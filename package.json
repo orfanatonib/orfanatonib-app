@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "start:local": "dotenv -e env/env.local -- vite",
-    "start:stg": "dotenv -e env/env.stg -- vite",
+    "start:staging": "dotenv -e env/env.staging -- vite",
     "start:prod": "dotenv -e env/env.prod -- vite",
     "build": "vite build",
     "preview": "vite preview --open",
