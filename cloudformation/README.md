@@ -20,12 +20,12 @@ Este diretório contém os templates e scripts para deploy da aplicação Orfana
 
 2. **Domínio `orfanatonib.com` controlado** pela conta AWS do perfil `clubinho-aws`
 
-3. **GitHub Personal Access Token** com permissões para acessar o repositório:
-   - Vá para [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
-   - Crie um novo token com as seguintes permissões:
+3. **GitHub Personal Access Token** (será configurado manualmente no console):
+   - Crie um token em [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+   - Permissões necessárias:
      - `repo` (Full control of private repositories)
      - `workflow` (Update GitHub Action workflows)
-   - Copie o token gerado e substitua `YOUR_GITHUB_OAUTH_TOKEN_HERE` no `parameters.json`
+   - **IMPORTANTE**: Guarde o token, será usado no passo 4 dos pós-deploy
 
 3. **Repositório GitHub** configurado (atualmente aponta para `https://github.com/diego-seven/orfanatonib-app`)
 
@@ -52,10 +52,12 @@ Este diretório contém os templates e scripts para deploy da aplicação Orfana
 - **Nome**: `orfanatonib-app`
 - **Build settings** otimizadas para Vite + React
 - **Auto-build** habilitado para branches
+- **NOTA**: O repositório GitHub será conectado manualmente no console
 
 ### Branches configuradas
-- **`main`** → Produção (`orfanatonib.com`)
-- **`staging`** → Staging (`staging.orfanatonib.com`)
+- **Branches serão criadas manualmente** no console após conectar o repositório
+- **`main`** → Produção (será configurado para `orfanatonib.com`)
+- **`staging`** → Staging (será configurado para `staging.orfanatonib.com`)
 
 ### Environment Variables
 Cada branch tem suas próprias variáveis de ambiente:
@@ -73,9 +75,28 @@ Cada branch tem suas próprias variáveis de ambiente:
 Após o deploy bem-sucedido, você precisará:
 
 1. **Configurar webhook do GitHub**:
-   - Acesse o AWS Amplify Console
-   - Conecte o repositório GitHub
-   - Configure webhooks para auto-deploy
+   - Acesse o [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+   - Selecione a app `orfanatonib-app`
+   - Vá para "App settings" > "Repository"
+   - Clique em "Connect to repository"
+   - Selecione GitHub e faça login
+   - Cole o Personal Access Token criado anteriormente
+   - Selecione o repositório `orfanatonib/orfanatonib-app`
+   - Configure webhooks para auto-deploy das branches `main` e `staging`
+
+2. **Criar branches no Amplify**:
+   - No Amplify Console, vá para "App settings" > "Branch settings"
+   - Clique em "Add branch" para cada branch:
+     - **Branch main**: Ambiente de produção
+     - **Branch staging**: Ambiente de staging
+   - Configure as environment variables para cada branch (conforme parameters.json)
+
+3. **Configurar domínios**:
+   - Vá para "App settings" > "Domain management"
+   - Adicione o domínio `orfanatonib.com`
+   - Configure subdomínios:
+     - `orfanatonib.com` → branch `main`
+     - `staging.orfanatonib.com` → branch `staging`
 
 2. **Configurar domínio no Route 53** (se necessário):
    - Verifique se `orfanatonib.com` está configurado no Route 53

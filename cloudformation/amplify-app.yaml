@@ -59,11 +59,6 @@ Parameters:
     Description: 'Staging Special Family Day ID'
     Default: 'a2f9913a-e123-46b2-b6f4-a4138686042f'
 
-  GithubOAuthToken:
-    Type: String
-    Description: 'GitHub OAuth token for repository access'
-    NoEcho: true
-
 Resources:
   # Amplify App
   AmplifyApp:
@@ -71,8 +66,6 @@ Resources:
     Properties:
       Name: 'orfanatonib-app'
       Description: 'Orfanato NIB React Application'
-      Repository: !Ref RepositoryUrl
-      OAuthToken: !Ref GithubOAuthToken
       BuildSpec: |
         version: 1
         frontend:
@@ -153,19 +146,19 @@ Resources:
         - Name: 'VITE_SPECIAL_FAMILY_DAY_ID'
           Value: !Ref StagingSpecialFamilyDayId
 
-  # Domain Association
-  DomainAssociation:
-    Type: 'AWS::Amplify::Domain'
-    Properties:
-      AppId: !GetAtt AmplifyApp.AppId
-      DomainName: 'orfanatonib.com'
-      SubDomainSettings:
-        # Production domain
-        - BranchName: !Ref RepositoryBranch
-          Prefix: ''
-        # Staging domain
-        - BranchName: !Ref StagingBranchResource
-          Prefix: 'staging'
+  # Domain Association - Será configurado manualmente no console
+  # DomainAssociation:
+  #   Type: 'AWS::Amplify::Domain'
+  #   Properties:
+  #     AppId: !GetAtt AmplifyApp.AppId
+  #     DomainName: 'orfanatonib.com'
+  #     SubDomainSettings:
+  #       # Production domain
+  #       - BranchName: !Ref RepositoryBranch
+  #         Prefix: ''
+  #       # Staging domain
+  #       - BranchName: !Ref StagingBranchResource
+  #         Prefix: 'staging'
 
 Outputs:
   AmplifyAppId:
@@ -186,14 +179,14 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-StagingBranch'
 
-  ProductionDomain:
-    Description: 'Production domain URL'
-    Value: !Sub 'https://orfanatonib.com'
-    Export:
-      Name: !Sub '${AWS::StackName}-ProductionDomain'
+  # ProductionDomain:
+  #   Description: 'Production domain URL'
+  #   Value: !Sub 'https://orfanatonib.com'
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-ProductionDomain'
 
-  StagingDomain:
-    Description: 'Staging domain URL'
-    Value: !Sub 'https://staging.orfanatonib.com'
-    Export:
-      Name: !Sub '${AWS::StackName}-StagingDomain'
+  # StagingDomain:
+  #   Description: 'Staging domain URL'
+  #   Value: !Sub 'https://staging.orfanatonib.com'
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-StagingDomain'
