@@ -20,6 +20,13 @@ Este diretório contém os templates e scripts para deploy da aplicação Orfana
 
 2. **Domínio `orfanatonib.com` controlado** pela conta AWS do perfil `clubinho-aws`
 
+3. **GitHub Personal Access Token** com permissões para acessar o repositório:
+   - Vá para [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+   - Crie um novo token com as seguintes permissões:
+     - `repo` (Full control of private repositories)
+     - `workflow` (Update GitHub Action workflows)
+   - Copie o token gerado e substitua `YOUR_GITHUB_OAUTH_TOKEN_HERE` no `parameters.json`
+
 3. **Repositório GitHub** configurado (atualmente aponta para `https://github.com/diego-seven/orfanatonib-app`)
 
 ### Deploy da Stack

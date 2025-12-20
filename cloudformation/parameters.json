@@ -42,5 +42,9 @@
   {
     "ParameterKey": "StagingSpecialFamilyDayId",
     "ParameterValue": "a2f9913a-e123-46b2-b6f4-a4138686042f"
+  },
+  {
+    "ParameterKey": "GithubOAuthToken",
+    "ParameterValue": "YOUR_GITHUB_OAUTH_TOKEN_HERE"
   }
 ]
