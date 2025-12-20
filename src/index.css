@@ -1,0 +1,42 @@
+:root {
+  --cor-primaria: #FFFF00;
+  --cor-secundaria: #000000;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background: linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%);
+  background-attachment: fixed;
+  color: #000000;
+}
+
+/* Background global suave - usar gradients.subtle.greenWhiteSoft no código */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.mainContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

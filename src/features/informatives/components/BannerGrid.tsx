@@ -1,0 +1,160 @@
+import React from 'react';
+import { Grid, Card, CardContent, CardActions, Typography, IconButton, Tooltip, Box, Chip } from '@mui/material';
+import { Edit, Delete, Public, Lock } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { useTheme, useMediaQuery } from '@mui/material';
+import type { InformativeBannerData } from 'store/slices/informative/informativeBannerSlice';
+
+type Props = {
+  items: InformativeBannerData[];
+  onEdit: (banner: InformativeBannerData) => void;
+  onDeleteAsk: (banner: InformativeBannerData) => void;
+};
+
+export default function BannerGrid({ items, onEdit, onDeleteAsk }: Props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  return (
+    <Grid container spacing={3} alignItems="stretch">
+      {items.map((banner, index) => (
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          key={banner.id}
+          component={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
+          sx={{ display: 'flex' }}
+        >
+          <Card
+            component={motion.div}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: 4,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+                borderColor: 'primary.main',
+              },
+            }}
+          >
+            {/* Header with Status */}
+            <Box
+              sx={{
+                p: { xs: 1.5, sm: 2 },
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.default',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Chip
+                icon={banner.public ? <Public fontSize="small" /> : <Lock fontSize="small" />}
+                label={banner.public ? 'Público' : 'Privado'}
+                size="small"
+                color={banner.public ? 'success' : 'warning'}
+                sx={{
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                  height: { xs: 24, sm: 28 },
+                  fontWeight: 600,
+                }}
+              />
+            </Box>
+
+            <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{
+                  fontSize: { xs: '1rem', sm: '1.25rem' },
+                  lineHeight: 1.3,
+                  mb: 1,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+                title={banner.title}
+              >
+                {banner.title}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  lineHeight: 1.6,
+                  fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                }}
+                title={banner.description}
+              >
+                {banner.description}
+              </Typography>
+            </CardContent>
+
+            <CardActions
+              sx={{
+                p: { xs: 1.5, sm: 2 },
+                pt: 0,
+                gap: { xs: 0.5, sm: 1 },
+                justifyContent: 'flex-end',
+              }}
+            >
+              <Tooltip title="Editar">
+                <IconButton
+                  size={isMobile ? 'small' : 'medium'}
+                  color="primary"
+                  onClick={() => onEdit(banner)}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: 'primary.lighter',
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Edit fontSize={isMobile ? 'small' : 'medium'} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Excluir">
+                <IconButton
+                  size={isMobile ? 'small' : 'medium'}
+                  color="error"
+                  onClick={() => onDeleteAsk(banner)}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: 'error.lighter',
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Delete fontSize={isMobile ? 'small' : 'medium'} />
+                </IconButton>
+              </Tooltip>
+            </CardActions>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
