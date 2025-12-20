@@ -1,0 +1,203 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Orfanato NIB Amplify App with production and staging environments'
+
+Parameters:
+  RepositoryUrl:
+    Type: String
+    Description: 'GitHub repository URL'
+    Default: 'https://github.com/your-org/orfanatonib-app'
+
+  RepositoryBranch:
+    Type: String
+    Description: 'Main branch name'
+    Default: 'main'
+
+  StagingBranch:
+    Type: String
+    Description: 'Staging branch name'
+    Default: 'staging'
+
+  # Production Environment Variables
+  ProdApiUrl:
+    Type: String
+    Description: 'Production API URL'
+    Default: 'https://api.orfanatonib.com'
+
+  ProdFeedMinisterioId:
+    Type: String
+    Description: 'Production Feed Ministerio ID'
+    Default: 'b8d9fa5f-4942-4a5b-bdf9-e1c8d7c3126b'
+
+  ProdGoogleClientId:
+    Type: String
+    Description: 'Production Google Client ID'
+    Default: '135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com'
+
+  ProdSpecialFamilyDayId:
+    Type: String
+    Description: 'Production Special Family Day ID'
+    Default: 'a2f9913a-e123-46b2-b6f4-a4138686042f'
+
+  # Staging Environment Variables
+  StagingApiUrl:
+    Type: String
+    Description: 'Staging API URL'
+    Default: 'https://staging-api.orfanatonib.com'
+
+  StagingFeedMinisterioId:
+    Type: String
+    Description: 'Staging Feed Ministerio ID'
+    Default: 'afa51053-1296-4c89-9059-a8ad8bd1ec90'
+
+  StagingGoogleClientId:
+    Type: String
+    Description: 'Staging Google Client ID'
+    Default: '135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com'
+
+  StagingSpecialFamilyDayId:
+    Type: String
+    Description: 'Staging Special Family Day ID'
+    Default: 'a2f9913a-e123-46b2-b6f4-a4138686042f'
+
+Resources:
+  # Amplify App
+  AmplifyApp:
+    Type: 'AWS::Amplify::App'
+    Properties:
+      Name: 'orfanatonib-app'
+      Description: 'Orfanato NIB React Application'
+      Repository: !Ref RepositoryUrl
+      BuildSpec: !Sub |
+        version: 1
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                # Garante Node 20 no container do Amplify
+                - echo "Using Node $${node -v} before nvm..."
+                - nvm install 20
+                - nvm use 20
+                - node -v
+                - corepack enable || true
+
+                # Instala deps (usa npm ci se houver package-lock)
+                - if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+                # Verifica se as variáveis de ambiente estão definidas
+                - |
+                  if [ -z "$$VITE_API_URL" ] || [ -z "$$VITE_FEED_MINISTERIO_ID" ] || [ -z "$$VITE_GOOGLE_CLIENT_ID" ] || [ -z "$$VITE_SPECIAL_FAMILY_DAY_ID" ]; then
+                    echo "Erro: Uma ou mais variáveis de ambiente necessárias não estão definidas no Amplify Console"
+                    echo "Variáveis necessárias: VITE_API_URL, VITE_FEED_MINISTERIO_ID, VITE_GOOGLE_CLIENT_ID, VITE_SPECIAL_FAMILY_DAY_ID"
+                    exit 1
+                  fi
+
+                # Gera .env para o Vite a partir das vars do Amplify Console (com override por branch)
+                - printf "VITE_API_URL=%s\nVITE_FEED_MINISTERIO_ID=%s\nVITE_GOOGLE_CLIENT_ID=%s\nVITE_SPECIAL_FAMILY_DAY_ID=%s\n" \
+                    "$$VITE_API_URL" "$$VITE_FEED_MINISTERIO_ID" "$$VITE_GOOGLE_CLIENT_ID" "$$VITE_SPECIAL_FAMILY_DAY_ID" > .env
+
+                # Log das variáveis (sem valores sensíveis) para debug
+                - echo "Variáveis de ambiente configuradas:"
+                - echo "VITE_API_URL: $$VITE_API_URL"
+                - echo "VITE_FEED_MINISTERIO_ID: [CONFIGURADO]"
+                - echo "VITE_GOOGLE_CLIENT_ID: [CONFIGURADO]"
+                - echo "VITE_SPECIAL_FAMILY_DAY_ID: [CONFIGURADO]"
+            build:
+              commands:
+                - echo "Iniciando build da aplicação..."
+                - npm run build
+                - echo "Build concluído. Verificando se os arquivos foram gerados..."
+                - ls -la dist/
+                - |
+                  if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+                    echo "Erro: Build falhou - diretório dist ou index.html não encontrado"
+                    exit 1
+                  fi
+                - echo "Build bem-sucedido! Arquivos prontos para deploy."
+          artifacts:
+            baseDirectory: dist
+            files:
+              - '**/*'
+          cache:
+            paths:
+              - node_modules/**/*
+
+  # Production Branch
+  ProductionBranch:
+    Type: 'AWS::Amplify::Branch'
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: !Ref RepositoryBranch
+      Description: 'Production branch'
+      EnableAutoBuild: true
+      EnvironmentVariables:
+        - Name: 'VITE_API_URL'
+          Value: !Ref ProdApiUrl
+        - Name: 'VITE_FEED_MINISTERIO_ID'
+          Value: !Ref ProdFeedMinisterioId
+        - Name: 'VITE_GOOGLE_CLIENT_ID'
+          Value: !Ref ProdGoogleClientId
+        - Name: 'VITE_SPECIAL_FAMILY_DAY_ID'
+          Value: !Ref ProdSpecialFamilyDayId
+
+  # Staging Branch
+  StagingBranch:
+    Type: 'AWS::Amplify::Branch'
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: !Ref StagingBranch
+      Description: 'Staging branch'
+      EnableAutoBuild: true
+      EnvironmentVariables:
+        - Name: 'VITE_API_URL'
+          Value: !Ref StagingApiUrl
+        - Name: 'VITE_FEED_MINISTERIO_ID'
+          Value: !Ref StagingFeedMinisterioId
+        - Name: 'VITE_GOOGLE_CLIENT_ID'
+          Value: !Ref StagingGoogleClientId
+        - Name: 'VITE_SPECIAL_FAMILY_DAY_ID'
+          Value: !Ref StagingSpecialFamilyDayId
+
+  # Domain Association
+  DomainAssociation:
+    Type: 'AWS::Amplify::Domain'
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      DomainName: 'orfanatonib.com'
+      SubDomainSettings:
+        # Production domain
+        - BranchName: !Ref RepositoryBranch
+          Prefix: ''
+        # Staging domain
+        - BranchName: !Ref StagingBranch
+          Prefix: 'staging'
+
+Outputs:
+  AmplifyAppId:
+    Description: 'Amplify App ID'
+    Value: !GetAtt AmplifyApp.AppId
+    Export:
+      Name: !Sub '${AWS::StackName}-AppId'
+
+  ProductionBranchName:
+    Description: 'Production branch name'
+    Value: !Ref RepositoryBranch
+    Export:
+      Name: !Sub '${AWS::StackName}-ProductionBranch'
+
+  StagingBranchName:
+    Description: 'Staging branch name'
+    Value: !Ref StagingBranch
+    Export:
+      Name: !Sub '${AWS::StackName}-StagingBranch'
+
+  ProductionDomain:
+    Description: 'Production domain URL'
+    Value: !Sub 'https://orfanatonib.com'
+    Export:
+      Name: !Sub '${AWS::StackName}-ProductionDomain'
+
+  StagingDomain:
+    Description: 'Staging domain URL'
+    Value: !Sub 'https://staging.orfanatonib.com'
+    Export:
+      Name: !Sub '${AWS::StackName}-StagingDomain'
