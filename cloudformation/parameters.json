@@ -1,7 +1,7 @@
 [
   {
     "ParameterKey": "RepositoryUrl",
-    "ParameterValue": "https://github.com/diego-seven/orfanatonib-app"
+    "ParameterValue": "https://github.com/orfanatonib/orfanatonib-app"
   },
   {
     "ParameterKey": "RepositoryBranch",
