@@ -226,7 +226,7 @@ Resources:
       Role: !GetAtt AmplifyDomainDnsLambdaRole.Arn
       Runtime: python3.13
       Handler: index.handler
-      Timeout: 300
+      Timeout: 900
       MemorySize: 256
       Code:
         ZipFile: |
@@ -458,11 +458,26 @@ Resources:
               ]
 
               upsert_records(route53, hosted_zone_id, changes)
+
+              # Espera o Amplify reconhecer os DNS e sair de AWAITING_APP_CNAME (sem passos manuais)
+              # Status típicos: AWAITING_APP_CNAME -> PENDING_DEPLOYMENT -> AVAILABLE
+              final_status = None
+              for _ in range(90):  # até ~15min (90 * 10s)
+                  da2 = amplify.get_domain_association(appId=app_id, domainName=domain_name)["domainAssociation"]
+                  final_status = da2.get("domainStatus")
+                  if final_status in ("AVAILABLE", "PENDING_DEPLOYMENT", "AVAILABLE_WITH_WAITS", "PENDING_VERIFICATION"):
+                      # já progrediu; se ainda estiver pendente, o Amplify continua sozinho
+                      break
+                  if final_status in ("FAILED", "ERROR"):
+                      send(event, context, "FAILED", reason=f"Amplify domainStatus={final_status}")
+                      return
+                  time.sleep(10)
+
               send(
                   event,
                   context,
                   "SUCCESS",
-                  data={"HostedZoneId": hosted_zone_id, "CloudFrontTarget": target},
+                  data={"HostedZoneId": hosted_zone_id, "CloudFrontTarget": target, "DomainStatus": final_status or "UNKNOWN"},
                   physical_id=f"{app_id}:{domain_name}",
               )
 
