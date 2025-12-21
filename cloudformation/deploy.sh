@@ -226,18 +226,24 @@ ensure_route53_records_from_amplify() {
     return 1
   fi
 
-  # Pega json da domain association
-  local da_json
-  set +e
-  da_json="$(aws amplify get-domain-association \
-    --app-id "$app_id" \
-    --domain-name "$domain" \
-    --profile "$PROFILE" \
-    --region "$REGION" \
-    --output json 2>/dev/null)"
-  rc=$?
-  set -e
-  if [ $rc -ne 0 ] || [ -z "${da_json:-}" ]; then
+  # Pega json da domain association (pode demorar alguns segundos até o Amplify preencher DNS records)
+  local da_json rc
+  for _ in $(seq 1 30); do # ~5min
+    set +e
+    da_json="$(aws amplify get-domain-association \
+      --app-id "$app_id" \
+      --domain-name "$domain" \
+      --profile "$PROFILE" \
+      --region "$REGION" \
+      --output json 2>/dev/null)"
+    rc=$?
+    set -e
+    if [ $rc -eq 0 ] && [ -n "${da_json:-}" ]; then
+      break
+    fi
+    sleep 10
+  done
+  if [ -z "${da_json:-}" ]; then
     error "Não consegui ler DomainAssociation no Amplify (app=$app_id domain=$domain)."
     error "Dica: verifique se o recurso DomainAssociation existe na stack e se já foi criado no Amplify."
     return 1
@@ -283,7 +289,52 @@ PY
   <<<"$da_json")
 
   if [ -z "$cf_target" ] || [ -z "$cert_name" ] || [ -z "$cert_value" ]; then
-    error "Amplify ainda não retornou DNS records suficientes (cf_target/cert). Tente novamente em alguns segundos."
+    # tenta reconsultar por mais um tempo
+    for _ in $(seq 1 30); do
+      sleep 10
+      da_json="$(aws amplify get-domain-association --app-id "$app_id" --domain-name "$domain" --profile "$PROFILE" --region "$REGION" --output json 2>/dev/null || true)"
+      read -r cert_name cert_value cf_target < <(python3 - <<'PY'
+import json,sys
+raw=sys.stdin.read().strip()
+if not raw:
+    print("", "", "")
+    sys.exit(0)
+j=json.loads(raw)
+da=j.get("domainAssociation",{})
+cert=da.get("certificateVerificationDNSRecord") or da.get("certificate",{}).get("certificateVerificationDNSRecord") or ""
+cert_name=cert_value=""
+if cert:
+    parts=[p for p in cert.strip().split(" ") if p]
+    if len(parts)>=3:
+        cert_name=parts[0]
+        cert_value=parts[2]
+        if not cert_name.endswith("."): cert_name += "."
+        if not cert_value.endswith("."): cert_value += "."
+cf_target=""
+for sd in da.get("subDomains",[]):
+    setting=sd.get("subDomainSetting") or {}
+    if setting.get("branchName")=="main" and not setting.get("prefix"):
+        rec=(sd.get("dnsRecord") or "").strip()
+        p=[x for x in rec.split(" ") if x]
+        if len(p)==2: cf_target=p[1]
+        elif len(p)>=3: cf_target=p[2]
+        break
+if not cf_target and da.get("subDomains"):
+    rec=(da["subDomains"][0].get("dnsRecord") or "").strip()
+    p=[x for x in rec.split(" ") if x]
+    if len(p)==2: cf_target=p[1]
+    elif len(p)>=3: cf_target=p[2]
+if cf_target and not cf_target.endswith("."): cf_target += "."
+print(cert_name, cert_value, cf_target)
+PY
+<<<"$da_json")
+      if [ -n "$cf_target" ] && [ -n "$cert_name" ] && [ -n "$cert_value" ]; then
+        break
+      fi
+    done
+  fi
+  if [ -z "$cf_target" ] || [ -z "$cert_name" ] || [ -z "$cert_value" ]; then
+    error "Amplify ainda não retornou DNS records suficientes (cf_target/cert) após aguardar. Tente novamente."
     return 1
   fi
 
