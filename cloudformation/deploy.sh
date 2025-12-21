@@ -171,13 +171,16 @@ make_parameters_file() {
   token="$(get_github_token)"
 
   python3 - "$tmp" "$token" <<'PY'
-import json, os, sys
+import json, sys
 path = sys.argv[1]
 token = sys.argv[2] or ""
 
 params = json.load(open(path, "r", encoding="utf-8"))
 
-# Injeta token apenas se existir env var
+# Remove parâmetro legado (não existe no template)
+params = [p for p in params if p.get("ParameterKey") != "RepositoryToken"]
+
+# Injeta token apenas se existir (env var ou secrets manager)
 if token:
     params = [p for p in params if p.get("ParameterKey") != "GitHubAccessToken"]
     params.append({"ParameterKey": "GitHubAccessToken", "ParameterValue": token})
