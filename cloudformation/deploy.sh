@@ -19,6 +19,7 @@ REGION="us-east-1"
 ASSUME_YES="false"
 RECREATE_ON_BLOCKED_STATUS="false"
 GITHUB_TOKEN_ENV="AMPLIFY_GITHUB_TOKEN"
+GITHUB_TOKEN_SECRET_ID=""
 
 # Cores para output
 RED='\033[0;31m'
@@ -56,6 +57,7 @@ Opções:
   --template FILE  Template CloudFormation (default: amplify-app.yaml)
   --parameters FILE Parâmetros CloudFormation (default: parameters.json)
   --github-token-env VAR  Nome da env var que contém o GitHub token (default: AMPLIFY_GITHUB_TOKEN)
+  --github-token-secret SECRET_ID  Secret no AWS Secrets Manager com o token (fallback quando env var não existe)
 
 Exemplos:
   $0 apply  orfanatonib-amplify-staging --recreate --yes
@@ -104,6 +106,10 @@ while [ $# -gt 0 ]; do
       GITHUB_TOKEN_ENV="$2"
       shift 2
       ;;
+    --github-token-secret)
+      GITHUB_TOKEN_SECRET_ID="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -115,6 +121,36 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+get_github_token() {
+  # 1) tenta env var local
+  local token=""
+  if printenv "$GITHUB_TOKEN_ENV" >/dev/null 2>&1; then
+    token="$(printenv "$GITHUB_TOKEN_ENV" || true)"
+  fi
+
+  if [ -n "$token" ]; then
+    echo "$token"
+    return 0
+  fi
+
+  # 2) fallback: AWS Secrets Manager
+  if [ -n "$GITHUB_TOKEN_SECRET_ID" ]; then
+    token="$(aws secretsmanager get-secret-value \
+      --secret-id "$GITHUB_TOKEN_SECRET_ID" \
+      --profile "$PROFILE" \
+      --region "$REGION" \
+      --query 'SecretString' \
+      --output text 2>/dev/null || true)"
+    if [ "$token" != "None" ] && [ -n "$token" ]; then
+      echo "$token"
+      return 0
+    fi
+  fi
+
+  echo ""
+  return 0
+}
 
 make_parameters_file() {
   # Cria um arquivo temporário de parâmetros incluindo o GitHubAccessToken (NoEcho) sem salvar em repo.
@@ -131,11 +167,13 @@ make_parameters_file() {
     exit 1
   fi
 
-  python3 - "$tmp" "$GITHUB_TOKEN_ENV" <<'PY'
+  local token
+  token="$(get_github_token)"
+
+  python3 - "$tmp" "$token" <<'PY'
 import json, os, sys
 path = sys.argv[1]
-env_name = sys.argv[2]
-token = os.environ.get(env_name, "")
+token = sys.argv[2] or ""
 
 params = json.load(open(path, "r", encoding="utf-8"))
 
@@ -265,9 +303,12 @@ create_stack() {
 
   # Se o template espera token e não foi fornecido, falha cedo (evita app "manual deploy")
   if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
-    if ! env | grep -q "^${GITHUB_TOKEN_ENV}="; then
-      error "Falta o token do GitHub. Exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
-      error "Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+    token_val="$(get_github_token)"
+    if [ -z "${token_val:-}" ]; then
+      error "Falta o token do GitHub."
+      error "- Opção 1: exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
+      error "  Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+      error "- Opção 2: informe um secret do Secrets Manager via --github-token-secret (recomendado)."
       rm -f "$params_file"
       exit 1
     fi
@@ -298,9 +339,12 @@ update_stack() {
   params_file="$(make_parameters_file)"
 
   if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
-    if ! env | grep -q "^${GITHUB_TOKEN_ENV}="; then
-      error "Falta o token do GitHub. Exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
-      error "Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+    token_val="$(get_github_token)"
+    if [ -z "${token_val:-}" ]; then
+      error "Falta o token do GitHub."
+      error "- Opção 1: exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
+      error "  Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+      error "- Opção 2: informe um secret do Secrets Manager via --github-token-secret (recomendado)."
       rm -f "$params_file"
       exit 1
     fi
