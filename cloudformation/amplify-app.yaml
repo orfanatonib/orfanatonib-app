@@ -173,6 +173,9 @@ Resources:
 
   DomainAssociation:
     Type: 'AWS::Amplify::Domain'
+    DependsOn:
+      - ProductionBranch
+      - StagingBranchResource
     Properties:
       AppId: !GetAtt AmplifyApp.AppId
       DomainName: !Ref RootDomainName
