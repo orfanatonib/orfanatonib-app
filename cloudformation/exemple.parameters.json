@@ -44,6 +44,18 @@
     "ParameterValue": "a2f9913a-e123-46b2-b6f4-a4138686042f"
   },
   {
+    "ParameterKey": "RootDomainName",
+    "ParameterValue": "orfanatonib.com"
+  },
+  {
+    "ParameterKey": "StagingSubdomainPrefix",
+    "ParameterValue": "staging"
+  },
+  {
+    "ParameterKey": "HostedZoneId",
+    "ParameterValue": "ZXXXXXXXXXXXXX"
+  },
+  {
     "ParameterKey": "GitHubAccessToken",
     "ParameterValue": "COLE_SEU_TOKEN_AQUI"
   }
