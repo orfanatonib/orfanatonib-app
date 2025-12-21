@@ -228,18 +228,30 @@ ensure_route53_records_from_amplify() {
 
   # Pega json da domain association
   local da_json
+  set +e
   da_json="$(aws amplify get-domain-association \
     --app-id "$app_id" \
     --domain-name "$domain" \
     --profile "$PROFILE" \
     --region "$REGION" \
-    --output json)"
+    --output json 2>/dev/null)"
+  rc=$?
+  set -e
+  if [ $rc -ne 0 ] || [ -z "${da_json:-}" ]; then
+    error "Não consegui ler DomainAssociation no Amplify (app=$app_id domain=$domain)."
+    error "Dica: verifique se o recurso DomainAssociation existe na stack e se já foi criado no Amplify."
+    return 1
+  fi
 
   # Extrai cert record e target cloudfront (do subdomain main)
   local cert_name cert_value cf_target
   read -r cert_name cert_value cf_target < <(python3 - <<'PY'
 import json,sys
-j=json.loads(sys.stdin.read())
+raw=sys.stdin.read().strip()
+if not raw:
+    print("", "", "")
+    sys.exit(0)
+j=json.loads(raw)
 da=j.get("domainAssociation",{})
 cert=da.get("certificateVerificationDNSRecord") or da.get("certificate",{}).get("certificateVerificationDNSRecord") or ""
 cert_name=cert_value=""
