@@ -52,10 +52,6 @@
     "ParameterValue": "staging"
   },
   {
-    "ParameterKey": "HostedZoneId",
-    "ParameterValue": "ZXXXXXXXXXXXXX"
-  },
-  {
     "ParameterKey": "GitHubAccessToken",
     "ParameterValue": "COLE_SEU_TOKEN_AQUI"
   }
