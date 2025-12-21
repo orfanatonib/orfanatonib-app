@@ -2,12 +2,13 @@
 
 # Script de deploy da stack CloudFormation para Orfanato NIB Amplify App
 # Uso:
-#   ./deploy.sh [create|update|delete|apply|status] STACK_NAME [--yes] [--recreate] [--profile P] [--region R] [--template FILE] [--parameters FILE]
+#   ./deploy.sh [create|update|delete|apply|status|deploy] STACK_NAME [--yes] [--recreate] [--profile P] [--region R] [--template FILE] [--parameters FILE]
 #
 # Notas:
 # - Por padrão usa o profile local 'clubinho-aws' (pode sobrescrever via --profile).
 # - "apply" faz create se não existir; caso exista faz update.
 # - "recreate" deleta e recria automaticamente quando a stack está em estados que impedem update.
+# - "deploy" orquestra tudo: apply -> DNS Route53 -> aguarda domínio -> dispara deploy main+staging.
 
 set -euo pipefail
 
@@ -20,6 +21,10 @@ ASSUME_YES="false"
 RECREATE_ON_BLOCKED_STATUS="false"
 GITHUB_TOKEN_ENV="AMPLIFY_GITHUB_TOKEN"
 GITHUB_TOKEN_SECRET_ID=""
+ROUTE53_HOSTED_ZONE_ID=""
+ROOT_DOMAIN_NAME="orfanatonib.com"
+STAGING_SUBDOMAIN_PREFIX="staging"
+WAIT_DOMAIN_SECONDS="900"
 
 # Cores para output
 RED='\033[0;31m'
@@ -58,9 +63,14 @@ Opções:
   --parameters FILE Parâmetros CloudFormation (default: parameters.json)
   --github-token-env VAR  Nome da env var que contém o GitHub token (default: AMPLIFY_GITHUB_TOKEN)
   --github-token-secret SECRET_ID  Secret no AWS Secrets Manager com o token (fallback quando env var não existe)
+  --hosted-zone-id Z     Hosted Zone ID do Route53 (opcional; se omitido tenta descobrir por RootDomainName)
+  --root-domain NAME     Domínio raiz (default: orfanatonib.com)
+  --staging-prefix PFX   Prefixo do subdomínio de staging (default: staging)
+  --wait-domain-seconds N  Tempo máximo para esperar o domínio progredir (default: 900)
 
 Exemplos:
   $0 apply  orfanatonib-amplify-staging --recreate --yes
+  $0 deploy orfanatonib-amplify --recreate --yes --root-domain orfanatonib.com --staging-prefix staging
   $0 create orfanatonib-amplify-staging --yes
   $0 update orfanatonib-amplify-staging --recreate --yes
   $0 delete orfanatonib-amplify-staging --yes
@@ -110,6 +120,22 @@ while [ $# -gt 0 ]; do
       GITHUB_TOKEN_SECRET_ID="$2"
       shift 2
       ;;
+    --hosted-zone-id)
+      ROUTE53_HOSTED_ZONE_ID="$2"
+      shift 2
+      ;;
+    --root-domain)
+      ROOT_DOMAIN_NAME="$2"
+      shift 2
+      ;;
+    --staging-prefix)
+      STAGING_SUBDOMAIN_PREFIX="$2"
+      shift 2
+      ;;
+    --wait-domain-seconds)
+      WAIT_DOMAIN_SECONDS="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -121,6 +147,13 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+require_aws() {
+  aws sts get-caller-identity --profile "$PROFILE" --region "$REGION" >/dev/null 2>&1 || {
+    error "Falha ao autenticar com AWS CLI (profile=$PROFILE region=$REGION)."
+    exit 1
+  }
+}
 
 get_github_token() {
   # 1) tenta env var local
@@ -150,6 +183,186 @@ get_github_token() {
 
   echo ""
   return 0
+}
+
+get_stack_output() {
+  local key="$1"
+  aws cloudformation describe-stacks \
+    --stack-name "$STACK_NAME" \
+    --profile "$PROFILE" \
+    --region "$REGION" \
+    --query "Stacks[0].Outputs[?OutputKey=='${key}'].OutputValue | [0]" \
+    --output text 2>/dev/null || true
+}
+
+discover_hosted_zone_id() {
+  local domain="$1"
+  local id
+  id="$(aws route53 list-hosted-zones-by-name \
+    --dns-name "$domain" \
+    --profile "$PROFILE" \
+    --query 'HostedZones[0].Id' \
+    --output text 2>/dev/null || true)"
+  id="${id##*/}"
+  if [ -n "$id" ] && [ "$id" != "None" ]; then
+    echo "$id"
+    return 0
+  fi
+  echo ""
+  return 0
+}
+
+ensure_route53_records_from_amplify() {
+  local app_id="$1"
+  local domain="$2"
+  local staging_prefix="$3"
+
+  local hz="${ROUTE53_HOSTED_ZONE_ID}"
+  if [ -z "$hz" ]; then
+    hz="$(discover_hosted_zone_id "$domain")"
+  fi
+  if [ -z "$hz" ]; then
+    error "HostedZoneId não encontrado para '$domain'. Passe --hosted-zone-id."
+    return 1
+  fi
+
+  # Pega json da domain association
+  local da_json
+  da_json="$(aws amplify get-domain-association \
+    --app-id "$app_id" \
+    --domain-name "$domain" \
+    --profile "$PROFILE" \
+    --region "$REGION" \
+    --output json)"
+
+  # Extrai cert record e target cloudfront (do subdomain main)
+  local cert_name cert_value cf_target
+  read -r cert_name cert_value cf_target < <(python3 - <<'PY'
+import json,sys
+j=json.loads(sys.stdin.read())
+da=j.get("domainAssociation",{})
+cert=da.get("certificateVerificationDNSRecord") or da.get("certificate",{}).get("certificateVerificationDNSRecord") or ""
+cert_name=cert_value=""
+if cert:
+    parts=[p for p in cert.strip().split(" ") if p]
+    if len(parts)>=3:
+        cert_name=parts[0]
+        cert_value=parts[2]
+        if not cert_name.endswith("."): cert_name += "."
+        if not cert_value.endswith("."): cert_value += "."
+
+cf_target=""
+for sd in da.get("subDomains",[]):
+    setting=sd.get("subDomainSetting") or {}
+    if setting.get("branchName")=="main" and not setting.get("prefix"):
+        rec=(sd.get("dnsRecord") or "").strip()
+        p=[x for x in rec.split(" ") if x]
+        if len(p)==2: cf_target=p[1]
+        elif len(p)>=3: cf_target=p[2]
+        break
+if not cf_target and da.get("subDomains"):
+    rec=(da["subDomains"][0].get("dnsRecord") or "").strip()
+    p=[x for x in rec.split(" ") if x]
+    if len(p)==2: cf_target=p[1]
+    elif len(p)>=3: cf_target=p[2]
+if cf_target and not cf_target.endswith("."): cf_target += "."
+print(cert_name, cert_value, cf_target)
+PY
+  <<<"$da_json")
+
+  if [ -z "$cf_target" ] || [ -z "$cert_name" ] || [ -z "$cert_value" ]; then
+    error "Amplify ainda não retornou DNS records suficientes (cf_target/cert). Tente novamente em alguns segundos."
+    return 1
+  fi
+
+  # CloudFront hosted zone id global
+  local cf_zone_id="Z2FDTNDATAQYW2"
+
+  local tmp="/tmp/route53-${STACK_NAME}-dns.json"
+  cat > "$tmp" <<JSON
+{
+  "Comment": "Amplify domain association DNS (orchestrated by deploy.sh)",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${domain}.",
+        "Type": "A",
+        "AliasTarget": { "HostedZoneId": "${cf_zone_id}", "DNSName": "${cf_target}", "EvaluateTargetHealth": false }
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${domain}.",
+        "Type": "AAAA",
+        "AliasTarget": { "HostedZoneId": "${cf_zone_id}", "DNSName": "${cf_target}", "EvaluateTargetHealth": false }
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${staging_prefix}.${domain}.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{ "Value": "${cf_target}" }]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${cert_name}",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{ "Value": "${cert_value}" }]
+      }
+    }
+  ]
+}
+JSON
+
+  aws route53 change-resource-record-sets \
+    --hosted-zone-id "$hz" \
+    --change-batch "file://$tmp" \
+    --profile "$PROFILE" \
+    --region "$REGION" >/dev/null
+
+  success "DNS atualizado no Route53 (HostedZoneId=$hz) para ${domain} e ${staging_prefix}.${domain}"
+}
+
+wait_domain_ready() {
+  local app_id="$1"
+  local domain="$2"
+  local max="${WAIT_DOMAIN_SECONDS}"
+  local start
+  start="$(date +%s)"
+  while true; do
+    status="$(aws amplify get-domain-association --app-id "$app_id" --domain-name "$domain" --profile "$PROFILE" --region "$REGION" --query 'domainAssociation.domainStatus' --output text 2>/dev/null || true)"
+    log "DomainStatus=${status}"
+    if [ "$status" = "AVAILABLE" ]; then
+      success "Domínio AVAILABLE: $domain"
+      return 0
+    fi
+    if [ "$status" = "FAILED" ] || [ "$status" = "ERROR" ]; then
+      error "Domínio falhou: $status"
+      return 1
+    fi
+    now="$(date +%s)"
+    if [ $((now-start)) -ge "$max" ]; then
+      warning "Timeout aguardando domínio progredir (status atual: $status)."
+      return 2
+    fi
+    sleep 10
+  done
+}
+
+start_amplify_deploys() {
+  local app_id="$1"
+  for br in "staging" "main"; do
+    log "Disparando deploy: app=$app_id branch=$br"
+    aws amplify start-job --app-id "$app_id" --branch-name "$br" --job-type RELEASE --profile "$PROFILE" --region "$REGION" >/dev/null
+  done
+  success "Deploys disparados (main + staging)."
 }
 
 make_parameters_file() {
@@ -459,6 +672,30 @@ case "$ACTION" in
     else
       "$0" create "$STACK_NAME" --profile "$PROFILE" --region "$REGION" --template "$TEMPLATE_FILE" --parameters "$PARAMETERS_FILE" $( [ "$ASSUME_YES" = "true" ] && echo "--yes" ) $( [ "$RECREATE_ON_BLOCKED_STATUS" = "true" ] && echo "--recreate" )
     fi
+    ;;
+
+  deploy)
+    require_aws
+    # 1) Garante stack aplicada
+    "$0" apply "$STACK_NAME" \
+      --profile "$PROFILE" --region "$REGION" \
+      --template "$TEMPLATE_FILE" --parameters "$PARAMETERS_FILE" \
+      $( [ "$ASSUME_YES" = "true" ] && echo "--yes" ) \
+      $( [ "$RECREATE_ON_BLOCKED_STATUS" = "true" ] && echo "--recreate" )
+
+    # 2) Orquestra DNS e domínio
+    local app_id
+    app_id="$(get_stack_output "AmplifyAppId")"
+    if [ -z "$app_id" ] || [ "$app_id" = "None" ]; then
+      error "Não consegui obter AmplifyAppId dos outputs da stack."
+      exit 1
+    fi
+
+    ensure_route53_records_from_amplify "$app_id" "$ROOT_DOMAIN_NAME" "$STAGING_SUBDOMAIN_PREFIX"
+    wait_domain_ready "$app_id" "$ROOT_DOMAIN_NAME" || true
+
+    # 3) Só então dispara deploys
+    start_amplify_deploys "$app_id"
     ;;
 
   delete)
