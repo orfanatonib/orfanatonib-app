@@ -84,6 +84,15 @@ Resources:
       Description: 'Orfanato NIB React Application'
       Repository: !Ref RepositoryUrl
       AccessToken: !Ref GitHubAccessToken
+      CustomRules:
+        # SPA routing: qualquer rota "sem extensão" deve servir index.html (permite refresh em /rota)
+        - Source: '</^[^.]+$|\\.(?!(css|gif|ico|jpg|jpeg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>'
+          Target: /index.html
+          Status: '200'
+        # Fallback extra: qualquer 404 volta para index.html
+        - Source: '/<*>'
+          Target: /index.html
+          Status: '404-200'
       BuildSpec: |
         version: 1
         frontend:
