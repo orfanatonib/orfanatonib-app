@@ -363,7 +363,7 @@ Resources:
                               {
                                   "Action": "DELETE",
                                   "ResourceRecordSet": {
-                                      "Name": f\"{staging_prefix}.{domain_name}.\",
+                                      "Name": f"{staging_prefix}.{domain_name}.",
                                       "Type": "CNAME",
                                       "TTL": 300,
                                       "ResourceRecords": [{"Value": target}],
@@ -385,7 +385,7 @@ Resources:
                           upsert_records(route53, hosted_zone_id, changes)
                   except Exception:
                       pass
-                  send(event, context, "SUCCESS", physical_id=f\"{app_id}:{domain_name}\")
+                  send(event, context, "SUCCESS", physical_id=f"{app_id}:{domain_name}")
                   return
 
               # Create/Update: wait until Amplify has DNS records
@@ -418,7 +418,7 @@ Resources:
 
               name, rtype, value = cert_rec
               apex = domain_name + "."
-              staging_fqdn = f\"{staging_prefix}.{domain_name}.\"
+              staging_fqdn = f"{staging_prefix}.{domain_name}."
 
               changes = [
                   {
@@ -463,7 +463,7 @@ Resources:
                   context,
                   "SUCCESS",
                   data={"HostedZoneId": hosted_zone_id, "CloudFrontTarget": target},
-                  physical_id=f\"{app_id}:{domain_name}\",
+                  physical_id=f"{app_id}:{domain_name}",
               )
 
   AmplifyDomainDnsRecords:
