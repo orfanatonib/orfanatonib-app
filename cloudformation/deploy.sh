@@ -684,7 +684,6 @@ case "$ACTION" in
       $( [ "$RECREATE_ON_BLOCKED_STATUS" = "true" ] && echo "--recreate" )
 
     # 2) Orquestra DNS e domínio
-    local app_id
     app_id="$(get_stack_output "AmplifyAppId")"
     if [ -z "$app_id" ] || [ "$app_id" = "None" ]; then
       error "Não consegui obter AmplifyAppId dos outputs da stack."
