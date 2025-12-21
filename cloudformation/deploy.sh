@@ -18,6 +18,7 @@ PROFILE="clubinho-aws"
 REGION="us-east-1"
 ASSUME_YES="false"
 RECREATE_ON_BLOCKED_STATUS="false"
+GITHUB_TOKEN_ENV="AMPLIFY_GITHUB_TOKEN"
 
 # Cores para output
 RED='\033[0;31m'
@@ -54,6 +55,7 @@ Opções:
   --region R       AWS region (default: us-east-1)
   --template FILE  Template CloudFormation (default: amplify-app.yaml)
   --parameters FILE Parâmetros CloudFormation (default: parameters.json)
+  --github-token-env VAR  Nome da env var que contém o GitHub token (default: AMPLIFY_GITHUB_TOKEN)
 
 Exemplos:
   $0 apply  orfanatonib-amplify-staging --recreate --yes
@@ -98,6 +100,10 @@ while [ $# -gt 0 ]; do
       PARAMETERS_FILE="$2"
       shift 2
       ;;
+    --github-token-env)
+      GITHUB_TOKEN_ENV="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -109,6 +115,40 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+make_parameters_file() {
+  # Cria um arquivo temporário de parâmetros incluindo o GitHubAccessToken (NoEcho) sem salvar em repo.
+  # Só injeta token se o template pedir GitHubAccessToken.
+  local tmp
+  tmp="$(mktemp)"
+
+  # Copia parameters.json (lista) para tmp
+  cp "$PARAMETERS_FILE" "$tmp"
+
+  # Se não houver python3, falha (dependência mínima)
+  if ! command -v python3 >/dev/null 2>&1; then
+    error "python3 é necessário para montar o arquivo temporário de parâmetros."
+    exit 1
+  fi
+
+  python3 - "$tmp" "$GITHUB_TOKEN_ENV" <<'PY'
+import json, os, sys
+path = sys.argv[1]
+env_name = sys.argv[2]
+token = os.environ.get(env_name, "")
+
+params = json.load(open(path, "r", encoding="utf-8"))
+
+# Injeta token apenas se existir env var
+if token:
+    params = [p for p in params if p.get("ParameterKey") != "GitHubAccessToken"]
+    params.append({"ParameterKey": "GitHubAccessToken", "ParameterValue": token})
+
+json.dump(params, open(path, "w", encoding="utf-8"), indent=2)
+PY
+
+  echo "$tmp"
+}
 
 # Verifica se o perfil AWS existe
 if ! aws configure list-profiles | grep -q "^${PROFILE}$"; then
@@ -220,10 +260,23 @@ create_stack() {
   log "Perfil AWS: $PROFILE"
   log "Região: $REGION"
 
+  local params_file
+  params_file="$(make_parameters_file)"
+
+  # Se o template espera token e não foi fornecido, falha cedo (evita app "manual deploy")
+  if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
+    if ! env | grep -q "^${GITHUB_TOKEN_ENV}="; then
+      error "Falta o token do GitHub. Exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
+      error "Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+      rm -f "$params_file"
+      exit 1
+    fi
+  fi
+
   aws cloudformation create-stack \
     --stack-name "$STACK_NAME" \
     --template-body "file://$TEMPLATE_FILE" \
-    --parameters "file://$PARAMETERS_FILE" \
+    --parameters "file://$params_file" \
     --capabilities CAPABILITY_IAM \
     --profile "$PROFILE" \
     --region "$REGION"
@@ -234,17 +287,31 @@ create_stack() {
     --profile "$PROFILE" \
     --region "$REGION"
   success "Stack create concluída com sucesso!"
+
+  rm -f "$params_file"
 }
 
 update_stack() {
   log "Atualizando stack CloudFormation: $STACK_NAME"
+
+  local params_file
+  params_file="$(make_parameters_file)"
+
+  if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
+    if ! env | grep -q "^${GITHUB_TOKEN_ENV}="; then
+      error "Falta o token do GitHub. Exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
+      error "Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
+      rm -f "$params_file"
+      exit 1
+    fi
+  fi
 
   # update-stack retorna exit code 255 em "No updates are to be performed."
   set +e
   out=$(aws cloudformation update-stack \
     --stack-name "$STACK_NAME" \
     --template-body "file://$TEMPLATE_FILE" \
-    --parameters "file://$PARAMETERS_FILE" \
+    --parameters "file://$params_file" \
     --capabilities CAPABILITY_IAM \
     --profile "$PROFILE" \
     --region "$REGION" 2>&1)
@@ -267,6 +334,8 @@ update_stack() {
     --profile "$PROFILE" \
     --region "$REGION"
   success "Stack update concluída com sucesso!"
+
+  rm -f "$params_file"
 }
 
 case "$ACTION" in

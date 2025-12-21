@@ -7,6 +7,11 @@ Parameters:
     Description: 'GitHub repository URL'
     Default: 'https://github.com/your-org/orfanatonib-app'
 
+  GitHubAccessToken:
+    Type: String
+    Description: 'GitHub Personal Access Token (Classic) para o Amplify clonar o repositório'
+    NoEcho: true
+
   RepositoryBranch:
     Type: String
     Description: 'Main branch name'
@@ -66,6 +71,8 @@ Resources:
     Properties:
       Name: 'orfanatonib-app'
       Description: 'Orfanato NIB React Application'
+      Repository: !Ref RepositoryUrl
+      AccessToken: !Ref GitHubAccessToken
       BuildSpec: |
         version: 1
         frontend:
@@ -84,12 +91,13 @@ Resources:
                     echo "Variáveis necessárias: VITE_API_URL, VITE_FEED_MINISTERIO_ID, VITE_GOOGLE_CLIENT_ID, VITE_SPECIAL_FAMILY_DAY_ID"
                     exit 1
                   fi
-                - printf "VITE_API_URL=%s\nVITE_FEED_MINISTERIO_ID=%s\nVITE_GOOGLE_CLIENT_ID=%s\nVITE_SPECIAL_FAMILY_DAY_ID=%s\n" "$VITE_API_URL" "$VITE_FEED_MINISTERIO_ID" "$VITE_GOOGLE_CLIENT_ID" "$VITE_SPECIAL_FAMILY_DAY_ID" > .env
-                - echo "Variáveis de ambiente configuradas:"
-                - echo "VITE_API_URL: $VITE_API_URL"
-                - echo "VITE_FEED_MINISTERIO_ID: [CONFIGURADO]"
-                - echo "VITE_GOOGLE_CLIENT_ID: [CONFIGURADO]"
-                - echo "VITE_SPECIAL_FAMILY_DAY_ID: [CONFIGURADO]"
+                - |
+                  cat > .env <<EOF
+                  VITE_API_URL=$VITE_API_URL
+                  VITE_FEED_MINISTERIO_ID=$VITE_FEED_MINISTERIO_ID
+                  VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+                  VITE_SPECIAL_FAMILY_DAY_ID=$VITE_SPECIAL_FAMILY_DAY_ID
+                  EOF
             build:
               commands:
                 - echo "Iniciando build da aplicação..."
