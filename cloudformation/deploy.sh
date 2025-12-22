@@ -732,12 +732,7 @@ update_stack() {
   if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
     token_val="$(get_github_token)"
     if [ -z "${token_val:-}" ]; then
-      error "Falta o token do GitHub."
-      error "- Opção 1: exporte a env var '$GITHUB_TOKEN_ENV' e rode de novo."
-      error "  Exemplo: export ${GITHUB_TOKEN_ENV}='ghp_...'"
-      error "- Opção 2: informe um secret do Secrets Manager via --github-token-secret (recomendado)."
-      rm -f "$params_file"
-      exit 1
+      warning "GitHub token não fornecido. Em UPDATE vamos usar UsePreviousValue=true para GitHubAccessToken."
     fi
   fi
 
