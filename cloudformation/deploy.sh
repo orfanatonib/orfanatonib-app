@@ -521,8 +521,12 @@ start_amplify_deploys() {
 }
 
 make_parameters_file() {
-  # Cria um arquivo temporário de parâmetros incluindo o GitHubAccessToken (NoEcho) sem salvar em repo.
-  # Só injeta token se o template pedir GitHubAccessToken.
+  # Cria um arquivo temporário de parâmetros para CloudFormation.
+  # - Em create: GitHubAccessToken é obrigatório (sem ele o Amplify não conecta no repo)
+  # - Em update: se token não for fornecido, usa UsePreviousValue=true
+  #
+  # arg1: require_token ("true"|"false")
+  local require_token="${1:-false}"
   local tmp
   tmp="$(mktemp)"
 
@@ -538,10 +542,11 @@ make_parameters_file() {
   local token
   token="$(get_github_token)"
 
-  python3 - "$tmp" "$token" <<'PY'
+  python3 - "$tmp" "$token" "$require_token" <<'PY'
 import json, sys
 path = sys.argv[1]
 token = sys.argv[2] or ""
+require_token = (sys.argv[3] or "").lower() == "true"
 
 params = json.load(open(path, "r", encoding="utf-8"))
 
@@ -557,10 +562,16 @@ allowed = {
 }
 params = [p for p in params if p.get("ParameterKey") in allowed]
 
-# Injeta token apenas se existir (env var ou secrets manager)
+# GitHubAccessToken:
+# - se token foi fornecido, injeta valor
+# - se token NÃO foi fornecido:
+#   - em create (require_token=True): deixa sem valor, o bash vai falhar antes
+#   - em update (require_token=False): UsePreviousValue=True para não exigir reenvio do token
+params = [p for p in params if p.get("ParameterKey") != "GitHubAccessToken"]
 if token:
-    params = [p for p in params if p.get("ParameterKey") != "GitHubAccessToken"]
     params.append({"ParameterKey": "GitHubAccessToken", "ParameterValue": token})
+elif not require_token:
+    params.append({"ParameterKey": "GitHubAccessToken", "UsePreviousValue": True})
 
 json.dump(params, open(path, "w", encoding="utf-8"), indent=2)
 PY
@@ -679,7 +690,7 @@ create_stack() {
   log "Região: $REGION"
 
   local params_file
-  params_file="$(make_parameters_file)"
+  params_file="$(make_parameters_file "true")"
 
   # Se o template espera token e não foi fornecido, falha cedo (evita app "manual deploy")
   if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
@@ -716,7 +727,7 @@ update_stack() {
   log "Atualizando stack CloudFormation: $STACK_NAME"
 
   local params_file
-  params_file="$(make_parameters_file)"
+  params_file="$(make_parameters_file "false")"
 
   if grep -q "GitHubAccessToken" "$TEMPLATE_FILE"; then
     token_val="$(get_github_token)"
