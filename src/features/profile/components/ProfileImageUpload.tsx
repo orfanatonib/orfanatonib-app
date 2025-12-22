@@ -144,7 +144,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         align-items: center;
         justify-content: center;
         gap: 20px;
-        padding: 20px;
+        padding: ${device.isMobile ? '12px' : '20px'};
         box-sizing: border-box;
       `;
       
@@ -152,8 +152,8 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       const videoWrapper = document.createElement('div');
       videoWrapper.style.cssText = `
         position: relative;
-        width: ${device.isMobile ? 'min(92vw, 420px)' : 'min(92vw, 980px)'};
-        aspect-ratio: ${device.isMobile ? '3 / 4' : '16 / 9'};
+        width: ${device.isMobile ? 'min(96vw, 440px)' : 'min(92vw, 980px)'};
+        aspect-ratio: ${device.isMobile ? '9 / 16' : '16 / 9'};
         border-radius: 16px;
         overflow: hidden;
         background: #000;
@@ -223,30 +223,30 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       switchCameraIconButton.setAttribute('aria-label', 'Trocar câmera');
       switchCameraIconButton.style.cssText = `
         position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 44px;
-        height: 44px;
+        top: 10px;
+        right: 10px;
+        width: 58px;
+        height: 58px;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.25);
-        background: rgba(0,0,0,0.55);
+        border: 1.5px solid rgba(255,255,255,0.45);
+        background: rgba(0,0,0,0.82);
         color: white;
         display: ${device.isMobile ? 'flex' : 'none'};
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        z-index: 5;
+        z-index: 7;
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.55);
       `;
       // SVG inline (não depende de libs/React no modal)
       switchCameraIconButton.innerHTML = `
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M16 6h-1.2l-1.1-1.3A2 2 0 0 0 12.2 4h-0.4a2 2 0 0 0-1.5.7L9.2 6H8a4 4 0 0 0-4 4v6a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-6a4 4 0 0 0-4-4Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
-          <path d="M8.5 12c1.2-1.2 3.3-1.2 4.5 0" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
-          <path d="M10.3 10.2 8.5 12l1.8 1.8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M15.5 12c-1.2 1.2-3.3 1.2-4.5 0" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
-          <path d="M13.7 13.8 15.5 12l-1.8-1.8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 7h4V3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 7a8 8 0 0 1 13 3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 17h-4v4" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 17a8 8 0 0 1-13-3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       `;
 
@@ -258,61 +258,36 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         pointer-events: none;
         z-index: 4;
       `;
-      const maskId = `cutout-${Date.now()}`;
-      // Silhueta: cabeça + ombros (ombro pra cima)
-      const silhouettePath = `
-        M50 14
-        a14 14 0 1 0 0 28
-        a14 14 0 1 0 0 -28
-        M18 98
-        C18 76 31 62 50 62
-        C69 62 82 76 82 98
-        L18 98
-        Z
-      `;
+      // Guia de enquadramento (mais bonito no mobile): ao invés de recorte, usamos um "busto" em outline + overlay leve.
+      // Isso evita a sensação de "janelas" e fica mais clean.
       maskOverlay.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="rgba(255,255,255,0.35)" />
-            </filter>
-            <mask id="${maskId}">
-              <rect x="0" y="0" width="100" height="100" fill="white"></rect>
-              <path d="${silhouettePath}" fill="black"></path>
-            </mask>
-          </defs>
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <!-- overlay suave para direcionar o olhar ao centro -->
+          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.28)"></rect>
 
-          <!-- escurecer fora do recorte -->
-          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.62)" mask="url(#${maskId})"></rect>
+          <!-- Cabeça -->
+          <circle cx="50" cy="32" r="13"
+                  fill="transparent"
+                  stroke="rgba(255,255,255,0.70)"
+                  stroke-width="1.6"
+                  vector-effect="non-scaling-stroke"></circle>
 
-          <!-- borda da silhueta -->
-          <path d="${silhouettePath}" fill="transparent"
-                stroke="rgba(255,255,255,0.92)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"
-                filter="url(#softGlow)"></path>
+          <!-- Ombros (arco) -->
+          <path d="M22 86 C26 66 38 58 50 58 C62 58 74 66 78 86"
+                fill="transparent"
+                stroke="rgba(255,255,255,0.55)"
+                stroke-width="1.6"
+                vector-effect="non-scaling-stroke"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
 
-          <!-- guias discretas: olhos e ombros -->
-          <line x1="32" y1="26" x2="68" y2="26" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" />
-          <line x1="26" y1="66" x2="74" y2="66" stroke="rgba(255,255,255,0.16)" stroke-width="0.8" />
+          <!-- Linha base bem discreta (para sugerir o enquadramento) -->
+          <path d="M20 92 H80"
+                stroke="rgba(255,255,255,0.25)"
+                stroke-width="1.2"
+                vector-effect="non-scaling-stroke"
+                stroke-linecap="round"></path>
         </svg>
-      `;
-
-      const hintBar = document.createElement('div');
-      hintBar.textContent = 'Enquadre do ombro pra cima • olhos na linha';
-      hintBar.style.cssText = `
-        position: absolute;
-        left: 12px;
-        right: 60px;
-        top: 12px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 100%);
-        color: rgba(255,255,255,0.94);
-        font-size: 13px;
-        font-weight: 650;
-        letter-spacing: 0.2px;
-        text-shadow: 0 1px 8px rgba(0,0,0,0.55);
-        z-index: 6;
-        pointer-events: none;
       `;
       
       let videoReady = false;
@@ -447,7 +422,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       // Montagem do modal
       videoWrapper.appendChild(videoElement);
       videoWrapper.appendChild(maskOverlay);
-      videoWrapper.appendChild(hintBar);
       videoWrapper.appendChild(switchCameraIconButton);
       modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
