@@ -12,6 +12,14 @@
     "ParameterValue": "staging"
   },
   {
+    "ParameterKey": "RootDomainName",
+    "ParameterValue": "orfanatonib.com"
+  },
+  {
+    "ParameterKey": "StagingSubdomainPrefix",
+    "ParameterValue": "staging"
+  },
+  {
     "ParameterKey": "ProdApiUrl",
     "ParameterValue": "https://api.orfanatonib.com"
   },
@@ -21,7 +29,7 @@
   },
   {
     "ParameterKey": "ProdGoogleClientId",
-    "ParameterValue": "135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com"
+    "ParameterValue": "402870724062-qigpqvb1p93sa1mjs59ijcm2dcd3e1tc.apps.googleusercontent.com"
   },
   {
     "ParameterKey": "ProdSpecialFamilyDayId",
@@ -37,23 +45,15 @@
   },
   {
     "ParameterKey": "StagingGoogleClientId",
-    "ParameterValue": "135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com"
+    "ParameterValue": "402870724062-qigpqvb1p93sa1mjs59ijcm2dcd3e1tc.apps.googleusercontent.com"
   },
   {
     "ParameterKey": "StagingSpecialFamilyDayId",
     "ParameterValue": "a2f9913a-e123-46b2-b6f4-a4138686042f"
   },
   {
-    "ParameterKey": "RootDomainName",
-    "ParameterValue": "orfanatonib.com"
-  },
-  {
-    "ParameterKey": "StagingSubdomainPrefix",
-    "ParameterValue": "staging"
-  },
-  {
     "ParameterKey": "GitHubAccessToken",
-    "ParameterValue": "COLE_SEU_TOKEN_AQUI"
+    "ParameterValue": "COLE_SEU_TOKEN_AQUI (NÃO VERSIONE; prefira export AMPLIFY_GITHUB_TOKEN)"
   }
 ]
 

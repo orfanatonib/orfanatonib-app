@@ -25,6 +25,7 @@ ROUTE53_HOSTED_ZONE_ID=""
 ROOT_DOMAIN_NAME="orfanatonib.com"
 STAGING_SUBDOMAIN_PREFIX="staging"
 WAIT_DOMAIN_SECONDS="900"
+SKIP_ENV_VALIDATE="false"
 
 # Cores para output
 RED='\033[0;31m'
@@ -67,6 +68,7 @@ Opções:
   --root-domain NAME     Domínio raiz (default: orfanatonib.com)
   --staging-prefix PFX   Prefixo do subdomínio de staging (default: staging)
   --wait-domain-seconds N  Tempo máximo para esperar o domínio progredir (default: 900)
+  --skip-env-validate    Não validar envs do parameters.json vs env/env.prod e env/env.staging
 
 Exemplos:
   $0 apply  orfanatonib-amplify-staging --recreate --yes
@@ -136,6 +138,10 @@ while [ $# -gt 0 ]; do
       WAIT_DOMAIN_SECONDS="$2"
       shift 2
       ;;
+    --skip-env-validate)
+      SKIP_ENV_VALIDATE="true"
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -153,6 +159,147 @@ require_aws() {
     error "Falha ao autenticar com AWS CLI (profile=$PROFILE region=$REGION)."
     exit 1
   }
+}
+
+param_get() {
+  # Lê um ParameterValue do arquivo JSON (lista) `parameters.json`.
+  # Retorna string vazia quando não existe.
+  local key="$1"
+  python3 - "$PARAMETERS_FILE" "$key" <<'PY'
+import json, sys
+path = sys.argv[1]
+key = sys.argv[2]
+try:
+  params = json.load(open(path, "r", encoding="utf-8"))
+except Exception:
+  print("")
+  sys.exit(0)
+for p in params if isinstance(params, list) else []:
+  if p.get("ParameterKey") == key:
+    print(p.get("ParameterValue", "") or "")
+    break
+else:
+  print("")
+PY
+}
+
+build_branch_env_json_from_parameters() {
+  # Produz JSON map para `aws amplify update-branch --environment-variables`.
+  # arg1: prod|staging
+  local kind="$1"
+  python3 - "$PARAMETERS_FILE" "$kind" <<'PY'
+import json, sys
+path = sys.argv[1]
+kind = sys.argv[2]
+params = json.load(open(path, "r", encoding="utf-8"))
+kv = {p.get("ParameterKey"): p.get("ParameterValue") for p in params if isinstance(p, dict)}
+if kind == "prod":
+  env = {
+    "VITE_API_URL": kv.get("ProdApiUrl", ""),
+    "VITE_FEED_MINISTERIO_ID": kv.get("ProdFeedMinisterioId", ""),
+    "VITE_GOOGLE_CLIENT_ID": kv.get("ProdGoogleClientId", ""),
+    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("ProdSpecialFamilyDayId", ""),
+  }
+elif kind == "staging":
+  env = {
+    "VITE_API_URL": kv.get("StagingApiUrl", ""),
+    "VITE_FEED_MINISTERIO_ID": kv.get("StagingFeedMinisterioId", ""),
+    "VITE_GOOGLE_CLIENT_ID": kv.get("StagingGoogleClientId", ""),
+    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("StagingSpecialFamilyDayId", ""),
+  }
+else:
+  raise SystemExit("invalid kind")
+
+missing = [k for k, v in env.items() if not v]
+if missing:
+  # imprime vazio para facilitar erro no bash
+  print("")
+  raise SystemExit(0)
+
+print(json.dumps(env, ensure_ascii=False))
+PY
+}
+
+validate_env_file_matches() {
+  # Valida que o `.env` em `env/env.(prod|staging)` está em sync com parameters.json.
+  local kind="$1" # prod|staging
+  local env_file="$2"
+
+  if [ "$SKIP_ENV_VALIDATE" = "true" ]; then
+    warning "Pulando validação de envs (--skip-env-validate)."
+    return 0
+  fi
+  if [ ! -f "$env_file" ]; then
+    warning "Arquivo não encontrado para validação: $env_file"
+    return 0
+  fi
+
+  python3 - "$PARAMETERS_FILE" "$kind" "$env_file" <<'PY'
+import json, sys
+params_path, kind, env_path = sys.argv[1], sys.argv[2], sys.argv[3]
+params = json.load(open(params_path, "r", encoding="utf-8"))
+kv = {p.get("ParameterKey"): p.get("ParameterValue") for p in params if isinstance(p, dict)}
+if kind == "prod":
+  expected = {
+    "VITE_API_URL": kv.get("ProdApiUrl", ""),
+    "VITE_FEED_MINISTERIO_ID": kv.get("ProdFeedMinisterioId", ""),
+    "VITE_GOOGLE_CLIENT_ID": kv.get("ProdGoogleClientId", ""),
+    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("ProdSpecialFamilyDayId", ""),
+  }
+elif kind == "staging":
+  expected = {
+    "VITE_API_URL": kv.get("StagingApiUrl", ""),
+    "VITE_FEED_MINISTERIO_ID": kv.get("StagingFeedMinisterioId", ""),
+    "VITE_GOOGLE_CLIENT_ID": kv.get("StagingGoogleClientId", ""),
+    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("StagingSpecialFamilyDayId", ""),
+  }
+else:
+  raise SystemExit("invalid kind")
+
+actual = {}
+with open(env_path, "r", encoding="utf-8") as f:
+  for line in f:
+    line = line.strip()
+    if not line or line.startswith("#"):
+      continue
+    if "=" not in line:
+      continue
+    k, v = line.split("=", 1)
+    actual[k.strip()] = v.strip()
+
+diffs = []
+for k, exp in expected.items():
+  act = actual.get(k, "")
+  if exp != act:
+    diffs.append((k, exp, act))
+
+if diffs:
+  print(f"ERRO: {env_path} não bate com cloudformation/parameters.json ({kind}).")
+  for k, exp, act in diffs:
+    print(f"- {k}: parameters.json='{exp}' env_file='{act}'")
+  sys.exit(1)
+PY
+}
+
+apply_branch_env_vars() {
+  local app_id="$1"
+  local branch_name="$2"
+  local env_json="$3"
+
+  if [ -z "$env_json" ]; then
+    error "Env JSON vazio para branch '$branch_name' (app=$app_id). Verifique cloudformation/parameters.json."
+    return 1
+  fi
+
+  log "Aplicando envs no Amplify: app=$app_id branch=$branch_name"
+  aws amplify update-branch \
+    --app-id "$app_id" \
+    --branch-name "$branch_name" \
+    --environment-variables "$env_json" \
+    --profile "$PROFILE" \
+    --region "$REGION" >/dev/null
+
+  success "Env vars atualizadas: branch=$branch_name"
 }
 
 get_github_token() {
@@ -421,7 +568,13 @@ wait_domain_ready() {
 
 start_amplify_deploys() {
   local app_id="$1"
-  for br in "staging" "main"; do
+  local prod_branch staging_branch
+  prod_branch="$(param_get "RepositoryBranch")"
+  staging_branch="$(param_get "StagingBranch")"
+  if [ -z "${prod_branch:-}" ]; then prod_branch="main"; fi
+  if [ -z "${staging_branch:-}" ]; then staging_branch="staging"; fi
+
+  for br in "$staging_branch" "$prod_branch"; do
     log "Disparando deploy: app=$app_id branch=$br"
     aws amplify start-job --app-id "$app_id" --branch-name "$br" --job-type RELEASE --profile "$PROFILE" --region "$REGION" >/dev/null
   done
@@ -453,8 +606,17 @@ token = sys.argv[2] or ""
 
 params = json.load(open(path, "r", encoding="utf-8"))
 
-# Remove parâmetro legado (não existe no template)
-params = [p for p in params if p.get("ParameterKey") != "RepositoryToken"]
+# Mantém APENAS os parâmetros que existem no template CloudFormation.
+# As env vars (Prod*/Staging*) são lidas pelo deploy.sh e aplicadas via Amplify API, não via CloudFormation.
+allowed = {
+  "RepositoryUrl",
+  "RepositoryBranch",
+  "StagingBranch",
+  "RootDomainName",
+  "StagingSubdomainPrefix",
+  "GitHubAccessToken",
+}
+params = [p for p in params if p.get("ParameterKey") in allowed]
 
 # Injeta token apenas se existir (env var ou secrets manager)
 if token:
@@ -752,6 +914,21 @@ case "$ACTION" in
       error "Não consegui obter AmplifyAppId dos outputs da stack."
       exit 1
     fi
+
+    # 2.1) Atualiza env vars por branch a partir do parameters.json (com validação vs env/env.*)
+    validate_env_file_matches "prod" "env/env.prod"
+    validate_env_file_matches "staging" "env/env.staging"
+
+    prod_branch="$(param_get "RepositoryBranch")"
+    staging_branch="$(param_get "StagingBranch")"
+    if [ -z "${prod_branch:-}" ]; then prod_branch="main"; fi
+    if [ -z "${staging_branch:-}" ]; then staging_branch="staging"; fi
+
+    prod_env_json="$(build_branch_env_json_from_parameters "prod")"
+    staging_env_json="$(build_branch_env_json_from_parameters "staging")"
+
+    apply_branch_env_vars "$app_id" "$prod_branch" "$prod_env_json"
+    apply_branch_env_vars "$app_id" "$staging_branch" "$staging_env_json"
 
     ensure_route53_records_from_amplify "$app_id" "$ROOT_DOMAIN_NAME" "$STAGING_SUBDOMAIN_PREFIX"
     wait_domain_ready "$app_id" "$ROOT_DOMAIN_NAME" || true

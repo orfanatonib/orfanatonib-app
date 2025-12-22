@@ -5,7 +5,7 @@ Parameters:
   RepositoryUrl:
     Type: String
     Description: 'GitHub repository URL'
-    Default: 'https://github.com/your-org/orfanatonib-app'
+    Default: 'https://github.com/orfanatonib/orfanatonib-app'
 
   GitHubAccessToken:
     Type: String
@@ -21,48 +21,6 @@ Parameters:
     Type: String
     Description: 'Staging branch name'
     Default: 'staging'
-
-  # Production Environment Variables
-  ProdApiUrl:
-    Type: String
-    Description: 'Production API URL'
-    Default: 'https://api.orfanatonib.com'
-
-  ProdFeedMinisterioId:
-    Type: String
-    Description: 'Production Feed Ministerio ID'
-    Default: 'b8d9fa5f-4942-4a5b-bdf9-e1c8d7c3126b'
-
-  ProdGoogleClientId:
-    Type: String
-    Description: 'Production Google Client ID'
-    Default: '135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com'
-
-  ProdSpecialFamilyDayId:
-    Type: String
-    Description: 'Production Special Family Day ID'
-    Default: 'a2f9913a-e123-46b2-b6f4-a4138686042f'
-
-  # Staging Environment Variables
-  StagingApiUrl:
-    Type: String
-    Description: 'Staging API URL'
-    Default: 'https://staging-api.orfanatonib.com'
-
-  StagingFeedMinisterioId:
-    Type: String
-    Description: 'Staging Feed Ministerio ID'
-    Default: 'afa51053-1296-4c89-9059-a8ad8bd1ec90'
-
-  StagingGoogleClientId:
-    Type: String
-    Description: 'Staging Google Client ID'
-    Default: '135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com'
-
-  StagingSpecialFamilyDayId:
-    Type: String
-    Description: 'Staging Special Family Day ID'
-    Default: 'a2f9913a-e123-46b2-b6f4-a4138686042f'
 
   RootDomainName:
     Type: String
@@ -147,15 +105,6 @@ Resources:
       Description: 'Production branch'
       EnableAutoBuild: true
       Stage: PRODUCTION
-      EnvironmentVariables:
-        - Name: 'VITE_API_URL'
-          Value: !Ref ProdApiUrl
-        - Name: 'VITE_FEED_MINISTERIO_ID'
-          Value: !Ref ProdFeedMinisterioId
-        - Name: 'VITE_GOOGLE_CLIENT_ID'
-          Value: !Ref ProdGoogleClientId
-        - Name: 'VITE_SPECIAL_FAMILY_DAY_ID'
-          Value: !Ref ProdSpecialFamilyDayId
 
   # Staging Branch
   StagingBranchResource:
@@ -166,15 +115,6 @@ Resources:
       Description: 'Staging branch'
       EnableAutoBuild: true
       Stage: BETA
-      EnvironmentVariables:
-        - Name: 'VITE_API_URL'
-          Value: !Ref StagingApiUrl
-        - Name: 'VITE_FEED_MINISTERIO_ID'
-          Value: !Ref StagingFeedMinisterioId
-        - Name: 'VITE_GOOGLE_CLIENT_ID'
-          Value: !Ref StagingGoogleClientId
-        - Name: 'VITE_SPECIAL_FAMILY_DAY_ID'
-          Value: !Ref StagingSpecialFamilyDayId
 
   DomainAssociation:
     Type: 'AWS::Amplify::Domain'
