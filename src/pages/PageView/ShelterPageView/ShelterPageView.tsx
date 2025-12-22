@@ -876,6 +876,8 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                               }}
                             >
                           <Avatar 
+                            src={leader.user?.mediaItem?.url ?? undefined}
+                            alt={leader.user?.name || 'Foto do líder'}
                             sx={{ 
                                   bgcolor: 'white',
                                   color: '#2196f3',
@@ -1132,6 +1134,8 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                               }}
                             >
                           <Avatar 
+                            src={teacher.user?.mediaItem?.url ?? undefined}
+                            alt={teacher.user?.name || 'Foto do professor'}
                             sx={{ 
                                   bgcolor: 'white',
                                   color: '#9c27b0',

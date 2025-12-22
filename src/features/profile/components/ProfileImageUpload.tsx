@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
 import { apiUpdateProfileImage } from '../api';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import type { AppDispatch } from '@/store/slices';
@@ -34,6 +35,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +78,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     // Para iOS Safari, usar input com capture (mais confiável)
     if (device.isIOS && device.isSafari) {
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       }
       return;
@@ -86,7 +88,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       // Fallback: usar input com capture
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       } else {
         onError('Seu navegador não suporta acesso à câmera. Tente usar a opção de selecionar da galeria.');
@@ -98,7 +100,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       // Configuração de vídeo baseada no dispositivo
       const videoConstraints: MediaTrackConstraints = device.isMobile
         ? { 
-            facingMode: { ideal: 'environment' }, // Câmera traseira
+            facingMode: { ideal: cameraFacingMode }, // mobile: permite alternar selfie/traseira
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
@@ -111,6 +113,10 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         video: videoConstraints,
         audio: false
       });
+      let activeStream: MediaStream = stream;
+      let activeFacingMode: 'environment' | 'user' = cameraFacingMode;
+      let activeDeviceId: string | undefined =
+        activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
       
       // Criar um canvas para capturar a foto
       const canvas = document.createElement('canvas');
@@ -198,12 +204,13 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cursor: pointer;
         min-width: 140px;
       `;
-      
-      const retakeButton = document.createElement('button');
-      retakeButton.textContent = 'Tirar Novamente';
-      retakeButton.style.cssText = `
+      // No modal, "Tirar novamente" não faz sentido porque ao capturar já fechamos a câmera (cleanup()).
+      // Em mobile, mostramos "Trocar câmera" para alternar selfie/traseira.
+      const switchCameraButton = document.createElement('button');
+      switchCameraButton.textContent = 'Trocar Câmera';
+      switchCameraButton.style.cssText = `
         padding: 14px 28px;
-        background: #666;
+        background: #444;
         color: white;
         border: none;
         border-radius: 8px;
@@ -211,6 +218,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         font-weight: 600;
         cursor: pointer;
         min-width: 140px;
+        display: ${device.isMobile ? 'inline-block' : 'none'};
       `;
       
       let videoReady = false;
@@ -222,7 +230,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       });
       
       const cleanup = () => {
-        stream.getTracks().forEach(track => {
+        activeStream.getTracks().forEach(track => {
           track.stop();
         });
         const existingModal = document.getElementById('camera-modal');
@@ -260,15 +268,86 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       cancelButton.onclick = () => {
         cleanup();
       };
-      
-      retakeButton.onclick = () => {
-        cleanup();
-        // Abrir a câmera novamente após um pequeno delay
-        setTimeout(() => handleCameraClick(), 300);
+
+      switchCameraButton.onclick = async () => {
+        if (!device.isMobile) return;
+        const nextFacingMode: 'environment' | 'user' = activeFacingMode === 'environment' ? 'user' : 'environment';
+        try {
+          // parar stream atual antes de pedir o novo
+          activeStream.getTracks().forEach(track => track.stop());
+          videoReady = false;
+
+          // Alguns devices/browsers ignoram facingMode. Tentamos primeiro escolher por deviceId via enumerateDevices.
+          let nextStream: MediaStream | null = null;
+          if (navigator.mediaDevices?.enumerateDevices) {
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+
+              const wantFront = nextFacingMode === 'user';
+              const frontRegex = /(front|user|facetime)/i;
+              const backRegex = /(back|rear|environment)/i;
+
+              const preferred = videoInputs.find((d) =>
+                wantFront ? frontRegex.test(d.label) : backRegex.test(d.label)
+              );
+
+              // fallback: pegar qualquer outra câmera diferente da atual
+              const fallbackOther = videoInputs.find((d) => d.deviceId && d.deviceId !== activeDeviceId);
+              const chosen = preferred ?? fallbackOther;
+
+              if (chosen?.deviceId) {
+                nextStream = await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    deviceId: { exact: chosen.deviceId },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                  },
+                  audio: false,
+                });
+              }
+            } catch {
+              // ignora e cai no facingMode
+            }
+          }
+
+          if (!nextStream) {
+            const nextConstraints: MediaTrackConstraints = {
+              facingMode: { ideal: nextFacingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            };
+            nextStream = await navigator.mediaDevices.getUserMedia({
+              video: nextConstraints,
+              audio: false,
+            });
+          }
+
+          activeStream = nextStream;
+          activeFacingMode = nextFacingMode;
+          setCameraFacingMode(nextFacingMode);
+          activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
+          videoElement.srcObject = activeStream;
+        } catch (err: any) {
+          console.error('Erro ao trocar câmera:', err);
+          onError('Não foi possível trocar a câmera. Seu dispositivo pode não ter câmera frontal ou o navegador bloqueou.');
+          // tentar voltar para a câmera anterior
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: { ideal: activeFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+              audio: false,
+            });
+            activeStream = fallbackStream;
+            activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
+            videoElement.srcObject = activeStream;
+          } catch {
+            cleanup();
+          }
+        }
       };
       
       // Adicionar botões ao container
-      buttonContainer.appendChild(retakeButton);
+      buttonContainer.appendChild(switchCameraButton);
       buttonContainer.appendChild(captureButton);
       buttonContainer.appendChild(cancelButton);
       
@@ -303,7 +382,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       
       // Fallback: tentar usar input com capture
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       }
     }
@@ -455,6 +534,23 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
             >
               Abrir Câmera
             </Button>
+            {detectDevice().isMobile && (
+              <Button
+                variant="text"
+                fullWidth
+                startIcon={<CameraswitchIcon />}
+                onClick={() => setCameraFacingMode((m) => (m === 'environment' ? 'user' : 'environment'))}
+                sx={{
+                  py: 1.25,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                }}
+              >
+                {cameraFacingMode === 'environment' ? 'Usar câmera frontal (selfie)' : 'Usar câmera traseira'}
+              </Button>
+            )}
           </Stack>
           {selectedFile && (
             <Box sx={{ mt: 2, textAlign: 'center' }}>
