@@ -183,79 +183,19 @@ else:
 PY
 }
 
-build_branch_env_json_from_parameters() {
-  # Produz JSON map para `aws amplify update-branch --environment-variables`.
-  # arg1: prod|staging
-  local kind="$1"
-  python3 - "$PARAMETERS_FILE" "$kind" <<'PY'
+env_file_to_json() {
+  # Converte env file KEY=VALUE para JSON map (para `aws amplify update-branch --environment-variables`).
+  # Também valida presença das chaves essenciais.
+  local env_file="$1"
+  python3 - "$env_file" <<'PY'
 import json, sys
-path = sys.argv[1]
-kind = sys.argv[2]
-params = json.load(open(path, "r", encoding="utf-8"))
-kv = {p.get("ParameterKey"): p.get("ParameterValue") for p in params if isinstance(p, dict)}
-if kind == "prod":
-  env = {
-    "VITE_API_URL": kv.get("ProdApiUrl", ""),
-    "VITE_FEED_MINISTERIO_ID": kv.get("ProdFeedMinisterioId", ""),
-    "VITE_GOOGLE_CLIENT_ID": kv.get("ProdGoogleClientId", ""),
-    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("ProdSpecialFamilyDayId", ""),
-  }
-elif kind == "staging":
-  env = {
-    "VITE_API_URL": kv.get("StagingApiUrl", ""),
-    "VITE_FEED_MINISTERIO_ID": kv.get("StagingFeedMinisterioId", ""),
-    "VITE_GOOGLE_CLIENT_ID": kv.get("StagingGoogleClientId", ""),
-    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("StagingSpecialFamilyDayId", ""),
-  }
-else:
-  raise SystemExit("invalid kind")
-
-missing = [k for k, v in env.items() if not v]
-if missing:
-  # imprime vazio para facilitar erro no bash
-  print("")
-  raise SystemExit(0)
-
-print(json.dumps(env, ensure_ascii=False))
-PY
-}
-
-validate_env_file_matches() {
-  # Valida que o `.env` em `env/env.(prod|staging)` está em sync com parameters.json.
-  local kind="$1" # prod|staging
-  local env_file="$2"
-
-  if [ "$SKIP_ENV_VALIDATE" = "true" ]; then
-    warning "Pulando validação de envs (--skip-env-validate)."
-    return 0
-  fi
-  if [ ! -f "$env_file" ]; then
-    warning "Arquivo não encontrado para validação: $env_file"
-    return 0
-  fi
-
-  python3 - "$PARAMETERS_FILE" "$kind" "$env_file" <<'PY'
-import json, sys
-params_path, kind, env_path = sys.argv[1], sys.argv[2], sys.argv[3]
-params = json.load(open(params_path, "r", encoding="utf-8"))
-kv = {p.get("ParameterKey"): p.get("ParameterValue") for p in params if isinstance(p, dict)}
-if kind == "prod":
-  expected = {
-    "VITE_API_URL": kv.get("ProdApiUrl", ""),
-    "VITE_FEED_MINISTERIO_ID": kv.get("ProdFeedMinisterioId", ""),
-    "VITE_GOOGLE_CLIENT_ID": kv.get("ProdGoogleClientId", ""),
-    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("ProdSpecialFamilyDayId", ""),
-  }
-elif kind == "staging":
-  expected = {
-    "VITE_API_URL": kv.get("StagingApiUrl", ""),
-    "VITE_FEED_MINISTERIO_ID": kv.get("StagingFeedMinisterioId", ""),
-    "VITE_GOOGLE_CLIENT_ID": kv.get("StagingGoogleClientId", ""),
-    "VITE_SPECIAL_FAMILY_DAY_ID": kv.get("StagingSpecialFamilyDayId", ""),
-  }
-else:
-  raise SystemExit("invalid kind")
-
+env_path = sys.argv[1]
+required = [
+  "VITE_API_URL",
+  "VITE_FEED_MINISTERIO_ID",
+  "VITE_GOOGLE_CLIENT_ID",
+  "VITE_SPECIAL_FAMILY_DAY_ID",
+]
 actual = {}
 with open(env_path, "r", encoding="utf-8") as f:
   for line in f:
@@ -265,19 +205,18 @@ with open(env_path, "r", encoding="utf-8") as f:
     if "=" not in line:
       continue
     k, v = line.split("=", 1)
-    actual[k.strip()] = v.strip()
+    k = k.strip()
+    v = v.strip()
+    actual[k] = v
 
-diffs = []
-for k, exp in expected.items():
-  act = actual.get(k, "")
-  if exp != act:
-    diffs.append((k, exp, act))
+missing = [k for k in required if not actual.get(k)]
+if missing:
+  print("")
+  sys.exit(0)
 
-if diffs:
-  print(f"ERRO: {env_path} não bate com cloudformation/parameters.json ({kind}).")
-  for k, exp, act in diffs:
-    print(f"- {k}: parameters.json='{exp}' env_file='{act}'")
-  sys.exit(1)
+# filtra apenas VITE_* (evita vazar lixo pro Amplify)
+vite_only = {k: v for k, v in actual.items() if k.startswith("VITE_")}
+print(json.dumps(vite_only, ensure_ascii=False))
 PY
 }
 
@@ -915,17 +854,14 @@ case "$ACTION" in
       exit 1
     fi
 
-    # 2.1) Atualiza env vars por branch a partir do parameters.json (com validação vs env/env.*)
-    validate_env_file_matches "prod" "env/env.prod"
-    validate_env_file_matches "staging" "env/env.staging"
-
+    # 2.1) Atualiza env vars por branch a partir dos arquivos env/env.* (fonte da verdade)
     prod_branch="$(param_get "RepositoryBranch")"
     staging_branch="$(param_get "StagingBranch")"
     if [ -z "${prod_branch:-}" ]; then prod_branch="main"; fi
     if [ -z "${staging_branch:-}" ]; then staging_branch="staging"; fi
 
-    prod_env_json="$(build_branch_env_json_from_parameters "prod")"
-    staging_env_json="$(build_branch_env_json_from_parameters "staging")"
+    prod_env_json="$(env_file_to_json "env/env.prod")"
+    staging_env_json="$(env_file_to_json "env/env.staging")"
 
     apply_branch_env_vars "$app_id" "$prod_branch" "$prod_env_json"
     apply_branch_env_vars "$app_id" "$staging_branch" "$staging_env_json"
