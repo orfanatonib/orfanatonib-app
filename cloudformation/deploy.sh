@@ -866,8 +866,8 @@ case "$ACTION" in
     if [ -z "${prod_branch:-}" ]; then prod_branch="main"; fi
     if [ -z "${staging_branch:-}" ]; then staging_branch="staging"; fi
 
-    prod_env_json="$(env_file_to_json "env/env.prod")"
-    staging_env_json="$(env_file_to_json "env/env.staging")"
+    prod_env_json="$(env_file_to_json "../env/env.prod")"
+    staging_env_json="$(env_file_to_json "../env/env.staging")"
 
     apply_branch_env_vars "$app_id" "$prod_branch" "$prod_env_json"
     apply_branch_env_vars "$app_id" "$staging_branch" "$staging_env_json"
