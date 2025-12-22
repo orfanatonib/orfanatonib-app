@@ -101,8 +101,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       const videoConstraints: MediaTrackConstraints = device.isMobile
         ? { 
             facingMode: { ideal: cameraFacingMode }, // mobile: permite alternar selfie/traseira
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            // Em mobile, portrait costuma ser mais natural para foto de perfil
+            width: { ideal: 720 },
+            height: { ideal: 1280 }
           }
         : { 
             width: { ideal: 1280 },
@@ -147,20 +148,31 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         box-sizing: border-box;
       `;
       
+      // Wrapper para permitir máscara/overlay por cima do vídeo
+      const videoWrapper = document.createElement('div');
+      videoWrapper.style.cssText = `
+        position: relative;
+        width: ${device.isMobile ? 'min(92vw, 420px)' : 'min(92vw, 980px)'};
+        aspect-ratio: ${device.isMobile ? '3 / 4' : '16 / 9'};
+        border-radius: 16px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+      `;
+
       const videoElement = document.createElement('video');
       videoElement.srcObject = stream;
       videoElement.style.cssText = `
-        max-width: 100%;
-        max-height: 70vh;
-        border-radius: 8px;
-        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         background: #000;
       `;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       videoElement.muted = true;
       
-      // Garantir que o vídeo esteja em landscape no mobile
+      // Garantir que o vídeo fique inline no mobile (evita fullscreen automático)
       if (device.isMobile) {
         videoElement.setAttribute('playsinline', 'true');
         videoElement.setAttribute('webkit-playsinline', 'true');
@@ -204,21 +216,103 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cursor: pointer;
         min-width: 140px;
       `;
-      // No modal, "Tirar novamente" não faz sentido porque ao capturar já fechamos a câmera (cleanup()).
-      // Em mobile, mostramos "Trocar câmera" para alternar selfie/traseira.
-      const switchCameraButton = document.createElement('button');
-      switchCameraButton.textContent = 'Trocar Câmera';
-      switchCameraButton.style.cssText = `
-        padding: 14px 28px;
-        background: #444;
+
+      // Ícone no canto superior direito para trocar câmera (somente mobile)
+      const switchCameraIconButton = document.createElement('button');
+      switchCameraIconButton.type = 'button';
+      switchCameraIconButton.setAttribute('aria-label', 'Trocar câmera');
+      switchCameraIconButton.style.cssText = `
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(0,0,0,0.55);
         color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
+        display: ${device.isMobile ? 'flex' : 'none'};
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        min-width: 140px;
-        display: ${device.isMobile ? 'inline-block' : 'none'};
+        z-index: 5;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+      `;
+      // SVG inline (não depende de libs/React no modal)
+      switchCameraIconButton.innerHTML = `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M16 6h-1.2l-1.1-1.3A2 2 0 0 0 12.2 4h-0.4a2 2 0 0 0-1.5.7L9.2 6H8a4 4 0 0 0-4 4v6a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-6a4 4 0 0 0-4-4Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 12c1.2-1.2 3.3-1.2 4.5 0" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M10.3 10.2 8.5 12l1.8 1.8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15.5 12c-1.2 1.2-3.3 1.2-4.5 0" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M13.7 13.8 15.5 12l-1.8-1.8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+
+      // Máscara de enquadramento (ombros pra cima) — versão mais clean (recorte SVG + guias)
+      const maskOverlay = document.createElement('div');
+      maskOverlay.style.cssText = `
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 4;
+      `;
+      const maskId = `cutout-${Date.now()}`;
+      // Silhueta: cabeça + ombros (ombro pra cima)
+      const silhouettePath = `
+        M50 14
+        a14 14 0 1 0 0 28
+        a14 14 0 1 0 0 -28
+        M18 98
+        C18 76 31 62 50 62
+        C69 62 82 76 82 98
+        L18 98
+        Z
+      `;
+      maskOverlay.innerHTML = `
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="rgba(255,255,255,0.35)" />
+            </filter>
+            <mask id="${maskId}">
+              <rect x="0" y="0" width="100" height="100" fill="white"></rect>
+              <path d="${silhouettePath}" fill="black"></path>
+            </mask>
+          </defs>
+
+          <!-- escurecer fora do recorte -->
+          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.62)" mask="url(#${maskId})"></rect>
+
+          <!-- borda da silhueta -->
+          <path d="${silhouettePath}" fill="transparent"
+                stroke="rgba(255,255,255,0.92)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"
+                filter="url(#softGlow)"></path>
+
+          <!-- guias discretas: olhos e ombros -->
+          <line x1="32" y1="26" x2="68" y2="26" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" />
+          <line x1="26" y1="66" x2="74" y2="66" stroke="rgba(255,255,255,0.16)" stroke-width="0.8" />
+        </svg>
+      `;
+
+      const hintBar = document.createElement('div');
+      hintBar.textContent = 'Enquadre do ombro pra cima • olhos na linha';
+      hintBar.style.cssText = `
+        position: absolute;
+        left: 12px;
+        right: 60px;
+        top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 100%);
+        color: rgba(255,255,255,0.94);
+        font-size: 13px;
+        font-weight: 650;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 8px rgba(0,0,0,0.55);
+        z-index: 6;
+        pointer-events: none;
       `;
       
       let videoReady = false;
@@ -269,7 +363,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cleanup();
       };
 
-      switchCameraButton.onclick = async () => {
+      switchCameraIconButton.onclick = async () => {
         if (!device.isMobile) return;
         const nextFacingMode: 'environment' | 'user' = activeFacingMode === 'environment' ? 'user' : 'environment';
         try {
@@ -347,11 +441,15 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       };
       
       // Adicionar botões ao container
-      buttonContainer.appendChild(switchCameraButton);
       buttonContainer.appendChild(captureButton);
       buttonContainer.appendChild(cancelButton);
       
-      modal.appendChild(videoElement);
+      // Montagem do modal
+      videoWrapper.appendChild(videoElement);
+      videoWrapper.appendChild(maskOverlay);
+      videoWrapper.appendChild(hintBar);
+      videoWrapper.appendChild(switchCameraIconButton);
+      modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
       document.body.appendChild(modal);
       
@@ -534,23 +632,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
             >
               Abrir Câmera
             </Button>
-            {detectDevice().isMobile && (
-              <Button
-                variant="text"
-                fullWidth
-                startIcon={<CameraswitchIcon />}
-                onClick={() => setCameraFacingMode((m) => (m === 'environment' ? 'user' : 'environment'))}
-                sx={{
-                  py: 1.25,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: 'text.secondary',
-                }}
-              >
-                {cameraFacingMode === 'environment' ? 'Usar câmera frontal (selfie)' : 'Usar câmera traseira'}
-              </Button>
-            )}
           </Stack>
           {selectedFile && (
             <Box sx={{ mt: 2, textAlign: 'center' }}>
