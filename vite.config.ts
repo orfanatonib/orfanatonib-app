@@ -9,7 +9,7 @@ export default defineConfig(() => ({
     svgr(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-icon.svg"],
+      includeAssets: ["favicon.ico", "pwa-192.png", "pwa-512.png"],
       manifest: {
         name: "Orfanato NIB",
         short_name: "Orfanato NIB",
@@ -21,9 +21,15 @@ export default defineConfig(() => ({
         theme_color: "#000000",
         icons: [
           {
-            src: "/pwa-icon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
+            src: "/pwa-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable"
+          },
+          {
+            src: "/pwa-512.png",
+            sizes: "512x512",
+            type: "image/png",
             purpose: "any maskable"
           }
         ]
