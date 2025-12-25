@@ -82,10 +82,12 @@ export default function LeaderCards(props: Props) {
       <Grid container spacing={{ xs: 1, sm: 1.25 }}>
         {rows.map((c) => {
           const expanded = open.has(c.id);
-          // Professores agora são acessados via team
-          const shelter = c.shelter || null;
-          const teachers = shelter?.teachers || [];
-          const totalTeachers = teachers.length;
+          // Múltiplas associações: abrigos, equipes e professores
+          const shelters = c.shelters || [];
+          const totalShelters = shelters.length;
+          const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
+          const allTeachers = shelters.flatMap(shelter => shelter.teachers || []);
+          const totalTeachers = allTeachers.length;
           const wa = buildWhatsappLink({ id: c.id, name: c.user?.name, phone: c.user?.phone } as any, loggedUser?.name);
 
           return (
@@ -284,34 +286,78 @@ export default function LeaderCards(props: Props) {
                       flexWrap="wrap"
                       rowGap={0.25}
                     >
-                      {shelter && (
-                        <Chip
-                          size="small"
-                          variant="filled"
-                          icon={<SchoolOutlined sx={{ fontSize: 12 }} />}
-                          label={shelter.name || "Sem abrigo"}
-                          color="info"
-                          sx={{ 
-                            fontWeight: 600, 
-                            fontSize: "0.7rem",
-                            height: 20,
-                            "& .MuiChip-label": { px: 0.5 }
-                          }}
-                        />
-                      )}
-                      {shelter?.team?.numberTeam !== undefined && (
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label={`Equipe ${shelter.team.numberTeam}`}
-                          color="info"
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: "0.7rem",
-                            height: 20,
-                            "& .MuiChip-label": { px: 0.5 }
-                          }}
-                        />
+                      {totalShelters > 0 && (
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                          {totalShelters === 1 ? (
+                            <>
+                              <Chip
+                                size="small"
+                                variant="filled"
+                                icon={<SchoolOutlined sx={{ fontSize: 12 }} />}
+                                label={shelters[0].name}
+                                color="info"
+                                sx={{
+                                  fontWeight: 600,
+                                  fontSize: "0.7rem",
+                                  height: 20,
+                                  "& .MuiChip-label": { px: 0.5 }
+                                }}
+                              />
+                              {shelters[0].teams.length > 0 && (
+                                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                                  {shelters[0].teams.slice(0, 3).map((team) => (
+                                    <Chip
+                                      key={team.id}
+                                      size="small"
+                                      variant="outlined"
+                                      label={`E${team.numberTeam}`}
+                                      color="info"
+                                      sx={{
+                                        fontWeight: 600,
+                                        fontSize: "0.7rem",
+                                        height: 20,
+                                        "& .MuiChip-label": { px: 0.5 }
+                                      }}
+                                    />
+                                  ))}
+                                  {shelters[0].teams.length > 3 && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      +{shelters[0].teams.length - 3}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <Typography variant="caption" sx={{ fontWeight: 600, color: "info.main" }}>
+                                {totalShelters} abrigo{totalShelters > 1 ? 's' : ''}, {totalTeams} equipe{totalTeams > 1 ? 's' : ''}
+                              </Typography>
+                              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                                {shelters.slice(0, 2).map((shelter) => (
+                                  <Chip
+                                    key={shelter.id}
+                                    size="small"
+                                    variant="filled"
+                                    label={shelter.name}
+                                    color="info"
+                                    sx={{
+                                      fontWeight: 600,
+                                      fontSize: "0.65rem",
+                                      height: 18,
+                                      "& .MuiChip-label": { px: 0.5 }
+                                    }}
+                                  />
+                                ))}
+                                {totalShelters > 2 && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    +{totalShelters - 2}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </>
+                          )}
+                        </Box>
                       )}
                       {totalTeachers > 0 && (
                         <Chip
@@ -366,96 +412,121 @@ export default function LeaderCards(props: Props) {
                           </Stack>
                         </Paper>
 
-                        {shelter ? (
-                          <Paper
-                            variant="outlined"
-                            sx={{
-                              p: 1.25,
-                              borderRadius: 2,
-                              bgcolor: "grey.50",
-                              border: "1px solid",
-                              borderColor: "grey.200",
-                            }}
-                          >
-                            <Stack spacing={1}>
-                              <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" rowGap={0.5}>
-                                <Chip 
-                                  size="small" 
-                                  color="primary" 
-                                  label={shelter.name}
-                                  sx={{ fontWeight: 600, fontSize: "0.75rem" }}
-                                />
-                                {shelter.team?.numberTeam && (
-                                  <Chip 
-                                    size="small" 
-                                    variant="outlined"
-                                    label={`Equipe ${shelter.team.numberTeam}`}
-                                    color="info"
-                                    sx={{ fontWeight: 600, fontSize: "0.75rem" }}
-                                  />
-                                )}
-                                {totalTeachers > 0 && (
-                                  <Chip 
-                                    size="small" 
-                                    variant="filled"
-                                    label={`${totalTeachers} prof(s)`}
-                                    color="info"
-                                    sx={{ fontWeight: 500, fontSize: "0.75rem" }}
-                                  />
-                                )}
-                              </Stack>
-                              
-                              {teachers.length > 0 && (
-                                <Box>
-                                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5, display: "block" }}>
-                                    Professores:
-                                  </Typography>
-                                  <Box 
-                                    sx={{ 
-                                      display: "flex", 
-                                      gap: 0.5, 
-                                      flexWrap: "wrap",
-                                      maxHeight: 120,
-                                      overflowY: "auto",
-                                      "&::-webkit-scrollbar": {
-                                        width: "4px",
-                                      },
-                                      "&::-webkit-scrollbar-track": {
-                                        background: "transparent",
-                                      },
-                                      "&::-webkit-scrollbar-thumb": {
-                                        background: "rgba(0,0,0,0.2)",
-                                        borderRadius: "2px",
-                                      },
-                                    }}
-                                  >
-                                    {teachers.map((t) => {
-                                      const teacherName = t.user?.name || t.user?.email || "Sem nome";
-                                      return (
-                                        <Chip
-                                          key={t.id}
-                                          size="small"
-                                          variant="outlined"
-                                          label={teacherName}
-                                          sx={{ 
-                                            fontWeight: 500,
-                                            fontSize: "0.7rem",
-                                            maxWidth: "100%",
-                                            "& .MuiChip-label": {
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                            }
-                                          }}
-                                          title={teacherName}
-                                        />
-                                      );
-                                    })}
-                                  </Box>
-                                </Box>
-                              )}
-                            </Stack>
-                          </Paper>
+                        {totalShelters > 0 ? (
+                          <Stack spacing={1.5}>
+                            {shelters.map((shelter) => (
+                              <Paper
+                                key={shelter.id}
+                                variant="outlined"
+                                sx={{
+                                  p: 1.25,
+                                  borderRadius: 2,
+                                  bgcolor: "grey.50",
+                                  border: "1px solid",
+                                  borderColor: "grey.200",
+                                }}
+                              >
+                                <Stack spacing={1}>
+                                  <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" rowGap={0.5}>
+                                    <Chip
+                                      size="small"
+                                      color="primary"
+                                      label={shelter.name}
+                                      sx={{ fontWeight: 600, fontSize: "0.75rem" }}
+                                    />
+                                    {shelter.teams.length > 0 && (
+                                      <Chip
+                                        size="small"
+                                        variant="filled"
+                                        label={`${shelter.teams.length} equipe${shelter.teams.length > 1 ? 's' : ''}`}
+                                        color="info"
+                                        sx={{ fontWeight: 500, fontSize: "0.75rem" }}
+                                      />
+                                    )}
+                                    {shelter.teachers && shelter.teachers.length > 0 && (
+                                      <Chip
+                                        size="small"
+                                        variant="outlined"
+                                        label={`${shelter.teachers.length} prof(s)`}
+                                        color="success"
+                                        sx={{ fontWeight: 500, fontSize: "0.75rem" }}
+                                      />
+                                    )}
+                                  </Stack>
+
+                                  {shelter.teams.length > 0 && (
+                                    <Box>
+                                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5, display: "block" }}>
+                                        Equipes:
+                                      </Typography>
+                                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                                        {shelter.teams.map((team) => (
+                                          <Chip
+                                            key={team.id}
+                                            size="small"
+                                            variant="outlined"
+                                            label={`Equipe ${team.numberTeam}`}
+                                            color="info"
+                                            sx={{ fontSize: "0.7rem", height: 24 }}
+                                          />
+                                        ))}
+                                      </Box>
+                                    </Box>
+                                  )}
+
+                                  {shelter.teachers && shelter.teachers.length > 0 && (
+                                    <Box>
+                                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5, display: "block" }}>
+                                        Professores:
+                                      </Typography>
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          gap: 0.5,
+                                          flexWrap: "wrap",
+                                          maxHeight: 120,
+                                          overflowY: "auto",
+                                          "&::-webkit-scrollbar": {
+                                            width: "4px",
+                                          },
+                                          "&::-webkit-scrollbar-track": {
+                                            background: "transparent",
+                                          },
+                                          "&::-webkit-scrollbar-thumb": {
+                                            background: "rgba(0,0,0,0.2)",
+                                            borderRadius: "2px",
+                                          },
+                                        }}
+                                      >
+                                        {shelter.teachers.map((t) => {
+                                          const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                                          return (
+                                            <Chip
+                                              key={t.id}
+                                              size="small"
+                                              variant="outlined"
+                                              label={teacherName}
+                                              sx={{
+                                                fontWeight: 500,
+                                                fontSize: "0.7rem",
+                                                maxWidth: "100%",
+                                                "& .MuiChip-label": {
+                                                  overflow: "hidden",
+                                                  textOverflow: "ellipsis",
+                                                  whiteSpace: "nowrap",
+                                                }
+                                              }}
+                                              title={teacherName}
+                                            />
+                                          );
+                                        })}
+                                      </Box>
+                                    </Box>
+                                  )}
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
                         ) : (
                           <Paper
                             variant="outlined"
@@ -508,7 +579,7 @@ export default function LeaderCards(props: Props) {
                         <Visibility fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={c.shelter?.id ? "Gerenciar Equipes do Abrigo" : "Gerenciar Equipes"}>
+                    <Tooltip title="Gerenciar Associações">
                       <IconButton 
                         size="small" 
                         onClick={() => onEdit(c)}

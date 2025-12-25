@@ -34,6 +34,36 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const validateLive = (
+    next: { currentPassword: string; newPassword: string; confirmPassword: string },
+    touched?: Partial<Record<'currentPassword' | 'newPassword' | 'confirmPassword', boolean>>
+  ) => {
+    const newErrors: Partial<Record<keyof ChangePasswordDto | 'confirmPassword', string>> = {};
+
+    const should = (key: 'currentPassword' | 'newPassword' | 'confirmPassword') =>
+      touched?.[key] ?? true; // default: validar tudo
+
+    if (should('currentPassword')) {
+      if (!next.currentPassword.trim()) newErrors.currentPassword = 'Senha atual é obrigatória';
+    }
+
+    if (should('newPassword')) {
+      if (!next.newPassword.trim()) newErrors.newPassword = 'Nova senha é obrigatória';
+      else if (next.newPassword.length < 6) newErrors.newPassword = 'A nova senha deve ter pelo menos 6 caracteres';
+      else if (next.currentPassword && next.currentPassword === next.newPassword) {
+        newErrors.newPassword = 'A nova senha deve ser diferente da senha atual';
+      }
+    }
+
+    if (should('confirmPassword')) {
+      if (!next.confirmPassword.trim()) newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
+      else if (next.newPassword !== next.confirmPassword) newErrors.confirmPassword = 'As senhas não coincidem';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof ChangePasswordDto | 'confirmPassword', string>> = {};
 
@@ -60,6 +90,15 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const isFormReady =
+    !!formData.currentPassword.trim() &&
+    !!formData.newPassword.trim() &&
+    !!confirmPassword.trim() &&
+    formData.newPassword.length >= 6 &&
+    formData.newPassword === confirmPassword &&
+    formData.currentPassword !== formData.newPassword &&
+    Object.keys(errors).length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,9 +157,16 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
                 label="Senha Atual"
                 value={formData.currentPassword}
                 onChange={(e) => {
-                  setFormData({ ...formData, currentPassword: e.target.value });
-                  if (errors.currentPassword) setErrors({ ...errors, currentPassword: undefined });
+                  const next = { ...formData, currentPassword: e.target.value };
+                  setFormData(next);
+                  validateLive({ ...next, confirmPassword }, { currentPassword: true });
                 }}
+                onBlur={() =>
+                  validateLive(
+                    { ...formData, confirmPassword },
+                    { currentPassword: true, newPassword: false, confirmPassword: false }
+                  )
+                }
                 error={!!errors.currentPassword}
                 helperText={errors.currentPassword}
                 required
@@ -153,12 +199,16 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
                 label="Nova Senha"
                 value={formData.newPassword}
                 onChange={(e) => {
-                  setFormData({ ...formData, newPassword: e.target.value });
-                  if (errors.newPassword) setErrors({ ...errors, newPassword: undefined });
-                  if (errors.confirmPassword && e.target.value === confirmPassword) {
-                    setErrors({ ...errors, confirmPassword: undefined });
-                  }
+                  const next = { ...formData, newPassword: e.target.value };
+                  setFormData(next);
+                  validateLive({ ...next, confirmPassword }, { newPassword: true, confirmPassword: true });
                 }}
+                onBlur={() =>
+                  validateLive(
+                    { ...formData, confirmPassword },
+                    { currentPassword: false, newPassword: true, confirmPassword: true }
+                  )
+                }
                 error={!!errors.newPassword}
                 helperText={errors.newPassword || 'Mínimo de 6 caracteres'}
                 required
@@ -191,11 +241,18 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
                 label="Confirmar Nova Senha"
                 value={confirmPassword}
                 onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
+                  const nextConfirm = e.target.value;
+                  setConfirmPassword(nextConfirm);
+                  validateLive({ ...formData, confirmPassword: nextConfirm }, { confirmPassword: true });
                 }}
+                onBlur={() =>
+                  validateLive(
+                    { ...formData, confirmPassword },
+                    { currentPassword: false, newPassword: true, confirmPassword: true }
+                  )
+                }
                 error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword}
+                helperText={errors.confirmPassword || 'Repita a nova senha'}
                 required
                 InputProps={{
                   endAdornment: (
@@ -233,7 +290,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
                   type="submit"
                   variant="contained"
                   startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isFormReady}
                   sx={{
                     px: 4,
                     py: 1.5,

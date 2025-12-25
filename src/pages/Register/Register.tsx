@@ -17,11 +17,12 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import axios from 'axios';
-import { IMaskInput } from 'react-imask';
 import { useSelector } from 'react-redux';
 
 import api from '@/config/axiosConfig';
 import { RootState } from '@/store/slices';
+import { digitsOnly, maskPhoneBR } from '@/utils/masks';
+import { isValidEmail, normalizeEmail } from '@/utils/validators';
 
 interface RegisterProps {
   commonUser: boolean;
@@ -61,19 +62,21 @@ const MESSAGES = {
 } as const;
 
 
-const PhoneMask = React.forwardRef<HTMLInputElement, any>(function PhoneMask(props, ref) {
-  return <IMaskInput {...props} mask="(00) 00000-0000" inputRef={ref} overwrite />;
-});
-
-
 const getSchema = (commonUser: boolean) =>
   Yup.object({
-    name: Yup.string().required('Nome é obrigatório'),
-    email: Yup.string().email('Email inválido').required('Email é obrigatório'),
+    name: Yup.string()
+      .required('Nome é obrigatório')
+      .min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    email: Yup.string()
+      .required('Email é obrigatório')
+      .test('valid-email', 'Email inválido', (val) => isValidEmail(val)),
     ...(commonUser && {
       confirmEmail: Yup.string()
-        .oneOf([Yup.ref('email')], 'Os emails não coincidem')
-        .required('Confirme o email'),
+        .required('Confirme o email')
+        .test('emails-match', 'Os emails não coincidem', function (val) {
+          const email = (this.parent as any)?.email;
+          return normalizeEmail(val) === normalizeEmail(email);
+        }),
       password: Yup.string()
         .min(6, 'Senha deve ter pelo menos 6 caracteres')
         .required('Senha obrigatória'),
@@ -83,15 +86,14 @@ const getSchema = (commonUser: boolean) =>
     }),
     phone: Yup.string()
       .test('len', 'Telefone inválido (DDD + número)', (val) => {
-        const digits = val?.replace(/\D/g, '');
-        return digits?.length === 10 || digits?.length === 11;
+        const digits = digitsOnly(val);
+        if (digits.startsWith("55")) return digits.length === 12 || digits.length === 13;
+        return digits.length === 10 || digits.length === 11;
       })
       .required('Telefone é obrigatório'),
-    role: (commonUser
-      ? Yup.mixed<RoleChoice>().oneOf(['', 'teacher', 'leader'])
-      : Yup.mixed<RoleChoice>()
-        .oneOf(['teacher', 'leader'])
-        .required('Selecione seu perfil')) as any,
+    role: (Yup.mixed<RoleChoice>()
+      .oneOf(['teacher', 'leader'])
+      .required('Selecione seu perfil')) as any,
   });
 
 
@@ -158,9 +160,11 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormData>({
     resolver: yupResolver(getSchema(commonUser)) as any,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -207,8 +211,8 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     try {
       await api.post(endpoint, {
         name: data.name,
-        email: data.email,
-        phone: data.phone,
+        email: normalizeEmail(data.email),
+        phone: digitsOnly(data.phone),
         password: commonUser ? data.password : undefined,
         role: data.role || undefined,
       });
@@ -323,11 +327,10 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             margin="normal"
             error={!!errors.phone}
             helperText={errors.phone?.message}
-            slotProps={{
-              input: {
-                inputComponent: PhoneMask as any,
-              },
-            }}
+            inputMode="numeric"
+            value={maskPhoneBR(field.value || "")}
+            onChange={(e) => field.onChange(maskPhoneBR(e.target.value))}
+            placeholder="(DD) 9XXXX-XXXX"
           />
         )}
       />
@@ -394,7 +397,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         type="submit"
         variant="contained"
         fullWidth
-        disabled={loading}
+        disabled={loading || !isValid}
         sx={{
           mt: { xs: 2, md: 3 },
           py: { xs: 1.5, md: 1 },

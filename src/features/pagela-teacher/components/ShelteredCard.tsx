@@ -16,6 +16,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 
 import { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import DecisionModal from "./DecisionModal";
+import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
 
 function genderPastel(seed: string, gender: string | undefined) {
   const g = (gender || "").toUpperCase();
@@ -65,6 +66,8 @@ export default function ShelteredCard({
   const hasAnyDecision = acceptedChrists.length > 0;
   
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [confirmToggleOpen, setConfirmToggleOpen] = React.useState(false);
+  const [pendingActive, setPendingActive] = React.useState<boolean | null>(null);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -319,9 +322,8 @@ export default function ShelteredCard({
                     checked={sheltered.active}
                     onChange={async (e) => {
                       e.stopPropagation();
-                      if (onToggleStatus) {
-                        await onToggleStatus(sheltered.id, !sheltered.active);
-                      }
+                      setPendingActive(!sheltered.active);
+                      setConfirmToggleOpen(true);
                     }}
                     size="small"
                     color="success"
@@ -347,6 +349,38 @@ export default function ShelteredCard({
         onSuccess={async () => {
           if (onRefresh) await onRefresh();
           handleCloseModal();
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmToggleOpen}
+        title={pendingActive ? "Ativar abrigado" : "Desativar abrigado"}
+        content={
+          <Typography sx={{ wordBreak: "break-word" }}>
+            {pendingActive
+              ? `Deseja ativar o abrigado "${sheltered.name}"?`
+              : `Deseja desativar o abrigado "${sheltered.name}"?`}
+          </Typography>
+        }
+        confirmText={pendingActive ? "Ativar" : "Desativar"}
+        confirmColor={pendingActive ? "success" : "error"}
+        confirmVariant="contained"
+        cancelVariant="text"
+        startAdornment={pendingActive ? <CheckCircleIcon color="success" /> : <CancelIcon color="error" />}
+        actionsSx={{
+          flexDirection: { xs: "column-reverse", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
+          "& .MuiButton-root": {
+            width: { xs: "100%", sm: "auto" },
+          },
+        }}
+        onClose={() => {
+          setConfirmToggleOpen(false);
+          setPendingActive(null);
+        }}
+        onConfirm={() => {
+          if (!onToggleStatus || pendingActive === null) return;
+          return onToggleStatus(sheltered.id, pendingActive);
         }}
       />
 

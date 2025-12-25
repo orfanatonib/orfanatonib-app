@@ -42,10 +42,18 @@ export default function LeaderToolbar({
       leaderSearchString: "",
       shelterSearchString: "",
       hasShelter: undefined,
+      teamId: undefined,
+      teamName: undefined,
+      hasTeam: undefined,
     }));
 
   const hasFilters = Boolean(
-    filters.leaderSearchString || filters.shelterSearchString || filters.hasShelter !== undefined
+    filters.leaderSearchString ||
+    filters.shelterSearchString ||
+    filters.hasShelter !== undefined ||
+    filters.teamId ||
+    filters.teamName ||
+    filters.hasTeam !== undefined
   );
 
   return (
@@ -67,129 +75,213 @@ export default function LeaderToolbar({
       </Typography>
 
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="flex-end">
-        {/* Busca por Líder */}
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Busca por Líder"
-            value={filters.leaderSearchString ?? ""}
-            onChange={(e) => set("leaderSearchString", e.target.value || undefined)}
-            placeholder="Nome, email, telefone do líder"
-            inputProps={{ "aria-label": "Campo de busca por líder" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.leaderSearchString && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => set("leaderSearchString", undefined)}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
-
-        {/* Busca por Abrigo */}
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Busca por Abrigo"
-            value={filters.shelterSearchString ?? ""}
-            onChange={(e) => set("shelterSearchString", e.target.value || undefined)}
-            placeholder="Todos os campos do abrigo"
-            inputProps={{ "aria-label": "Campo de busca por abrigo" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.shelterSearchString && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => set("shelterSearchString", undefined)}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
-
-        {/* Filtro de Vínculo */}
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="has-shelter-label">Vínculo</InputLabel>
-            <Select
-              labelId="has-shelter-label"
-              label="Vínculo"
-              value={filters.hasShelter ?? "all"}
-              onChange={(e) => {
-                const value = e.target.value;
-                let hasShelterValue: boolean | undefined;
-                
-                if (value === "all") {
-                  hasShelterValue = undefined;
-                } else if (value === "true") {
-                  hasShelterValue = true;
-                } else if (value === "false") {
-                  hasShelterValue = false;
-                }
-                
-                set("hasShelter", hasShelterValue);
+          {/* Busca por Líder */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Busca por Líder"
+              value={filters.leaderSearchString ?? ""}
+              onChange={(e) => set("leaderSearchString", e.target.value || undefined)}
+              placeholder="Nome, email, telefone do líder"
+              inputProps={{ "aria-label": "Campo de busca por líder" }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: filters.leaderSearchString && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => set("leaderSearchString", undefined)}
+                      edge="end"
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
               sx={{
-                borderRadius: 2,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
+                  },
+                },
               }}
-            >
-              <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="true">Com abrigo</MenuItem>
-              <MenuItem value="false">Sem abrigo</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
+            />
+          </Grid>
 
-        {/* Botões de Ação */}
-        <Grid item xs={12} sm={6} md={2}>
-          {isXs ? (
-            <Box sx={{ height: 40 }} />
-          ) : (
-            <Stack direction="row" spacing={1.5} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+          {/* Busca por Abrigo */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Busca por Abrigo"
+              value={filters.shelterSearchString ?? ""}
+              onChange={(e) => set("shelterSearchString", e.target.value || undefined)}
+              placeholder="Todos os campos do abrigo"
+              inputProps={{ "aria-label": "Campo de busca por abrigo" }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: filters.shelterSearchString && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => set("shelterSearchString", undefined)}
+                      edge="end"
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
+                  },
+                },
+              }}
+            />
+          </Grid>
+
+          {/* Filtro de Vínculo */}
+          <Grid item xs={6} sm={4} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="has-shelter-label">Vínculo</InputLabel>
+              <Select
+                labelId="has-shelter-label"
+                label="Vínculo"
+                value={filters.hasShelter ?? "all"}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  let hasShelterValue: boolean | undefined;
+
+                  if (value === "all") {
+                    hasShelterValue = undefined;
+                  } else if (value === "true") {
+                    hasShelterValue = true;
+                  } else if (value === "false") {
+                    hasShelterValue = false;
+                  }
+
+                  set("hasShelter", hasShelterValue);
+                }}
+                sx={{
+                  borderRadius: 2,
+                }}
+              >
+                <MenuItem value="all">Todos</MenuItem>
+                <MenuItem value="true">Com abrigo</MenuItem>
+                <MenuItem value="false">Sem abrigo</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Filtro por Número da Equipe */}
+          <Grid item xs={6} sm={4} md={2}>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="Nº da Equipe"
+              value={filters.teamName ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                set("teamName", value ? value : undefined);
+              }}
+              placeholder="Ex: 1, 2, 3..."
+              inputProps={{
+                "aria-label": "Número da equipe",
+                min: 1
+              }}
+              InputProps={{
+                endAdornment: filters.teamName && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => set("teamName", undefined)}
+                      edge="end"
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
+                  },
+                },
+              }}
+            />
+          </Grid>
+
+          {/* Filtro de Equipe */}
+          <Grid item xs={6} sm={4} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="has-team-label">Equipe</InputLabel>
+              <Select
+                labelId="has-team-label"
+                label="Equipe"
+                value={filters.hasTeam ?? "all"}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  let hasTeamValue: boolean | undefined;
+
+                  if (value === "all") {
+                    hasTeamValue = undefined;
+                  } else if (value === "true") {
+                    hasTeamValue = true;
+                  } else if (value === "false") {
+                    hasTeamValue = false;
+                  }
+
+                  set("hasTeam", hasTeamValue);
+                }}
+                sx={{
+                  borderRadius: 2,
+                }}
+              >
+                <MenuItem value="all">Todas</MenuItem>
+                <MenuItem value="true">Com equipe</MenuItem>
+                <MenuItem value="false">Sem equipe</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Botões de Ação - Desktop (mesma linha) */}
+          <Grid 
+            item 
+            xs={0}
+            sm={0}
+            md={12}
+            sx={{ 
+              display: { xs: "none", md: "flex" }, 
+              justifyContent: "flex-end",
+              mt: { xs: 2, md: 0 }
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
               {hasFilters && (
                 <Button
                   variant="outlined"
@@ -221,9 +313,8 @@ export default function LeaderToolbar({
                 </IconButton>
               </Tooltip>
             </Stack>
-          )}
+          </Grid>
         </Grid>
-      </Grid>
 
       {/* FABs para Mobile */}
       {isXs && (

@@ -13,7 +13,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ContactFormData, ContactFormProps } from '../types';
 import { contactFormSchema } from '../validation';
-import PhoneMask from './PhoneMask';
+import { maskPhoneBR } from '@/utils/masks';
 
 const ContactForm: React.FC<ContactFormProps> = ({
   onSubmit,
@@ -31,6 +31,8 @@ const ContactForm: React.FC<ContactFormProps> = ({
     formState: { errors },
   } = useForm<ContactFormData>({
     resolver: yupResolver(contactFormSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -110,11 +112,10 @@ const ContactForm: React.FC<ContactFormProps> = ({
               margin="normal"
               error={!!errors.telefone}
               helperText={errors.telefone?.message}
-              slotProps={{
-                input: {
-                  inputComponent: PhoneMask as any,
-                },
-              }}
+              inputMode="numeric"
+              value={maskPhoneBR(field.value || "")}
+              onChange={(e) => field.onChange(maskPhoneBR(e.target.value))}
+              placeholder="(DD) 9XXXX-XXXX"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,

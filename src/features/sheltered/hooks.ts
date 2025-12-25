@@ -3,6 +3,54 @@ import {
   apiCreateSheltered, apiDeleteSheltered, apiFetchSheltered, apiFetchShelteredren, apiUpdateSheltered
 } from "./api";
 import { ShelteredFilters, ShelteredResponseDto, ShelteredSort, CreateShelteredForm, EditShelteredForm } from "./types";
+import { digitsOnly } from "@/utils/masks";
+
+function normalizeBackendMessage(msg: unknown): string {
+  if (Array.isArray(msg)) return msg.filter(Boolean).join("\n");
+  if (typeof msg === "string") return msg;
+  return "";
+}
+
+function normalizeIsoDateString(input?: string | null): string | null | undefined {
+  if (input === null) return null;
+  if (input === undefined) return undefined;
+  const raw = String(input).trim();
+  if (!raw) return raw as any;
+
+  // dd/mm/yyyy -> yyyy-mm-dd
+  const br = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) {
+    const [, dd, mm, yyyy] = br;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // yyyy-mm-dd (aceita ano com mais dígitos e usa os últimos 4)
+  const iso = raw.match(/^(\d{4,})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    let [, y, m, d] = iso;
+    if (y.length > 4) y = y.slice(-4);
+    return `${y}-${m}-${d}`;
+  }
+
+  return raw;
+}
+
+function isValidIsoDate(iso: string): boolean {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return false;
+  if (mo < 1 || mo > 12) return false;
+  if (d < 1 || d > 31) return false;
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === mo - 1 &&
+    dt.getUTCDate() === d
+  );
+}
 
 export function useSheltered(pageIndex: number, pageSize: number, sorting: ShelteredSort, filters: ShelteredFilters) {
   const [rows, setRows] = useState<ShelteredResponseDto[]>([]);
@@ -59,10 +107,24 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
     setDialogLoading(true);
     setDialogError("");
     try {
-      await apiCreateSheltered(payload);
+      const birthDate = normalizeIsoDateString(payload.birthDate) as string;
+      const joinedAt = normalizeIsoDateString(payload.joinedAt ?? null) as string | null;
+      if (!birthDate || !isValidIsoDate(birthDate)) {
+        setDialogError("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
+        return;
+      }
+      if (joinedAt && !isValidIsoDate(joinedAt)) {
+        setDialogError('Data "No abrigo desde" inválida. Use o formato DD/MM/AAAA.');
+        return;
+      }
+      const guardianPhone = digitsOnly(payload.guardianPhone);
+      const postalCode = digitsOnly(payload.address?.postalCode);
+      const nextAddress = payload.address ? { ...payload.address, postalCode } : payload.address;
+      await apiCreateSheltered({ ...payload, birthDate, joinedAt, guardianPhone, address: nextAddress as any });
       await refetch(page, limit, filters, sort);
     } catch (err: any) {
-      setDialogError(err?.response?.data?.message || err.message || "Erro ao criar abrigado");
+      const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
+      setDialogError(backendMsg || err?.message || "Erro ao criar abrigado");
     } finally {
       setDialogLoading(false);
     }
@@ -72,10 +134,39 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
     setDialogLoading(true);
     setDialogError("");
     try {
-      await apiUpdateSheltered(id, payload);
+      const birthDate = normalizeIsoDateString((payload as any).birthDate) as string | undefined;
+      const joinedAt = normalizeIsoDateString((payload as any).joinedAt ?? undefined) as string | null | undefined;
+      const nextPayload: any = { ...payload };
+      if (birthDate !== undefined) {
+        if (!birthDate || !isValidIsoDate(birthDate)) {
+          setDialogError("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
+          return;
+        }
+        nextPayload.birthDate = birthDate;
+      }
+      if (joinedAt !== undefined) {
+        if (joinedAt && !isValidIsoDate(joinedAt)) {
+          setDialogError('Data "No abrigo desde" inválida. Use o formato DD/MM/AAAA.');
+          return;
+        }
+        nextPayload.joinedAt = joinedAt;
+      }
+
+      if (nextPayload.guardianPhone !== undefined) {
+        nextPayload.guardianPhone = digitsOnly(nextPayload.guardianPhone);
+      }
+      if (nextPayload.address?.postalCode !== undefined) {
+        nextPayload.address = {
+          ...nextPayload.address,
+          postalCode: digitsOnly(nextPayload.address.postalCode),
+        };
+      }
+
+      await apiUpdateSheltered(id, nextPayload);
       await refetch(page, limit, filters, sort);
     } catch (err: any) {
-      setDialogError(err?.response?.data?.message || err.message || "Erro ao atualizar abrigado");
+      const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
+      setDialogError(backendMsg || err?.message || "Erro ao atualizar abrigado");
     } finally {
       setDialogLoading(false);
     }

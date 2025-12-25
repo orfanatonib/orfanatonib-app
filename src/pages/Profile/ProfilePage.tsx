@@ -13,12 +13,18 @@ import {
   Tab,
   useTheme,
   useMediaQuery,
+  Chip,
+  Stack,
+  Grid,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
   Person as PersonIcon,
   Lock as LockIcon,
   PhotoCamera as PhotoCameraIcon,
+  HomeOutlined as HomeOutlinedIcon,
+  GroupsOutlined as GroupsOutlinedIcon,
+  PlaceOutlined as PlaceOutlinedIcon,
 } from '@mui/icons-material';
 import { RootState } from '@/store/slices';
 import { apiGetProfile } from '@/features/profile/api';
@@ -209,6 +215,96 @@ const ProfilePage: React.FC = () => {
                 )}
               </Box>
             </Box>
+
+            {/* Vínculo (Professor) */}
+            {profile?.role === 'teacher' && profile?.teacherProfile?.team?.shelter && (
+              <Box sx={{ mb: 3 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    borderRadius: 2,
+                    bgcolor: 'rgba(25, 118, 210, 0.03)',
+                    borderColor: 'rgba(25, 118, 210, 0.15)',
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle2" fontWeight={900} sx={{ letterSpacing: 0.2 }}>
+                      Olá professor, você está participando do abrigo:
+                    </Typography>
+
+                    <Grid container spacing={1} alignItems="center">
+                      <Grid item xs={12} md={6}>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                          <HomeOutlinedIcon fontSize="small" color="primary" />
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 800, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                            title={profile.teacherProfile.team.shelter.name}
+                          >
+                            {profile.teacherProfile.team.shelter.name}
+                          </Typography>
+                        </Stack>
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <Stack
+                          direction={{ xs: 'column', sm: 'row' }}
+                          spacing={1}
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        >
+                          {(() => {
+                            const teamNumber = profile.teacherProfile.team.numberTeam;
+                            const teamDesc = profile.teacherProfile.team.description?.trim() || '';
+                            const defaultLabel = `Equipe ${teamNumber}`;
+                            const showDesc =
+                              !!teamDesc &&
+                              teamDesc.toLowerCase() !== defaultLabel.toLowerCase();
+                            return (
+                              <>
+                                <Chip
+                                  icon={<GroupsOutlinedIcon />}
+                                  label={defaultLabel}
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ fontWeight: 800 }}
+                                />
+                                {showDesc && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ fontWeight: 700 }}
+                                  >
+                                    {teamDesc}
+                                  </Typography>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </Stack>
+                      </Grid>
+
+                      {!!profile.teacherProfile.team.shelter.address?.city && (
+                        <Grid item xs={12}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <PlaceOutlinedIcon fontSize="small" color="action" />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                              {profile.teacherProfile.team.shelter.address?.district
+                                ? `${profile.teacherProfile.team.shelter.address?.district} • `
+                                : ""}
+                              {profile.teacherProfile.team.shelter.address?.city}
+                              {profile.teacherProfile.team.shelter.address?.state
+                                ? `/${profile.teacherProfile.team.shelter.address?.state}`
+                                : ''}
+                            </Typography>
+                          </Stack>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Stack>
+                </Paper>
+              </Box>
+            )}
 
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
