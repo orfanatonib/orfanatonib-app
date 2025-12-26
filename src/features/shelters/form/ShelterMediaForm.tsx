@@ -93,16 +93,17 @@ const ShelterMediaForm: React.FC<Props> = ({
                 bgcolor: 'error.main',
                 color: 'white',
                 zIndex: 10,
+                width: { xs: 40, sm: 44 },
+                height: { xs: 40, sm: 44 },
                 '&:hover': {
                   bgcolor: 'error.dark',
-                  transform: 'scale(1.1)',
+                  transform: 'scale(1.15)',
                 },
                 transition: 'all 0.2s',
-                boxShadow: 3,
+                boxShadow: 4,
               }}
-              size="small"
             >
-              <CloseIcon fontSize="small" />
+              <CloseIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
             </IconButton>
             <Box
               sx={{
