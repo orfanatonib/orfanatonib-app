@@ -508,9 +508,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                         display: "flex",
                         justifyContent: "space-between",
                         mb: { xs: 1, sm: 1.5 },
-                        flexDirection: { xs: "column", sm: "row" },
-                        gap: { xs: 0.75, sm: 1 },
-                        alignItems: { xs: "stretch", sm: "center" },
+                        alignItems: "center",
                       }}
                     >
                       <Typography
@@ -531,23 +529,22 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                           Líderes ({teamLeaders.length})
                         </span>
                       </Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon fontSize="small" />}
-                        onClick={() => handleAddLeader(teamNumber)}
-                        disabled={loading}
-                        variant="outlined"
-                        sx={{
-                          fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" },
-                          px: { xs: 1, sm: 1.5, md: 2 },
-                          py: { xs: 0.4, sm: 0.5, md: 0.75 },
-                          minWidth: 'fit-content',
-                          flexShrink: 0,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Adicionar
-                      </Button>
+                      <Tooltip title="Adicionar líder">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddLeader(teamNumber)}
+                          disabled={loading}
+                          sx={{
+                            color: "primary.main",
+                            '&:hover': {
+                              bgcolor: "primary.light",
+                              color: "primary.dark",
+                            },
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                     <ChipsListWithExpand
                       items={teamLeaders.map((leader: any) => ({
@@ -577,9 +574,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                         display: "flex",
                         justifyContent: "space-between",
                         mb: { xs: 1, sm: 1.5 },
-                        flexDirection: { xs: "column", sm: "row" },
-                        gap: { xs: 0.75, sm: 1 },
-                        alignItems: { xs: "stretch", sm: "center" },
+                        alignItems: "center",
                       }}
                     >
                       <Typography
@@ -600,23 +595,22 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                           Professores ({teamTeachers.length})
                         </span>
                       </Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon fontSize="small" />}
-                        onClick={() => handleAddTeacher(teamNumber)}
-                        disabled={loading}
-                        variant="outlined"
-                        sx={{
-                          fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" },
-                          px: { xs: 1, sm: 1.5, md: 2 },
-                          py: { xs: 0.4, sm: 0.5, md: 0.75 },
-                          minWidth: 'fit-content',
-                          flexShrink: 0,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Adicionar
-                      </Button>
+                      <Tooltip title="Adicionar professor">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddTeacher(teamNumber)}
+                          disabled={loading}
+                          sx={{
+                            color: "secondary.main",
+                            '&:hover': {
+                              bgcolor: "secondary.light",
+                              color: "secondary.dark",
+                            },
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                     <ChipsListWithExpand
                       items={teamTeachers.map((teacher: any) => ({
