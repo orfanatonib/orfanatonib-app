@@ -345,19 +345,47 @@ export default function ImageSectionEditor({
                   <Box
                     className="swiper-button-prev"
                     sx={{
-                      color: 'primary.main',
+                      color: 'white',
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      width: { xs: '32px', md: '40px' },
+                      height: { xs: '32px', md: '40px' },
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       '&::after': {
-                        fontSize: { xs: '16px', md: '20px' },
+                        fontSize: { xs: '18px', md: '24px' },
+                        fontWeight: 'bold',
                       },
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.8)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                      backdropFilter: 'blur(4px)',
                     }}
                   />
                   <Box
                     className="swiper-button-next"
                     sx={{
-                      color: 'primary.main',
+                      color: 'white',
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      width: { xs: '32px', md: '40px' },
+                      height: { xs: '32px', md: '40px' },
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       '&::after': {
-                        fontSize: { xs: '16px', md: '20px' },
+                        fontSize: { xs: '18px', md: '24px' },
+                        fontWeight: 'bold',
                       },
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.8)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                      backdropFilter: 'blur(4px)',
                     }}
                   />
                 </Box>
