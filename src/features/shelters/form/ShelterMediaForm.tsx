@@ -92,12 +92,13 @@ const ShelterMediaForm: React.FC<Props> = ({
                 right: 8,
                 bgcolor: 'error.main',
                 color: 'white',
+                zIndex: 10,
                 '&:hover': {
                   bgcolor: 'error.dark',
                   transform: 'scale(1.1)',
                 },
                 transition: 'all 0.2s',
-                boxShadow: 2,
+                boxShadow: 3,
               }}
               size="small"
             >
@@ -113,6 +114,7 @@ const ShelterMediaForm: React.FC<Props> = ({
                 color: "white",
                 p: 1,
                 fontSize: '0.875rem',
+                zIndex: 5,
               }}
             >
               Clique no "X" para remover e adicionar nova imagem
