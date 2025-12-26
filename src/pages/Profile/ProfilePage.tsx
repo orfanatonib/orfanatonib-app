@@ -372,7 +372,7 @@ const ProfilePage: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-              <PasswordChangeForm onError={setError} />
+              <PasswordChangeForm onError={setError} isCommonUser={profile?.commonUser ?? true} />
             </TabPanel>
 
             <TabPanel value={tabValue} index={2}>

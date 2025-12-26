@@ -83,7 +83,7 @@ const sectionLabels: Record<SectionId, string> = {
   all: "tudo",
   pages: "pages",
   conteudos: "conteúdos",
-  shelter: "shelter",
+  shelter: "abrigo",
   operacional: "operacional",
 };
 

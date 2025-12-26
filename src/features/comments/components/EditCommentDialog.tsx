@@ -22,6 +22,13 @@ type Props = {
 export default function EditCommentDialog({
   open, value, setValue, errors, loading, error, onCancel, onSave,
 }: Props) {
+  const fieldLabels: Record<string, string> = {
+    name: "Nome",
+    comment: "Comentário",
+    shelter: "Abrigo",
+    neighborhood: "Bairro"
+  };
+
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Editar Comentário</DialogTitle>
@@ -33,7 +40,7 @@ export default function EditCommentDialog({
               key={field}
               fullWidth
               required={field !== "name"}
-              label={`${field.charAt(0).toUpperCase() + field.slice(1)}${field !== "name" ? " (Obrigatório)" : ""}`}
+              label={`${fieldLabels[field]}${field !== "name" ? " (Obrigatório)" : ""}`}
               variant="outlined"
               size="small"
               sx={{ mb: 2 }}
@@ -44,7 +51,7 @@ export default function EditCommentDialog({
               error={errors[field as keyof typeof errors] as boolean}
               helperText={
                 errors[field as keyof typeof errors]
-                  ? `${field.charAt(0).toUpperCase() + field.slice(1)} é obrigatório`
+                  ? `${fieldLabels[field]} é obrigatório`
                   : ""
               }
             />

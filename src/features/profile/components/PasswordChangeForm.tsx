@@ -19,9 +19,10 @@ import { apiChangePassword } from '../api';
 
 interface PasswordChangeFormProps {
   onError: (error: string) => void;
+  isCommonUser: boolean;
 }
 
-const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
+const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isCommonUser }) => {
   const [formData, setFormData] = useState<ChangePasswordDto>({
     currentPassword: '',
     newPassword: '',
@@ -43,14 +44,14 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
     const should = (key: 'currentPassword' | 'newPassword' | 'confirmPassword') =>
       touched?.[key] ?? true; // default: validar tudo
 
-    if (should('currentPassword')) {
+    if (should('currentPassword') && isCommonUser) {
       if (!next.currentPassword.trim()) newErrors.currentPassword = 'Senha atual é obrigatória';
     }
 
     if (should('newPassword')) {
       if (!next.newPassword.trim()) newErrors.newPassword = 'Nova senha é obrigatória';
       else if (next.newPassword.length < 6) newErrors.newPassword = 'A nova senha deve ter pelo menos 6 caracteres';
-      else if (next.currentPassword && next.currentPassword === next.newPassword) {
+      else if (isCommonUser && next.currentPassword && next.currentPassword === next.newPassword) {
         newErrors.newPassword = 'A nova senha deve ser diferente da senha atual';
       }
     }
@@ -67,7 +68,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof ChangePasswordDto | 'confirmPassword', string>> = {};
 
-    if (!formData.currentPassword.trim()) {
+    if (isCommonUser && !formData.currentPassword?.trim()) {
       newErrors.currentPassword = 'Senha atual é obrigatória';
     }
 
@@ -83,7 +84,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
       newErrors.confirmPassword = 'As senhas não coincidem';
     }
 
-    if (formData.currentPassword === formData.newPassword) {
+    if (isCommonUser && formData.currentPassword === formData.newPassword) {
       newErrors.newPassword = 'A nova senha deve ser diferente da senha atual';
     }
 
@@ -92,12 +93,12 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
   };
 
   const isFormReady =
-    !!formData.currentPassword.trim() &&
+    (!isCommonUser || !!formData.currentPassword?.trim()) &&
     !!formData.newPassword.trim() &&
     !!confirmPassword.trim() &&
     formData.newPassword.length >= 6 &&
     formData.newPassword === confirmPassword &&
-    formData.currentPassword !== formData.newPassword &&
+    (!isCommonUser || (formData.currentPassword && formData.currentPassword !== formData.newPassword)) &&
     Object.keys(errors).length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,7 +112,11 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
 
     setIsSubmitting(true);
     try {
-      await apiChangePassword(formData);
+      const payload: ChangePasswordDto = {
+        newPassword: formData.newPassword,
+        ...(isCommonUser && formData.currentPassword ? { currentPassword: formData.currentPassword } : {}),
+      };
+      await apiChangePassword(payload);
       setSuccess(true);
       setFormData({ currentPassword: '', newPassword: '' });
       setConfirmPassword('');
@@ -119,8 +124,8 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || 'Erro ao alterar senha';
       onError(errorMessage);
-      
-      if (errorMessage.includes('incorreta')) {
+
+      if (isCommonUser && errorMessage.includes('incorreta')) {
         setErrors({ currentPassword: 'Senha atual incorreta' });
       }
     } finally {
@@ -144,14 +149,25 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
       >
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                Para alterar sua senha, você precisa informar sua senha atual.
-              </Alert>
-            </Grid>
+            {isCommonUser && (
+              <Grid item xs={12}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Para alterar sua senha, você precisa informar sua senha atual.
+                </Alert>
+              </Grid>
+            )}
 
-            <Grid item xs={12}>
-              <TextField
+            {!isCommonUser && (
+              <Grid item xs={12}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Como você utiliza autenticação via Google, não é necessário informar a senha atual.
+                </Alert>
+              </Grid>
+            )}
+
+            {isCommonUser && (
+              <Grid item xs={12}>
+                <TextField
                 fullWidth
                 type={showCurrentPassword ? 'text' : 'password'}
                 label="Senha Atual"
@@ -190,7 +206,8 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError }) => {
                   },
                 }}
               />
-            </Grid>
+              </Grid>
+            )}
 
             <Grid item xs={12}>
               <TextField

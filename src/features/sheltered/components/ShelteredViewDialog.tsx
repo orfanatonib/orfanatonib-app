@@ -162,7 +162,7 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
                   {sheltered.shelter ? (
                     <Chip size="small" label={`Abrigo ${sheltered.shelter.name}`} color="primary" variant="outlined" />
                   ) : (
-                    <Chip size="small" label="Sem shelter" variant="outlined" />
+                    <Chip size="small" label="Sem abrigo" variant="outlined" />
                   )}
                 </Stack>
               </Box>
