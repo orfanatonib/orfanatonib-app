@@ -220,7 +220,7 @@ const FeedbackManager: React.FC = () => {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <Grid container spacing={3} alignItems="stretch">
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
               {filtered.map((feedback, index) => (
                 <Grid
                   item

@@ -17,42 +17,34 @@ export default function CommentDetailsModal({ comment, open, onClose }: Props) {
       <DialogContent sx={{ p: "5px", overflowX: "auto" }}>
         {comment && (
           <Stack spacing={3} sx={{ mt: 2, mx: "auto", maxWidth: "100%" }}>
-            <Paper elevation={1} sx={{ p: "5px", borderRadius: 2, bgcolor: "#fff" }}>
-              <Typography variant="h6" fontWeight="bold" color="primary" textAlign="center" mb={2}>
-                Informações do Comentário
-              </Typography>
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", textAlign: "left", width: "100%", mt: 4 }}>
-                <Grid container spacing={2} sx={{ maxWidth: 800, width: "100%", px: { xs: 2, md: 0 } }}>
-                  <Grid item xs={12} md={6}>
+            <Paper elevation={1} sx={{ p: 3, borderRadius: 2, bgcolor: "#fff" }}>
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", textAlign: "left", width: "100%" }}>
+                <Grid container spacing={2.5} sx={{ maxWidth: 800, width: "100%", px: { xs: 2, md: 0 } }}>
+                  <Grid item xs={12}>
                     <Typography variant="body1"><strong>Nome:</strong> {comment.name || "Sem Nome"}</Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
+                  <Grid item xs={12}>
+                    <Typography variant="body1" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
                       <strong>Comentário:</strong> {comment.comment || "Sem Comentário"}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body1"><strong>Abrigo:</strong> {comment.shelter || "Não informado"}</Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body1"><strong>Bairro:</strong> {comment.neighborhood || "Não informado"}</Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body1">
                       <strong>Status:</strong> {comment.published ? "Publicado" : "Não Publicado"}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body1"><strong>Criado em:</strong> {fmtDate(comment.createdAt)}</Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body1"><strong>Atualizado em:</strong> {fmtDate(comment.updatedAt)}</Typography>
                   </Grid>
-                  {comment.id && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body1"><strong>ID:</strong> {comment.id}</Typography>
-                    </Grid>
-                  )}
                 </Grid>
               </Box>
             </Paper>

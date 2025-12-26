@@ -38,7 +38,8 @@ const FeedbackCard: React.FC<Props> = ({ feedback, onView, onDelete }) => {
       component={motion.div}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       sx={{
-        height: "100%",
+        width: "100%",
+        minHeight: { xs: 240, sm: 260 },
         display: "flex",
         flexDirection: "column",
         borderRadius: 4,
@@ -79,16 +80,16 @@ const FeedbackCard: React.FC<Props> = ({ feedback, onView, onDelete }) => {
         />
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
+      <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 2.5 } }}>
         <Typography
           variant="h6"
           fontWeight="bold"
           sx={{
-            fontSize: { xs: "1rem", sm: "1.25rem" },
+            fontSize: { xs: "0.95rem", sm: "1.1rem" },
             mb: 1.5,
             lineHeight: 1.3,
             display: "-webkit-box",
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 1,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
           }}
@@ -97,38 +98,29 @@ const FeedbackCard: React.FC<Props> = ({ feedback, onView, onDelete }) => {
           {feedback.name}
         </Typography>
 
-        <Stack spacing={1.5} mb={2}>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-              Avaliação
+        <Stack spacing={1.5}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Rating value={feedback.rating} readOnly size="small" sx={{ fontSize: { xs: "1rem", sm: "1.1rem" } }} />
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, fontSize: { xs: "0.75rem", sm: "0.8rem" } }}>
+              {feedback.rating}/5
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
-              <Rating value={feedback.rating} readOnly size="small" />
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-                {feedback.rating}/5
-              </Typography>
-            </Box>
           </Box>
 
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-              Categoria
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                mt: 0.5,
-                fontSize: { xs: "0.8rem", sm: "0.85rem" },
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-              title={categoryLabel}
-            >
-              {categoryLabel}
-            </Typography>
-          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.85rem" },
+              color: "text.secondary",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={categoryLabel}
+          >
+            {categoryLabel}
+          </Typography>
         </Stack>
       </CardContent>
 
