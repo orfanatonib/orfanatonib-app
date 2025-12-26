@@ -47,13 +47,14 @@ const ShelterMediaForm: React.FC<Props> = ({
               <Box
                 sx={{
                   width: "100%",
-                  height: 300,
+                  minHeight: 300,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   bgcolor: 'grey.100',
                   gap: 2,
+                  py: 3,
                 }}
               >
                 <ImageIcon sx={{ fontSize: 60, color: 'error.main' }} />
