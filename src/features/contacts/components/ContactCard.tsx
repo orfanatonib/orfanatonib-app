@@ -32,7 +32,8 @@ export default function ContactCard({ contact, onView, onDelete }: Props) {
       component={motion.div}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       sx={{
-        height: "100%",
+        width: "100%",
+        minHeight: { xs: 240, sm: 260 },
         display: "flex",
         flexDirection: "column",
         borderRadius: 4,

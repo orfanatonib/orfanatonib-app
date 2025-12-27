@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Grid, FormControl, InputLabel, Select, MenuItem, Button, Box, IconButton, Card, CardMedia } from '@mui/material';
+import { Grid, FormControl, InputLabel, Select, MenuItem, Button, Box, IconButton, Card, CardMedia, Typography } from '@mui/material';
 import { CloudUpload, Link as LinkIcon, Image as ImageIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface Props {
@@ -19,11 +19,13 @@ const ShelterMediaForm: React.FC<Props> = ({
   uploadType, setUploadType, url, setUrl, file, setFile, existingImageUrl, onRemoveExistingImage, onUrlChange, onFileChange,
 }) => {
   const [showExisting, setShowExisting] = React.useState(!!existingImageUrl);
+  const [imageError, setImageError] = React.useState(false);
   const previewUrl = file ? URL.createObjectURL(file) : (uploadType === "link" && url ? url : null);
 
-  // Resetar showExisting quando existingImageUrl mudar
+  // Resetar showExisting e imageError quando existingImageUrl mudar
   React.useEffect(() => {
     setShowExisting(!!existingImageUrl);
+    setImageError(false);
   }, [existingImageUrl]);
 
   // Se tem imagem existente e não foi removida, mostrar apenas a imagem com botão X
@@ -40,21 +42,47 @@ const ShelterMediaForm: React.FC<Props> = ({
         </Grid>
 
         <Grid item xs={12}>
-          <Card sx={{ position: 'relative', borderRadius: 2 }}>
-            <CardMedia
-              component="img"
-              image={existingImageUrl}
-              alt="Imagem atual do abrigo"
-              sx={{
-                width: "100%",
-                height: "auto",
-                maxHeight: 300,
-                objectFit: "cover",
-              }}
-            />
+          <Card sx={{ position: 'relative', borderRadius: 2, border: imageError ? '2px solid' : 'none', borderColor: imageError ? 'error.main' : 'transparent' }}>
+            {imageError ? (
+              <Box
+                sx={{
+                  width: "100%",
+                  minHeight: 300,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'grey.100',
+                  gap: 2,
+                  py: 3,
+                }}
+              >
+                <ImageIcon sx={{ fontSize: 60, color: 'error.main' }} />
+                <Typography variant="body1" color="error.main" fontWeight={600}>
+                  Erro ao carregar a imagem
+                </Typography>
+                <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
+                  A imagem não pôde ser carregada. Clique no "X" para remover e adicionar uma nova.
+                </Typography>
+              </Box>
+            ) : (
+              <CardMedia
+                component="img"
+                image={existingImageUrl}
+                alt="Imagem atual do abrigo"
+                onError={() => setImageError(true)}
+                sx={{
+                  width: "100%",
+                  height: "auto",
+                  maxHeight: 300,
+                  objectFit: "cover",
+                }}
+              />
+            )}
             <IconButton
               onClick={() => {
                 setShowExisting(false);
+                setImageError(false);
                 if (onRemoveExistingImage) {
                   onRemoveExistingImage();
                 }
@@ -65,16 +93,18 @@ const ShelterMediaForm: React.FC<Props> = ({
                 right: 8,
                 bgcolor: 'error.main',
                 color: 'white',
+                zIndex: 10,
+                width: { xs: 40, sm: 44 },
+                height: { xs: 40, sm: 44 },
                 '&:hover': {
                   bgcolor: 'error.dark',
-                  transform: 'scale(1.1)',
+                  transform: 'scale(1.15)',
                 },
                 transition: 'all 0.2s',
-                boxShadow: 2,
+                boxShadow: 4,
               }}
-              size="small"
             >
-              <CloseIcon fontSize="small" />
+              <CloseIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
             </IconButton>
             <Box
               sx={{
@@ -86,6 +116,7 @@ const ShelterMediaForm: React.FC<Props> = ({
                 color: "white",
                 p: 1,
                 fontSize: '0.875rem',
+                zIndex: 5,
               }}
             >
               Clique no "X" para remover e adicionar nova imagem

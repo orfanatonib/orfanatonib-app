@@ -16,7 +16,7 @@ export default function BannerGrid({ items, onEdit, onDeleteAsk }: Props) {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Grid container spacing={3} alignItems="stretch">
+    <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
       {items.map((banner, index) => (
         <Grid
           item
@@ -35,7 +35,8 @@ export default function BannerGrid({ items, onEdit, onDeleteAsk }: Props) {
             component={motion.div}
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
             sx={{
-              height: '100%',
+              width: '100%',
+              minHeight: { xs: 240, sm: 260 },
               display: 'flex',
               flexDirection: 'column',
               borderRadius: 4,

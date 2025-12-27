@@ -606,7 +606,7 @@ const Eventos: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #000000 0%, #FFFF00 100%)',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 50%, #ffffff 100%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

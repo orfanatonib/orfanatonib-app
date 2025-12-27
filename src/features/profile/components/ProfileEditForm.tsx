@@ -12,6 +12,8 @@ import { motion } from 'framer-motion';
 import SaveIcon from '@mui/icons-material/Save';
 import { Profile, UpdateProfileDto } from '../types';
 import { apiUpdateProfile } from '../api';
+import { digitsOnly, maskPhoneBR } from '@/utils/masks';
+import { isValidEmail, normalizeEmail } from '@/utils/validators';
 
 interface ProfileEditFormProps {
   profile: Profile | null;
@@ -38,7 +40,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       setFormData({
         name: profile.name || '',
         email: profile.email || '',
-        phone: profile.phone || '',
+        phone: maskPhoneBR(profile.phone || ''),
       });
     }
   }, [profile]);
@@ -46,12 +48,27 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof UpdateProfileDto, string>> = {};
 
-    if (formData.name && formData.name.trim().length < 2) {
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    } else if (formData.name.trim().length < 2) {
       newErrors.name = 'O nome deve ter pelo menos 2 caracteres';
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!isValidEmail(formData.email)) {
       newErrors.email = 'Email inválido';
+    }
+
+    const phoneDigits = digitsOnly(formData.phone);
+    if (!phoneDigits) {
+      newErrors.phone = 'Telefone é obrigatório';
+    } else {
+      const isWithCC = phoneDigits.startsWith('55') && phoneDigits.length > 11;
+      const lenOk = isWithCC
+        ? phoneDigits.length === 12 || phoneDigits.length === 13
+        : phoneDigits.length === 10 || phoneDigits.length === 11;
+      if (!lenOk) newErrors.phone = 'Telefone inválido';
     }
 
     setErrors(newErrors);
@@ -75,10 +92,12 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         payload.name = formData.name.trim();
       }
       if (formData.email && formData.email.trim() !== profile?.email) {
-        payload.email = formData.email.trim();
+        payload.email = normalizeEmail(formData.email);
       }
-      if (formData.phone && formData.phone.trim() !== profile?.phone) {
-        payload.phone = formData.phone.trim();
+      const nextPhoneDigits = digitsOnly(formData.phone);
+      const prevPhoneDigits = digitsOnly(profile?.phone);
+      if (nextPhoneDigits && nextPhoneDigits !== prevPhoneDigits) {
+        payload.phone = nextPhoneDigits; // enviar limpo para o back
       }
 
       if (Object.keys(payload).length === 0) {
@@ -135,7 +154,15 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
                 value={formData.name}
                 onChange={(e) => {
                   setFormData({ ...formData, name: e.target.value });
-                  if (errors.name) setErrors({ ...errors, name: undefined });
+                  const v = e.target.value;
+                  if (!v.trim()) setErrors({ ...errors, name: 'Nome é obrigatório' });
+                  else if (v.trim().length < 2) setErrors({ ...errors, name: 'O nome deve ter pelo menos 2 caracteres' });
+                  else if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
+                onBlur={() => {
+                  const v = formData.name || '';
+                  if (!v.trim()) setErrors({ ...errors, name: 'Nome é obrigatório' });
+                  else if (v.trim().length < 2) setErrors({ ...errors, name: 'O nome deve ter pelo menos 2 caracteres' });
                 }}
                 error={!!errors.name}
                 helperText={errors.name}
@@ -158,7 +185,16 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
                 value={formData.email}
                 onChange={(e) => {
                   setFormData({ ...formData, email: e.target.value });
-                  if (errors.email) setErrors({ ...errors, email: undefined });
+                  // Validação em tempo real
+                  const v = e.target.value;
+                  if (!v.trim()) setErrors({ ...errors, email: 'Email é obrigatório' });
+                  else if (!isValidEmail(v)) setErrors({ ...errors, email: 'Email inválido' });
+                  else if (errors.email) setErrors({ ...errors, email: undefined });
+                }}
+                onBlur={() => {
+                  const v = formData.email || '';
+                  if (!v.trim()) setErrors({ ...errors, email: 'Email é obrigatório' });
+                  else if (!isValidEmail(v)) setErrors({ ...errors, email: 'Email inválido' });
                 }}
                 error={!!errors.email}
                 helperText={errors.email}
@@ -178,14 +214,36 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
                 fullWidth
                 type="tel"
                 label="Telefone"
-                value={formData.phone}
+                inputMode="numeric"
+                value={maskPhoneBR(formData.phone)}
                 onChange={(e) => {
-                  setFormData({ ...formData, phone: e.target.value });
-                  if (errors.phone) setErrors({ ...errors, phone: undefined });
+                  setFormData({ ...formData, phone: maskPhoneBR(e.target.value) });
+                  const digits = digitsOnly(e.target.value);
+                  if (!digits) setErrors({ ...errors, phone: 'Telefone é obrigatório' });
+                  else {
+                    const isWithCC = digits.startsWith('55') && digits.length > 11;
+                    const lenOk = isWithCC
+                      ? digits.length === 12 || digits.length === 13
+                      : digits.length === 10 || digits.length === 11;
+                    if (!lenOk) setErrors({ ...errors, phone: 'Telefone inválido' });
+                    else if (errors.phone) setErrors({ ...errors, phone: undefined });
+                  }
+                }}
+                onBlur={() => {
+                  const digits = digitsOnly(formData.phone);
+                  if (!digits) setErrors({ ...errors, phone: 'Telefone é obrigatório' });
+                  else {
+                    const isWithCC = digits.startsWith('55') && digits.length > 11;
+                    const lenOk = isWithCC
+                      ? digits.length === 12 || digits.length === 13
+                      : digits.length === 10 || digits.length === 11;
+                    if (!lenOk) setErrors({ ...errors, phone: 'Telefone inválido' });
+                  }
                 }}
                 error={!!errors.phone}
                 helperText={errors.phone}
-                placeholder="+5511999999999"
+                placeholder="(DD) 9XXXX-XXXX"
+                required
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {

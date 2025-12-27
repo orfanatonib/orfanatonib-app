@@ -69,7 +69,7 @@ export type UpdateProfileDto = {
 };
 
 export type ChangePasswordDto = {
-  currentPassword: string;
+  currentPassword?: string;
   newPassword: string;
 };
 

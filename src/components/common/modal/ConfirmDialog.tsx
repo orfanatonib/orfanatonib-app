@@ -89,9 +89,17 @@ export default function ConfirmDialog({
       fullWidth={fullWidth}
       maxWidth={maxWidth}
       disableEscapeKeyDown={disableEscapeKeyDown}
+      PaperProps={{
+        sx: {
+          overflowX: "hidden",
+        },
+      }}
+      sx={{
+        "& .MuiDialog-paper": { overflowX: "hidden" },
+      }}
     >
       {!!title && (
-        <DialogTitle sx={{ pr: showCloseIcon ? 6 : 3, ...titleSx }}>
+        <DialogTitle sx={{ pr: showCloseIcon ? 6 : 3, overflowX: "hidden", ...titleSx }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {startAdornment}
             <Typography variant="h6" component="div">{title}</Typography>
@@ -112,7 +120,14 @@ export default function ConfirmDialog({
       )}
 
       {(content || shelteredren) && (
-        <DialogContent sx={{ pt: title ? 1 : 2, ...contentSx }}>
+        <DialogContent
+          sx={{
+            pt: title ? 1 : 2,
+            overflowX: "hidden",
+            "& *": { overflowWrap: "anywhere" },
+            ...contentSx,
+          }}
+        >
           {content ? (
             typeof content === "string"
               ? <Typography>{content}</Typography>
@@ -121,7 +136,7 @@ export default function ConfirmDialog({
         </DialogContent>
       )}
 
-      <DialogActions sx={{ justifyContent: "flex-end", gap: 1, ...actionsSx }}>
+      <DialogActions sx={{ justifyContent: "flex-end", gap: 1, overflowX: "hidden", ...actionsSx }}>
         <Button
           onClick={onClose}
           variant={cancelVariant}

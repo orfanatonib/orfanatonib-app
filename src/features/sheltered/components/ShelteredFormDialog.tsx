@@ -10,6 +10,7 @@ import { CreateShelteredForm, EditShelteredForm } from "../types";
 import { apiFetchSheltersList } from "@/features/shelters/api";
 import ShelterAutocomplete from "@/features/shelters/form/ShelterAutocomplete";
 import { RootState } from "@/store/slices";
+import { formatDateBR, maskCEP, maskDateBR, maskPhoneBR } from "@/utils/masks";
 
 type Props = {
   mode: "create" | "edit";
@@ -29,7 +30,12 @@ export default function ShelteredFormDialog({
   
   const user = useSelector((state: RootState) => state.auth.user);
   const isTeacher = user?.role === UserRole.TEACHER;
-  const teacherShelter = user?.teacherProfile?.shelter ?? null;
+  // O abrigo do professor vem pelo team (teacherProfile.team.shelter) no /auth/me atual.
+  // Mantemos fallback para teacherProfile.shelter por compatibilidade.
+  const teacherShelter =
+    user?.teacherProfile?.team?.shelter ??
+    user?.teacherProfile?.shelter ??
+    null;
   const teacherShelterId = teacherShelter?.id ?? null;
 
   const [shelterOptions, setShelterOptions] = React.useState<Array<{ id: string; detalhe: string; leader: boolean }>>([]);
@@ -70,7 +76,16 @@ export default function ShelteredFormDialog({
           setLoadingShelterDetail(true);
           setShelterDetailErr("");
           const items = await apiFetchSheltersList();
-          if (!cancelled) setShelterOptions(Array.isArray(items) ? items : []);
+          if (!cancelled) {
+            const safe = Array.isArray(items) ? items : [];
+            setShelterOptions(
+              safe.map((s) => ({
+                id: s.id,
+                detalhe: s.name,
+                leader: false,
+              }))
+            );
+          }
         } catch (e: any) {
           if (!cancelled) setShelterDetailErr(e?.response?.data?.message || e?.message || "Falha ao carregar shelters");
         } finally {
@@ -146,10 +161,10 @@ export default function ShelteredFormDialog({
               fullWidth
               required
               label="Nascimento (obrigatório)"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={(value as any).birthDate ?? ""}
-              onChange={(e) => setField("birthDate", e.target.value)}
+              placeholder="DD/MM/AAAA"
+              inputMode="numeric"
+              value={formatDateBR((value as any).birthDate)}
+              onChange={(e) => setField("birthDate", maskDateBR(e.target.value))}
               error={showErrors && !req.birthDate}
               helperText={showErrors && !req.birthDate ? "Informe a data de nascimento" : undefined}
             />
@@ -168,8 +183,10 @@ export default function ShelteredFormDialog({
             <TextField
               fullWidth
               label="Telefone"
-              value={(value as any).guardianPhone ?? ""}
-              onChange={(e) => setField("guardianPhone", e.target.value)}
+              placeholder="(DD) 9XXXX-XXXX"
+              inputMode="numeric"
+              value={maskPhoneBR((value as any).guardianPhone ?? "")}
+              onChange={(e) => setField("guardianPhone", maskPhoneBR(e.target.value))}
             />
           </Grid>
 
@@ -177,10 +194,13 @@ export default function ShelteredFormDialog({
             <TextField
               fullWidth
               label="No abrigo desde"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={(value as any).joinedAt ?? ""}
-              onChange={(e) => setField("joinedAt", e.target.value || null)}
+              placeholder="DD/MM/AAAA"
+              inputMode="numeric"
+              value={formatDateBR((value as any).joinedAt)}
+              onChange={(e) => {
+                const v = maskDateBR(e.target.value);
+                setField("joinedAt", v ? v : null);
+              }}
             />
           </Grid>
 
@@ -212,7 +232,7 @@ export default function ShelteredFormDialog({
                     {selectedShelterDetail}
                   </Box>
                 ) : (
-                  <Alert severity="info">Seu perfil não possui um shelter vinculado.</Alert>
+                  <Alert severity="info">Seu perfil não possui um abrigo vinculado.</Alert>
                 )}
 
                 {showErrors && !req.shelterId && (
@@ -295,8 +315,15 @@ export default function ShelteredFormDialog({
             <TextField
               fullWidth
               label="CEP"
-              value={(value as any).address?.postalCode ?? ""}
-              onChange={(e) => setField("address", { ...(value as any).address, postalCode: e.target.value })}
+              placeholder="00000-000"
+              inputMode="numeric"
+              value={maskCEP((value as any).address?.postalCode ?? "")}
+              onChange={(e) =>
+                setField("address", {
+                  ...((value as any).address ?? {}),
+                  postalCode: maskCEP(e.target.value),
+                })
+              }
             />
           </Grid>
 

@@ -202,7 +202,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 active: true,
                 user: {
                   id: leader.leaderProfileId, // Usando leaderProfileId como fallback
-                  name: leader.name,
+                  name: leader.user.name,
                   email: "",
                   phone: "",
                   active: true,
@@ -390,7 +390,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           </Alert>
         )}
 
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {Array.from({ length: teamsQuantity }, (_, i) => {
             const teamNumber = i + 1;
             const team = teams.find((t) => t.numberTeam === teamNumber);
@@ -398,11 +398,11 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             const teamTeachers = team?.teachers || [];
 
             return (
-              <Grid item xs={12} sm={6} key={teamNumber}>
+              <Grid item xs={12} sm={6} md={6} lg={4} key={teamNumber}>
                 <Paper
                   elevation={2}
                   sx={{
-                    p: 2.5,
+                    p: { xs: 1.5, sm: 2, md: 2.5 },
                     height: "100%",
                     border: "2px solid",
                     borderColor: "divider",
@@ -430,23 +430,23 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     },
                   }}
                 >
-                  <Box 
-                    sx={{ 
-                      display: "flex", 
-                      alignItems: "center", 
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
                       justifyContent: "space-between",
-                      gap: 1.5, 
-                      mb: 2,
-                      pb: 1.5,
+                      gap: { xs: 1, sm: 1.5 },
+                      mb: { xs: 1.5, sm: 2 },
+                      pb: { xs: 1, sm: 1.5 },
                       borderBottom: "2px solid",
                       borderColor: "divider",
                     }}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 }, flex: 1, minWidth: 0 }}>
                       <Box
                         sx={{
-                          width: 40,
-                          height: 40,
+                          width: { xs: 32, sm: 36, md: 40 },
+                          height: { xs: 32, sm: 36, md: 40 },
                           borderRadius: "50%",
                           bgcolor: "primary.main",
                           color: "white",
@@ -454,13 +454,22 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: 700,
-                          fontSize: "1.1rem",
+                          fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
                           flexShrink: 0,
                         }}
                       >
                         {teamNumber}
                       </Box>
-                      <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: "1.1rem" }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        sx={{
+                          fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem" },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Equipe {teamNumber}
                       </Typography>
                     </Box>
@@ -484,49 +493,58 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                   </Box>
 
                   {/* Líderes */}
-                  <Box 
-                    sx={{ 
-                      mb: 2.5,
-                      p: 1.5,
+                  <Box
+                    sx={{
+                      mb: { xs: 1.5, sm: 2, md: 2.5 },
+                      p: { xs: 1, sm: 1.25, md: 1.5 },
                       borderRadius: 2,
                       bgcolor: "rgba(255, 255, 0, 0.08)",
                       border: "1px solid",
                       borderColor: "primary.light",
                     }}
                   >
-                    <Box sx={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
-                      mb: 1.5,
-                      flexDirection: { xs: "column", sm: "row" },
-                      gap: { xs: 1, sm: 0 },
-                      alignItems: { xs: "flex-start", sm: "center" }
-                    }}>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight={700} 
-                        sx={{ 
-                          display: "flex", 
-                          alignItems: "center", 
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: { xs: 1, sm: 1.5 },
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
                           gap: 0.75,
                           color: "primary.dark",
-                          fontSize: "0.95rem",
+                          fontSize: { xs: "0.85rem", sm: "0.9rem", md: "0.95rem" },
+                          minWidth: 0,
+                          flexShrink: 1,
                         }}
                       >
-                        <PersonIcon fontSize="small" color="primary" />
-                        Líderes ({teamLeaders.length})
+                        <PersonIcon fontSize="small" color="primary" sx={{ flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          Líderes ({teamLeaders.length})
+                        </span>
                       </Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleAddLeader(teamNumber)}
-                        disabled={loading}
-                        variant="outlined"
-                        fullWidth={false}
-                        sx={{ width: { xs: "100%", sm: "auto" } }}
-                      >
-                        Adicionar
-                      </Button>
+                      <Tooltip title="Adicionar líder">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddLeader(teamNumber)}
+                          disabled={loading}
+                          sx={{
+                            color: "primary.main",
+                            '&:hover': {
+                              bgcolor: "primary.light",
+                              color: "primary.dark",
+                            },
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                     <ChipsListWithExpand
                       items={teamLeaders.map((leader: any) => ({
@@ -544,46 +562,55 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                   {/* Professores */}
                   <Box
                     sx={{
-                      p: 1.5,
+                      p: { xs: 1, sm: 1.25, md: 1.5 },
                       borderRadius: 2,
                       bgcolor: "rgba(0, 0, 0, 0.04)",
                       border: "1px solid",
                       borderColor: "grey.300",
                     }}
                   >
-                    <Box sx={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
-                      mb: 1.5,
-                      flexDirection: { xs: "column", sm: "row" },
-                      gap: { xs: 1, sm: 0 },
-                      alignItems: { xs: "flex-start", sm: "center" }
-                    }}>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight={700} 
-                        sx={{ 
-                          display: "flex", 
-                          alignItems: "center", 
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: { xs: 1, sm: 1.5 },
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
                           gap: 0.75,
                           color: "text.primary",
-                          fontSize: "0.95rem",
+                          fontSize: { xs: "0.85rem", sm: "0.9rem", md: "0.95rem" },
+                          minWidth: 0,
+                          flexShrink: 1,
                         }}
                       >
-                        <SchoolIcon fontSize="small" color="secondary" />
-                        Professores ({teamTeachers.length})
+                        <SchoolIcon fontSize="small" color="secondary" sx={{ flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          Professores ({teamTeachers.length})
+                        </span>
                       </Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleAddTeacher(teamNumber)}
-                        disabled={loading}
-                        variant="outlined"
-                        fullWidth={false}
-                        sx={{ width: { xs: "100%", sm: "auto" } }}
-                      >
-                        Adicionar
-                      </Button>
+                      <Tooltip title="Adicionar professor">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddTeacher(teamNumber)}
+                          disabled={loading}
+                          sx={{
+                            color: "secondary.main",
+                            '&:hover': {
+                              bgcolor: "secondary.light",
+                              color: "secondary.dark",
+                            },
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                     <ChipsListWithExpand
                       items={teamTeachers.map((teacher: any) => ({
@@ -648,7 +675,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
               <List dense>
                 {selectedTeamNumber && getAvailableLeaders(selectedTeamNumber)
                   .filter((leader) =>
-                    leader.name.toLowerCase().includes(leaderSearchTerm.toLowerCase())
+                    leader.user.name.toLowerCase().includes(leaderSearchTerm.toLowerCase())
                   )
                   .map((leader) => {
                     const isSelected = selectedLeaderIds.includes(leader.leaderProfileId);
@@ -670,13 +697,13 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                             tabIndex={-1}
                             disableRipple
                           />
-                          <ListItemText primary={leader.name} />
+                          <ListItemText primary={leader.user.name} />
                         </ListItemButton>
                       </ListItem>
                     );
                   })}
                 {selectedTeamNumber && getAvailableLeaders(selectedTeamNumber).filter((leader) =>
-                  leader.name.toLowerCase().includes(leaderSearchTerm.toLowerCase())
+                  leader.user.name.toLowerCase().includes(leaderSearchTerm.toLowerCase())
                 ).length === 0 && (
                   <ListItem>
                     <ListItemText 

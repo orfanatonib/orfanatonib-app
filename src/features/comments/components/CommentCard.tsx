@@ -40,7 +40,8 @@ export default function CommentCard({
       component={motion.div}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       sx={{
-        height: "100%",
+        width: "100%",
+        minHeight: { xs: 260, sm: 280 },
         display: "flex",
         flexDirection: "column",
         borderRadius: 4,
@@ -129,13 +130,14 @@ export default function CommentCard({
             fontSize: { xs: "0.8rem", sm: "0.85rem" },
             lineHeight: 1.6,
             display: "-webkit-box",
-            WebkitLineClamp: 4,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
           title={comment.comment || ""}
         >
-          {truncate(comment.comment || "")}
+          {comment.comment || ""}
         </Typography>
       </CardContent>
 

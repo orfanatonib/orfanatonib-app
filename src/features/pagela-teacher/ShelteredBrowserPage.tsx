@@ -17,6 +17,7 @@ import { CreateShelteredForm, EditShelteredForm, ShelteredResponseDto } from "..
 import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
+import NoShelterLinkedPage from "./NoShelterLinkedPage";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
@@ -28,15 +29,26 @@ export default function ShelteredBrowserPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const canAccess = isAdmin || isLeader || isTeacher;
 
+  const teacherShelter =
+    user?.teacherProfile?.team?.shelter ??
+    user?.teacherProfile?.shelter ??
+    null;
+
+  const hasLinkedShelter = React.useMemo(() => {
+    if (isTeacher) return !!teacherShelter?.id;
+    if (isLeader) return !!user?.leaderProfile?.team?.shelter?.id;
+    return true; // admin não depende disso
+  }, [isTeacher, isLeader, teacherShelter?.id, user?.leaderProfile?.team?.shelter?.id]);
+
   const shelterName = React.useMemo(() => {
-    if (isTeacher && user?.teacherProfile?.shelter?.name) {
-      return user.teacherProfile.shelter.name;
+    if (isTeacher && teacherShelter?.name) {
+      return teacherShelter.name;
     }
     if (isLeader && user?.leaderProfile?.team?.shelter?.name) {
       return user.leaderProfile.team.shelter.name;
     }
     return null;
-  }, [isTeacher, isLeader, user]);
+  }, [isTeacher, isLeader, user, teacherShelter]);
 
   const {
     q,
@@ -115,14 +127,19 @@ export default function ShelteredBrowserPage() {
   const openEdit = async (shelteredId: string) => {
     try {
       const full: ShelteredResponseDto = await apiFetchSheltered(shelteredId);
+      const isoToBr = (raw?: string | null) => {
+        if (!raw) return raw ?? "";
+        const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
+      };
       setEditing({
         id: full.id,
         name: full.name ?? "",
         gender: (full.gender as any) ?? "M",
         guardianName: full.guardianName ?? "",
         guardianPhone: full.guardianPhone ?? "",
-        birthDate: full.birthDate ?? "",
-        joinedAt: (full as any).joinedAt ?? null,
+        birthDate: isoToBr(full.birthDate ?? ""),
+        joinedAt: (isoToBr((full as any).joinedAt) as any) || null,
         shelterId: (full as any)?.shelter?.id ?? null,
         address: full.address
           ? {
@@ -155,6 +172,10 @@ export default function ShelteredBrowserPage() {
   React.useEffect(() => {
     document.title = "Lançar Pagela • Selecionar Abrigado";
   }, []);
+
+  if (canAccess && !hasLinkedShelter) {
+    return <NoShelterLinkedPage />;
+  }
 
   return (
     <Box
@@ -230,23 +251,23 @@ export default function ShelteredBrowserPage() {
               Abrigados do Abrigo {shelterName}
             </Typography>
           )}
-          {canAccess && isAdmin && (
+          {canAccess && (
             <Button
               onClick={openCreate}
               startIcon={<PersonAdd />}
               variant="contained"
               sx={{ display: { xs: "none", md: "inline-flex" } }}
             >
-              Adicionar abrigado
+              Cadastrar abrigado
             </Button>
           )}
         </Box>
       </Box>
 
-      {canAccess && isAdmin && (
+      {canAccess && (
         <Fab
           color="primary"
-          aria-label="Adicionar abrigado"
+          aria-label="Cadastrar abrigado"
           onClick={openCreate}
           sx={{
             position: "fixed",
@@ -431,6 +452,26 @@ export default function ShelteredBrowserPage() {
               >
                 {q ? "Nenhum abrigado encontrado com os filtros aplicados." : "Nenhum abrigado cadastrado."}
               </Typography>
+
+              {!q && (
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonAdd />}
+                    onClick={openCreate}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 800,
+                      width: { xs: "100%", sm: "auto" },
+                      px: { xs: 2, sm: 3 },
+                      py: 1.25,
+                      borderRadius: 2,
+                    }}
+                  >
+                    Cadastrar abrigado
+                  </Button>
+                </Box>
+              )}
             </Box>
           ) : (
             <>

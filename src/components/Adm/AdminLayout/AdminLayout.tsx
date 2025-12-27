@@ -187,7 +187,7 @@ function AdminLayout() {
     tudo: "tudo",
     pages: "pages",
     conteudos: "conteúdos",
-    shelter: "shelter",
+    shelter: "abrigo",
     operacional: "operacional",
   };
 

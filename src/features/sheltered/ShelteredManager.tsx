@@ -109,14 +109,19 @@ export default function ShelteredManager() {
 
   const [editing, setEditing] = useState<EditShelteredForm | null>(null);
   const startEdit = (c: ShelteredResponseDto) => {
+    const isoToBr = (raw?: string | null) => {
+      if (!raw) return raw ?? "";
+      const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
+    };
     setEditing({
       id: c.id,
       name: c.name,
       gender: c.gender,
       guardianName: c.guardianName,
       guardianPhone: c.guardianPhone,
-      birthDate: c.birthDate,
-      joinedAt: c.joinedAt,
+      birthDate: isoToBr(c.birthDate),
+      joinedAt: (isoToBr(c.joinedAt) as any) || null,
       shelterId: c.shelter?.id ?? null,
       address: c.address ? ({ ...c.address } as any) : undefined,
     });

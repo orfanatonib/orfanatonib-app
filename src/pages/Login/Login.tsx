@@ -25,12 +25,7 @@ import {
   setGoogleUser,
   fetchCurrentUser,
 } from '@/store/slices/auth/authSlice';
-
-
-const isEmailValid = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+import { isValidEmail } from '@/utils/validators';
 
 const isPasswordValid = (password: string): boolean => {
   return password.length >= 6;
@@ -82,7 +77,7 @@ const Login: React.FC = () => {
   }, [isAuthenticated, user, navigate]);
 
   const isFormValid = (): boolean => {
-    return isEmailValid(email) && isPasswordValid(password);
+    return isValidEmail(email) && isPasswordValid(password);
   };
 
 
