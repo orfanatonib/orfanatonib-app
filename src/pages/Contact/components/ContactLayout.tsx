@@ -41,7 +41,6 @@ const ContactLayout: React.FC<ContactLayoutProps> = ({ children }) => {
                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '2.8rem', lg: '3rem' },
                fontWeight: 800,
                color: '#000000',
-               fontWeight: 800,
                fontFamily: "'Poppins', sans-serif",
                mb: { xs: 1.5, sm: 2 },
                lineHeight: 1.2,
