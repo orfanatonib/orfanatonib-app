@@ -10,6 +10,9 @@ export default defineConfig(() => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192.png", "pwa-512.png"],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
+      },
       manifest: {
         name: "Orfanato NIB",
         short_name: "Orfanato NIB",
