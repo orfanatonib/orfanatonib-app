@@ -105,11 +105,21 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { rejectValue: stri
     }
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await apiAxios.get<User>('/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
       return response.data;
     } catch (error: any) {
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        log('[Auth] Request timeout');
+        return rejectWithValue('Timeout ao verificar autenticação');
+      }
       const errorMessage = error?.response?.data?.message || 'Erro ao buscar usuário';
       log('[Auth] Error fetching user:', errorMessage);
       return rejectWithValue(errorMessage);
@@ -130,12 +140,19 @@ export const initAuth = createAsyncThunk<void, void, { rejectValue: string }>(
         dispatch(login({ accessToken, refreshToken }));
 
         try {
-          await dispatch(fetchCurrentUser()).unwrap();
+          const fetchPromise = dispatch(fetchCurrentUser()).unwrap();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Init timeout')), 12000)
+          );
+
+          await Promise.race([fetchPromise, timeoutPromise]);
         } catch (e) {
+          log('[Auth] Init failed, logging out:', e);
           dispatch(logout());
         }
       }
     } catch (e: any) {
+      log('[Auth] Init error:', e);
       return rejectWithValue('Falha ao inicializar auth');
     }
   }

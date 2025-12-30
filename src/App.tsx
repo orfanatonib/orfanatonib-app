@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, CircularProgress, Toolbar } from '@mui/material';
@@ -69,13 +69,21 @@ function App() {
   const dispatch = useDispatch<AppDispatchType>();
   const dynamicRoutes = useSelector((state: RootStateType) => state.routes.routes);
   const { initialized, loadingUser } = useSelector((state: RootStateType) => state.auth);
+  const [forceReady, setForceReady] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRoutes());
     dispatch(initAuth());
+
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('[App] Force ready after 15s timeout');
+      setForceReady(true);
+    }, 15000);
+
+    return () => clearTimeout(fallbackTimeout);
   }, [dispatch]);
 
-  if (!initialized || loadingUser) {
+  if (!forceReady && (!initialized || loadingUser)) {
     return (
       <Box
         sx={{
