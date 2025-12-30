@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Script de Deploy Completo - Clubinho NIB Amplify App
+# Script de Deploy Completo - orfanato NIB Amplify App
 # =============================================================================
 #
 # Este script orquestra o deploy completo da infraestrutura via CloudFormation:
@@ -15,7 +15,7 @@
 #   ./deploy.sh
 #
 # Opções:
-#   --profile PROFILE    AWS CLI profile (default: clubinho-aws)
+#   --profile PROFILE    AWS CLI profile (default: orfanato-aws)
 #   --region REGION      AWS region (default: us-east-1)
 #   --skip-dns          Pula o deploy da stack DNS
 #   --skip-builds       Pula os builds do Amplify
@@ -31,14 +31,14 @@ set -euo pipefail
 
 PROFILE="clubinho-aws"
 REGION="us-east-1"
-AMPLIFY_STACK_NAME="clubinhonib-amplify"
-DNS_STACK_NAME="clubinhonib-dns"
+AMPLIFY_STACK_NAME="orfanatonib-amplify"
+DNS_STACK_NAME="orfanatonib-dns"
 AMPLIFY_TEMPLATE="amplify-app.yaml"
 DNS_TEMPLATE="route53-dns.yaml"
 AMPLIFY_PARAMS="parameters.json"
 GITHUB_TOKEN_ENV="AMPLIFY_GITHUB_TOKEN"
-HOSTED_ZONE_ID="Z04342831HLGP0JZ4VI5K"
-ROOT_DOMAIN="clubinhonib.com"
+HOSTED_ZONE_ID="Z0258077265U2L3HPAGYP"
+ROOT_DOMAIN="orfanatonib.com"
 STAGING_PREFIX="staging"
 
 SKIP_DNS="false"
@@ -81,7 +81,7 @@ while [ $# -gt 0 ]; do
       echo "Uso: $0 [opções]"
       echo ""
       echo "Opções:"
-      echo "  --profile PROFILE    AWS CLI profile (default: clubinho-aws)"
+      echo "  --profile PROFILE    AWS CLI profile (default: orfanato-aws)"
       echo "  --region REGION      AWS region (default: us-east-1)"
       echo "  --skip-dns           Pula deploy da stack DNS"
       echo "  --skip-builds        Pula builds do Amplify"
@@ -100,7 +100,7 @@ done
 # VERIFICAÇÕES INICIAIS
 # =============================================================================
 
-header "🚀 Deploy Clubinho NIB - CloudFormation"
+header "🚀 Deploy orfanato NIB - CloudFormation"
 
 log "Verificando pré-requisitos..."
 

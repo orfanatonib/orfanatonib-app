@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, CircularProgress, Toolbar } from '@mui/material';
+import { Box, CircularProgress, Toolbar, Button, Typography } from '@mui/material';
 
 import './App.css';
 import './styles/Global.css';
@@ -29,7 +29,7 @@ import AdminDashboardPage from './components/Adm/AdminDashboardPage';
 import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
 
 import { fetchRoutes } from './store/slices/route/routeSlice';
-import { UserRole, initAuth } from './store/slices/auth/authSlice';
+import { UserRole, initAuth, logout } from './store/slices/auth/authSlice';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -83,6 +83,11 @@ function App() {
     return () => clearTimeout(fallbackTimeout);
   }, [dispatch]);
 
+  const handleLogout = () => {
+    dispatch(logout());
+    setForceReady(true);
+  };
+
   if (!forceReady && (!initialized || loadingUser)) {
     return (
       <Box
@@ -90,13 +95,34 @@ function App() {
           height: '100vh',
           width: '100vw',
           display: 'flex',
+          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           background: 'linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)',
           backgroundAttachment: 'fixed',
+          gap: 3,
+          px: 2,
         }}
       >
         <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Verificando autenticação...
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleLogout}
+          sx={{
+            mt: 2,
+            borderWidth: 2,
+            '&:hover': {
+              borderWidth: 2,
+              bgcolor: 'rgba(211, 47, 47, 0.04)',
+            }
+          }}
+        >
+          Sair e Limpar Dados
+        </Button>
       </Box>
     );
   }

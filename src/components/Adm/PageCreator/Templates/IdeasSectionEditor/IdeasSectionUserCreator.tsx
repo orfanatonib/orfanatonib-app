@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
 import { clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
-import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
+import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
 import api from '@/config/axiosConfig';
 
 export function IdeasSectionUserCreator() {
@@ -276,10 +276,9 @@ export function IdeasSectionUserCreator() {
             borderRadius: '3px',
           },
         }}>
-          <IdeasMaterialSection
+          <IdeasMaterialSectionUser
             section={sectionData}
             onUpdate={handleSectionUpdate}
-            isCreationMode={true}
           />
 
           <Box sx={{
@@ -322,7 +321,7 @@ export function IdeasSectionUserCreator() {
             <Button
               variant="contained"
               onClick={handleShareIdea}
-              disabled={loading || !sectionData.title.trim() || !sectionData.description.trim() || sectionData.medias.length === 0}
+              disabled={loading}
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
               sx={{
                 px: { xs: 4, md: 6 },
@@ -359,6 +358,7 @@ export function IdeasSectionUserCreator() {
         autoHideDuration={6000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ zIndex: 1400 }}
       >
         <Alert
           onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
