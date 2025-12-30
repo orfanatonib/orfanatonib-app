@@ -55,7 +55,6 @@ const FeedbackCard: React.FC<Props> = ({ feedback, onView, onDelete }) => {
         },
       }}
     >
-      {/* Header with Status */}
       <Box
         sx={{
           p: { xs: 1.5, sm: 2 },

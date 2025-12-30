@@ -86,7 +86,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      // Remove campos vazios antes de enviar
       const payload: UpdateProfileDto = {};
       if (formData.name && formData.name.trim() !== profile?.name) {
         payload.name = formData.name.trim();
@@ -114,7 +113,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       const errorMessage = err?.response?.data?.message || 'Erro ao atualizar perfil';
       onError(errorMessage);
       
-      // Tratamento específico para email duplicado
       if (errorMessage.includes('já está em uso')) {
         setErrors({ email: 'Este email já está em uso por outro usuário' });
       }
@@ -185,7 +183,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
                 value={formData.email}
                 onChange={(e) => {
                   setFormData({ ...formData, email: e.target.value });
-                  // Validação em tempo real
                   const v = e.target.value;
                   if (!v.trim()) setErrors({ ...errors, email: 'Email é obrigatório' });
                   else if (!isValidEmail(v)) setErrors({ ...errors, email: 'Email inválido' });

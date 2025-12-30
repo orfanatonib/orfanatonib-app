@@ -17,14 +17,12 @@ function normalizeIsoDateString(input?: string | null): string | null | undefine
   const raw = String(input).trim();
   if (!raw) return raw as any;
 
-  // dd/mm/yyyy -> yyyy-mm-dd
   const br = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (br) {
     const [, dd, mm, yyyy] = br;
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // yyyy-mm-dd (aceita ano com mais dígitos e usa os últimos 4)
   const iso = raw.match(/^(\d{4,})-(\d{2})-(\d{2})$/);
   if (iso) {
     let [, y, m, d] = iso;

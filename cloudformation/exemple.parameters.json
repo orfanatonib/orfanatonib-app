@@ -1,7 +1,7 @@
 [
   {
     "ParameterKey": "RepositoryUrl",
-    "ParameterValue": "https://github.com/orfanatonib/orfanatonib-app"
+    "ParameterValue": "https://github.com/ministerioclubinhos/clubinhonib-app"
   },
   {
     "ParameterKey": "RepositoryBranch",
@@ -13,7 +13,7 @@
   },
   {
     "ParameterKey": "RootDomainName",
-    "ParameterValue": "orfanatonib.com"
+    "ParameterValue": "clubinhonib.com"
   },
   {
     "ParameterKey": "StagingSubdomainPrefix",
@@ -21,7 +21,7 @@
   },
   {
     "ParameterKey": "ProdApiUrl",
-    "ParameterValue": "https://api.orfanatonib.com"
+    "ParameterValue": "https://api.clubinhonib.com"
   },
   {
     "ParameterKey": "ProdFeedMinisterioId",
@@ -37,7 +37,7 @@
   },
   {
     "ParameterKey": "StagingApiUrl",
-    "ParameterValue": "https://staging-api.orfanatonib.com"
+    "ParameterValue": "https://staging-api.clubinhonib.com"
   },
   {
     "ParameterKey": "StagingFeedMinisterioId",

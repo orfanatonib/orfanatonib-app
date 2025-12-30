@@ -327,7 +327,6 @@ export async function apiLoadTeacherOptions() {
   })) as TeacherOption[];
 }
 
-// Removido: TeacherSimpleApi agora é TeacherSimpleListDto no módulo de teachers
 
 export type LeaderSimpleApi = {
   leaderProfileId: string;
@@ -335,7 +334,6 @@ export type LeaderSimpleApi = {
   vinculado: boolean;
 };
 
-// Removido: apiListTeachersSimple agora está no módulo de teachers
 
 export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
   let allLeaders: any[] = [];

@@ -53,14 +53,12 @@ export default function LeaderMultiEditDialog({
   const [loadingShelters, setLoadingShelters] = useState(false);
   const [error, setError] = useState("");
 
-  // Carregar abrigos ao abrir o modal
   useEffect(() => {
     if (open) {
       loadShelters();
     }
   }, [open]);
 
-  // Carregar associações atuais do líder
   useEffect(() => {
     if (open && leader) {
       loadCurrentAssociations();
@@ -112,7 +110,6 @@ export default function LeaderMultiEditDialog({
       return;
     }
 
-    // Verificar se o abrigo já está selecionado
     const isAlreadySelected = associations.some((assoc, i) =>
       i !== index && assoc.shelterId === shelter.id
     );
@@ -191,7 +188,6 @@ export default function LeaderMultiEditDialog({
       return;
     }
 
-    // Converter para o formato da API
     const payload: LeaderAssociationUpdateDto = associations.map(assoc => ({
       shelterId: assoc.shelterId,
       teams: assoc.teams,
@@ -377,7 +373,6 @@ export default function LeaderMultiEditDialog({
   );
 }
 
-// Componente auxiliar para seleção de equipes
 function TeamsSelector({
   shelterId,
   selectedTeams,

@@ -30,8 +30,6 @@ export default function ShelteredFormDialog({
   
   const user = useSelector((state: RootState) => state.auth.user);
   const isTeacher = user?.role === UserRole.TEACHER;
-  // O abrigo do professor vem pelo team (teacherProfile.team.shelter) no /auth/me atual.
-  // Mantemos fallback para teacherProfile.shelter por compatibilidade.
   const teacherShelter =
     user?.teacherProfile?.team?.shelter ??
     user?.teacherProfile?.shelter ??

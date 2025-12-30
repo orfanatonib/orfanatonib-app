@@ -117,7 +117,6 @@ export default function EventPageCreator() {
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}
@@ -138,7 +137,6 @@ export default function EventPageCreator() {
           </Typography>
         </Box>
 
-        {/* Form Section */}
         <Paper
           elevation={2}
           sx={{
@@ -229,7 +227,6 @@ export default function EventPageCreator() {
           </Grid>
         </Paper>
 
-        {/* Add Event Section */}
         <Paper
           elevation={2}
           sx={{
@@ -377,7 +374,6 @@ export default function EventPageCreator() {
           </Grid>
         </Paper>
 
-        {/* Events List */}
         {events.length > 0 && (
           <Paper
             elevation={2}
@@ -436,7 +432,6 @@ export default function EventPageCreator() {
           </Paper>
         )}
 
-        {/* Save Button */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
           <Button
             variant="outlined"

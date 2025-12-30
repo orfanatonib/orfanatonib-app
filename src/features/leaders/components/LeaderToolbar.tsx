@@ -75,7 +75,6 @@ export default function LeaderToolbar({
       </Typography>
 
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="flex-end">
-          {/* Busca por Líder */}
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
@@ -117,7 +116,6 @@ export default function LeaderToolbar({
             />
           </Grid>
 
-          {/* Busca por Abrigo */}
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
@@ -159,7 +157,6 @@ export default function LeaderToolbar({
             />
           </Grid>
 
-          {/* Filtro de Vínculo */}
           <Grid item xs={6} sm={4} md={2}>
             <FormControl fullWidth size="small">
               <InputLabel id="has-shelter-label">Vínculo</InputLabel>
@@ -192,7 +189,6 @@ export default function LeaderToolbar({
             </FormControl>
           </Grid>
 
-          {/* Filtro por Número da Equipe */}
           <Grid item xs={6} sm={4} md={2}>
             <TextField
               fullWidth
@@ -236,7 +232,6 @@ export default function LeaderToolbar({
             />
           </Grid>
 
-          {/* Filtro de Equipe */}
           <Grid item xs={6} sm={4} md={2}>
             <FormControl fullWidth size="small">
               <InputLabel id="has-team-label">Equipe</InputLabel>
@@ -269,7 +264,6 @@ export default function LeaderToolbar({
             </FormControl>
           </Grid>
 
-          {/* Botões de Ação - Desktop (mesma linha) */}
           <Grid 
             item 
             xs={0}
@@ -316,7 +310,6 @@ export default function LeaderToolbar({
           </Grid>
         </Grid>
 
-      {/* FABs para Mobile */}
       {isXs && (
         <Box
           sx={{

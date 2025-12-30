@@ -49,7 +49,6 @@ export type TeamSimple = {
   updatedAt: string;
 };
 
-// Tipos para equipes e abrigos conforme nova documentação
 export type TeamSimple = {
   id: string;
   numberTeam: number;
@@ -83,7 +82,6 @@ export type LeaderShelterAssociation = {
   teachers?: MinimalTeacher[]; // Professores do abrigo
 };
 
-// Tipo conforme documentação: LeaderResponseDto (atualizado para múltiplas associações)
 export type LeaderProfile = {
   id: string;
   active: boolean;
@@ -107,17 +105,14 @@ export type LeaderFilters = {
   sort?: "name" | "updatedAt" | "createdAt";
   order?: "asc" | "desc";
 
-  // Filtros de busca
   leaderSearchString?: string;  // Busca por nome, email ou telefone do líder
   shelterSearchString?: string; // Busca por nome ou endereço do abrigo
 
-  // Filtros específicos
   hasShelter?: boolean;         // true: só líderes com abrigo, false: só sem abrigo
   teamId?: string;             // Filtrar por ID específico da equipe
   teamName?: string;           // Filtrar por número da equipe
   hasTeam?: boolean;           // true: só líderes com equipe, false: só sem equipe
 
-  // Filtros legados (compatibilidade)
   searchString?: string;
   q?: string;
   active?: boolean;
@@ -125,7 +120,6 @@ export type LeaderFilters = {
   shelterName?: string;
 };
 
-// Tipos para respostas da API conforme documentação
 
 /**
  * Tipo simplificado para listagem de líderes
@@ -183,5 +177,4 @@ export type TeamsCompleteResponse = {
   updatedAt: string;
 }[];
 
-// Mantido para compatibilidade (deprecated)
 export type LeaderSimpleApi = LeaderSimpleListDto;

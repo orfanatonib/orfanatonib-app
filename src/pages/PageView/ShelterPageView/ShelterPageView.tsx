@@ -49,7 +49,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
   const [leadersScrollRef, setLeadersScrollRef] = useState<HTMLDivElement | null>(null);
   const [teachersScrollRef, setTeachersScrollRef] = useState<HTMLDivElement | null>(null);
 
-  // Verificar autenticação
   useEffect(() => {
     if (initialized && !loadingUser && !isAuthenticated) {
       navigate('/login', { state: { from: location }, replace: true });
@@ -76,7 +75,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     }
   }, [idToFetch]);
 
-  // Pegar líderes diretamente das equipes para garantir que todos sejam incluídos
   const uniqueLeaders = useMemo(() => {
     if (!shelter?.teams || shelter.teams.length === 0) return [];
     const leadersMap = new Map<string, (typeof shelter.teams)[0]['leaders'][0]>();
@@ -93,7 +91,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     return Array.from(leadersMap.values());
   }, [shelter?.teams]);
 
-  // Pegar professores diretamente das equipes para garantir que todos sejam incluídos
   const uniqueTeachers = useMemo(() => {
     if (!shelter?.teams || shelter.teams.length === 0) return [];
     const teachersMap = new Map<string, (typeof shelter.teams)[0]['teachers'][0]>();
@@ -110,7 +107,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     return Array.from(teachersMap.values());
   }, [shelter?.teams]);
 
-  // Função para encontrar as equipes de um líder
   const getLeaderTeams = useMemo(() => {
     const teamsMap = new Map<string, number[]>();
     if (shelter?.teams && shelter.teams.length > 0) {
@@ -136,7 +132,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     };
   }, [shelter?.teams]);
 
-  // Função para encontrar as equipes de um professor
   const getTeacherTeams = useMemo(() => {
     const teamsMap = new Map<string, number[]>();
     if (shelter?.teams && shelter.teams.length > 0) {
@@ -173,17 +168,14 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
       
       let targetScroll: number;
       if (direction === 'left') {
-        // Encontrar o card mais próximo à esquerda do centro
         const targetPosition = currentScroll - scrollAmount;
         targetScroll = Math.max(0, targetPosition);
       } else {
-        // Encontrar o card mais próximo à direita do centro
         const targetPosition = currentScroll + scrollAmount;
         const maxScroll = container.scrollWidth - containerWidth;
         targetScroll = Math.min(maxScroll, targetPosition);
       }
       
-      // Centralizar o card
       const cardIndex = Math.round(targetScroll / scrollAmount);
       const centeredScroll = cardIndex * scrollAmount - (containerWidth / 2) + (cardWidth / 2);
       
@@ -213,7 +205,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
         targetScroll = Math.min(maxScroll, targetPosition);
       }
       
-      // Centralizar o card
       const cardIndex = Math.round(targetScroll / scrollAmount);
       const centeredScroll = cardIndex * scrollAmount - (containerWidth / 2) + (cardWidth / 2);
       
@@ -228,7 +219,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     navigate(-1);
   };
 
-  // Mostrar loading enquanto verifica autenticação
   if (!initialized || loadingUser) {
     return (
       <Box
@@ -250,7 +240,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     );
   }
 
-  // Redirecionar se não estiver autenticado
   if (!isAuthenticated) {
     return null; // O useEffect já redirecionou
   }
@@ -301,7 +290,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
         pb: 6,
       }}
       >
-      {/* Hero Section com Imagem */}
       {shelter.mediaItem?.url && (
         <Box
           sx={{
@@ -323,7 +311,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
               filter: 'brightness(0.7)',
             }}
           />
-          {/* Overlay com gradiente */}
           <Box
             sx={{
               position: 'absolute',
@@ -334,7 +321,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
               background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)',
             }}
           />
-          {/* Conteúdo do Hero */}
           <Container
             maxWidth="lg"
             sx={{
@@ -404,7 +390,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
         </Box>
       )}
 
-      {/* Header quando não tem imagem */}
       {!shelter.mediaItem?.url && (
         <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 5 }, pb: { xs: 2, md: 3 }, px: { xs: 2, sm: 3 } }}>
           <motion.div
@@ -489,9 +474,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
 
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <Grid container spacing={{ xs: 2, sm: 3 }}>
-          {/* Coluna Principal */}
           <Grid item xs={12} md={8}>
-          {/* Endereço */}
           {address && (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -683,7 +666,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
             </motion.div>
           )}
 
-          {/* Equipes */}
           {shelter.teamsQuantity && shelter.teamsQuantity > 0 && (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -753,9 +735,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
           )}
           </Grid>
 
-          {/* Sidebar */}
           <Grid item xs={12} md={4}>
-          {/* Líderes */}
           {uniqueLeaders.length > 0 && (
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -864,7 +844,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                               },
                             }}
                           >
-                            {/* Header com gradiente */}
                             <Box
                               sx={{
                                 background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
@@ -892,7 +871,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                             {leader.user?.name?.charAt(0)?.toUpperCase() || 'L'}
                           </Avatar>
                             </Box>
-                            {/* Conteúdo */}
                             <Box sx={{ p: 2, textAlign: 'center' }}>
                               <Typography
                                 variant="body1"
@@ -1013,7 +991,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
             </motion.div>
           )}
 
-          {/* Professores */}
           {uniqueTeachers.length > 0 && (
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -1122,7 +1099,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                               },
                             }}
                           >
-                            {/* Header com gradiente */}
                             <Box
                               sx={{
                                 background: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)',
@@ -1150,7 +1126,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
                             {teacher.user?.name?.charAt(0)?.toUpperCase() || 'P'}
                           </Avatar>
                             </Box>
-                            {/* Conteúdo */}
                             <Box sx={{ p: 2, textAlign: 'center' }}>
                               <Typography
                                 variant="body1"
@@ -1271,7 +1246,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
             </motion.div>
           )}
 
-          {/* Informações de Data */}
           <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

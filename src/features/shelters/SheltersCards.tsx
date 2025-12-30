@@ -303,7 +303,6 @@ export default function SheltersCards(props: Props) {
                     <Divider sx={{ mx: { xs: 1.5, sm: 2 } }} />
                     <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                       <Stack spacing={2}>
-                        {/* Professores */}
                         <Paper
                           variant="outlined"
                           sx={{
@@ -335,7 +334,6 @@ export default function SheltersCards(props: Props) {
                           </Stack>
                         </Paper>
 
-                        {/* Endereço */}
                         {c.address && (
                           <Paper
                             variant="outlined"
@@ -377,7 +375,6 @@ export default function SheltersCards(props: Props) {
                           </Paper>
                         )}
 
-                        {/* Informações adicionais */}
                         <Paper
                           variant="outlined"
                           sx={{

@@ -1,13 +1,23 @@
-# CloudFormation - Orfanato NIB Amplify App
+# CloudFormation - Clubinho NIB Amplify App
 
-Este diretório contém os templates e scripts para deploy da aplicação Orfanato NIB no AWS Amplify usando CloudFormation.
+Este diretório contém os templates e scripts para deploy da aplicação Clubinho NIB no AWS Amplify usando CloudFormation.
 
 ## 📁 Arquivos
 
-- `amplify-app.yaml` - Template CloudFormation principal
-- `parameters.json` - Parâmetros para o deploy
-- `deploy.sh` - Script automatizado de deploy
-- `README.md` - Este arquivo
+### Templates CloudFormation
+- `amplify-app.yaml` - Template CloudFormation para AWS Amplify App
+- `route53-dns.yaml` - Template CloudFormation para registros DNS do Route53
+
+### Parâmetros
+- `parameters.json` - Parâmetros para a stack do Amplify
+- `exemple.parameters.json` - Exemplo de parâmetros (não versionar!)
+
+### Scripts de Deploy
+- **`deploy.sh`** - Script único de deploy completo (orquestra tudo automaticamente)
+
+### Arquivos de Ambiente
+- `../env/env.prod` - Variáveis de ambiente para produção
+- `../env/env.staging` - Variáveis de ambiente para staging
 
 ## 🚀 Como fazer o deploy
 
@@ -18,7 +28,7 @@ Este diretório contém os templates e scripts para deploy da aplicação Orfana
    aws configure --profile clubinho-aws
    ```
 
-2. **Domínio `orfanatonib.com` controlado** pela conta AWS do perfil `clubinho-aws`
+2. **Domínio `clubinhonib.com` controlado** pela conta AWS do perfil `clubinho-aws`
 
 3. **GitHub Personal Access Token** (será configurado manualmente no console):
    - Crie um token em [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
@@ -27,37 +37,76 @@ Este diretório contém os templates e scripts para deploy da aplicação Orfana
      - `workflow` (Update GitHub Action workflows)
    - **IMPORTANTE**: Guarde o token, será usado no passo 4 dos pós-deploy
 
-3. **Repositório GitHub** configurado (atualmente aponta para `https://github.com/diego-seven/orfanatonib-app`)
+3. **Repositório GitHub** configurado (atualmente aponta para `https://github.com/ministerioclubinhos/clubinhonib-app`)
 
-### Deploy da Stack
+### Deploy Completo
 
-#### Criar a stack (primeira vez):
+Execute um único comando para fazer o deploy de tudo:
+
 ```bash
-./deploy.sh create orfanatonib-amplify-stack
+# 1. Export o GitHub token
+export AMPLIFY_GITHUB_TOKEN='your-github-token-here'
+
+# 2. Execute o deploy completo
+./deploy.sh
 ```
 
-#### Atualizar a stack (deploy de mudanças):
+**O script faz automaticamente:**
+1. ✅ Cria/atualiza stack Amplify (App + Branches + Domain)
+2. ✅ Atualiza environment variables (de env/env.prod e env/env.staging)
+3. ✅ Obtém DNS records do Amplify dinamicamente
+4. ✅ Cria/atualiza stack DNS no Route53
+5. ✅ Dispara builds das branches main e staging
+
+### Opções Avançadas
+
 ```bash
-./deploy.sh update orfanatonib-amplify-stack
+# Pular deploy do DNS
+./deploy.sh --skip-dns
+
+# Pular builds do Amplify
+./deploy.sh --skip-builds
+
+# Usar outro profile AWS
+./deploy.sh --profile outro-profile
+
+# Ver todas as opções
+./deploy.sh --help
 ```
 
-#### Deletar a stack:
+### Deletar as Stacks
+
 ```bash
-./deploy.sh delete orfanatonib-amplify-stack
+aws cloudformation delete-stack --stack-name clubinhonib-dns --profile clubinho-aws
+aws cloudformation delete-stack --stack-name clubinhonib-amplify --profile clubinho-aws
 ```
 
-## 🏗️ O que a stack cria
+## 🏗️ Arquitetura e Recursos Criados
 
-### AWS Amplify App
-- **Nome**: `orfanatonib-app`
-- **Build settings** otimizadas para Vite + React
-- **Auto-build** habilitado para branches
-- **NOTA**: O repositório GitHub será conectado manualmente no console
+### Stack 1: Amplify App (`clubinhonib-amplify`)
+Cria automaticamente via CloudFormation:
+- **AWS Amplify App** (`clubinhonib-app`)
+  - Build settings otimizadas para Vite + React
+  - Auto-build habilitado para branches
+  - Repositório GitHub conectado automaticamente
 
-### Branches configuradas
-- **Branches serão criadas manualmente** no console após conectar o repositório
-- **`main`** → Produção (será configurado para `orfanatonib.com`)
-- **`staging`** → Staging (será configurado para `staging.orfanatonib.com`)
+- **Branches**:
+  - **`main`** → Produção
+  - **`staging`** → Staging
+
+- **Domain Association**:
+  - Domínio customizado: `clubinhonib.com`
+  - Certificado SSL gerenciado automaticamente
+  - CloudFront distribution criado automaticamente
+
+### Stack 2: Route53 DNS (`clubinhonib-dns`)
+Cria automaticamente via CloudFormation:
+- **Registros DNS**:
+  - `clubinhonib.com` → Alias (A + AAAA) para CloudFront
+  - `staging.clubinhonib.com` → CNAME para CloudFront
+  - Registro de validação do certificado SSL
+
+**IMPORTANTE**: Esta stack obtém os valores dinamicamente do Amplify, não são hardcoded!
 
 ### Environment Variables
 Cada branch tem suas próprias variáveis de ambiente:
@@ -67,8 +116,8 @@ Cada branch tem suas próprias variáveis de ambiente:
 - `VITE_SPECIAL_FAMILY_DAY_ID`
 
 ### Domínios
-- **Produção**: `https://orfanatonib.com`
-- **Staging**: `https://staging.orfanatonib.com`
+- **Produção**: `https://clubinhonib.com`
+- **Staging**: `https://staging.clubinhonib.com`
 
 ## 🔧 Configurações pós-deploy
 
@@ -76,12 +125,12 @@ Após o deploy bem-sucedido, você precisará:
 
 1. **Configurar webhook do GitHub**:
    - Acesse o [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
-   - Selecione a app `orfanatonib-app`
+   - Selecione a app `clubinhonib-app`
    - Vá para "App settings" > "Repository"
    - Clique em "Connect to repository"
    - Selecione GitHub e faça login
    - Cole o Personal Access Token criado anteriormente
-   - Selecione o repositório `orfanatonib/orfanatonib-app`
+   - Selecione o repositório `ministerioclubinhos/clubinhonib-app`
    - Configure webhooks para auto-deploy das branches `main` e `staging`
 
 2. **Criar branches no Amplify**:
@@ -93,13 +142,13 @@ Após o deploy bem-sucedido, você precisará:
 
 3. **Configurar domínios**:
    - Vá para "App settings" > "Domain management"
-   - Adicione o domínio `orfanatonib.com`
+   - Adicione o domínio `clubinhonib.com`
    - Configure subdomínios:
-     - `orfanatonib.com` → branch `main`
-     - `staging.orfanatonib.com` → branch `staging`
+     - `clubinhonib.com` → branch `main`
+     - `staging.clubinhonib.com` → branch `staging`
 
 2. **Configurar domínio no Route 53** (se necessário):
-   - Verifique se `orfanatonib.com` está configurado no Route 53
+   - Verifique se `clubinhonib.com` está configurado no Route 53
    - O Amplify criará os registros necessários automaticamente
 
 3. **Fazer push das branches**:
@@ -116,7 +165,7 @@ Após o deploy bem-sucedido, você precisará:
 ### Ver status da stack:
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name orfanatonib-amplify-stack \
+  --stack-name clubinhonib-amplify-stack \
   --profile clubinho-aws \
   --region us-east-1
 ```
@@ -124,7 +173,7 @@ aws cloudformation describe-stacks \
 ### Ver outputs da stack:
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name orfanatonib-amplify-stack \
+  --stack-name clubinhonib-amplify-stack \
   --profile clubinho-aws \
   --region us-east-1 \
   --query 'Stacks[0].Outputs'
@@ -132,14 +181,14 @@ aws cloudformation describe-stacks \
 
 ### Logs de build:
 - Acesse o AWS Amplify Console
-- Vá para a app `orfanatonib-app`
+- Vá para a app `clubinhonib-app`
 - Clique em "Build settings" > "Build history"
 
 ## 🔍 Troubleshooting
 
 ### Stack falha ao criar:
 - Verifique se o perfil `clubinho-aws` tem permissões adequadas
-- Confirme que o domínio `orfanatonib.com` está na conta AWS correta
+- Confirme que o domínio `clubinhonib.com` está na conta AWS correta
 
 ### Build falha no Amplify:
 - Verifique os logs no Amplify Console
@@ -171,5 +220,5 @@ Para modificar configurações:
 
 Após mudanças, execute:
 ```bash
-./deploy.sh update orfanatonib-amplify-stack
+./deploy.sh update clubinhonib-amplify-stack
 ```

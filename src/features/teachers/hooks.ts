@@ -100,7 +100,6 @@ export function useTeacherMutations(
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState("");
 
-  // Métodos de setShelter/clearShelter removidos - agora gerenciados via Teams
   return { dialogLoading, dialogError, setDialogError };
 }
 

@@ -178,7 +178,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
           <Alert severity="info">Nenhum abrigado selecionado.</Alert>
         ) : (
           <Stack spacing={2}>
-            {/* Contatos */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<PhoneIphone fontSize="small" />} title="Telefone do Responsável">
@@ -210,7 +209,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               </Grid>
             </Grid>
 
-            {/* Datas */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<Cake fontSize="small" />} title="Nascimento">
@@ -226,7 +224,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               </Grid>
             </Grid>
 
-            {/* Endereço */}
             <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Home fontSize="small" />
@@ -267,7 +264,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               )}
             </Paper>
 
-            {/* Metadados */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<MenuBook fontSize="small" />} title="Criado em">

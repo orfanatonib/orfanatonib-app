@@ -103,7 +103,6 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
       </DialogTitle>
       
       <DialogContent sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
-        {/* Tabs com design moderno */}
         <Paper
           elevation={2}
           sx={{
@@ -289,7 +288,6 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
                               <DeleteIcon color="error" fontSize="small" />
                             </IconButton>
                             
-                            {/* Nome do arquivo */}
                             <Box
                               sx={{
                                 position: 'absolute',

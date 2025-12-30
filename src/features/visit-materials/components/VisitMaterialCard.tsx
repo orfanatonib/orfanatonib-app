@@ -44,7 +44,6 @@ export default function VisitMaterialCard({
           },
         }}
       >
-        {/* Header with Badges */}
         <Box
           sx={{
             position: 'relative',
@@ -59,7 +58,6 @@ export default function VisitMaterialCard({
             flexWrap: { xs: 'wrap', sm: 'nowrap' },
           }}
         >
-          {/* Status Icons */}
           <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, flexWrap: 'wrap', flex: 1 }}>
             <Tooltip title={isPublic ? 'Público' : 'Privado'}>
               <Chip
@@ -108,7 +106,6 @@ export default function VisitMaterialCard({
         </Box>
 
         <CardContent sx={{ p: { xs: 2, sm: 3 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {/* Title */}
           <Typography
             variant="h6"
             fontWeight="bold"
@@ -126,7 +123,6 @@ export default function VisitMaterialCard({
             {material.title}
           </Typography>
 
-          {/* Subtitle */}
           {material.subtitle && (
             <Typography
               variant="body2"
@@ -144,7 +140,6 @@ export default function VisitMaterialCard({
             </Typography>
           )}
 
-          {/* Description */}
           {material.description && (
             <Typography
               variant="body2"
@@ -163,7 +158,6 @@ export default function VisitMaterialCard({
             </Typography>
           )}
 
-          {/* Current Week Badge */}
           {material.currentWeek && (
             <Box sx={{ mb: 2 }}>
               <Chip
@@ -224,7 +218,6 @@ export default function VisitMaterialCard({
           </Button>
         </CardActions>
 
-        {/* Set as Current Button */}
         {!material.currentWeek && onSetAsCurrent && (
           <Box sx={{ px: { xs: 1.5, sm: 2 }, pb: { xs: 1.5, sm: 2 } }}>
             <Button

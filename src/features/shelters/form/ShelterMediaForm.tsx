@@ -22,13 +22,11 @@ const ShelterMediaForm: React.FC<Props> = ({
   const [imageError, setImageError] = React.useState(false);
   const previewUrl = file ? URL.createObjectURL(file) : (uploadType === "link" && url ? url : null);
 
-  // Resetar showExisting e imageError quando existingImageUrl mudar
   React.useEffect(() => {
     setShowExisting(!!existingImageUrl);
     setImageError(false);
   }, [existingImageUrl]);
 
-  // Se tem imagem existente e não foi removida, mostrar apenas a imagem com botão X
   if (showExisting && existingImageUrl && !file && (!url || url === existingImageUrl)) {
     return (
       <Fragment>
@@ -127,7 +125,6 @@ const ShelterMediaForm: React.FC<Props> = ({
     );
   }
 
-  // Formulário normal de seleção de mídia
   return (
     <Fragment>
       <Grid item xs={12}>
@@ -147,7 +144,6 @@ const ShelterMediaForm: React.FC<Props> = ({
             label="Tipo de Imagem" 
             onChange={(e) => {
               setUploadType(e.target.value as "upload" | "link");
-              // Limpar campos ao trocar de tipo
               if (e.target.value === "upload") {
                 setUrl("");
               } else {
@@ -243,7 +239,6 @@ const ShelterMediaForm: React.FC<Props> = ({
         </Grid>
       )}
 
-      {/* Preview da Imagem */}
       {previewUrl && (
         <Grid item xs={12}>
           <Box sx={{ 

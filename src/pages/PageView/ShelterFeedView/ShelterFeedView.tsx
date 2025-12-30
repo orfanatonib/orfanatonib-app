@@ -131,9 +131,10 @@ function SectionSkeleton() {
 export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
@@ -161,13 +162,23 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   const sectionsList = useMemo(() => section?.sections ?? [], [section?.sections]);
 
   useEffect(() => {
+    dispatch(setSectionData(null as any));
+    setInitialLoadComplete(false);
+    setPage(1);
+    setHasMore(true);
+  }, [dispatch]);
+
+  useEffect(() => {
     const controller = new AbortController();
 
     const fetchSectionData = async () => {
       try {
         setError(null);
-        if (page === 1) setLoading(true);
-        else setLoadingMore(true);
+        if (page === 1) {
+          setLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
 
         const sectionId = feed ? defaultSectionId : undefined;
         if (!sectionId) throw new Error('Nenhum ID de seção fornecido.');
@@ -179,9 +190,12 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
 
         if (page === 1) {
           dispatch(setSectionData(data));
+          setLoading(false);
+          setInitialLoadComplete(true);
         } else {
           dispatch(appendSections(data.sections));
           dispatch(updatePagination({ page: data.page, total: data.total }));
+          setLoadingMore(false);
         }
 
         setHasMore(data.page * data.limit < data.total);
@@ -189,10 +203,13 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
         if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
           console.error('Error loading section:', err);
           setError('Erro ao carregar a seção. Tente novamente mais tarde.');
+          if (page === 1) {
+            setLoading(false);
+            setInitialLoadComplete(true);
+          } else {
+            setLoadingMore(false);
+          }
         }
-      } finally {
-        if (page === 1) setLoading(false);
-        else setLoadingMore(false);
       }
     };
 
@@ -205,7 +222,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
     navigate(-1);
   };
 
-  if (loading) {
+  if (!initialLoadComplete) {
     return (
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
         <motion.div
@@ -229,10 +246,10 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Alert 
-            severity="error" 
-            sx={{ 
-              borderRadius: { xs: 3, md: 4 }, 
+          <Alert
+            severity="error"
+            sx={{
+              borderRadius: { xs: 3, md: 4 },
               boxShadow: 3,
               fontSize: { xs: '0.9rem', md: '1rem' },
               p: { xs: 2, md: 3 },
@@ -261,10 +278,10 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
               borderRadius: { xs: 3, md: 4 },
             }}
           >
-            <Typography 
-              variant="h5" 
+            <Typography
+              variant="h5"
               color="text.secondary"
-              sx={{ 
+              sx={{
                 fontSize: { xs: '1.3rem', md: '1.5rem' },
                 mb: 2,
               }}
@@ -282,7 +299,6 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-      {/* Header da Galeria */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -338,33 +354,43 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
                 <PhotoLibraryIcon sx={{ fontSize: { xs: '2rem', md: '2.5rem' } }} />
               </Box>
 
-              {feed && isAuthenticated && user?.role === UserRole.TEACHER && (
+              {feed && isAuthenticated && (
                 <Button
                   component={Link}
                   to="/imagens-abrigo"
                   variant="contained"
-                  startIcon={<PhotoCameraIcon />}
+                  startIcon={!isMobile && <PhotoCameraIcon />}
                   sx={{
-                    bgcolor: '#FF0000',
-                    color: 'white',
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    color: '#2e7d32',
                     fontWeight: 'bold',
-                    px: { xs: 2.5, md: 3.5 },
-                    py: { xs: 1.25, md: 1.75 },
-                    borderRadius: 2.5,
+                    px: { xs: 2, sm: 2.5, md: 3.5 },
+                    py: { xs: 1, sm: 1.25, md: 1.5 },
+                    borderRadius: 2,
                     textTransform: 'none',
-                    fontSize: { xs: '0.875rem', md: '1rem' },
-                    boxShadow: '0 4px 12px rgba(255, 0, 0, 0.4)',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                     border: '2px solid',
-                    borderColor: '#CC0000',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    whiteSpace: { xs: 'nowrap', sm: 'normal' },
+                    minWidth: { xs: 'auto', sm: 'auto' },
                     '&:hover': {
-                      bgcolor: '#CC0000',
-                      boxShadow: '0 6px 16px rgba(255, 0, 0, 0.5)',
+                      bgcolor: 'rgba(255,255,255,1)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.3)',
                       transform: 'translateY(-2px)',
+                      borderColor: 'rgba(255,255,255,0.5)',
                     },
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  Envie fotos do seu Abigo para todos verem
+                  {isMobile ? (
+                    <>
+                      <PhotoCameraIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />
+                      Enviar Fotos
+                    </>
+                  ) : (
+                    'Envie fotos do seu Abrigo'
+                  )}
                 </Button>
               )}
             </Box>
@@ -414,7 +440,6 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
         </Paper>
       </motion.div>
 
-      {/* Seções da Galeria */}
       <AnimatePresence>
         {sectionsList.length > 0 ? (
           <motion.div

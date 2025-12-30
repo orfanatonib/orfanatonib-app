@@ -121,7 +121,6 @@ const DocumentsManager: React.FC = () => {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -130,7 +129,6 @@ const DocumentsManager: React.FC = () => {
           <BackHeader title="📄 Gerenciar Documentos" />
         </motion.div>
 
-        {/* Search and Add Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -224,7 +222,6 @@ const DocumentsManager: React.FC = () => {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {loading && filteredDocuments.length === 0 ? (
           <Box
             sx={{

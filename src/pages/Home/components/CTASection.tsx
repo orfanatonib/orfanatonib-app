@@ -109,7 +109,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Explorar Recursos
+                  Área do professor
                 </Button>
               </motion.div>
             ) : (

@@ -126,8 +126,6 @@ export default function TeacherViewDialog({ open, teacher, onClose }: Props) {
         teacherId={teacher?.id}
         onClose={() => setTeamManagementOpen(false)}
         onSuccess={async () => {
-          // Não fechar o modal, apenas atualizar os dados se necessário
-          // O modal só fecha quando o usuário clicar em "Fechar"
         }}
       />
     </Dialog>

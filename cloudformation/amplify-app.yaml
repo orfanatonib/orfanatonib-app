@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CloudFormation template for Orfanato NIB Amplify App with production and staging environments'
+Description: 'CloudFormation template for Clubinho NIB Amplify App with production and staging environments'
 
 Parameters:
   RepositoryUrl:
     Type: String
     Description: 'GitHub repository URL'
-    Default: 'https://github.com/orfanatonib/orfanatonib-app'
+    Default: 'https://github.com/ministerioclubinhos/clubinhonib-app'
 
   GitHubAccessToken:
     Type: String
@@ -24,8 +24,8 @@ Parameters:
 
   RootDomainName:
     Type: String
-    Description: 'Domínio raiz para produção (ex: orfanatonib.com)'
-    Default: 'orfanatonib.com'
+    Description: 'Domínio raiz para produção (ex: clubinhonib.com)'
+    Default: 'clubinhonib.com'
 
   StagingSubdomainPrefix:
     Type: String
@@ -38,8 +38,8 @@ Resources:
   AmplifyApp:
     Type: 'AWS::Amplify::App'
     Properties:
-      Name: 'orfanatonib-app'
-      Description: 'Orfanato NIB React Application'
+      Name: 'clubinhonib-app'
+      Description: 'Clubinho NIB React Application'
       Repository: !Ref RepositoryUrl
       AccessToken: !Ref GitHubAccessToken
       CustomRules:

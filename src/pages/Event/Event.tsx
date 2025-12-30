@@ -649,7 +649,6 @@ const Eventos: React.FC = () => {
           background: gradients.subtle.greenWhiteSoft,
         }}
       >
-        {/* Título e Controles */}
         <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -879,7 +878,6 @@ const Eventos: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {/* FABs para Mobile */}
               {isMobile && isAdmin && (
                 <Box
                   sx={{
@@ -984,12 +982,9 @@ const Eventos: React.FC = () => {
                 </Box>
               )}
 
-              {/* Layout Principal - Eventos Principais */}
               <Box sx={{ width: '100%', mb: 6 }}>
-                {/* Layout quando tem evento hoje */}
                 {arrangement.temHoje ? (
                   <Box sx={{ width: '100%' }}>
-                    {/* Evento Hoje - Destacado Sozinho */}
                     <motion.div
                       initial={{ opacity: 0, y: 30, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1070,7 +1065,6 @@ const Eventos: React.FC = () => {
                                   },
                                 }}
                               >
-                                {/* Barra de Status Superior - Próximo */}
                                 <Box
                                   sx={{
                                     position: 'absolute',
@@ -1362,7 +1356,6 @@ const Eventos: React.FC = () => {
                   </AccordionSummary>
                   <AccordionDetails sx={{ p: 4 }}>
                     <Grid container spacing={{ xs: 3, md: 4 }}>
-                      {/* Mostrar todos os eventos futuros */}
                       {arrangement.proximoEvento && (
                         <Grid item xs={12} sm={6} md={4} key={`proximo-${arrangement.proximoEvento.id}`}>
                           <motion.div

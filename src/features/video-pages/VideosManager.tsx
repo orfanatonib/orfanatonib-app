@@ -75,7 +75,6 @@ export default function VideosManager() {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -84,7 +83,6 @@ export default function VideosManager() {
           <BackHeader title="🎥 Páginas de Vídeos" />
         </motion.div>
 
-        {/* Search Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -108,7 +106,6 @@ export default function VideosManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {loading && filtered.length === 0 ? (
           <Box
             sx={{

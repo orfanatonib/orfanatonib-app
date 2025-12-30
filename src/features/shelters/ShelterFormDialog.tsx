@@ -41,9 +41,7 @@ export default function ShelterFormDialog({
   const isAdmin = useSelector(selectIsAdmin);
   const isCreate = mode === "create";
 
-  // Seleção de líderes e professores removida - agora gerenciada via Teams
 
-  // Estados locais para mídia (sem título e descrição)
   const [uploadType, setUploadType] = useState<"upload" | "link">("upload"); // Padrão: upload
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -164,7 +162,6 @@ export default function ShelterFormDialog({
 
           <Grid item xs={12}><Divider /></Grid>
 
-          {/* Seção de Mídia */}
           <ShelterMediaForm
             uploadType={uploadType}
             setUploadType={setUploadType}

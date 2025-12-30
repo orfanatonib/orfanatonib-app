@@ -261,7 +261,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
 
   const renderForm = () => (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {/* Nome */}
       <Controller
         name="name"
         control={control}

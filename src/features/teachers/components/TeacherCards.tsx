@@ -369,7 +369,6 @@ export default function TeacherCards({
                           </Stack>
                         </Paper>
 
-                        {/* Abrigo, Equipe e Líder */}
                         {shelter && (
                           <Paper
                             variant="outlined"

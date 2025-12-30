@@ -82,7 +82,6 @@ export default function LeaderCards(props: Props) {
       <Grid container spacing={{ xs: 1, sm: 1.25 }}>
         {rows.map((c) => {
           const expanded = open.has(c.id);
-          // Múltiplas associações: abrigos, equipes e professores
           const shelters = c.shelters || [];
           const totalShelters = shelters.length;
           const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
@@ -383,7 +382,6 @@ export default function LeaderCards(props: Props) {
                     <Divider sx={{ mx: { xs: 1, sm: 1.25 } }} />
                     <CardContent sx={{ p: { xs: 1.25, sm: 1.5 } }}>
                       <Stack spacing={2}>
-                        {/* Datas */}
                         <Paper
                           variant="outlined"
                           sx={{

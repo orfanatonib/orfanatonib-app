@@ -37,7 +37,6 @@ export default function IdeasPageCard({ page, onView, onDelete }: Props) {
         },
       }}
     >
-      {/* Header with Delete Button */}
       <Box
         sx={{
           position: 'relative',

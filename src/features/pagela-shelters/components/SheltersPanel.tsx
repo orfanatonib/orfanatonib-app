@@ -176,7 +176,6 @@ export function SheltersPanel({
                                 <CardActionArea onClick={() => onShelterSelect(shelter)}>
                                     <Box sx={{ p: { xs: 2, sm: 2 }, minHeight: { xs: 120, sm: 110 } }}>
                                         <Stack spacing={1}>
-                                            {/* Primeira linha: Iniciais (esquerda) + Quantidade de professores (direita) */}
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">
                                             <Avatar
                                                 sx={{
@@ -208,7 +207,6 @@ export function SheltersPanel({
                                                 </Typography>
                                             </Stack>
 
-                                            {/* Segunda linha: Nome do abrigo */}
                                             <Typography
                                                 variant="subtitle2"
                                                 fontWeight="bold"
@@ -224,7 +222,6 @@ export function SheltersPanel({
                                                 {shelter.name}
                                                 </Typography>
 
-                                            {/* Terceira linha: Cidade, Estado */}
                                                 <Typography
                                                 variant="caption"
                                                     color="text.secondary"
@@ -239,7 +236,6 @@ export function SheltersPanel({
                                                     {shelter.address.city}, {shelter.address.state}
                                                 </Typography>
                                                 
-                                            {/* Quarta linha: Bairro */}
                                             <Typography
                                                 variant="caption"
                                                 color="text.secondary"
@@ -254,7 +250,6 @@ export function SheltersPanel({
                                                 {shelter.address.district}
                                             </Typography>
 
-                                            {/* Quinta linha: Líderes */}
                                             {shelter.leaders && shelter.leaders.length > 0 && (
                                                 <Typography
                                                     variant="caption"
@@ -279,7 +274,6 @@ export function SheltersPanel({
                 )}
             </Box>
             
-            {/* Paginação no rodapé */}
             {totalPages > 1 && (
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: "1px solid", borderColor: "divider" }}>
                     <Pagination

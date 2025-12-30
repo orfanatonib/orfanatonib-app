@@ -492,7 +492,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     )}
                   </Box>
 
-                  {/* Líderes */}
                   <Box
                     sx={{
                       mb: { xs: 1.5, sm: 2, md: 2.5 },
@@ -559,7 +558,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     />
                   </Box>
 
-                  {/* Professores */}
                   <Box
                     sx={{
                       p: { xs: 1, sm: 1.25, md: 1.5 },
@@ -630,7 +628,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           })}
         </Grid>
 
-        {/* Dialog para adicionar líder */}
         <Dialog 
           open={showAddLeaderDialog} 
           onClose={() => {
@@ -737,7 +734,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           </DialogActions>
         </Dialog>
 
-        {/* Dialog para adicionar professor */}
         <Dialog 
           open={showAddTeacherDialog} 
           onClose={() => {
@@ -853,7 +849,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           </DialogActions>
         </Dialog>
 
-        {/* Dialog de confirmação para excluir equipe */}
         <Dialog 
           open={showDeleteTeamDialog} 
           onClose={() => {

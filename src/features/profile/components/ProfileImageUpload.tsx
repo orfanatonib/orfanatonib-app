@@ -43,7 +43,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de arquivo
     if (!file.type.startsWith('image/')) {
       onError('Por favor, selecione apenas arquivos de imagem');
       return;
@@ -57,14 +56,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Detectar dispositivo e navegador
   const detectDevice = () => {
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
     const isAndroid = /android/i.test(userAgent);
     const isMobile = isIOS || isAndroid;
     
-    // Detectar navegador
     const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
     const isSafari = /Safari/.test(userAgent) && !isChrome;
     const isFirefox = /Firefox/.test(userAgent);
@@ -75,7 +72,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const handleCameraClick = async () => {
     const device = detectDevice();
     
-    // Para iOS Safari, usar input com capture (mais confiável)
     if (device.isIOS && device.isSafari) {
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
@@ -84,9 +80,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       return;
     }
     
-    // Verificar se a API de MediaDevices está disponível
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      // Fallback: usar input com capture
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
@@ -97,11 +91,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     }
 
     try {
-      // Configuração de vídeo baseada no dispositivo
       const videoConstraints: MediaTrackConstraints = device.isMobile
         ? { 
             facingMode: { ideal: cameraFacingMode }, // mobile: permite alternar selfie/traseira
-            // Em mobile, portrait costuma ser mais natural para foto de perfil
             width: { ideal: 720 },
             height: { ideal: 1280 }
           }
@@ -119,7 +111,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       let activeDeviceId: string | undefined =
         activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
       
-      // Criar um canvas para capturar a foto
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -128,7 +119,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         throw new Error('Não foi possível criar o contexto do canvas');
       }
       
-      // Criar um modal simples para mostrar a câmera
       const modal = document.createElement('div');
       modal.id = 'camera-modal';
       modal.style.cssText = `
@@ -148,7 +138,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         box-sizing: border-box;
       `;
       
-      // Wrapper para permitir máscara/overlay por cima do vídeo
       const videoWrapper = document.createElement('div');
       videoWrapper.style.cssText = `
         position: relative;
@@ -172,7 +161,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       videoElement.playsInline = true;
       videoElement.muted = true;
       
-      // Garantir que o vídeo fique inline no mobile (evita fullscreen automático)
       if (device.isMobile) {
         videoElement.setAttribute('playsinline', 'true');
         videoElement.setAttribute('webkit-playsinline', 'true');
@@ -217,7 +205,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         min-width: 140px;
       `;
 
-      // Ícone no canto superior direito para trocar câmera (somente mobile)
       const switchCameraIconButton = document.createElement('button');
       switchCameraIconButton.type = 'button';
       switchCameraIconButton.setAttribute('aria-label', 'Trocar câmera');
@@ -240,7 +227,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         -webkit-backdrop-filter: blur(6px);
         box-shadow: 0 12px 28px rgba(0,0,0,0.55);
       `;
-      // SVG inline (não depende de libs/React no modal)
       switchCameraIconButton.innerHTML = `
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 7h4V3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -250,7 +236,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         </svg>
       `;
 
-      // Máscara de enquadramento (ombros pra cima) — versão mais clean (recorte SVG + guias)
       const maskOverlay = document.createElement('div');
       maskOverlay.style.cssText = `
         position: absolute;
@@ -258,8 +243,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         pointer-events: none;
         z-index: 4;
       `;
-      // Guia de enquadramento (mais bonito no mobile): ao invés de recorte, usamos um "busto" em outline + overlay leve.
-      // Isso evita a sensação de "janelas" e fica mais clean.
       maskOverlay.innerHTML = `
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <!-- overlay suave para direcionar o olhar ao centro -->
@@ -342,11 +325,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         if (!device.isMobile) return;
         const nextFacingMode: 'environment' | 'user' = activeFacingMode === 'environment' ? 'user' : 'environment';
         try {
-          // parar stream atual antes de pedir o novo
           activeStream.getTracks().forEach(track => track.stop());
           videoReady = false;
 
-          // Alguns devices/browsers ignoram facingMode. Tentamos primeiro escolher por deviceId via enumerateDevices.
           let nextStream: MediaStream | null = null;
           if (navigator.mediaDevices?.enumerateDevices) {
             try {
@@ -361,7 +342,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                 wantFront ? frontRegex.test(d.label) : backRegex.test(d.label)
               );
 
-              // fallback: pegar qualquer outra câmera diferente da atual
               const fallbackOther = videoInputs.find((d) => d.deviceId && d.deviceId !== activeDeviceId);
               const chosen = preferred ?? fallbackOther;
 
@@ -376,7 +356,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                 });
               }
             } catch {
-              // ignora e cai no facingMode
             }
           }
 
@@ -400,7 +379,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         } catch (err: any) {
           console.error('Erro ao trocar câmera:', err);
           onError('Não foi possível trocar a câmera. Seu dispositivo pode não ter câmera frontal ou o navegador bloqueou.');
-          // tentar voltar para a câmera anterior
           try {
             const fallbackStream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: { ideal: activeFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -415,11 +393,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         }
       };
       
-      // Adicionar botões ao container
       buttonContainer.appendChild(captureButton);
       buttonContainer.appendChild(cancelButton);
       
-      // Montagem do modal
       videoWrapper.appendChild(videoElement);
       videoWrapper.appendChild(maskOverlay);
       videoWrapper.appendChild(switchCameraIconButton);
@@ -427,7 +403,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       modal.appendChild(buttonContainer);
       document.body.appendChild(modal);
       
-      // Tratamento de erro do vídeo
       videoElement.onerror = () => {
         onError('Erro ao carregar a câmera. Tente novamente ou use a opção de selecionar da galeria.');
         cleanup();
@@ -452,7 +427,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       
       onError(errorMessage);
       
-      // Fallback: tentar usar input com capture
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
@@ -490,14 +464,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cameraInputRef.current.value = '';
       }
       
-      // Atualizar o estado do Redux para atualizar o avatar na navbar
       try {
         await dispatch(fetchCurrentUser()).unwrap();
       } catch (err) {
         console.error('Erro ao atualizar usuário no Redux:', err);
       }
       
-      // Atualizar o preview com a nova imagem
       if (updatedProfile.image?.url) {
         setPreview(updatedProfile.image.url);
       }

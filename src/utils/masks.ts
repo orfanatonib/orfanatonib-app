@@ -2,7 +2,6 @@ export function digitsOnly(input: unknown): string {
   return String(input ?? "").replace(/\D/g, "");
 }
 
-// Datas
 export function maskDateBR(raw: string): string {
   const digits = digitsOnly(raw).slice(0, 8); // ddmmyyyy
   const dd = digits.slice(0, 2);
@@ -21,14 +20,12 @@ export function formatDateBR(raw?: string | null): string {
   return v;
 }
 
-// CEP
 export function maskCEP(raw: string): string {
   const digits = digitsOnly(raw).slice(0, 8);
   if (digits.length <= 5) return digits;
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
-// Telefone BR (aceita +55 opcional)
 export function maskPhoneBR(raw: string): string {
   const digitsAll = digitsOnly(raw).slice(0, 13);
   const hasCC = digitsAll.startsWith("55") && digitsAll.length > 11;

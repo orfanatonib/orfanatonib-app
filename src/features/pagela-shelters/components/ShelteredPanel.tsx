@@ -199,7 +199,6 @@ export function ShelteredPanel({
                 <CardActionArea onClick={() => onShelteredSelect(sheltered)}>
                   <Box sx={{ p: { xs: 2, sm: 2 }, minHeight: { xs: 100, sm: 90 } }}>
                     <Stack spacing={1}>
-                      {/* Primeira linha: Iniciais (esquerda) + Nome do abrigo (direita) */}
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Avatar
                         sx={{
@@ -235,7 +234,6 @@ export function ShelteredPanel({
                         </Typography>
                       </Stack>
 
-                      {/* Segunda linha: Nome do abrigado */}
                       <Typography
                         variant="subtitle2"
                         fontWeight="bold"
@@ -251,7 +249,6 @@ export function ShelteredPanel({
                         {sheltered.name}
                         </Typography>
                         
-                      {/* Terceira linha: Responsável */}
                       {sheltered.guardianName && (
                         <Typography
                           variant="caption"
@@ -268,7 +265,6 @@ export function ShelteredPanel({
                         </Typography>
                       )}
                         
-                      {/* Quarta linha: Número do responsável */}
                       {sheltered.guardianPhone && (
                           <Typography
                             variant="caption"
@@ -291,7 +287,6 @@ export function ShelteredPanel({
                 )}
             </Box>
             
-            {/* Paginação no rodapé */}
             {totalPages > 1 && (
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: "1px solid", borderColor: "divider" }}>
                     <Pagination

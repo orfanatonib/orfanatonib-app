@@ -52,7 +52,6 @@ export default function BannerGrid({ items, onEdit, onDeleteAsk }: Props) {
               },
             }}
           >
-            {/* Header with Status */}
             <Box
               sx={{
                 p: { xs: 1.5, sm: 2 },

@@ -41,7 +41,6 @@ export default function LeaderSelect({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Definir o label baseado no parâmetro multiple
   const displayLabel = label || (multiple ? "Líderes (opcional)" : "Líder (opcional)");
 
   const [open, setOpen] = useState(false);

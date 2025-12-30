@@ -117,7 +117,6 @@ const VisitMaterialsList = () => {
             }}
         >
             <Container maxWidth="xl">
-                {/* Header with Back Button */}
                 <Box sx={{ mb: { xs: 2, sm: 3 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
                     <IconButton
                         onClick={handleBack}
@@ -138,7 +137,6 @@ const VisitMaterialsList = () => {
                     </Typography>
                 </Box>
 
-                {/* Search and Filter Section */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -153,7 +151,6 @@ const VisitMaterialsList = () => {
                             bgcolor: 'background.paper',
                         }}
                     >
-                        {/* Search Bar */}
                         <Box sx={{ mb: 3 }}>
                             <TextField
                                 fullWidth
@@ -197,7 +194,6 @@ const VisitMaterialsList = () => {
                             />
                         </Box>
 
-                        {/* Tabs */}
                         <Box sx={{ position: 'relative' }}>
                             <Box
                                 sx={{
@@ -242,7 +238,6 @@ const VisitMaterialsList = () => {
                     </Paper>
                 </motion.div>
 
-                {/* Content Section */}
                 {(loading || isFiltering) && materials.length > 0 && (
                     <Box
                         sx={{
@@ -312,7 +307,6 @@ const VisitMaterialsList = () => {
                                             },
                                         }}
                                     >
-                        {/* Header with Badge */}
                         {material.testament && (
                             <Box
                                 sx={{

@@ -189,7 +189,6 @@ export default function VisitVideoPlayer({ video }: Props) {
           },
         }}
       >
-        {/* Header */}
         <Box
           display="flex"
           alignItems="center"
@@ -238,12 +237,10 @@ export default function VisitVideoPlayer({ video }: Props) {
           </Box>
         </Box>
 
-        {/* Video Player */}
         <Box sx={{ mb: 3 }}>
           {renderVideo()}
         </Box>
 
-        {/* Description */}
         {video.description && (
           <Typography
             variant="body2"
@@ -259,7 +256,6 @@ export default function VisitVideoPlayer({ video }: Props) {
           </Typography>
         )}
 
-        {/* Download Button */}
         {shouldAllowDownload() && (
           <Box sx={{ mt: 'auto' }}>
             <DownloadButton

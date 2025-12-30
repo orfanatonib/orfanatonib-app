@@ -21,7 +21,6 @@ export type ShelterSimple = {
   updatedAt: string;
 };
 
-// Mantido para compatibilidade, mas TeacherProfile agora usa shelter diretamente
 export type TeamSimple = {
   id: string;
   numberTeam: number;

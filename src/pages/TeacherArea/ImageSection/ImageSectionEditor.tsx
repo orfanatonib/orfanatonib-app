@@ -89,7 +89,6 @@ export default function ImageSectionEditor({
   return (
     <Box>
       <Grid container spacing={{ xs: 2, md: 3 }}>
-        {/* Formulário - Mobile First */}
         <Grid item xs={12} md={5}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -187,7 +186,6 @@ export default function ImageSectionEditor({
           </motion.div>
         </Grid>
 
-        {/* Galeria de Imagens - Mobile First */}
         <Grid item xs={12} md={7}>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -318,7 +316,6 @@ export default function ImageSectionEditor({
                               <DeleteIcon color="error" fontSize={isMobile ? "small" : "medium"} />
                             </IconButton>
                             
-                            {/* Overlay com número da imagem */}
                             <Box
                               sx={{
                                 position: 'absolute',
@@ -341,7 +338,6 @@ export default function ImageSectionEditor({
                     ))}
                   </Swiper>
                   
-                  {/* Custom Navigation Buttons */}
                   <Box
                     className="swiper-button-prev"
                     sx={{

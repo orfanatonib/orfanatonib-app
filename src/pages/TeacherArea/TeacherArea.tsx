@@ -53,11 +53,8 @@ const TeacherArea: React.FC = () => {
           zIndex: 1,
         }}
       >
-      {/* Informative Banner */}
       <InformativeBanner />
 
-      {/* Special Family Callout - Commented out for now */}
-      {/* <SpecialFamilyCallout /> */}
 
       <BannerSection 
         showWeekBanner={showWeek} 

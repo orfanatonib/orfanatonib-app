@@ -18,7 +18,6 @@ export async function apiFetchShelteredren(args: {
       order,
   };
 
-  // Filtros agrupados (novos)
   if (filters?.shelteredSearchingString?.trim()) params.shelteredSearchingString = filters.shelteredSearchingString;
   if (filters?.shelterSearchingString?.trim()) params.shelterSearchingString = filters.shelterSearchingString;
   if (filters?.addressFilter?.trim()) params.addressFilter = filters.addressFilter;
@@ -28,7 +27,6 @@ export async function apiFetchShelteredren(args: {
   if (filters?.joinedFrom) params.joinedFrom = filters.joinedFrom;
   if (filters?.joinedTo) params.joinedTo = filters.joinedTo;
 
-  // Filtros legados (compatibilidade)
   if (filters?.searchString?.trim()) params.searchString = filters.searchString;
   if (filters?.shelterId) params.shelterId = filters.shelterId;
   if (filters?.shelterName?.trim()) params.shelterName = filters.shelterName;

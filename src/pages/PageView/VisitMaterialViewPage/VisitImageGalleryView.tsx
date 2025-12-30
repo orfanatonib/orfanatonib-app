@@ -83,7 +83,6 @@ export default function VisitImageGallery({ image }: Props) {
             },
           }}
         >
-          {/* Header */}
           <Box
             display="flex"
             alignItems="center"
@@ -132,7 +131,6 @@ export default function VisitImageGallery({ image }: Props) {
             </Box>
           </Box>
 
-          {/* Image */}
           <Box
             sx={{
               mb: 3,
@@ -203,7 +201,6 @@ export default function VisitImageGallery({ image }: Props) {
             )}
           </Box>
 
-          {/* Description */}
           {image.description && (
             <Typography
               variant="body2"
@@ -219,7 +216,6 @@ export default function VisitImageGallery({ image }: Props) {
             </Typography>
           )}
 
-          {/* Download Button */}
           <Box sx={{ mt: 'auto' }}>
             <DownloadButton
               url={image.url}
@@ -231,7 +227,6 @@ export default function VisitImageGallery({ image }: Props) {
         </Paper>
       </motion.div>
 
-      {/* Full Screen Image Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

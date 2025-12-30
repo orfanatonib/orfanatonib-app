@@ -103,7 +103,6 @@ export default function ShelteredCard({
             transform: "translateY(-2px)", 
             boxShadow: `0 4px 12px ${colors.solid}30`,
             borderColor: colors.solid,
-            // Intensificar levemente a cor do gênero no hover
             background: theme.palette.mode === "light"
               ? `linear-gradient(180deg, ${colors.soft} 0%, ${colors.light} 50%, #fff 100%)`
               : "linear-gradient(180deg, #1e1e1e 0%, #161616 100%)",
@@ -202,7 +201,6 @@ export default function ShelteredCard({
           onClick={() => onClick(sheltered)} 
           sx={{ 
             display: "flex",
-            // Sobrescrever qualquer background padrão do MUI (especialmente o verde do success)
             backgroundColor: "transparent !important",
             color: "inherit !important",
             "&:hover": {
@@ -211,7 +209,6 @@ export default function ShelteredCard({
               "&::before": {
                 display: "none !important",
               },
-              // Manter cores do texto originais
               "& .MuiTypography-root": {
                 color: "inherit !important",
               },
@@ -290,7 +287,6 @@ export default function ShelteredCard({
               <FavoriteIcon fontSize="inherit" sx={{ opacity: 0.5, ml: 0.25 }} />
             </Stack>
 
-            {/* Linha de ativar/desativar */}
             {!!onToggleStatus && (
               <Box
                 sx={{

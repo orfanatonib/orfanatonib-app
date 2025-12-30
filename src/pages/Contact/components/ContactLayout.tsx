@@ -26,7 +26,6 @@ const ContactLayout: React.FC<ContactLayoutProps> = ({ children }) => {
           px: { xs: 1, sm: 2, md: 3 },
         }}
       >
-        {/* Header Section */}
         <Box
           sx={{
             textAlign: 'center',
@@ -64,7 +63,6 @@ const ContactLayout: React.FC<ContactLayoutProps> = ({ children }) => {
           </Typography>
         </Box>
 
-        {/* Form Card */}
         <Card
           sx={{
             background: 'rgba(255, 255, 255, 0.8)',

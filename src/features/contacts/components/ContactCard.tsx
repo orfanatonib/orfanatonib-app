@@ -49,7 +49,6 @@ export default function ContactCard({ contact, onView, onDelete }: Props) {
         },
       }}
     >
-      {/* Header with Status */}
       <Box
         sx={{
           p: { xs: 1.5, sm: 2 },

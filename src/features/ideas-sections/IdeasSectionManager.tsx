@@ -109,7 +109,6 @@ export default function IdeasSectionManager() {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +117,6 @@ export default function IdeasSectionManager() {
           <BackHeader title="💡 Ideias Compartilhadas" />
         </motion.div>
 
-        {/* Search Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -186,7 +184,6 @@ export default function IdeasSectionManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {isBusy && filteredSections.length === 0 ? (
           <Box
             sx={{

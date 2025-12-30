@@ -44,7 +44,6 @@ export default function IdeasManager() {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -53,7 +52,6 @@ export default function IdeasManager() {
           <BackHeader title="💡 Páginas de Ideias" />
         </motion.div>
 
-        {/* Search Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +75,6 @@ export default function IdeasManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {loading && filtered.length === 0 ? (
           <Box
             sx={{

@@ -58,7 +58,6 @@ export default function CommentCard({
         position: "relative",
       }}
     >
-      {/* Header with Status and Delete */}
       <Box
         sx={{
           p: { xs: 1.5, sm: 2 },

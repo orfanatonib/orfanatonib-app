@@ -246,7 +246,6 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}
@@ -294,7 +293,6 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         onClose={() => setErrorSnackbarOpen(false)}
       />
 
-        {/* Form Section */}
         <Paper
           elevation={2}
           sx={{
@@ -407,7 +405,6 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         />
       ))}
 
-        {/* Action Buttons */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
           <Button
             variant="outlined"

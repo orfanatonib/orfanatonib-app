@@ -642,7 +642,6 @@ export default function TeamManagementDialog({
         </Button>
       </DialogActions>
 
-      {/* Dialog para criar equipe */}
       <Dialog open={showCreateTeamDialog} onClose={() => setShowCreateTeamDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Criar Nova Equipe</DialogTitle>
         <DialogContent>
@@ -675,7 +674,6 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog para adicionar líder */}
       <Dialog open={showAddLeaderDialog} onClose={() => setShowAddLeaderDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Adicionar Líder à Equipe</DialogTitle>
         <DialogContent>
@@ -699,7 +697,6 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog para adicionar professor */}
       <Dialog open={showAddTeacherDialog} onClose={() => setShowAddTeacherDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Adicionar Professor à Equipe</DialogTitle>
         <DialogContent>
@@ -723,7 +720,6 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de confirmação para excluir equipe */}
       <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>

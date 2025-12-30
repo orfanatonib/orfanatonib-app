@@ -45,14 +45,12 @@ export default function TeacherEditDialog({
   const [loadingTeamsQuantity, setLoadingTeamsQuantity] = useState(false);
   const [error, setError] = useState("");
 
-  // Carregar abrigos ao abrir o modal
   useEffect(() => {
     if (open) {
       loadShelters();
     }
   }, [open]);
 
-  // Carregar abrigo atual e quantidade de equipes
   useEffect(() => {
     if (open && teacher?.shelter) {
       const currentShelter = shelters.find((s) => s.id === teacher.shelter?.id);
@@ -85,12 +83,10 @@ export default function TeacherEditDialog({
     setError("");
     try {
       const data = await apiGetShelterTeamsQuantity(shelterId);
-      // Se teamsQuantity for 0 ou null, bloquear a inserção
       if (data.teamsQuantity === 0 || data.teamsQuantity === null || data.teamsQuantity === undefined) {
         setTeamsQuantity(null);
       } else {
         setTeamsQuantity(data.teamsQuantity);
-        // Se o professor já está vinculado, usar o número da equipe atual
         if (teacher?.shelter?.id === shelterId && teacher?.shelter?.team?.numberTeam) {
           setNumberTeam(teacher.shelter.team.numberTeam);
         } else {
@@ -98,9 +94,7 @@ export default function TeacherEditDialog({
         }
       }
     } catch (err: any) {
-      // Se não encontrar a quantidade de equipes, bloquear a inserção
       setTeamsQuantity(null);
-      // Não definir erro aqui, apenas deixar teamsQuantity como null para mostrar o alerta de baixo
     } finally {
       setLoadingTeamsQuantity(false);
     }
@@ -156,7 +150,6 @@ export default function TeacherEditDialog({
     }
   };
 
-  // Gerar opções de número de equipe baseado em teamsQuantity
   const teamNumberOptions = teamsQuantity
     ? Array.from({ length: teamsQuantity }, (_, i) => i + 1)
     : [];

@@ -21,7 +21,6 @@ export type SupportContact = {
 };
 
 export const SUPPORT_CONTACTS: SupportContact[] = [
-  // Troque pelos números reais
   { personName: "Maria Silva", phoneE164: "+5592999999999", whatsapp: true },
   { personName: "João Souza", phoneE164: "+5592999999998", whatsapp: true },
 ];

@@ -52,7 +52,6 @@ export default function CommentsManager() {
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,7 +60,6 @@ export default function CommentsManager() {
           <BackHeader title="💬 Gerenciar Comentários" />
         </motion.div>
 
-        {/* Toolbar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,7 +74,6 @@ export default function CommentsManager() {
           />
         </motion.div>
 
-        {/* Grid Section */}
         <CommentsGrid
           comments={filtered}
           loading={loading}

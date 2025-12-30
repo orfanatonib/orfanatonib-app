@@ -43,9 +43,7 @@ export default function ImageSectionManager() {
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
   const handleEdit = (section: SectionData) => {
-    // Define os dados da seção no Redux para o modo de edição
     dispatch(setData(section));
-    // Redireciona para a página de edição de imagens
     navigate('/adm/editar-imagens-shelter');
   };
 
@@ -68,7 +66,6 @@ export default function ImageSectionManager() {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +74,6 @@ export default function ImageSectionManager() {
           <BackHeader title="📸 Imagens dos Abrigos" />
         </motion.div>
 
-        {/* Search Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -145,7 +141,6 @@ export default function ImageSectionManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {isBusy && filteredSections.length === 0 ? (
           <Box
             sx={{

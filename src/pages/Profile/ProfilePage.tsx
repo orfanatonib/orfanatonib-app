@@ -144,7 +144,6 @@ const ProfilePage: React.FC = () => {
               border: '1px solid rgba(25, 118, 210, 0.1)',
             }}
           >
-            {/* Header */}
             <Box
               sx={{
                 display: 'flex',
@@ -216,7 +215,6 @@ const ProfilePage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Vínculo (Professor) */}
             {profile?.role === 'teacher' && profile?.teacherProfile?.team?.shelter && (
               <Box sx={{ mb: 3 }}>
                 <Paper
@@ -306,7 +304,6 @@ const ProfilePage: React.FC = () => {
               </Box>
             )}
 
-            {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs
                 value={tabValue}
@@ -356,7 +353,6 @@ const ProfilePage: React.FC = () => {
               </Tabs>
             </Box>
 
-            {/* Tab Panels */}
             {error && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {error}

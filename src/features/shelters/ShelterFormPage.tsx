@@ -45,7 +45,6 @@ export default function ShelterFormPage() {
     createShelter,
     updateShelter,
   } = useShelterMutations(async () => {
-    // Mostrar feedback de sucesso
     const message = isEdit ? "Abrigo atualizado com sucesso!" : "Abrigo criado com sucesso!";
     setSuccessSnackbar({ open: true, message });
     
@@ -312,7 +311,6 @@ export default function ShelterFormPage() {
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <Grid container spacing={3}>
-            {/* Coluna Esquerda - Formulário */}
             <Grid item xs={12} lg={6}>
               <Paper
                 elevation={2}
@@ -372,7 +370,6 @@ export default function ShelterFormPage() {
               <Divider sx={{ my: 2 }} />
             </Grid>
 
-            {/* Seção de Mídia */}
             <ShelterMediaForm
               uploadType={uploadType}
               setUploadType={setUploadType}
@@ -429,7 +426,6 @@ export default function ShelterFormPage() {
               </Paper>
             </Grid>
 
-            {/* Coluna Direita - Gerenciamento de Equipes */}
             <Grid item xs={12} lg={6}>
               <Paper
                 elevation={2}
@@ -472,7 +468,6 @@ export default function ShelterFormPage() {
         </motion.div>
       </Container>
 
-      {/* Snackbar de sucesso */}
       <Snackbar
         open={successSnackbar.open}
         autoHideDuration={2000}

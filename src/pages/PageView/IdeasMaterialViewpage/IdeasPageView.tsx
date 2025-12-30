@@ -427,7 +427,6 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         flexDirection: 'column',
       }}
     >
-      {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -539,7 +538,6 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         </Box>
       </motion.div>
 
-      {/* Content Section */}
       <Box
         sx={{
           flex: 1,

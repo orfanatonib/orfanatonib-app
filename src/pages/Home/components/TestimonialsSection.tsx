@@ -49,7 +49,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
         },
       }}
     >
-      {/* Divisão Suave Superior */}
       <Box
         sx={{
           position: 'absolute',
@@ -64,7 +63,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
         }}
       />
       
-      {/* Ondas Decorativas Superiores */}
       <motion.div
         style={{
           position: 'absolute',
@@ -214,7 +212,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation Buttons */}
           <IconButton
             onClick={prevTestimonial}
             sx={{
@@ -253,7 +250,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
             <ChevronRight />
           </IconButton>
 
-          {/* Dots Indicator */}
           <Box
             sx={{
               display: 'flex',
@@ -282,7 +278,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
         </Box>
       </Container>
 
-      {/* Divisão Suave Inferior */}
       <Box
         sx={{
           position: 'absolute',
@@ -297,7 +292,6 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
         }}
       />
       
-      {/* Ondas Decorativas Inferiores */}
       <motion.div
         style={{
           position: 'absolute',

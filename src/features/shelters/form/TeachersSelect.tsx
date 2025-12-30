@@ -68,11 +68,8 @@ export default function TeachersSelect({
     () =>
       (options ?? []).filter(
         (opt) => {
-          // Se não está vinculado, sempre mostrar
           if (!opt.vinculado) return true;
           
-          // Se está vinculado, mostrar apenas se já está selecionado
-          // Isso permite manter líderes/professores já vinculados ao shelter atual
           return safeValue.includes(opt.teacherProfileId);
         }
       ),
@@ -237,7 +234,6 @@ export default function TeachersSelect({
           </Stack>
         </ListSubheader>
 
-        {/* LISTA */}
         {visibleOptions.length === 0 && (
           <MenuItem disabled dense>
             <ListItemText

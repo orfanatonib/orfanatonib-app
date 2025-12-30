@@ -30,21 +30,18 @@ function genderPastel(seed: string, gender?: string) {
   const g = (gender || "").toUpperCase();
   
   if (g === "F") {
-    // Feminino: Tons de rosa/vermelho suave
     return {
       solid: "#e91e63", // Rosa vibrante
       soft: "#f8bbd0", // Rosa claro
       light: "#fce4ec", // Rosa muito claro
     };
   } else if (g === "M") {
-    // Masculino: Tons de azul
     return {
       solid: "#2196f3", // Azul vibrante
       soft: "#90caf9", // Azul claro
       light: "#e3f2fd", // Azul muito claro
     };
   } else {
-    // Neutro: Tons de cinza/roxo
     return {
       solid: "#9e9e9e", // Cinza
       soft: "#e0e0e0", // Cinza claro

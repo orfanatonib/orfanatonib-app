@@ -20,7 +20,6 @@ import { Edit as EditIcon } from "@mui/icons-material";
 import { LeaderProfile } from "../types";
 import CircularProgress from "@mui/material/CircularProgress";
 import { fmtDate } from "@/utils/dates";
-// Removido: TeamManagementDialog - agora usamos LeaderMultiEditDialog
 
 type Props = {
   open: boolean;
@@ -33,7 +32,6 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
-  // Múltiplas associações: abrigos, equipes e professores
   const shelters = React.useMemo(() => {
     return leader?.shelters || [];
   }, [leader]);

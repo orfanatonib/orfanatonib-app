@@ -22,7 +22,6 @@ export type ListLeadersParams = {
   teamId?: string;
   teamName?: string;
   hasTeam?: boolean;
-  // Filtros legados para compatibilidade
   q?: string;
   active?: boolean;
   hasShelters?: boolean;
@@ -73,14 +72,12 @@ export async function apiUpdateLeaderAssociations(leaderId: string, payload: Lea
   return data;
 }
 
-// Mantido para compatibilidade - será deprecated
 export type ManageLeaderTeamDto = {
   shelterId: string;
   numberTeam: number;
 };
 
 export async function apiManageLeaderTeam(leaderId: string, payload: ManageLeaderTeamDto) {
-  // Converte para o novo formato
   const newPayload: LeaderAssociationUpdateDto = [{
     shelterId: payload.shelterId,
     teams: [payload.numberTeam]

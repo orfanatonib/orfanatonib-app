@@ -313,7 +313,6 @@ export default function ShelteredBrowserPage() {
             >
               Selecionar Abrigado
             </Typography>
-            {/* Busca e Filtros na mesma linha */}
             <Box 
               sx={{ 
                 display: "flex", 
@@ -322,7 +321,6 @@ export default function ShelteredBrowserPage() {
                 flexWrap: "wrap"
               }}
             >
-              {/* Campo de Busca - 40% */}
               <TextField
                 value={q}
                 onChange={(e) => onChangeQ(e.target.value)}
@@ -344,7 +342,6 @@ export default function ShelteredBrowserPage() {
                 }}
               />
               
-              {/* Filtro: Aceitou Jesus - 20% */}
               <FormControl 
                 size="small" 
                 sx={{ 
@@ -370,7 +367,6 @@ export default function ShelteredBrowserPage() {
                 </Select>
               </FormControl>
 
-              {/* Filtro: Status Ativo - 20% */}
               <FormControl 
                 size="small" 
                 sx={{ 
@@ -401,7 +397,6 @@ export default function ShelteredBrowserPage() {
                 </Select>
               </FormControl>
 
-              {/* Botão Limpar Filtros */}
               {(q || acceptedJesus !== "all" || active !== "all") && (
                 <Button
                   variant="outlined"
@@ -475,7 +470,6 @@ export default function ShelteredBrowserPage() {
             </Box>
           ) : (
             <>
-              {/* Loading sutil no topo quando está carregando nova página */}
               <Fade in={loading && items.length > 0}>
                 <LinearProgress 
                   sx={{ 
@@ -489,7 +483,6 @@ export default function ShelteredBrowserPage() {
                 />
               </Fade>
               
-              {/* Grid com opacidade reduzida durante loading */}
               <Box sx={{ 
                 position: "relative", 
                 opacity: loading && items.length > 0 ? 0.6 : 1, 
@@ -513,7 +506,6 @@ export default function ShelteredBrowserPage() {
               
               {pagination.totalPages > 1 && (
                 <Stack spacing={2} alignItems="center" sx={{ mt: { xs: 3, md: 4 }, mb: { xs: 2, md: 2 }, position: "relative" }}>
-                  {/* Loading sutil na paginação */}
                   {loading && items.length > 0 && (
                     <Box sx={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
                       <CircularProgress size={16} thickness={4} />
