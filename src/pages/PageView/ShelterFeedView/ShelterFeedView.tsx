@@ -1,41 +1,35 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
+  Button,
   CircularProgress,
   Container,
   Typography,
-  Alert,
-  Tooltip,
-  Fab,
   Skeleton,
   Paper,
-  Grid,
+  Grid2,
   IconButton,
   useTheme,
   useMediaQuery,
   Chip,
-  Stack,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import api from '@/config/axiosConfig';
 import { RootState, AppDispatch } from '@/store/slices';
-import { fetchRoutes } from '@/store/slices/route/routeSlice';
 import { UserRole } from 'store/slices/auth/authSlice';
 import ShelterSectionImageView from './ShelterSectionImageView';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { FofinhoButton } from './../../TeacherArea/components';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import { Button } from '@mui/material';
-import { Link } from 'react-router-dom';
 import {
   setSectionData,
   appendSections,
   updatePagination,
   PaginatedSectionResponse,
 } from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
+import ErrorState, { ErrorType } from '@/components/common/ErrorState';
 
 interface ShelterFeedViewProps {
   idToFetch?: string;
@@ -110,19 +104,19 @@ function SectionSkeleton() {
             mb: 2,
           }}
         />
-        <Grid container spacing={1} justifyContent="center">
+        <Grid2 container spacing={1} justifyContent="center">
           {[...Array(6)].map((_, i) => (
-            <Grid item xs={4} sm={2} md={2} key={i}>
-              <Skeleton 
-                variant="rectangular" 
-                height={isMobile ? 60 : 80} 
-                sx={{ 
+            <Grid2 size={{ xs: 4, sm: 2, md: 2 }} key={i}>
+              <Skeleton
+                variant="rectangular"
+                height={isMobile ? 60 : 80}
+                sx={{
                   borderRadius: { xs: 2, md: 3 },
-                }} 
+                }}
               />
-            </Grid>
+            </Grid2>
           ))}
-        </Grid>
+        </Grid2>
       </Paper>
     </motion.div>
   );
@@ -133,8 +127,10 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
+  const [errorType, setErrorType] = useState<ErrorType>('generic');
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
@@ -173,7 +169,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
 
     const fetchSectionData = async () => {
       try {
-        setError(null);
+        setHasError(false);
         if (page === 1) {
           setLoading(true);
         } else {
@@ -202,7 +198,19 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
       } catch (err: any) {
         if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
           console.error('Error loading section:', err);
-          setError('Erro ao carregar a seção. Tente novamente mais tarde.');
+
+          let type: ErrorType = 'generic';
+
+          if (err.response?.status === 404) {
+            type = '404';
+          } else if (err.response?.status === 500) {
+            type = '500';
+          } else if (err.code === 'ERR_NETWORK' || !err.response) {
+            type = 'network';
+          }
+
+          setErrorType(type);
+          setHasError(true);
           if (page === 1) {
             setLoading(false);
             setInitialLoadComplete(true);
@@ -216,86 +224,11 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
     fetchSectionData();
 
     return () => controller.abort();
-  }, [page, defaultSectionId, dispatch, feed]);
+  }, [page, defaultSectionId, dispatch, feed, retryTrigger]);
 
   const handleBack = () => {
     navigate(-1);
   };
-
-  if (!initialLoadComplete) {
-    return (
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          {[...Array(2)].map((_, i) => (
-            <SectionSkeleton key={i} />
-          ))}
-        </motion.div>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Alert
-            severity="error"
-            sx={{
-              borderRadius: { xs: 3, md: 4 },
-              boxShadow: 3,
-              fontSize: { xs: '0.9rem', md: '1rem' },
-              p: { xs: 2, md: 3 },
-            }}
-          >
-            {error}
-          </Alert>
-        </motion.div>
-      </Container>
-    );
-  }
-
-  if (!section) {
-    return (
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: 6,
-              textAlign: 'center',
-              borderRadius: { xs: 3, md: 4 },
-            }}
-          >
-            <Typography
-              variant="h5"
-              color="text.secondary"
-              sx={{
-                fontSize: { xs: '1.3rem', md: '1.5rem' },
-                mb: 2,
-              }}
-            >
-              📸 Nenhuma página de imagens encontrada
-            </Typography>
-            <Typography color="text.secondary">
-              A página de imagens solicitada não existe ou foi removida.
-            </Typography>
-          </Paper>
-        </motion.div>
-      </Container>
-    );
-  }
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
@@ -328,7 +261,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
               zIndex: 0,
             }}
           />
-          
+
           <Box sx={{ position: 'relative', zIndex: 1 }}>
             <Box
               display="flex"
@@ -440,73 +373,124 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
         </Paper>
       </motion.div>
 
-      <AnimatePresence>
-        {sectionsList.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+      {!initialLoadComplete ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          {[...Array(2)].map((_, i) => (
+            <SectionSkeleton key={i} />
+          ))}
+        </motion.div>
+      ) : hasError ? (
+        <ErrorState
+          type={errorType}
+          onRetry={() => {
+            setHasError(false);
+            setInitialLoadComplete(false);
+            setPage(1);
+            setRetryTrigger(prev => prev + 1);
+          }}
+        />
+      ) : !section ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Paper
+            elevation={2}
+            sx={{
+              p: 6,
+              textAlign: 'center',
+              borderRadius: { xs: 3, md: 4 },
+            }}
           >
-            {sectionsList.map((sectionItem, index) => (
-              <motion.div
-                key={sectionItem.id}
-                ref={index === sectionsList.length - 1 ? lastSectionRef : null}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                style={{ 
-                  marginBottom: index < sectionsList.length - 1 ? theme.spacing(2) : 0 
-                }}
-              >
-                <ShelterSectionImageView 
-                  caption={sectionItem.caption}
-                  description={sectionItem.description}
-                  mediaItems={sectionItem.mediaItems}
-                  createdAt={sectionItem.createdAt ? new Date(sectionItem.createdAt) : undefined}
-                  updatedAt={sectionItem.updatedAt ? new Date(sectionItem.updatedAt) : undefined}
-                />
-              </motion.div>
-            ))}
-
-            {loadingMore && (
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                py={4}
-              >
-                <CircularProgress size={40} />
-              </Box>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Paper
-              elevation={2}
+            <Typography
+              variant="h5"
+              color="text.secondary"
               sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: { xs: 3, md: 4 },
+                fontSize: { xs: '1.3rem', md: '1.5rem' },
+                mb: 2,
               }}
             >
-              <Typography
-                variant="h6"
-                color="text.secondary"
-                sx={{ mb: 2 }}
+              📸 Nenhuma página de imagens encontrada
+            </Typography>
+            <Typography color="text.secondary">
+              A página de imagens solicitada não existe ou foi removida.
+            </Typography>
+          </Paper>
+        </motion.div>
+      ) : (
+        <AnimatePresence>
+          {sectionsList.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {sectionsList.map((sectionItem, index) => (
+                <motion.div
+                  key={sectionItem.id}
+                  ref={index === sectionsList.length - 1 ? lastSectionRef : null}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  style={{
+                    marginBottom: index < sectionsList.length - 1 ? theme.spacing(2) : 0
+                  }}
+                >
+                  <ShelterSectionImageView
+                    caption={sectionItem.caption}
+                    description={sectionItem.description}
+                    mediaItems={sectionItem.mediaItems}
+                    createdAt={sectionItem.createdAt ? new Date(sectionItem.createdAt) : undefined}
+                    updatedAt={sectionItem.updatedAt ? new Date(sectionItem.updatedAt) : undefined}
+                  />
+                </motion.div>
+              ))}
+
+              {loadingMore && (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  py={4}
+                >
+                  <CircularProgress size={40} />
+                </Box>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 6,
+                  textAlign: 'center',
+                  borderRadius: { xs: 3, md: 4 },
+                }}
               >
-                📸 Nenhuma seção disponível
-              </Typography>
-              <Typography color="text.secondary">
-                As seções de imagens ainda não foram publicadas.
-              </Typography>
-            </Paper>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  📸 Nenhuma seção disponível
+                </Typography>
+                <Typography color="text.secondary">
+                  As seções de imagens ainda não foram publicadas.
+                </Typography>
+              </Paper>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
     </Container>
   );
