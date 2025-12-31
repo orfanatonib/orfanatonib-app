@@ -1,6 +1,6 @@
-# CloudFormation - Orfanato NIB Amplify App
+# CloudFormation - Orfanatos NIB Amplify App
 
-Este diretório contém os templates e scripts para deploy da aplicação Orfanato NIB no AWS Amplify usando CloudFormation.
+Este diretório contém os templates e scripts para deploy da aplicação Orfanatos NIB no AWS Amplify usando CloudFormation.
 
 ## 📁 Arquivos
 

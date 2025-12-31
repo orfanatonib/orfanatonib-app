@@ -158,7 +158,7 @@ const TeacherWeekBanner: React.FC = () => {
               textShadow: '1px 1px 3px rgba(0, 0, 0, 0.3)',
             }}
           >
-            Olá {user?.name || 'Professor'}, estamos na {part} do mês de:
+            Olá {user?.name || 'Membro'}, estamos na {part} do mês de:
           </Typography>
 
           <Typography

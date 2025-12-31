@@ -59,7 +59,7 @@ const ContactLayout: React.FC<ContactLayoutProps> = ({ children }) => {
               px: { xs: 1, sm: 0 },
             }}
           >
-            Entre em contato para saber mais informações sobre o Orfanato NIB
+            Entre em contato para saber mais informações sobre o Orfanatos NIB
           </Typography>
         </Box>
 

@@ -114,7 +114,7 @@ const TeacherArea: React.FC = () => {
                   mb: 0.5,
                 }}
               >
-                🎓 Área do Professor
+                🎓 Área do Membro
               </Typography>
               <Typography
                 variant="body2"

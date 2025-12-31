@@ -24,7 +24,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
       <Box
         component="img"
         src={banner}
-        alt="Banner Orfanato NIB"
+        alt="Banner Orfanatos NIB"
         sx={{
           width: '100%',
           height: '100%',
@@ -102,7 +102,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
               lineHeight: 1.1,
             }}
           >
-            Bem-vindo ao Orfanato NIB
+            Bem-vindo ao Orfanatos NIB
           </Typography>
         </motion.div>
 
@@ -144,7 +144,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
                 <Button
                   variant="contained"
                   component={Link}
-                  to="/area-do-professor"
+                  to="/area-do-membro"
                   size="large"
                   sx={{
                     px: { xs: 3, md: 4 },
@@ -163,7 +163,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Área do Professor
+                  Área do Membro
                 </Button>
               </motion.div>
             )}

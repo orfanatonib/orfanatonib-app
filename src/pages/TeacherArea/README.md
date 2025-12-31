@@ -62,7 +62,7 @@ src/pages/TeacherArea/
 ### Sections
 - **BannerSection**: Gerencia a exibição dos banners
 - **MotivationSection**: Seção de texto motivacional
-- **TeacherContent**: Conteúdo principal para professores logados
+- **TeacherContent**: Conteúdo principal para membros logados
 - **CommentsSection**: Seção de comentários
 - **DocumentsSection**: Seção de documentos
 - **IdeasGallerySection**: Galeria de ideias

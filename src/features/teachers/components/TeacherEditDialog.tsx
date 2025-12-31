@@ -126,7 +126,7 @@ export default function TeacherEditDialog({
     }
 
     if (!teamsQuantity || teamsQuantity < 1) {
-      setError("Este abrigo não possui quantidade de equipes definida. Por favor, vá na aba de Abrigos, edite este abrigo e defina a quantidade de equipes antes de vincular professores.");
+      setError("Este abrigo não possui quantidade de equipes definida. Por favor, vá na aba de Abrigos, edite este abrigo e defina a quantidade de equipes antes de vincular membros.");
       return;
     }
 
@@ -144,7 +144,7 @@ export default function TeacherEditDialog({
       if (onSuccess) await onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao vincular professor");
+      setError(err?.response?.data?.message || err.message || "Erro ao vincular membro");
     } finally {
       setLoading(false);
     }
@@ -168,7 +168,7 @@ export default function TeacherEditDialog({
         },
       }}
     >
-      <DialogTitle>Vincular Professor a Equipe</DialogTitle>
+      <DialogTitle>Vincular Membro a Equipe</DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {teacher && (
@@ -212,7 +212,7 @@ export default function TeacherEditDialog({
                     label="Abrigo"
                     placeholder="Selecione um abrigo"
                     required
-                    helperText="Selecione o abrigo onde o professor será vinculado"
+                    helperText="Selecione o abrigo onde o membro será vinculado"
                   />
                 )}
                 renderOption={(props, option) => (
@@ -258,7 +258,7 @@ export default function TeacherEditDialog({
                     </Typography>
                     <Typography variant="body2">
                       Este abrigo não possui quantidade de equipes definida. Por favor, vá na aba de <strong>Abrigos</strong>, 
-                      edite este abrigo e defina a quantidade de equipes antes de vincular professores.
+                      edite este abrigo e defina a quantidade de equipes antes de vincular membros.
                     </Typography>
                   </Alert>
                 )}
@@ -270,8 +270,8 @@ export default function TeacherEditDialog({
                 <Alert severity="info">
                   O abrigo <strong>{selectedShelter.name}</strong> possui <strong>{teamsQuantity}</strong> equipe(s).
                   {teacher.shelter?.id === selectedShelter.id
-                    ? " O professor será movido para a equipe selecionada."
-                    : " O professor será vinculado à equipe selecionada."}
+                    ? " O membro será movido para a equipe selecionada."
+                    : " O membro será vinculado à equipe selecionada."}
                 </Alert>
               </Grid>
             )}

@@ -363,7 +363,7 @@ export default function LeaderCards(props: Props) {
                           size="small"
                           variant="filled"
                           icon={<GroupOutlined sx={{ fontSize: 12 }} />}
-                          label={`Profs.: ${totalTeachers}`}
+                          label={`Membros: ${totalTeachers}`}
                           color="success"
                           sx={{ 
                             fontWeight: 600, 
@@ -445,7 +445,7 @@ export default function LeaderCards(props: Props) {
                                       <Chip
                                         size="small"
                                         variant="outlined"
-                                        label={`${shelter.teachers.length} prof(s)`}
+                                        label={`${shelter.teachers.length} membro(s)`}
                                         color="success"
                                         sx={{ fontWeight: 500, fontSize: "0.75rem" }}
                                       />
@@ -475,7 +475,7 @@ export default function LeaderCards(props: Props) {
                                   {shelter.teachers && shelter.teachers.length > 0 && (
                                     <Box>
                                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5, display: "block" }}>
-                                        Professores:
+                                        Membros:
                                       </Typography>
                                       <Box
                                         sx={{

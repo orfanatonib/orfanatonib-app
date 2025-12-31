@@ -39,7 +39,7 @@ export function IdeasSectionUserCreator() {
 
   const handleBack = () => {
     dispatch(clearIdeasSectionData());
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
   };
 
   const handleShareIdea = async () => {
@@ -147,7 +147,7 @@ export function IdeasSectionUserCreator() {
       });
 
       setTimeout(() => {
-        navigate('/area-do-professor');
+        navigate('/area-do-membro');
       }, 2000);
     } catch (error) {
       console.error('Error sharing idea:', error);
@@ -239,7 +239,7 @@ export function IdeasSectionUserCreator() {
           Pode ser uma brincadeira, um versículo, uma forma especial de contar<br />
           uma história ou qualquer outra atividade para o seu Abrigo!<br /><br />
           Agora você também pode enviar <strong>vídeos, imagens e documentos</strong><br />
-          para mostrar como fez e ajudar outros professores a colocarem em prática. 📹📸📄
+          para mostrar como fez e ajudar outros membros a colocarem em prática. 📹📸📄
         </Typography>
 
 

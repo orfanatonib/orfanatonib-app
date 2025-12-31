@@ -57,7 +57,7 @@ interface CardData {
 const cardData: CardData[] = [
   { title: "Criar Página", description: "Adicione novas páginas de conteúdo ao site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudos" },
   { title: "Meditações", description: "Crie, edite e visualize meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudos" },
-  { title: "Documentos", description: "Gerencie documentos para professores.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudos" },
+  { title: "Documentos", description: "Gerencie documentos para membros.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudos" },
   { title: "Informativos", description: "Gerencie banners informativos do site.", icon: <Campaign fontSize="large" color="primary" />, path: "/adm/informativos", section: "conteudos" },
 
   { title: "Páginas de Materiais de Visita", description: "Gerencie materiais de visita.", icon: <EventNote fontSize="large" color="primary" />, path: "/adm/paginas-materiais-visita", section: "pages" },
@@ -65,10 +65,10 @@ const cardData: CardData[] = [
   { title: "Fotos dos Abrigos", description: "Organize e edite galerias de fotos dos abrigos.", icon: <Collections fontSize="large" color="primary" />, path: "/adm/fotos-abrigos", section: "pages" },
   { title: "Ideias compartilhadas", description: "Gerencie Ideias compartilhadas pelos Abrigos", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/ideias-compartilhadas", section: "pages" },
   { title: "Páginas de Vídeos", description: "Adicione vídeos ou links do YouTube para o site.", icon: <VideoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-videos", section: "pages" },
-  { title: "Páginas de Ideias", description: "Gerencie páginas de ideias para professores.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "pages" },
+  { title: "Páginas de Ideias", description: "Gerencie páginas de ideias para membros.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "pages" },
 
   { title: "Usuários", description: "Gerencie usuários do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "shelter" },
-  { title: "Professores", description: "Gerencie professores do abrigo.", icon: <School fontSize="large" color="primary" />, path: "/adm/professores", section: "shelter" },
+  { title: "Membros", description: "Gerencie membros do abrigo.", icon: <School fontSize="large" color="primary" />, path: "/adm/professores", section: "shelter" },
   { title: "Líderes", description: "Gerencie líderes do abrigo.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "shelter" },
   { title: "Abrigados", description: "Gerencie crianças do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "shelter" },
   { title: "Abrigos", description: "Gerencie abrigos.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "shelter" },

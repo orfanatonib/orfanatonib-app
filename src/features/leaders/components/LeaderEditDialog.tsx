@@ -192,7 +192,7 @@ export default function LeaderEditDialog({
                   )}
                   {leader.shelter.teachers && leader.shelter.teachers.length > 0 && (
                     <Typography variant="body2" color="text.secondary">
-                      Professores da equipe: <strong>{leader.shelter.teachers.length}</strong>
+                      Membros da equipe: <strong>{leader.shelter.teachers.length}</strong>
                     </Typography>
                   )}
                 </>

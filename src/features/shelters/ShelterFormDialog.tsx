@@ -42,40 +42,35 @@ export default function ShelterFormDialog({
   const isCreate = mode === "create";
 
 
-  const [uploadType, setUploadType] = useState<"upload" | "link">("upload"); // Padrão: upload
-  const [url, setUrl] = useState("");
+  const [uploadType] = useState<"upload">("upload"); // Upload only
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (value?.mediaItem) {
-      setUploadType(value.mediaItem.uploadType || "upload");
-      setUrl(value.mediaItem.url || "");
+      // Upload only: não suportamos link
     } else {
-      setUploadType("upload"); // Padrão: upload
-      setUrl("");
       setFile(null);
     }
   }, [value?.mediaItem]);
 
-  const updateMediaItem = (newUrl?: string, newFile?: File | null) => {
+  const updateMediaItem = (newFile?: File | null) => {
     if (!value) return;
 
-    const mediaItem = (newUrl || newFile) ? {
+    const mediaItem = (newFile) ? {
       title: "Foto do Abrigo",
       description: "Imagem do abrigo",
       uploadType,
-      url: uploadType === "link" ? (newUrl || url) : "",
+      url: "",
     } : undefined;
 
     onChange({
       ...value,
       mediaItem,
-      file: uploadType === "upload" ? (newFile !== undefined ? newFile || undefined : file || undefined) : undefined,
+      file: newFile !== undefined ? (newFile || undefined) : (file || undefined),
     } as any);
   };
 
   const handleRemoveExistingImage = () => {
-    setUrl("");
     setFile(null);
     onChange({
       ...value,
@@ -163,16 +158,11 @@ export default function ShelterFormDialog({
           <Grid item xs={12}><Divider /></Grid>
 
           <ShelterMediaForm
-            uploadType={uploadType}
-            setUploadType={setUploadType}
-            url={url}
-            setUrl={setUrl}
             file={file}
             setFile={setFile}
             existingImageUrl={value.mediaItem?.url}
             onRemoveExistingImage={handleRemoveExistingImage}
-            onUrlChange={(newUrl) => updateMediaItem(newUrl, undefined)}
-            onFileChange={(newFile) => updateMediaItem(undefined, newFile)}
+            onFileChange={(newFile) => updateMediaItem(newFile)}
           />
         </Grid>
 

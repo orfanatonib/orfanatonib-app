@@ -1,26 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Container,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  Alert,
-  Typography,
-  Divider,
-  Box,
-  CircularProgress,
-  Snackbar,
-} from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Container, Snackbar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
+
 import BackHeader from "@/components/common/header/BackHeader";
-import AddressFields from "./form/AddressFields";
-import ShelterMediaForm from "./form/ShelterMediaForm";
 import TeamManagementSection, { TeamManagementRef } from "./components/TeamManagementSection";
 import { CreateShelterForm, EditShelterForm, TeamInputDto } from "./types";
 import { useShelterMutations } from "./hooks";
 import { apiFetchShelter } from "./api";
+
+import "./ShelterFormPage.css";
+import ShelterFormLeftPanel from "./ShelterFormLeftPanel";
+import ShelterFormRightPanel from "./ShelterFormRightPanel";
+
+type SnackbarState = { open: boolean; message: string };
 
 export default function ShelterFormPage() {
   const navigate = useNavigate();
@@ -28,15 +21,19 @@ export default function ShelterFormPage() {
   const isEdit = !!id;
 
   const [formData, setFormData] = useState<CreateShelterForm | EditShelterForm | null>(null);
-  const [initialLoading, setInitialLoading] = useState(isEdit);
-  const [error, setError] = useState("");
-  const [savedShelterId, setSavedShelterId] = useState<string | null>(id || null);
-  const [successSnackbar, setSuccessSnackbar] = useState({ open: false, message: "" });
-  const teamManagementRef = useRef<TeamManagementRef>(null);
+  const [initialLoading, setInitialLoading] = useState<boolean>(isEdit);
+  const [error, setError] = useState<string>("");
 
-  const [uploadType, setUploadType] = useState<"upload" | "link">("upload");
-  const [url, setUrl] = useState("");
+  const [savedShelterId, setSavedShelterId] = useState<string | null>(id || null);
+
   const [file, setFile] = useState<File | null>(null);
+
+  const [successSnackbar, setSuccessSnackbar] = useState<SnackbarState>({
+    open: false,
+    message: "",
+  });
+
+  const teamManagementRef = useRef<TeamManagementRef | null>(null);
 
   const {
     dialogLoading,
@@ -47,130 +44,164 @@ export default function ShelterFormPage() {
   } = useShelterMutations(async () => {
     const message = isEdit ? "Abrigo atualizado com sucesso!" : "Abrigo criado com sucesso!";
     setSuccessSnackbar({ open: true, message });
-    
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     navigate("/adm/abrigos");
   });
 
   useEffect(() => {
-    if (isEdit && id) {
-      const loadShelter = async () => {
-        try {
-          setInitialLoading(true);
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        setInitialLoading(true);
+
+        if (isEdit && id) {
           const shelter = await apiFetchShelter(id);
+          if (!isMounted) return;
+
           setSavedShelterId(shelter.id);
+
           setFormData({
             id: shelter.id,
             name: shelter.name,
             description: shelter.description || "",
             teamsQuantity: shelter.teamsQuantity || 1,
             address: shelter.address,
-            mediaItem: shelter.mediaItem ? {
-              title: shelter.mediaItem.title,
-              description: shelter.mediaItem.description,
-              uploadType: (shelter.mediaItem.uploadType.toUpperCase() === "LINK" ? "link" : "upload") as "upload" | "link",
-              url: shelter.mediaItem.url,
-              isLocalFile: shelter.mediaItem.isLocalFile,
-            } : undefined,
+            // Mantém apenas para preview (url da imagem existente)
+            mediaItem: shelter.mediaItem
+              ? {
+                  title: shelter.mediaItem.title,
+                  description: shelter.mediaItem.description,
+                  url: shelter.mediaItem.url,
+                  isLocalFile: shelter.mediaItem.isLocalFile,
+                  uploadType: shelter.mediaItem.uploadType,
+                }
+              : undefined,
             file: undefined,
           } as EditShelterForm);
 
-          if (shelter.mediaItem) {
-            setUploadType((shelter.mediaItem.uploadType.toUpperCase() === "LINK" ? "link" : "upload") as "upload" | "link");
-            setUrl(shelter.mediaItem.url || "");
-          }
-        } catch (err: any) {
-          setError(err?.response?.data?.message || "Erro ao carregar abrigo");
-        } finally {
-          setInitialLoading(false);
+          setFile(null);
+        } else {
+          setFormData({
+            name: "",
+            description: "",
+            teamsQuantity: 1,
+            address: {
+              street: "",
+              district: "",
+              city: "",
+              state: "",
+              postalCode: "",
+            },
+            mediaItem: undefined,
+            file: undefined,
+          });
+
+          setSavedShelterId(null);
+          setFile(null);
         }
-      };
-      loadShelter();
-    } else {
-      setFormData({
-        name: "",
-        description: "",
-        teamsQuantity: 1,
-        address: {
-          street: "",
-          district: "",
-          city: "",
-          state: "",
-          postalCode: "",
-        } as any,
-        mediaItem: undefined,
-        file: undefined,
-      });
-      setInitialLoading(false);
-    }
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err?.response?.data?.message || "Erro ao carregar abrigo");
+      } finally {
+        if (!isMounted) return;
+        setInitialLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, isEdit]);
 
-  const updateMediaItem = (newUrl?: string, newFile?: File | null) => {
+  const name = useMemo(() => (formData as any)?.name ?? "", [formData]);
+  const description = useMemo(() => (formData as any)?.description ?? "", [formData]);
+  const teamsQuantity = useMemo(() => (formData as any)?.teamsQuantity ?? 1, [formData]);
+
+  const existingImageUrl = useMemo(() => formData?.mediaItem?.url, [formData]);
+
+  const clearErrors = () => {
+    setError("");
+    setDialogError("");
+  };
+
+  const handleCancel = () => navigate("/adm/abrigos");
+
+  const handleFileChange = (newFile: File | null) => {
     if (!formData) return;
 
-    const mediaItem = (newUrl || newFile) ? {
-      title: "Foto do Abrigo",
-      description: "Imagem do abrigo",
-      uploadType,
-      url: uploadType === "link" ? (newUrl || url) : "",
-    } : undefined;
+    setFile(newFile);
 
     setFormData({
       ...formData,
-      mediaItem,
-      file: uploadType === "upload" ? (newFile !== undefined ? newFile || undefined : file || undefined) : undefined,
+      // Mantém metadata mínima (o payload final é montado no submit)
+      mediaItem: newFile
+        ? { title: "Foto do Abrigo", description: "Imagem do abrigo", uploadType: "upload", url: "" }
+        : formData.mediaItem,
+      file: newFile || undefined,
     } as any);
   };
 
   const handleRemoveExistingImage = () => {
-    setUrl("");
+    // Remove no estado local. (Backend precisa interpretar remoção caso você queira remover de verdade)
     setFile(null);
-    if (formData) {
-      setFormData({
-        ...formData,
-        mediaItem: undefined,
-        file: undefined,
-      } as any);
-    }
+
+    if (!formData) return;
+
+    setFormData({
+      ...formData,
+      mediaItem: undefined,
+      file: undefined,
+    } as any);
   };
 
   const convertTeamsToInputDto = (teams: any[]): TeamInputDto[] => {
     return teams.map((team) => ({
       numberTeam: team.numberTeam,
       description: team.description || undefined,
-      leaderProfileIds: (team.leaders || []).map((l: any) => l.id).filter((id: string) => !!id),
-      teacherProfileIds: (team.teachers || []).map((t: any) => t.id).filter((id: string) => !!id),
+      leaderProfileIds: (team.leaders || []).map((l: any) => l.id).filter((x: string) => !!x),
+      teacherProfileIds: (team.teachers || []).map((t: any) => t.id).filter((x: string) => !!x),
     }));
+  };
+
+  const validate = (): boolean => {
+    if (!formData) return false;
+
+    if (!formData.teamsQuantity || formData.teamsQuantity < 1) {
+      setError("A quantidade de equipes é obrigatória e deve ser maior que 0");
+      return false;
+    }
+
+    if (!formData.name?.trim()) {
+      setError("O nome do abrigo é obrigatório");
+      return false;
+    }
+
+    if (
+      !formData.address?.street?.trim() ||
+      !formData.address?.district?.trim() ||
+      !formData.address?.city?.trim() ||
+      !formData.address?.state?.trim() ||
+      !formData.address?.postalCode?.trim()
+    ) {
+      setError("Todos os campos do endereço são obrigatórios (exceto número e complemento)");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async () => {
     if (!formData) return;
 
-    setError("");
-    setDialogError("");
-
-    if (!formData.teamsQuantity || formData.teamsQuantity < 1) {
-      setError("A quantidade de equipes é obrigatória e deve ser maior que 0");
-      return;
-    }
-
-    if (!formData.name?.trim()) {
-      setError("O nome do abrigo é obrigatório");
-      return;
-    }
-
-    if (!formData.address?.street?.trim() || 
-        !formData.address?.district?.trim() || 
-        !formData.address?.city?.trim() || 
-        !formData.address?.state?.trim() || 
-        !formData.address?.postalCode?.trim()) {
-      setError("All address fields are required (except number and complement)");
-      return;
-    }
+    clearErrors();
+    if (!validate()) return;
 
     try {
-      const { file, ...rest } = formData as any;
+      const { file: _ignoredFile, ...rest } = formData as any;
 
       const teamsData = teamManagementRef.current?.getCurrentTeams() || [];
       const teamsInput = convertTeamsToInputDto(teamsData);
@@ -187,28 +218,20 @@ export default function ShelterFormPage() {
         if (file) {
           const formDataObj = new FormData();
           const shelterData = {
-            name: payload.name,
-            description: payload.description,
-            teamsQuantity: payload.teamsQuantity,
-            address: payload.address,
-            teams: payload.teams,
+            ...payload,
             mediaItem: {
+              uploadType: "upload",
+              isLocalFile: true,
+              fieldKey: "image",
               title: rest.mediaItem?.title || "Foto do Abrigo",
               description: rest.mediaItem?.description || "Imagem do abrigo",
-              uploadType: "upload",
-            }
+            },
           };
-          formDataObj.append('shelterData', JSON.stringify(shelterData));
-          formDataObj.append('image', file);
+
+          formDataObj.append("shelterData", JSON.stringify(shelterData));
+          formDataObj.append("image", file);
+
           await updateShelter(id, formDataObj);
-        } else if (rest.mediaItem && !rest.mediaItem.id) {
-          payload.mediaItem = {
-            title: rest.mediaItem.title || "Foto do Abrigo",
-            description: rest.mediaItem.description || "Imagem do abrigo",
-            url: rest.mediaItem.url,
-            uploadType: "link",
-          };
-          await updateShelter(id, payload);
         } else {
           await updateShelter(id, payload);
         }
@@ -220,38 +243,25 @@ export default function ShelterFormPage() {
           address: rest.address,
         };
 
-        if (teamsInput && teamsInput.length > 0) {
-          payload.teams = teamsInput;
-        }
+        if (teamsInput.length > 0) payload.teams = teamsInput;
 
         if (file) {
           const formDataObj = new FormData();
           const shelterData = {
-            name: payload.name,
-            description: payload.description,
-            teamsQuantity: payload.teamsQuantity,
-            address: payload.address,
-            teams: payload.teams,
+            ...payload,
             mediaItem: {
               uploadType: "upload",
               isLocalFile: true,
               fieldKey: "image",
               title: rest.mediaItem?.title || "Foto do Abrigo",
               description: rest.mediaItem?.description || "Imagem do abrigo",
-            }
+            },
           };
-          formDataObj.append('shelterData', JSON.stringify(shelterData));
-          formDataObj.append('image', file);
+
+          formDataObj.append("shelterData", JSON.stringify(shelterData));
+          formDataObj.append("image", file);
+
           await createShelter(formDataObj);
-        } else if (rest.mediaItem?.url) {
-          payload.mediaItem = {
-            uploadType: "link",
-            isLocalFile: false,
-            url: rest.mediaItem.url,
-            title: rest.mediaItem.title || "Foto do Abrigo",
-            description: rest.mediaItem.description || "Imagem do abrigo",
-          };
-          await createShelter(payload);
         } else {
           await createShelter(payload);
         }
@@ -261,42 +271,24 @@ export default function ShelterFormPage() {
     }
   };
 
-  const handleCancel = () => {
-    navigate("/adm/abrigos");
-  };
-
   if (initialLoading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            py: 8,
-          }}
-        >
+      <Container maxWidth="md" className="shelterFormPage__loading">
+        <div className="shelterFormPage__loadingInner">
           <CircularProgress size={48} />
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" className="shelterFormPage__loadingText">
             Carregando abrigo...
           </Typography>
-        </Box>
+        </div>
       </Container>
     );
   }
 
-  if (!formData) {
-    return null;
-  }
-
-  const name = (formData as any).name ?? "";
-  const description = (formData as any).description ?? "";
-  const teamsQuantity = (formData as any).teamsQuantity ?? 1;
+  if (!formData) return null;
 
   return (
-    <Box sx={{ width: "100%", py: { xs: 2, md: 4 } }}>
-      <Container maxWidth={false} sx={{ px: { xs: 2, md: 4 } }}>
+    <div className="shelterFormPage">
+      <Container maxWidth={false} className="shelterFormPage__container">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -310,163 +302,50 @@ export default function ShelterFormPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={6}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: { xs: 2, md: 4 },
-                  borderRadius: 2,
-                  height: "100%",
-                }}
-              >
-                {(error || dialogError) && (
-                  <Alert severity="error" sx={{ mb: 3 }} onClose={() => { setError(""); setDialogError(""); }}>
-                    {error || dialogError}
-                  </Alert>
-                )}
-
-                <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                label="Nome do Abrigo"
-                type="text"
-                fullWidth
-                value={name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value } as any)}
-                placeholder="Ex: Abrigo Central 1"
-                required
-                error={!name.trim()}
-                helperText={!name.trim() ? "O nome do abrigo é obrigatório" : ""}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Descrição"
-                type="text"
-                fullWidth
-                multiline
-                rows={3}
-                value={description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value } as any)}
-                placeholder="Descrição do abrigo, missão, objetivos..."
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
-                Endereço
-              </Typography>
-            </Grid>
-
-            <AddressFields
-              value={(formData as any).address ?? {}}
-              onChange={(addr) => setFormData({ ...formData, address: addr } as any)}
-            />
-
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-            </Grid>
-
-            <ShelterMediaForm
-              uploadType={uploadType}
-              setUploadType={setUploadType}
-              url={url}
-              setUrl={setUrl}
+          <div className="shelterFormPage__grid">
+            <ShelterFormLeftPanel
+              isEdit={isEdit}
+              name={name}
+              description={description}
+              address={(formData as any).address ?? {}}
+              existingImageUrl={existingImageUrl}
               file={file}
-              setFile={setFile}
-              existingImageUrl={formData.mediaItem?.url}
+              dialogLoading={dialogLoading}
+              error={error || dialogError}
+              onCloseError={clearErrors}
+              onChangeName={(v) => setFormData({ ...formData, name: v } as any)}
+              onChangeDescription={(v) => setFormData({ ...formData, description: v } as any)}
+              onChangeAddress={(addr) => setFormData({ ...formData, address: addr } as any)}
+              onChangeFile={handleFileChange}
               onRemoveExistingImage={handleRemoveExistingImage}
-              onUrlChange={(newUrl) => updateMediaItem(newUrl, undefined)}
-              onFileChange={(newFile) => updateMediaItem(undefined, newFile)}
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+              showActions={false}
             />
 
-            {dialogLoading && (
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 2 }}>
-                  <CircularProgress size={24} />
-                  <Typography variant="body2" color="text.secondary">
-                    {isEdit ? "Salvando alterações..." : "Criando abrigo..."}
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  justifyContent: "flex-end",
-                  mt: 2,
-                  flexDirection: { xs: "column", sm: "row" },
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  onClick={handleCancel}
-                  disabled={dialogLoading}
-                  sx={{ minWidth: 120 }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={dialogLoading}
-                  sx={{ minWidth: 120 }}
-                >
-                  {isEdit ? "Salvar" : "Criar"}
-                </Button>
-              </Box>
-            </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} lg={6}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: { xs: 2, md: 4 },
-                  borderRadius: 2,
-                  height: "100%",
-                }}
-              >
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    label="Quantidade de Equipes"
-                    type="number"
-                    fullWidth
-                    value={teamsQuantity}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setFormData({ ...formData, teamsQuantity: val } as any);
-                    }}
-                    inputProps={{ min: 1, step: 1 }}
-                    required
-                    helperText="Número de equipes (obrigatório, mínimo: 1)"
-                    error={!teamsQuantity || teamsQuantity < 1}
-                  />
-                </Box>
-                
-                <Divider sx={{ mb: 3 }} />
-                
-                <TeamManagementSection
-                  ref={teamManagementRef}
-                  shelterId={savedShelterId}
-                  teamsQuantity={teamsQuantity}
-                  onTeamsQuantityChange={(newQuantity) => {
-                    setFormData(prev => prev ? { ...prev, teamsQuantity: newQuantity } as any : null);
-                  }}
-                />
-              </Paper>
-            </Grid>
-          </Grid>
+            <ShelterFormRightPanel
+              savedShelterId={savedShelterId}
+              teamsQuantity={teamsQuantity}
+              onChangeTeamsQuantity={(q) => setFormData({ ...formData, teamsQuantity: q } as any)}
+              teamManagementRef={teamManagementRef}
+            />
+          </div>
         </motion.div>
       </Container>
+
+      <div className="shelterFormPage__bottomActions">
+        <Container maxWidth={false} className="shelterFormPage__container">
+          <div className="shelterFormPage__bottomInner">
+            <Button variant="outlined" onClick={handleCancel} disabled={dialogLoading} className="shelterFormBtn">
+              Cancelar
+            </Button>
+
+            <Button variant="contained" onClick={handleSubmit} disabled={dialogLoading} className="shelterFormBtn">
+              {isEdit ? "Salvar" : "Criar"}
+            </Button>
+          </div>
+        </Container>
+      </div>
 
       <Snackbar
         open={successSnackbar.open}
@@ -474,16 +353,15 @@ export default function ShelterFormPage() {
         onClose={() => setSuccessSnackbar({ open: false, message: "" })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert 
-          severity="success" 
-          variant="filled" 
+        <Alert
+          severity="success"
+          variant="filled"
           onClose={() => setSuccessSnackbar({ open: false, message: "" })}
-          sx={{ borderRadius: 2 }}
+          className="shelterFormPage__snackbar"
         >
           {successSnackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </div>
   );
 }
-

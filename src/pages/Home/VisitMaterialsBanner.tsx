@@ -124,7 +124,7 @@ const VisitMaterialsBanner: React.FC = () => {
               textShadow: '0 2px 4px rgba(0,0,0,0.8)',
             }}
           >
-            Olá {user?.name || 'Professor'}, estamos na {part} do mês de:
+            Olá {user?.name || 'Membro'}, estamos na {part} do mês de:
           </Typography>
         </motion.div>
 

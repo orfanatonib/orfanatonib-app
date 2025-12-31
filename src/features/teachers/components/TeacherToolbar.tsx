@@ -80,11 +80,11 @@ export default function TeacherToolbar({
           <TextField
             fullWidth
             size="small"
-            label="Busca por Professor"
+            label="Busca por Membro"
             value={filters.teacherSearchString ?? ""}
             onChange={(e) => handleChange("teacherSearchString", e.target.value || undefined)}
-            placeholder="Nome, email, telefone do professor"
-            inputProps={{ "aria-label": "Campo de busca por professor" }}
+            placeholder="Nome, email, telefone do membro"
+            inputProps={{ "aria-label": "Campo de busca por membro" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

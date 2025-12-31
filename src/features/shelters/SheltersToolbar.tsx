@@ -145,7 +145,7 @@ export default function SheltersToolbar({
           <TextField
             fullWidth
             size="small"
-            label="Staff (Líderes e Professores)"
+            label="Staff (Líderes e Membros)"
             value={filters.userSearchString ?? ""}
             onChange={(e) => handleChange("userSearchString", e.target.value || undefined)}
             placeholder="Nome, email ou telefone"

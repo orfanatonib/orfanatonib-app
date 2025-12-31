@@ -244,7 +244,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
 
     const handleConfirmAddTeacher = () => {
       if (!selectedTeamNumber || selectedTeacherIds.length === 0) {
-        setError("Selecione pelo menos um professor");
+        setError("Selecione pelo menos um membro");
         return;
       }
 
@@ -590,10 +590,10 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                       >
                         <SchoolIcon fontSize="small" color="secondary" sx={{ flexShrink: 0 }} />
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          Professores ({teamTeachers.length})
+                          Membros ({teamTeachers.length})
                         </span>
                       </Typography>
-                      <Tooltip title="Adicionar professor">
+                      <Tooltip title="Adicionar membro">
                         <IconButton
                           size="small"
                           onClick={() => handleAddTeacher(teamNumber)}
@@ -619,7 +619,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                         onDelete: () => handleRemoveTeacher(teamNumber, teacher.id),
                       }))}
                       maxVisible={5}
-                      emptyMessage="Nenhum professor"
+                      emptyMessage="Nenhum membro"
                     />
                   </Box>
                 </Paper>
@@ -752,13 +752,13 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           }}
         >
           <DialogTitle sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
-            Adicionar Professores à Equipe {selectedTeamNumber}
+            Adicionar Membros à Equipe {selectedTeamNumber}
           </DialogTitle>
           <DialogContent dividers sx={{ p: 0 }}>
             <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
               <TextField
                 fullWidth
-                placeholder="Buscar professores..."
+                placeholder="Buscar membros..."
                 value={teacherSearchTerm}
                 onChange={(e) => setTeacherSearchTerm(e.target.value)}
                 InputProps={{
@@ -771,11 +771,11 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 size="small"
               />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                {selectedTeacherIds.length} professor(es) selecionado(s)
+                {selectedTeacherIds.length} membro(es) selecionado(s)
               </Typography>
               {selectedTeamNumber && getAvailableTeachers(selectedTeamNumber).length === 0 && (
                 <Alert severity="info" sx={{ mt: 1 }}>
-                  Todos os professores disponíveis já estão em outras equipes
+                  Todos os membros disponíveis já estão em outras equipes
                 </Alert>
               )}
             </Box>
@@ -817,8 +817,8 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     <ListItemText 
                       primary={
                         getAvailableTeachers(selectedTeamNumber).length === 0
-                          ? "Nenhum professor disponível (todos já estão em outras equipes)"
-                          : "Nenhum professor encontrado"
+                          ? "Nenhum membro disponível (todos já estão em outras equipes)"
+                          : "Nenhum membro encontrado"
                       }
                       primaryTypographyProps={{ color: "text.secondary", align: "center" }}
                     />
@@ -878,7 +878,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     </Typography>
                     <Typography variant="body2" component="ul" sx={{ mt: 1, pl: 2 }}>
                       {leadersCount > 0 && <li>{leadersCount} líder(es)</li>}
-                      {teachersCount > 0 && <li>{teachersCount} professor(es)</li>}
+                      {teachersCount > 0 && <li>{teachersCount} membro(es)</li>}
                     </Typography>
                     <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
                       Todos os membros serão removidos junto com a equipe.

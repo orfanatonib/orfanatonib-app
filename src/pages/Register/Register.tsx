@@ -345,12 +345,12 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             fullWidth
             margin="normal"
             error={!!errors.role}
-            helperText={errors.role?.message || 'Informe se você é Professor ou Líder'}
+            helperText={errors.role?.message || 'Informe se você é Membro ou Líder'}
           >
             <MenuItem value="">
               <em>Selecione</em>
             </MenuItem>
-            <MenuItem value="teacher">Professor</MenuItem>
+            <MenuItem value="teacher">Membro</MenuItem>
             <MenuItem value="leader">Líder</MenuItem>
           </TextField>
         )}

@@ -103,7 +103,7 @@ export default function TeacherProfilesManager() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <BackHeader title="Gerenciador de Professores" />
+          <BackHeader title="Gerenciador de Membros" />
         </motion.div>
 
         <motion.div
@@ -131,7 +131,7 @@ export default function TeacherProfilesManager() {
           >
             <CircularProgress size={48} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando professores...
+              Carregando membros...
             </Typography>
           </Box>
         ) : null}
@@ -160,7 +160,7 @@ export default function TeacherProfilesManager() {
           >
             <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum professor encontrado
+              Nenhum membro encontrado
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Tente ajustar os filtros de busca.

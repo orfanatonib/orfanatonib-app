@@ -46,7 +46,7 @@ const AboutLayout: React.FC<AboutLayoutProps> = ({ children }) => {
           }}
         >
           <Typography variant="h2" component="h1" sx={{ fontSize: { xs: '1.8rem', sm: '2.5rem', md: '2.8rem', lg: '3rem' }, fontWeight: 800, color: '#000000', fontFamily: "'Poppins', sans-serif", mb: { xs: 1.5, sm: 2 }, lineHeight: 1.2, }} >
-            Sobre o Orfanato NIB
+            Sobre o Orfanatos NIB
           </Typography>
           <Typography
             variant="h6"

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Route53 DNS records for Orfanato NIB Amplify App custom domain'
+Description: 'Route53 DNS records for Orfanatos NIB Amplify App custom domain'
 
 Parameters:
   HostedZoneId:

@@ -337,7 +337,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
                 textShadow: '0 2px 4px rgba(0,0,0,0.3)',
               }}
             >
-              📰 Feed Orfanato
+              📰 Feed do Ministério de Orfanatos NIB
             </Typography>
 
             <Typography
@@ -350,7 +350,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
                 textShadow: '0 1px 2px rgba(0,0,0,0.2)',
               }}
             >
-              Acompanhe as novidades e atividades
+              Acompanhe tudo o que acontece nos abrigos assistidos pelo nosso ministério
             </Typography>
 
             <Box

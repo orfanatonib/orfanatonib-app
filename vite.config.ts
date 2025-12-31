@@ -14,9 +14,9 @@ export default defineConfig(() => ({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
       },
       manifest: {
-        name: "Orfanato NIB",
-        short_name: "Orfanato NIB",
-        description: "Orfanato NIB",
+        name: "Orfanatos NIB",
+        short_name: "Orfanatos NIB",
+        description: "Orfanatos NIB",
         start_url: "/",
         scope: "/",
         display: "standalone",

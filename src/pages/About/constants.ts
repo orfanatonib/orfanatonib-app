@@ -10,7 +10,7 @@ export const ABOUT_SECTIONS: AboutSection[] = [
   {
     id: 'nossa-historia',
     title: 'Nossa História',
-    content: 'Com mais de 20 anos de caminhada, o Ministério de Orfanato começou sob a coordenação da Nova Igreja Batista da Torquato Tapajós, segue firme no propósito de tornar o Evangelho acessível a pessoas em diferentes realidades. Ao longo do tempo, temos amadurecido e inovado na forma de comunicar a Palavra, levando ensino bíblico e cuidado pastoral a quem precisa de fé, direção e recomeço.',
+    content: 'Com mais de 20 anos de caminhada, o Ministério de Orfanatos começou sob a coordenação da Nova Igreja Batista da Torquato Tapajós, segue firme no propósito de tornar o Evangelho acessível a pessoas em diferentes realidades. Ao longo do tempo, temos amadurecido e inovado na forma de comunicar a Palavra, levando ensino bíblico e cuidado pastoral a quem precisa de fé, direção e recomeço.',
   },
   {
     id: 'missao-visao',

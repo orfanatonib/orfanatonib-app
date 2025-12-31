@@ -1,0 +1,147 @@
+.shelterFormPage {
+  width: 100%;
+  padding: 16px 0;
+}
+
+.shelterFormPage__container {
+  padding: 0 16px;
+}
+
+@media (min-width: 900px) {
+  .shelterFormPage {
+    padding: 32px 0;
+  }
+  .shelterFormPage__container {
+    padding: 0 32px;
+  }
+}
+
+.shelterFormPage__loading {
+  padding: 32px 0;
+}
+
+.shelterFormPage__loadingInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.shelterFormPage__loadingText {
+  margin-top: 16px;
+}
+
+.shelterFormPage__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+@media (min-width: 1200px) {
+  .shelterFormPage__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.shelterFormCard {
+  border-radius: 16px;
+  height: 100%;
+  padding: 16px;
+}
+
+@media (min-width: 900px) {
+  .shelterFormCard {
+    padding: 32px;
+  }
+}
+
+.shelterFormCard__alert {
+  margin-bottom: 16px;
+}
+
+.shelterFormCard__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shelterFormCard__divider {
+  margin: 8px 0;
+}
+
+.shelterFormCard__dividerLarge {
+  margin: 16px 0;
+}
+
+.shelterFormCard__sectionTitle {
+  margin-bottom: 8px;
+}
+
+.shelterFormAddress {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 900px) {
+  .shelterFormAddress {
+    padding: 16px;
+  }
+}
+
+.shelterFormCard__loadingInline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.shelterFormCard__actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  flex-direction: column;
+}
+
+@media (min-width: 600px) {
+  .shelterFormCard__actions {
+    flex-direction: row;
+  }
+}
+
+.shelterFormBtn {
+  min-width: 120px;
+}
+
+.shelterFormPage__bottomActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 60;
+  background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.95));
+  padding: 12px 0 18px;
+}
+
+.shelterFormPage__bottomInner {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .shelterFormPage__bottomInner {
+    justify-content: flex-end;
+  }
+}
+
+.shelterFormRight__top {
+  margin-bottom: 16px;
+}
+
+.shelterFormPage__snackbar {
+  border-radius: 16px !important;
+}

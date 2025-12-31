@@ -105,8 +105,6 @@ export default function ShelteredFormDialog({
   const req = {
     name: !!(value as any).name?.trim(),
     gender: !!(value as any).gender,
-    birthDate: !!(value as any).birthDate,
-    district: !!(value as any).address?.district?.trim(),
     city: !!(value as any).address?.city?.trim(),
     state: !!(value as any).address?.state?.trim(),
     shelterId: !!effectiveShelterId,
@@ -157,14 +155,14 @@ export default function ShelteredFormDialog({
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              required
-              label="Nascimento (obrigatório)"
+              label="Nascimento"
               placeholder="DD/MM/AAAA"
               inputMode="numeric"
               value={formatDateBR((value as any).birthDate)}
-              onChange={(e) => setField("birthDate", maskDateBR(e.target.value))}
-              error={showErrors && !req.birthDate}
-              helperText={showErrors && !req.birthDate ? "Informe a data de nascimento" : undefined}
+              onChange={(e) => {
+                const v = maskDateBR(e.target.value);
+                setField("birthDate", v ? v : null);
+              }}
             />
           </Grid>
 
@@ -276,12 +274,9 @@ export default function ShelteredFormDialog({
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              required
-              label="Bairro (obrigatório)"
+              label="Bairro"
               value={(value as any).address?.district ?? ""}
               onChange={(e) => setField("address", { ...(value as any).address, district: e.target.value })}
-              error={showErrors && !req.district}
-              helperText={showErrors && !req.district ? "Informe o bairro" : undefined}
             />
           </Grid>
 

@@ -43,7 +43,7 @@ type Props = { open: boolean; user: UserRow | null; onClose: () => void };
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Professor",
+  [UserRole.TEACHER]: "Membro",
 };
 
 

@@ -36,7 +36,7 @@ export default function TeachersSelect({
   value,
   options,
   onChange,
-  name = "Selecionar professores",
+  name = "Selecionar membros",
 }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
@@ -127,7 +127,7 @@ export default function TeachersSelect({
     (selected: string[]) => {
       if (isXs) {
         const total = selected.length;
-        if (total === 0) return "Nenhum professor";
+        if (total === 0) return "Nenhum membro";
         if (total <= 2) {
           const names = selected
             .map((id) => {
@@ -200,7 +200,7 @@ export default function TeachersSelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={stopPropagation}
-              inputProps={{ "aria-label": "Buscar professor" }}
+              inputProps={{ "aria-label": "Buscar membro" }}
             />
           </Box>
 

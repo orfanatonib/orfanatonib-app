@@ -90,12 +90,12 @@ export type TeacherQuery = {
 };
 
 /**
- * Tipo simplificado para listagem de professores
+ * Tipo simplificado para listagem de membros
  * Usado no endpoint GET /teacher-profiles/simple
  * Conforme documentação: TeacherSimpleListDto
  */
 export type TeacherSimpleListDto = {
-  teacherProfileId: string;  // UUID do perfil do professor
+  teacherProfileId: string;  // UUID do perfil do membro
   name: string;              // Nome do usuário (ou email se não tiver nome, ou "—" se não tiver nenhum)
   vinculado: boolean;        // Se está vinculado a uma equipe/abrigo
 };

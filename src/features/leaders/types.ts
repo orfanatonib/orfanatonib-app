@@ -68,7 +68,7 @@ export type ShelterWithTeamsAndTeachers = ShelterSimple & {
     leaders?: MinimalUser[];
     teachers?: MinimalTeacher[];
   }[];
-  teachers?: MinimalTeacher[]; // Professores gerais do abrigo
+  teachers?: MinimalTeacher[]; // Membros gerais do abrigo
 };
 
 export type LeaderShelterAssociation = {
@@ -79,7 +79,7 @@ export type LeaderShelterAssociation = {
     numberTeam: number;
     description: string | null;
   }[];
-  teachers?: MinimalTeacher[]; // Professores do abrigo
+  teachers?: MinimalTeacher[]; // Membros do abrigo
 };
 
 export type LeaderProfile = {

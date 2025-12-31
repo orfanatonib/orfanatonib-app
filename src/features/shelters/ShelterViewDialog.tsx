@@ -265,7 +265,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                   />
                   <Chip
                     size="small"
-                    label={`Professores: ${teachers.length}`}
+                    label={`Membros: ${teachers.length}`}
                     color={teachers.length > 0 ? "info" : "default"}
                     variant={teachers.length > 0 ? "filled" : "outlined"}
                   />
@@ -364,7 +364,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                   icon={<SchoolOutlined fontSize="small" />} 
                   title={
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="caption">Professores</Typography>
+                      <Typography variant="caption">Membros</Typography>
                       <Tooltip title="Gerenciar Equipes">
                         <IconButton
                           size="small"
@@ -400,7 +400,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                     </Stack>
                   ) : (
                     <Typography variant="body2" color="text.secondary">
-                      Nenhum professor vinculado
+                      Nenhum membro vinculado
                     </Typography>
                   )}
                 </LineCard>

@@ -71,7 +71,7 @@ const Login: React.FC = () => {
       const isAdminOrCoordinator =
         user.role === UserRole.ADMIN || user.role === UserRole.LEADER;
 
-      const redirectPath = isAdminOrCoordinator ? '/adm' : '/area-do-professor';
+      const redirectPath = isAdminOrCoordinator ? '/adm' : '/area-do-membro';
       navigate(redirectPath);
     }
   }, [isAuthenticated, user, navigate]);
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
   };
 
   const getRedirectPath = (role: UserRole): string => {
-    return role === UserRole.ADMIN ? '/adm' : '/area-do-professor';
+    return role === UserRole.ADMIN ? '/adm' : '/area-do-membro';
   };
 
   const mapUserRole = (responseUser: any): any => {
@@ -218,7 +218,7 @@ const Login: React.FC = () => {
             }}
           >
             <Typography variant="h5" component="h1" gutterBottom align="center">
-              Área do Professor
+              Área do Membro
             </Typography>
 
             {errorMessage && (

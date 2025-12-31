@@ -2,9 +2,9 @@ import { apiManageTeacherTeam, ManageTeacherTeamDto } from "./api";
 import { TeacherProfile } from "./types";
 
 /**
- * Vincula um professor a uma equipe de um abrigo
+ * Vincula um membro a uma equipe de um abrigo
  * - Se a equipe não existir, será criada automaticamente
- * - Se o professor já estiver em outra equipe, será movido automaticamente
+ * - Se o membro já estiver em outra equipe, será movido automaticamente
  */
 export async function addTeacherToShelter(
   teacherId: string,

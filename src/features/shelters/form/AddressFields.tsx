@@ -18,6 +18,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Rua"
           fullWidth
+          size="small"
           value={v.street ?? ""}
           onChange={(e) => set("street", e.target.value)}
         />
@@ -27,6 +28,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Número"
           fullWidth
+          size="small"
           value={v.number ?? ""}
           onChange={(e) => set("number", e.target.value)}
         />
@@ -36,6 +38,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Bairro"
           fullWidth
+          size="small"
           value={v.district ?? ""}
           onChange={(e) => set("district", e.target.value)}
         />
@@ -45,6 +48,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Complemento"
           fullWidth
+          size="small"
           placeholder="Bloco, apto, referência…"
           value={v.complement ?? ""}
           onChange={(e) => set("complement", e.target.value)}
@@ -55,6 +59,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Cidade"
           fullWidth
+          size="small"
           value={v.city ?? ""}
           onChange={(e) => set("city", e.target.value)}
         />
@@ -64,6 +69,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="Estado"
           fullWidth
+          size="small"
           inputProps={{ maxLength: 2 }}
           placeholder="UF"
           value={v.state ?? ""}
@@ -75,6 +81,7 @@ export default function AddressFields({ value = {}, onChange }: Props) {
         <TextField
           label="CEP"
           fullWidth
+          size="small"
           placeholder="00000-000"
           value={v.postalCode ?? ""}
           onChange={(e) => set("postalCode", e.target.value)}

@@ -228,7 +228,7 @@ const ProfilePage: React.FC = () => {
                 >
                   <Stack spacing={1}>
                     <Typography variant="subtitle2" fontWeight={900} sx={{ letterSpacing: 0.2 }}>
-                      Olá professor, você está participando do abrigo:
+                      Olá membro, você está participando do abrigo:
                     </Typography>
 
                     <Grid container spacing={1} alignItems="center">

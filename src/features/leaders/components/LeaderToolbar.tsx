@@ -264,15 +264,15 @@ export default function LeaderToolbar({
             </FormControl>
           </Grid>
 
-          <Grid 
-            item 
-            xs={0}
-            sm={0}
+          {/* Botões de ação (desktop) */}
+          <Grid
+            item
+            xs={12}
+            sm={12}
             md={12}
-            sx={{ 
-              display: { xs: "none", md: "flex" }, 
+            sx={{
+              display: { xs: "none", md: "flex" },
               justifyContent: "flex-end",
-              mt: { xs: 2, md: 0 }
             }}
           >
             <Stack direction="row" spacing={1.5} alignItems="center">

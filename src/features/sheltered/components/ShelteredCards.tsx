@@ -443,11 +443,13 @@ export default function ShelteredrenCards(props: Props) {
                                 </Typography>
                               </Stack>
                               <Stack spacing={0.5}>
-                                <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.4 }}>
-                                  {c.address.street}{c.address.number ? `, ${c.address.number}` : ""}
-                                </Typography>
+                                {(c.address.street || c.address.number) && (
+                                  <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.4 }}>
+                                    {c.address.street || ""}{c.address.number ? `, ${c.address.number}` : ""}
+                                  </Typography>
+                                )}
                                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4 }}>
-                                  {c.address.district} • {c.address.city} / {c.address.state}
+                                  {c.address.district ? `${c.address.district} • ` : ""}{c.address.city} / {c.address.state}
                                 </Typography>
                                 {c.address.postalCode && (
                                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4 }}>

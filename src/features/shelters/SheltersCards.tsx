@@ -317,7 +317,7 @@ export default function SheltersCards(props: Props) {
                             <Stack direction="row" spacing={0.75} alignItems="center">
                               <GroupIcon fontSize="small" color="primary" />
                               <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
-                                Professores ({teachers.length})
+                                Membros ({teachers.length})
                               </Typography>
                             </Stack>
 
@@ -329,7 +329,7 @@ export default function SheltersCards(props: Props) {
                                 variant: "outlined" as const,
                               }))}
                               maxVisible={5}
-                              emptyMessage="Nenhum professor vinculado."
+                              emptyMessage="Nenhum membro vinculado."
                             />
                           </Stack>
                         </Paper>

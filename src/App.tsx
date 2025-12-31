@@ -121,7 +121,7 @@ function App() {
             }
           }}
         >
-          Sair e Limpar Dados
+          Sair
         </Button>
       </Box>
     );
@@ -129,9 +129,9 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Box sx={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
         flexDirection: 'column',
         background: 'linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)',
         backgroundAttachment: 'fixed',
@@ -153,7 +153,7 @@ function App() {
               <Route path="*" element={<Home />} />
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/area-do-professor" element={<TeacherArea />} />
+                <Route path="/area-do-membro" element={<TeacherArea />} />
                 <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
                 <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
@@ -175,7 +175,7 @@ function App() {
                   <Route path="paginas-materiais-visita" element={<VisitMaterialManager />} />
                   <Route path="paginas-fotos" element={<ImagePageManager />} />
                   <Route path="fotos-abrigos" element={<ImageSectionManager />} />
-                  <Route path="ideias-compartilhadas" element={<IdeasSectionManager  />} />
+                  <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
                   <Route path="paginas-videos" element={<VideosManager />} />
                   <Route path="paginas-ideias" element={<IdeasManager />} />
                   <Route path="criar-pagina" element={<SelecPageTemplate />} />
@@ -184,7 +184,7 @@ function App() {
                   <Route path="professores" element={<TeacherProfilesManager />} />
                   <Route path="abrigados" element={<ShelteredManager />} />
                   <Route path="abrigos" element={<SheltersManager />} />
-                  <Route path="abrigos/new" element={<ShelterFormPage />} />
+                  <Route path="abrigos/novo" element={<ShelterFormPage />} />
                   <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
                   <Route path="pagelas" element={<PagelaSheltersManager />} />
 
@@ -194,7 +194,7 @@ function App() {
                   <Route path="editar-pagina-visita" element={<VisitMaterialPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
-                  <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage  />} />
+                  <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
                 </Route>
               </Route>
 

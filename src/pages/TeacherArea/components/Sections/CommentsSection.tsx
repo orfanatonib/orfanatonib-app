@@ -226,7 +226,7 @@ const CommentsSection: React.FC = () => {
                 letterSpacing: '-0.3px',
               }}
             >
-              Comentários dos Professores
+              Comentários dos Membros
             </Typography>
           </Box>
 

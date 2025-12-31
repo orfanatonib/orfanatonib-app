@@ -60,7 +60,7 @@ const NavBar: React.FC = () => {
   };
 
   const handleTeacherArea = () => {
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
     handleClose();
   };
 
@@ -106,7 +106,7 @@ const NavBar: React.FC = () => {
             }
           }}
         >
-          Orfanato NIB
+          Orfanatos NIB
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {isMobile ? <MobileNavigation /> : <DesktopNavigation />}
@@ -177,7 +177,7 @@ const NavBar: React.FC = () => {
                       <ListItemIcon>
                         <SchoolIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
                       </ListItemIcon>
-                      <ListItemText>Área do Professor</ListItemText>
+                      <ListItemText>Área do Membro</ListItemText>
                     </MenuItem>
                     {isTeacher && (
                       <MenuItem onClick={handleShelteredArea}>

@@ -19,7 +19,7 @@ export const SECTION_DATA = [
     items: [
       '🚩 Consulte o banner semanal para o tema e versículo atual',
       '🎨 Adapte os materiais à realidade e idade da sua turma',
-      '💬 Compartilhe experiências e ideias com outros professores',
+      '💬 Compartilhe experiências e ideias com outros membros',
       '📖 Mantenha-se atualizado com as novidades da plataforma',
     ],
   },

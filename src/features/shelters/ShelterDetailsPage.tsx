@@ -416,7 +416,7 @@ export default function ShelterDetailsPage() {
                       />
                       <Chip
                         icon={<SchoolOutlined />}
-                        label={`${allTeachers.length} Professor(es)`}
+                        label={`${allTeachers.length} Membro(es)`}
                         color="secondary"
                         variant="outlined"
                       />
@@ -578,7 +578,7 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Professores ({team.teachers?.length || 0})
+                                  Membros ({team.teachers?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
                                   items={team.teachers?.map((teacher) => ({
@@ -591,7 +591,7 @@ export default function ShelterDetailsPage() {
                                     variant: "outlined" as const,
                                   })) || []}
                                   maxVisible={3}
-                                  emptyMessage="Nenhum professor"
+                                  emptyMessage="Nenhum membro"
                                 />
                               </Box>
                             </Stack>
@@ -680,7 +680,7 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Professores ({team.teachers?.length || 0})
+                                  Membros ({team.teachers?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
                                   items={team.teachers?.map((teacher) => ({
@@ -693,7 +693,7 @@ export default function ShelterDetailsPage() {
                                     variant: "outlined" as const,
                                   })) || []}
                                   maxVisible={3}
-                                  emptyMessage="Nenhum professor"
+                                  emptyMessage="Nenhum membro"
                                 />
                               </Box>
                             </Stack>

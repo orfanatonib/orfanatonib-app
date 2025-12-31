@@ -98,7 +98,7 @@ export async function apiListSheltersSimple() {
 /**
  * Busca todas as equipes com detalhes completos
  * GET /teams
- * Retorna todas as equipes com seus abrigos, líderes e professores
+ * Retorna todas as equipes com seus abrigos, líderes e membros
  */
 export async function apiListAllTeams() {
   const { data } = await api.get<TeamsCompleteResponse>("/teams");

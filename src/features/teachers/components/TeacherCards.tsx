@@ -184,7 +184,7 @@ export default function TeacherCards({
                       transition: "transform 0.2s ease",
                       flexShrink: 0,
                     }}
-                    aria-label={`Avatar do professor ${t.user?.name}`}
+                    aria-label={`Avatar do membro ${t.user?.name}`}
                   >
                     {initials(t.user?.name)}
                   </Avatar>
@@ -335,7 +335,7 @@ export default function TeacherCards({
                             <Stack direction="row" spacing={0.75} alignItems="center">
                               <PersonOutlined fontSize="small" color="primary" />
                               <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
-                                Informações do Professor
+                                Informações do Membro
                               </Typography>
                             </Stack>
                             <Stack spacing={1}>

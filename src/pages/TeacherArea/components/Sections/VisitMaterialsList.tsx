@@ -105,7 +105,7 @@ const VisitMaterialsList = () => {
     }
 
     const handleBack = () => {
-        navigate('/area-do-professor');
+        navigate('/area-do-membro');
     };
 
     return (

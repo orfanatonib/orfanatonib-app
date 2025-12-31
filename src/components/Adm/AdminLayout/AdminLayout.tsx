@@ -103,7 +103,7 @@ function AdminLayout() {
           { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
           { label: "Pagelas", to: "/adm/pagelas", icon: <Groups /> },
           { label: "Usuários", to: "/adm/usuarios", icon: <Group /> },
-          { label: "Professores", to: "/adm/professores", icon: <School /> },
+          { label: "Membros", to: "/adm/professores", icon: <School /> },
           { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
           { label: "Abrigados", to: "/adm/abrigados", icon: <Groups /> },
         ],

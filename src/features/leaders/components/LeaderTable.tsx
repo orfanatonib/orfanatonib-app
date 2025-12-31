@@ -176,7 +176,7 @@ export default function LeaderTable({
     },
     {
       id: "teachers",
-      header: "Professores",
+      header: "Membros",
       cell: ({ row }) => {
         const shelters = row.original.shelters;
         const allTeachers = shelters?.flatMap(shelter => shelter.teachers || []) ?? [];
@@ -243,7 +243,7 @@ export default function LeaderTable({
               color="primary"
               sx={{ cursor: "pointer", fontWeight: 500 }}
             >
-              {allTeachers.length} professores
+              {allTeachers.length} membros
             </Typography>
           </Tooltip>
         );

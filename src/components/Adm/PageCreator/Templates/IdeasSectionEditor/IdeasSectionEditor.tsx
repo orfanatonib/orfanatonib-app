@@ -145,7 +145,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         
         const currentPath = window.location.pathname;
         if (currentPath === '/compartilhar-ideia') {
-          navigate('/area-do-professor');
+          navigate('/area-do-membro');
         } else {
           navigate('/adm/ideias-compartilhadas');
         }

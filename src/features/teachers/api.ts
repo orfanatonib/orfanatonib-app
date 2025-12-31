@@ -12,7 +12,7 @@ export async function apiGetTeacher(teacherId: string) {
 }
 
 /**
- * Lista todos os professores de forma simplificada (apenas ID, nome e status de vinculação)
+ * Lista todos os membros de forma simplificada (apenas ID, nome e status de vinculação)
  * Usado para listas de seleção (selects, comboboxes)
  */
 export async function apiListTeachersSimple() {
@@ -30,10 +30,10 @@ export type ManageTeacherTeamDto = {
 
  
 /**
- * Endpoint único para vincular professor a equipe de um abrigo
+ * Endpoint único para vincular membro a equipe de um abrigo
  * - Busca a equipe com o numberTeam especificado no abrigo
  * - Se a equipe não existir, cria uma nova equipe automaticamente
- * - Se o professor já estiver vinculado a outra equipe, remove da anterior e vincula à nova
+ * - Se o membro já estiver vinculado a outra equipe, remove da anterior e vincula à nova
  */
 export async function apiManageTeacherTeam(teacherId: string, payload: ManageTeacherTeamDto) {
   const { data } = await api.put<TeacherProfile>(`/teacher-profiles/${teacherId}`, payload);

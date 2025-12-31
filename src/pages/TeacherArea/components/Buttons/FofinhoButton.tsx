@@ -171,8 +171,8 @@ const buttonMap: Record<string, FofinhoButtonProps> = {
     color: 'info',
   },
   teacherArea: {
-    to: '/area-do-professor',
-    label: 'Área do Professor',
+    to: '/area-do-membro',
+    label: 'Área do Membro',
     icon: BadgeIcon,
     color: 'primary',
   },

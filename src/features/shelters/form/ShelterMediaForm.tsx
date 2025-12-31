@@ -1,33 +1,28 @@
 import React, { Fragment } from 'react';
-import { Grid, FormControl, InputLabel, Select, MenuItem, Button, Box, IconButton, Card, CardMedia, Typography } from '@mui/material';
-import { CloudUpload, Link as LinkIcon, Image as ImageIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Grid, Button, Box, IconButton, Card, CardMedia, Typography } from '@mui/material';
+import { CloudUpload, Image as ImageIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface Props {
-  uploadType: "upload" | "link";
-  setUploadType: (v: "upload" | "link") => void;
-  url: string;
-  setUrl: (v: string) => void;
   file: File | null;
   setFile: (f: File | null) => void;
   existingImageUrl?: string;
   onRemoveExistingImage?: () => void;
-  onUrlChange?: (url: string) => void;
   onFileChange?: (file: File | null) => void;
 }
 
 const ShelterMediaForm: React.FC<Props> = ({
-  uploadType, setUploadType, url, setUrl, file, setFile, existingImageUrl, onRemoveExistingImage, onUrlChange, onFileChange,
+  file, setFile, existingImageUrl, onRemoveExistingImage, onFileChange,
 }) => {
   const [showExisting, setShowExisting] = React.useState(!!existingImageUrl);
   const [imageError, setImageError] = React.useState(false);
-  const previewUrl = file ? URL.createObjectURL(file) : (uploadType === "link" && url ? url : null);
+  const previewUrl = file ? URL.createObjectURL(file) : null;
 
   React.useEffect(() => {
     setShowExisting(!!existingImageUrl);
     setImageError(false);
   }, [existingImageUrl]);
 
-  if (showExisting && existingImageUrl && !file && (!url || url === existingImageUrl)) {
+  if (showExisting && existingImageUrl && !file) {
     return (
       <Fragment>
         <Grid item xs={12}>
@@ -135,84 +130,14 @@ const ShelterMediaForm: React.FC<Props> = ({
           </Box>
         </Box>
       </Grid>
-      
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel>Tipo de Imagem</InputLabel>
-          <Select 
-            value={uploadType} 
-            label="Tipo de Imagem" 
-            onChange={(e) => {
-              setUploadType(e.target.value as "upload" | "link");
-              if (e.target.value === "upload") {
-                setUrl("");
-              } else {
-                setFile(null);
-              }
-            }}
-          >
-            <MenuItem value="upload">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CloudUpload fontSize="small" />
-                Upload (Enviar arquivo)
-              </Box>
-            </MenuItem>
-            <MenuItem value="link">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LinkIcon fontSize="small" />
-                Link (URL externa - Unsplash, etc)
-              </Box>
-            </MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-
-      {uploadType === "link" && (
+        
         <Grid item xs={12}>
-          <Box
-            component="input"
-            type="text"
-            value={url}
-            onChange={(e: any) => {
-              const newUrl = e.target.value;
-              setUrl(newUrl);
-              if (onUrlChange) onUrlChange(newUrl);
-            }}
-            placeholder="https://images.unsplash.com/photo-..."
-            sx={{
-              width: '100%',
-              padding: '16.5px 14px',
-              fontSize: '1rem',
-              fontFamily: 'inherit',
-              border: '1px solid',
-              borderColor: 'rgba(0, 0, 0, 0.23)',
-              borderRadius: '4px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              '&:hover': {
-                borderColor: 'rgba(0, 0, 0, 0.87)',
-              },
-              '&:focus': {
-                borderColor: 'primary.main',
-                borderWidth: '2px',
-                padding: '15.5px 13px',
-              },
-            }}
-          />
-          <Box sx={{ mt: 0.5, fontSize: '0.75rem', color: 'text.secondary', pl: 1.75 }}>
-            Cole o link da imagem (ex: Unsplash, Google Drive, etc)
-          </Box>
-        </Grid>
-      )}
-
-      {uploadType === "upload" && (
-        <Grid item xs={12}>
-          <Button 
-            component="label" 
-            variant="outlined" 
+          <Button
+            component="label"
+            variant="outlined"
             fullWidth
             startIcon={<CloudUpload />}
-            sx={{ 
+            sx={{
               py: 2,
               borderRadius: 2,
               borderStyle: 'dashed',
@@ -237,7 +162,6 @@ const ShelterMediaForm: React.FC<Props> = ({
             </Box>
           )}
         </Grid>
-      )}
 
       {previewUrl && (
         <Grid item xs={12}>

@@ -282,7 +282,7 @@ export function PagelasPanel({
                             fontStyle: 'italic'
                           }}
                         >
-                          Professor: {pagela.teacher.user.name}
+                          Membro: {pagela.teacher.user.name}
                         </Typography>
                       )}
                       </Box>

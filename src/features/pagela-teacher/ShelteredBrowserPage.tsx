@@ -287,7 +287,7 @@ export default function ShelteredBrowserPage() {
             Acesso não autorizado
           </Typography>
           <Typography>
-            Você precisa ser um Administrador, Líder ou Professor para acessar esta área.
+            Você precisa ser um Administrador, Líder ou Membro para acessar esta área.
           </Typography>
         </Alert>
       ) : (

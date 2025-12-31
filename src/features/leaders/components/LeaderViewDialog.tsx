@@ -108,7 +108,7 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
                         {shelter.teachers && shelter.teachers.length > 0 && (
                           <Box>
                             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                              Professores:
+                              Membros:
                             </Typography>
                             <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                               {shelter.teachers.map((t) => {
@@ -135,7 +135,7 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
 
             {totalTeachers > 0 && (
               <>
-                <Grid item xs={12}><strong>Todos os Professores</strong></Grid>
+                <Grid item xs={12}><strong>Todos os Membros</strong></Grid>
                 <Grid item xs={12}>
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     {allTeachers.map((t) => {
