@@ -37,6 +37,7 @@ interface ShelterScheduleFormModalProps {
   onSubmit: (data: CreateShelterScheduleDto) => Promise<void>;
   initialData?: ShelterScheduleResponseDto | null;
   loading?: boolean;
+  hideInfoBanner?: boolean;
 }
 
 export default function ShelterScheduleFormModal({
@@ -45,6 +46,7 @@ export default function ShelterScheduleFormModal({
   onSubmit,
   initialData,
   loading = false,
+  hideInfoBanner = false,
 }: ShelterScheduleFormModalProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -150,25 +152,27 @@ export default function ShelterScheduleFormModal({
       </DialogTitle>
 
       <DialogContent dividers>
-        {/* Banner Informativo */}
-        <Box
-          sx={{
-            mb: 2.5,
-            p: 2,
-            borderRadius: 3,
-            background: (theme) =>
-              `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
-            textAlign: "center",
-            boxShadow: 2,
-          }}
-        >
-          <Typography variant="body1" fontWeight="bold" color="white" sx={{ mb: 0.5 }}>
-            📋 Informe qual lição pretende adotar na visita!
-          </Typography>
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.9)", fontStyle: "italic" }}>
-            💡 Data, horário e sala podem ser preenchidos depois!
-          </Typography>
-        </Box>
+        {/* Banner Informativo - apenas para líderes */}
+        {!hideInfoBanner && (
+          <Box
+            sx={{
+              mb: 2.5,
+              p: 2,
+              borderRadius: 3,
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+              textAlign: "center",
+              boxShadow: 2,
+            }}
+          >
+            <Typography variant="body1" fontWeight="bold" color="white" sx={{ mb: 0.5 }}>
+              📋 Informe qual lição pretende adotar na visita!
+            </Typography>
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.9)", fontStyle: "italic" }}>
+              💡 Data, horário e sala podem ser preenchidos depois!
+            </Typography>
+          </Box>
+        )}
 
         {teamsError && (
           <Alert severity="error" sx={{ mb: 2 }}>

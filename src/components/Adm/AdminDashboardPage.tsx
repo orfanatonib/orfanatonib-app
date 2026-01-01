@@ -45,7 +45,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
-type SectionId = "all" | "pages" | "conteudos" | "shelter" | "operacional";
+type SectionId = "all" | "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
 
 interface CardData {
   title: string;
@@ -56,40 +56,50 @@ interface CardData {
 }
 
 const cardData: CardData[] = [
-  { title: "Criar Página", description: "Adicione novas páginas de conteúdo ao site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudos" },
-  { title: "Meditações", description: "Crie, edite e visualize meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudos" },
-  { title: "Documentos", description: "Gerencie documentos para membros.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudos" },
-  { title: "Informativos", description: "Gerencie banners informativos do site.", icon: <Campaign fontSize="large" color="primary" />, path: "/adm/informativos", section: "conteudos" },
+  // 👥 PESSOAS - Gestão de Pessoas
+  { title: "Usuários", description: "Gerencie contas de acesso ao sistema.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "pessoas" },
+  { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
+  { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
+  { title: "Abrigados", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "pessoas" },
 
-  { title: "Páginas de Materiais de Visita", description: "Gerencie materiais de visita.", icon: <EventNote fontSize="large" color="primary" />, path: "/adm/paginas-materiais-visita", section: "pages" },
-  { title: "Páginas de Fotos", description: "Organize e edite galerias de imagens do site.", icon: <PhotoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-fotos", section: "pages" },
-  { title: "Fotos dos Abrigos", description: "Organize e edite galerias de fotos dos abrigos.", icon: <Collections fontSize="large" color="primary" />, path: "/adm/fotos-abrigos", section: "pages" },
-  { title: "Ideias compartilhadas", description: "Gerencie Ideias compartilhadas pelos Abrigos", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/ideias-compartilhadas", section: "pages" },
-  { title: "Páginas de Vídeos", description: "Adicione vídeos ou links do YouTube para o site.", icon: <VideoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-videos", section: "pages" },
-  { title: "Páginas de Ideias", description: "Gerencie páginas de ideias para membros.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "pages" },
+  // 🏠 ABRIGOS - Gestão de Abrigos
+  { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
+  { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
+  { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
 
-  { title: "Usuários", description: "Gerencie usuários do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "shelter" },
-  { title: "Membros", description: "Gerencie membros do abrigo.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "shelter" },
-  { title: "Líderes", description: "Gerencie líderes do abrigo.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "shelter" },
-  { title: "Abrigados", description: "Gerencie crianças do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "shelter" },
-  { title: "Abrigos", description: "Gerencie abrigos.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "shelter" },
-  { title: "Pagelas", description: "Gerencie pagelas.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/pagelas", section: "shelter" },
-  { title: "Agendamentos", description: "Gerencie agendamentos de visitas e reuniões.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "shelter" },
+  // 📝 CONTEÚDO - Criação de Conteúdo
+  { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
+  { title: "Meditações", description: "Crie e edite meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudo" },
+  { title: "Documentos", description: "Disponibilize documentos para download.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudo" },
+  { title: "Informativos", description: "Gerencie banners e avisos do site.", icon: <Campaign fontSize="large" color="primary" />, path: "/adm/informativos", section: "conteudo" },
 
-  { title: "Comentários", description: "Gerencie comentários dos usuários.", icon: <Comment fontSize="large" color="primary" />, path: "/adm/comentarios", section: "operacional" },
-  { title: "Contatos", description: "Gerencie contatos enviados para o Abrigo.", icon: <ContactPhone fontSize="large" color="primary" />, path: "/adm/contatos", section: "operacional" },
-  { title: "Feedbacks", description: "Gerencie feedbacks enviados para o Abrigo.", icon: <RateReview fontSize="large" color="primary" />, path: "/adm/feedbacks", section: "operacional" },
+  // 📸 MÍDIAS - Fotos e Vídeos
+  { title: "Galerias de Fotos", description: "Organize galerias de imagens do ministério.", icon: <PhotoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-fotos", section: "midias" },
+  { title: "Fotos dos Abrigos", description: "Gerencie fotos específicas de cada abrigo.", icon: <Collections fontSize="large" color="primary" />, path: "/adm/fotos-abrigos", section: "midias" },
+  { title: "Vídeos", description: "Adicione vídeos e links do YouTube.", icon: <VideoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-videos", section: "midias" },
+
+  // 💡 MATERIAIS - Materiais e Ideias
+  { title: "Materiais de Visita", description: "Gerencie materiais para as visitas.", icon: <EventNote fontSize="large" color="primary" />, path: "/adm/paginas-materiais-visita", section: "materiais" },
+  { title: "Páginas de Ideias", description: "Organize páginas com sugestões de atividades.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "materiais" },
+  { title: "Ideias Compartilhadas", description: "Veja ideias enviadas pelos abrigos.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/ideias-compartilhadas", section: "materiais" },
+
+  // 💬 INTERAÇÕES - Comunicação com Usuários
+  { title: "Comentários", description: "Modere comentários dos usuários.", icon: <Comment fontSize="large" color="primary" />, path: "/adm/comentarios", section: "interacoes" },
+  { title: "Contatos", description: "Visualize mensagens de contato recebidas.", icon: <ContactPhone fontSize="large" color="primary" />, path: "/adm/contatos", section: "interacoes" },
+  { title: "Feedbacks", description: "Analise feedbacks enviados pelos usuários.", icon: <RateReview fontSize="large" color="primary" />, path: "/adm/feedbacks", section: "interacoes" },
 ];
 
 const sectionLabels: Record<SectionId, string> = {
-  all: "tudo",
-  pages: "pages",
-  conteudos: "conteúdos",
-  shelter: "abrigo",
-  operacional: "operacional",
+  all: "Tudo",
+  pessoas: "Pessoas",
+  abrigos: "Abrigos",
+  conteudo: "Conteúdo",
+  midias: "Mídias",
+  materiais: "Materiais",
+  interacoes: "Interações",
 };
 
-const order: Exclude<SectionId, "all">[] = ["pages", "conteudos", "shelter", "operacional"];
+const order: Exclude<SectionId, "all">[] = ["pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"];
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -135,10 +145,12 @@ export default function AdminDashboardPage() {
 
   const grouped = React.useMemo(() => {
     const g: Record<Exclude<SectionId, "all">, CardData[]> = {
-      pages: [],
-      conteudos: [],
-      shelter: [],
-      operacional: [],
+      pessoas: [],
+      abrigos: [],
+      conteudo: [],
+      midias: [],
+      materiais: [],
+      interacoes: [],
     };
     for (const c of visibleCards) {
       const inSection = section === "all" ? true : c.section === section;
@@ -153,8 +165,8 @@ export default function AdminDashboardPage() {
   }, [section, normalizedQuery, visibleCards]);
 
   const hasResults =
-    grouped.pages.length + grouped.conteudos.length + grouped.shelter.length + grouped.operacional.length >
-    0;
+    grouped.pessoas.length + grouped.abrigos.length + grouped.conteudo.length + 
+    grouped.midias.length + grouped.materiais.length + grouped.interacoes.length > 0;
 
   const MobileList: React.FC = () => {
     const allFiltered = order.flatMap((sec) => grouped[sec]);
@@ -198,7 +210,7 @@ export default function AdminDashboardPage() {
                 gap: 0.5,
               }}
             >
-              {(["all", "pages", "conteudos", "shelter", "operacional"] as SectionId[]).map((key) => (
+              {(["all", "pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"] as SectionId[]).map((key) => (
                 <Button
                   key={key}
                   size="small"
@@ -359,7 +371,7 @@ export default function AdminDashboardPage() {
               }}
               sx={{ maxWidth: 360, mr: 1 }}
             />
-            {(["all", "pages", "conteudos", "shelter", "operacional"] as SectionId[]).map((key) => (
+            {(["all", "pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"] as SectionId[]).map((key) => (
               <Button
                 key={key}
                 variant={section === key ? "contained" : "outlined"}

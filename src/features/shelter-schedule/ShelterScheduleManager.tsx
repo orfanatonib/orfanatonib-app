@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { Box, CircularProgress, Alert, Button, Fab, useTheme, useMediaQuery } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/slices";
+import { UserRole } from "@/store/slices/auth/authSlice";
 
 import { useShelterSchedules } from "./hooks";
 import { ShelterScheduleResponseDto } from "./types";
@@ -35,6 +38,9 @@ interface ShelterGroup {
 export default function ShelterScheduleManager() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const { user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isLeader = user?.role === UserRole.LEADER;
 
   const {
     schedules,
@@ -51,7 +57,7 @@ export default function ShelterScheduleManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingSchedule, setDeletingSchedule] = useState<ShelterScheduleResponseDto | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [expandedShelters, setExpandedShelters] = useState<Set<string>>(new Set());
+  const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<ShelterScheduleResponseDto | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
@@ -106,23 +112,14 @@ export default function ShelterScheduleManager() {
     );
   }, [schedules]);
 
-  // Auto-expand all shelters on first load
   React.useEffect(() => {
-    if (groupedData.length > 0 && expandedShelters.size === 0) {
-      setExpandedShelters(new Set(groupedData.map((s) => s.shelterId)));
+    if (groupedData.length > 0 && expandedShelterId === null && isLeader && !isAdmin) {
+      setExpandedShelterId(groupedData[0].shelterId);
     }
-  }, [groupedData]);
+  }, [groupedData, isLeader, isAdmin]);
 
   const toggleShelter = (shelterId: string) => {
-    setExpandedShelters((prev) => {
-      const next = new Set(prev);
-      if (next.has(shelterId)) {
-        next.delete(shelterId);
-      } else {
-        next.add(shelterId);
-      }
-      return next;
-    });
+    setExpandedShelterId((prev) => (prev === shelterId ? null : shelterId));
   };
 
   const handleOpenCreate = () => {
@@ -220,7 +217,7 @@ export default function ShelterScheduleManager() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
-      <LeaderInfoBanner />
+      {isLeader && !isAdmin && <LeaderInfoBanner />}
 
       <ScheduleHeader
         schedulesCount={schedules.length}
@@ -236,7 +233,7 @@ export default function ShelterScheduleManager() {
             <ShelterCard
               key={shelter.shelterId}
               shelter={shelter}
-              isExpanded={expandedShelters.has(shelter.shelterId)}
+              isExpanded={expandedShelterId === shelter.shelterId}
               selectedScheduleId={selectedSchedule?.id || null}
               getVisitColor={getVisitColor}
               onToggleExpand={toggleShelter}
@@ -266,6 +263,7 @@ export default function ShelterScheduleManager() {
         onSubmit={handleSubmit}
         initialData={editingSchedule}
         loading={submitting}
+        hideInfoBanner={isAdmin}
       />
 
       <ShelterScheduleDeleteDialog
