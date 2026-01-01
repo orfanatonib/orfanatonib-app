@@ -65,6 +65,7 @@ import VideosManager from './features/video-pages/VideosManager';
 import VisitMaterialManager from './features/visit-materials/VisitMaterialManager';
 import { ProfilePage } from './features/profile';
 import EventosPage from './pages/Event/EventosPage';
+import ShelterScheduleManager from './features/shelter-schedule/ShelterScheduleManager';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -188,6 +189,7 @@ function App() {
                   <Route path="abrigos/novo" element={<ShelterFormPage />} />
                   <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
                   <Route path="pagelas" element={<PagelaSheltersManager />} />
+                  <Route path="agendamentos" element={<ShelterScheduleManager />} />
 
                   <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
