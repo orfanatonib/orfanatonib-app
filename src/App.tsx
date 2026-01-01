@@ -64,6 +64,7 @@ import IdeasManager from './features/ideas-pages/IdeasManager';
 import VideosManager from './features/video-pages/VideosManager';
 import VisitMaterialManager from './features/visit-materials/VisitMaterialManager';
 import { ProfilePage } from './features/profile';
+import EventosPage from './pages/Event/EventosPage';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -145,7 +146,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/sobre" element={<About />} />
               <Route path="/contato" element={<Contact />} />
-              <Route path="/eventos" element={<Event />} />
+              <Route path="/eventos" element={<EventosPage />} />
               <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
@@ -181,7 +182,7 @@ function App() {
                   <Route path="criar-pagina" element={<SelecPageTemplate />} />
                   <Route path="usuarios" element={<UsersManager />} />
                   <Route path="lideres" element={<LeaderProfilesManager />} />
-                  <Route path="professores" element={<TeacherProfilesManager />} />
+                  <Route path="membros" element={<TeacherProfilesManager />} />
                   <Route path="abrigados" element={<ShelteredManager />} />
                   <Route path="abrigos" element={<SheltersManager />} />
                   <Route path="abrigos/novo" element={<ShelterFormPage />} />

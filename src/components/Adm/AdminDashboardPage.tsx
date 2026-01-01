@@ -68,7 +68,7 @@ const cardData: CardData[] = [
   { title: "Páginas de Ideias", description: "Gerencie páginas de ideias para membros.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "pages" },
 
   { title: "Usuários", description: "Gerencie usuários do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "shelter" },
-  { title: "Membros", description: "Gerencie membros do abrigo.", icon: <School fontSize="large" color="primary" />, path: "/adm/professores", section: "shelter" },
+  { title: "Membros", description: "Gerencie membros do abrigo.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "shelter" },
   { title: "Líderes", description: "Gerencie líderes do abrigo.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "shelter" },
   { title: "Abrigados", description: "Gerencie crianças do abrigo.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "shelter" },
   { title: "Abrigos", description: "Gerencie abrigos.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "shelter" },
@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
   const normalizedQuery = query.trim().toLowerCase();
   const leaderAllowed = new Set<string>([
     "/adm/abrigados",
-    "/adm/professores",
+    "/adm/membros",
     "/adm/abrigos",
     "/adm/pagelas",
   ]);
