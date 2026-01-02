@@ -139,7 +139,7 @@ const CommentsSection: React.FC = () => {
   const placeholders: Record<string, string> = {
     name: 'Seu nome',
     comment: 'Escreva seu comentário aqui...',
-    shelter: 'Ex: Abrigo do Amor',
+    shelter: 'Ex: Abrigo São Lucas',
     neighborhood: 'Ex: Jardim das Flores',
   };
 
