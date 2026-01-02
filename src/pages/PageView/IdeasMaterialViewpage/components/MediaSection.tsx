@@ -723,6 +723,7 @@ export default function MediaSection({
           open={userModalOpen}
           onClose={() => setUserModalOpen(false)}
           user={user}
+          ideaTitle={title}
         />
       )}
     </Box>

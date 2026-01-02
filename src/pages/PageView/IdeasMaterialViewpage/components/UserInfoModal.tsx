@@ -19,6 +19,7 @@ import {
   Phone as PhoneIcon,
   Check as CheckIcon,
 } from "@mui/icons-material";
+import { buildIdeasWhatsappLink } from "@/utils/whatsapp";
 
 interface UserInfoModalProps {
   open: boolean;
@@ -28,9 +29,10 @@ interface UserInfoModalProps {
     email: string;
     phone?: string;
   };
+  ideaTitle?: string;
 }
 
-export default function UserInfoModal({ open, onClose, user }: UserInfoModalProps) {
+export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserInfoModalProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -58,15 +60,8 @@ export default function UserInfoModal({ open, onClose, user }: UserInfoModalProp
   // Abrir WhatsApp
   const handleWhatsApp = () => {
     if (!user.phone) return;
-    
-    // Limpar o telefone (remover caracteres especiais)
-    const cleanPhone = user.phone.replace(/\D/g, "");
-    
-    // Adicionar código do Brasil se não tiver
-    const phoneWithCountry = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
-    
-    const message = encodeURIComponent(`Olá ${user.name.split(" ")[0]}! 👋`);
-    window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, "_blank");
+    const link = buildIdeasWhatsappLink(user.name, ideaTitle, user.phone);
+    if (link) window.open(link, "_blank");
   };
 
   // Abrir email

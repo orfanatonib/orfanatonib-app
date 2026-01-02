@@ -1,11 +1,12 @@
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,
-  Stack, Paper, Grid, Box, useMediaQuery, Chip, Divider, IconButton, Tooltip
+  Stack, Paper, Grid, Box, useMediaQuery, Chip, Divider, IconButton, Tooltip, Avatar
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { Close, Download, PlayArrow, Image as ImageIcon, AudioFile, VideoFile, PictureAsPdf } from '@mui/icons-material';
+import { useTheme, alpha } from '@mui/material/styles';
+import { Close, Download, PlayArrow, Image as ImageIcon, AudioFile, VideoFile, PictureAsPdf, Person, Email, Phone, ContentCopy, WhatsApp } from '@mui/icons-material';
 import { IdeasSection } from '../types';
 import { formatDatePtBr, getMediaTypeIcon, getMediaTypeLabel, formatFileSize } from '../utils';
+import { buildIdeasWhatsappLink, justDigits } from '@/utils/whatsapp';
 
 interface Props {
   section: IdeasSection | null;
@@ -16,6 +17,21 @@ interface Props {
 export default function IdeasSectionDetailsModal({ section, open, onClose }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const handleWhatsApp = (phone: string, userName?: string, ideaTitle?: string) => {
+    const link = buildIdeasWhatsappLink(userName, ideaTitle, phone);
+    if (link) window.open(link, '_blank');
+  };
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  };
 
   const getMediaIcon = (mediaType: string) => {
     switch (mediaType) {
@@ -143,6 +159,84 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
                 </Grid>
               </Grid>
             </Paper>
+
+            {/* Seção do Usuário que compartilhou */}
+            {section.user && (
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  p: { xs: 2, sm: 3 }, 
+                  border: '1px solid', 
+                  borderColor: 'divider', 
+                  borderRadius: 2,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.03)} 0%, ${alpha(theme.palette.secondary.main, 0.03)} 100%)`,
+                }}
+              >
+                <Typography variant="h6" gutterBottom color="primary">
+                  👤 Compartilhado por
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: theme.palette.primary.main,
+                      fontSize: '1.25rem',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {getInitials(section.user.name)}
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 200 }}>
+                    <Typography variant="h6" fontWeight="bold">
+                      {section.user.name}
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1} flexWrap="wrap">
+                      {/* Email */}
+                      <Chip
+                        icon={<Email fontSize="small" />}
+                        label={section.user.email}
+                        size="small"
+                        variant="outlined"
+                        onClick={() => window.open(`mailto:${section.user!.email}`)}
+                        deleteIcon={
+                          <Tooltip title="Copiar email">
+                            <ContentCopy fontSize="small" />
+                          </Tooltip>
+                        }
+                        onDelete={() => handleCopy(section.user!.email)}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) }
+                        }}
+                      />
+                      {/* Telefone/WhatsApp */}
+                      {section.user.phone && (
+                        <Chip
+                          icon={<WhatsApp fontSize="small" sx={{ color: '#25D366' }} />}
+                          label={section.user.phone}
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleWhatsApp(section.user!.phone!, section.user!.name, section.title)}
+                          deleteIcon={
+                            <Tooltip title="Copiar telefone">
+                              <ContentCopy fontSize="small" />
+                            </Tooltip>
+                          }
+                          onDelete={() => handleCopy(section.user!.phone!)}
+                          sx={{ 
+                            cursor: 'pointer',
+                            borderColor: '#25D366',
+                            color: '#25D366',
+                            '&:hover': { bgcolor: alpha('#25D366', 0.1) }
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+                </Box>
+              </Paper>
+            )}
 
             <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom color="primary">
