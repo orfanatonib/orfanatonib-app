@@ -6,7 +6,6 @@ import {
   Grid,
   CircularProgress,
   Alert,
-  Paper,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SaveIcon from '@mui/icons-material/Save';
@@ -135,17 +134,10 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-        }}
-      >
+      <Box sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Nome Completo"
@@ -175,7 +167,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 type="email"
@@ -206,13 +198,13 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 type="tel"
                 label="Telefone"
                 inputMode="numeric"
-                value={maskPhoneBR(formData.phone)}
+                value={maskPhoneBR(formData.phone || '')}
                 onChange={(e) => {
                   setFormData({ ...formData, phone: maskPhoneBR(e.target.value) });
                   const digits = digitsOnly(e.target.value);
@@ -260,33 +252,29 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
             )}
 
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  size="small"
+                  startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <SaveIcon fontSize="small" />}
                   disabled={isSubmitting}
                   sx={{
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 1.5,
                     textTransform: 'none',
                     fontWeight: 600,
                     background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
-                    },
                   }}
                 >
-                  {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+                  {isSubmitting ? 'Salvando...' : 'Salvar'}
                 </Button>
               </Box>
             </Grid>
           </Grid>
         </form>
-      </Paper>
+      </Box>
     </motion.div>
   );
 };

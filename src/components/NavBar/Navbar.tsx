@@ -27,16 +27,20 @@ import {
 } from '@mui/icons-material';
 import DesktopNavigation from './DesktopNavigation';
 import MobileNavigation from './MobileNavigation';
+import CompleteProfileAlert from './CompleteProfileAlert';
+import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
 
-const NavBar: React.FC = () => {
+const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, completeProfile }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  const profileAlerts = useProfileAlerts({ profile, completeProfile });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -109,11 +113,20 @@ const NavBar: React.FC = () => {
           Orfanatos NIB
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
-          {isMobile ? <MobileNavigation /> : <DesktopNavigation />}
+          {isMobile ? (
+            <>
+              <CompleteProfileAlert alerts={profileAlerts} />
+              <MobileNavigation />
+            </>
+          ) : (
+            <DesktopNavigation />
+          )}
           {!isMobile && (
             <>
               {isAuthenticated ? (
                 <>
+                  {/* Sininho de alertas de perfil */}
+                  <CompleteProfileAlert alerts={profileAlerts} />
                   <Tooltip title="Menu do Usuário">
                     <IconButton
                       onClick={handleProfileClick}
@@ -128,7 +141,7 @@ const NavBar: React.FC = () => {
                       }}
                     >
                       <Avatar
-                        src={(user as any)?.image?.url}
+                        src={profile?.image?.url || undefined}
                         sx={{
                           width: 36,
                           height: 36,
@@ -145,7 +158,7 @@ const NavBar: React.FC = () => {
                           },
                         }}
                       >
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                        {!profile?.image?.url ? (profile?.name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || 'U') : null}
                       </Avatar>
                     </IconButton>
                   </Tooltip>

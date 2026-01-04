@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import {
   Box,
   Button,
-  Paper,
   Typography,
   Avatar,
   CircularProgress,
@@ -490,14 +489,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-        }}
-      >
+      <Box sx={{ width: '100%' }}>
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Avatar
             src={preview || currentImageUrl}
@@ -610,37 +602,40 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         </Box>
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
             Imagem atualizada com sucesso!
           </Alert>
         )}
 
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleSubmit}
-          disabled={isSubmitting || !selectedFile}
-          startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <PhotoCameraIcon />}
-          sx={{
-            py: 1.5,
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-              boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
-            },
-            '&:disabled': {
-              background: 'rgba(0, 0, 0, 0.12)',
-              color: 'rgba(0, 0, 0, 0.26)',
-            },
-          }}
-        >
-          {isSubmitting ? 'Enviando...' : 'Enviar Foto'}
-        </Button>
-      </Paper>
+        <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleSubmit}
+            disabled={isSubmitting || !selectedFile}
+            startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <PhotoCameraIcon />}
+            sx={{
+              maxWidth: { xs: '100%', sm: 200 },
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+              },
+              '&:disabled': {
+                background: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
+          >
+            {isSubmitting ? 'Enviando...' : 'Enviar Foto'}
+          </Button>
+        </Box>
+      </Box>
     </motion.div>
   );
 };

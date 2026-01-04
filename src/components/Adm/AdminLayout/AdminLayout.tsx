@@ -39,6 +39,7 @@ import {
   NoteAdd,
   ExpandMore,
   CalendarMonth,
+  Favorite,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -80,6 +81,7 @@ function AdminLayout() {
         title: "Pessoas",
         items: [
           { label: "Usuários", to: "/adm/usuarios", icon: <Group /> },
+          { label: "Perfis", to: "/adm/perfis", icon: <Favorite /> },
           { label: "Membros", to: "/adm/membros", icon: <School /> },
           { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
           { label: "Abrigados", to: "/adm/abrigados", icon: <Group /> },
@@ -138,6 +140,7 @@ function AdminLayout() {
   const leaderAllowed = new Set<string>([
     "/adm/abrigados",
     "/adm/membros",
+    "/adm/perfis",
     "/adm/abrigos",
     "/adm/pagelas",
     "/adm/agendamentos",
@@ -160,6 +163,7 @@ function AdminLayout() {
     // Pessoas
     if (
       path.startsWith("/adm/usuarios") ||
+      path.startsWith("/adm/perfis") ||
       path.startsWith("/adm/membros") ||
       path.startsWith("/adm/lideres") ||
       path.startsWith("/adm/abrigados")

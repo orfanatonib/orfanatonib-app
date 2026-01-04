@@ -6,7 +6,6 @@ import {
   Grid,
   CircularProgress,
   Alert,
-  Paper,
   IconButton,
   InputAdornment,
 } from '@mui/material';
@@ -139,19 +138,12 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-        }}
-      >
+      <Box sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {isCommonUser && (
               <Grid item xs={12}>
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert severity="info">
                   Para alterar sua senha, você precisa informar sua senha atual.
                 </Alert>
               </Grid>
@@ -159,14 +151,14 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
 
             {!isCommonUser && (
               <Grid item xs={12}>
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert severity="info">
                   Como você utiliza autenticação via Google, não é necessário informar a senha atual.
                 </Alert>
               </Grid>
             )}
 
             {isCommonUser && (
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <TextField
                 fullWidth
                 type={showCurrentPassword ? 'text' : 'password'}
@@ -209,7 +201,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
               </Grid>
             )}
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={isCommonUser ? 6 : 6}>
               <TextField
                 fullWidth
                 type={showNewPassword ? 'text' : 'password'}
@@ -251,7 +243,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -302,24 +294,20 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
             )}
 
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  size="small"
+                  startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <SaveIcon fontSize="small" />}
                   disabled={isSubmitting || !isFormReady}
                   sx={{
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 1.5,
                     textTransform: 'none',
                     fontWeight: 600,
                     background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
-                    },
                   }}
                 >
                   {isSubmitting ? 'Alterando...' : 'Alterar Senha'}
@@ -328,7 +316,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
             </Grid>
           </Grid>
         </form>
-      </Paper>
+      </Box>
     </motion.div>
   );
 };

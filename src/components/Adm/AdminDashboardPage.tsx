@@ -39,6 +39,7 @@ import {
   ArrowUpward,
   ChevronRight,
   CalendarMonth,
+  Favorite,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -58,6 +59,7 @@ interface CardData {
 const cardData: CardData[] = [
   // 👥 PESSOAS - Gestão de Pessoas
   { title: "Usuários", description: "Gerencie contas de acesso ao sistema.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "pessoas" },
+  { title: "Perfis", description: "Conheça melhor as pessoas do ministério.", icon: <Favorite fontSize="large" color="primary" />, path: "/adm/perfis", section: "pessoas" },
   { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
   { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
   { title: "Abrigados", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "pessoas" },
@@ -127,6 +129,7 @@ export default function AdminDashboardPage() {
   const leaderAllowed = new Set<string>([
     "/adm/abrigados",
     "/adm/membros",
+    "/adm/perfis",
     "/adm/abrigos",
     "/adm/pagelas",
     "/adm/agendamentos",
