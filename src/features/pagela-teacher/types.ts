@@ -28,6 +28,7 @@ export type PageDto<T> = {
 export type CreatePagelaPayload = {
   shelteredId: string;
   teacherProfileId?: string | null;
+  leaderProfileId?: string | null;
   referenceDate: string;
   visit: number;
   year?: number;

@@ -19,6 +19,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useSelector } from "react-redux";
+import { UserRole } from "@/store/slices/auth/authSlice";
+import { apiGetProfile } from "@/features/profile/api";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO } from "../utils";
 
@@ -54,11 +56,51 @@ export default function PagelaQuickForm({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const teacherProfileIdFromRedux = useSelector(
-    (s: any) => s?.auth?.user?.teacherProfile?.id ?? null
-  ) as string | null;
+  const user = useSelector((s: any) => s?.auth?.user);
+  const userRole = user?.role;
+  const isTeacher = userRole === UserRole.TEACHER;
+  const isLeader = userRole === UserRole.LEADER;
+  
+  const [fullProfile, setFullProfile] = React.useState<any>(null);
+  
+  // Buscar perfil completo se necessário
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      // Só busca se for teacher/leader e não tiver o ID no Redux
+      if (isTeacher && !user?.teacherProfile?.id) {
+        try {
+          const profile = await apiGetProfile();
+          setFullProfile(profile);
+        } catch (err) {
+          console.error('Erro ao buscar perfil completo:', err);
+        }
+      } else if (isLeader && !user?.leaderProfile?.id) {
+        try {
+          const profile = await apiGetProfile();
+          setFullProfile(profile);
+        } catch (err) {
+          console.error('Erro ao buscar perfil completo:', err);
+        }
+      }
+    };
+    
+    fetchProfile();
+  }, [isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
+  
+  const teacherProfileIdFromRedux = isTeacher 
+    ? (user?.teacherProfile?.id ?? fullProfile?.teacherProfile?.id ?? null) 
+    : null;
+  const leaderProfileIdFromRedux = isLeader 
+    ? (user?.leaderProfile?.id ?? fullProfile?.leaderProfile?.id ?? null) 
+    : null;
 
-  const effectiveTeacherProfileId = teacherProfileIdFromRedux ?? teacherProfileId ?? null;
+  // Para professores, usar teacherProfileId; para líderes, usar leaderProfileId
+  const effectiveTeacherProfileId = isTeacher 
+    ? (teacherProfileIdFromRedux ?? teacherProfileId ?? null)
+    : null;
+  const effectiveLeaderProfileId = isLeader 
+    ? (leaderProfileIdFromRedux ?? null)
+    : null;
 
   const [yearText, setYearText] = React.useState<string>("");
   const [visitText, setVisitText] = React.useState<string>("");
@@ -126,14 +168,51 @@ export default function PagelaQuickForm({
   const handleSave = async () => {
     if (!canSave) return;
 
-    const payloadCommon = {
+    // Garantir que temos o teacherProfileId/leaderProfileId antes de enviar
+    let finalTeacherProfileId = effectiveTeacherProfileId;
+    let finalLeaderProfileId = effectiveLeaderProfileId;
+    
+    // Se não temos o ID, buscar do perfil completo
+    if (isTeacher && !finalTeacherProfileId) {
+      try {
+        const profile = await apiGetProfile();
+        finalTeacherProfileId = profile?.teacherProfile?.id ?? null;
+        if (finalTeacherProfileId) {
+          setFullProfile(profile);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+      }
+    } else if (isLeader && !finalLeaderProfileId) {
+      try {
+        const profile = await apiGetProfile();
+        finalLeaderProfileId = profile?.leaderProfile?.id ?? null;
+        if (finalLeaderProfileId) {
+          setFullProfile(profile);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+      }
+    }
+
+    const payloadCommon: any = {
       referenceDate: todayISO(),
       year: parsedYear!,
       visit: parsedVisit!,
       present,
       notes,
-      teacherProfileId: effectiveTeacherProfileId,
     };
+    
+    // Enviar o ID correto baseado no role (obrigatório)
+    if (isTeacher && finalTeacherProfileId) {
+      payloadCommon.teacherProfileId = finalTeacherProfileId;
+    } else if (isLeader && finalLeaderProfileId) {
+      payloadCommon.leaderProfileId = finalLeaderProfileId;
+    } else {
+      // Se ainda não temos o ID, mostrar erro
+      console.error('Não foi possível obter teacherProfileId ou leaderProfileId');
+      return;
+    }
 
     if (editing && currentId) {
       await onUpdate(currentId, payloadCommon);

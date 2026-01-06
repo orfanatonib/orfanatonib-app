@@ -23,6 +23,9 @@ import {
   EventAvailable,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import { useSelector } from "react-redux";
+import { UserRole } from "@/store/slices/auth/authSlice";
+import { apiGetProfile } from "@/features/profile/api";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO, toLabelWeek } from "../utils";
 
@@ -76,26 +79,106 @@ export default function PagelaQuickCard({
     setNotes(current?.notes ?? "");
   }, [current]);
 
+  const user = useSelector((s: any) => s?.auth?.user);
+  const userRole = user?.role;
+  const isTeacher = userRole === UserRole.TEACHER;
+  const isLeader = userRole === UserRole.LEADER;
+  
+  const [fullProfile, setFullProfile] = React.useState<any>(null);
+  
+  // Buscar perfil completo se necessário
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      if (isTeacher && !user?.teacherProfile?.id) {
+        try {
+          const profile = await apiGetProfile();
+          setFullProfile(profile);
+        } catch (err) {
+          console.error('Erro ao buscar perfil completo:', err);
+        }
+      } else if (isLeader && !user?.leaderProfile?.id) {
+        try {
+          const profile = await apiGetProfile();
+          setFullProfile(profile);
+        } catch (err) {
+          console.error('Erro ao buscar perfil completo:', err);
+        }
+      }
+    };
+    
+    fetchProfile();
+  }, [isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
+  
+  const teacherProfileIdFromRedux = isTeacher 
+    ? (user?.teacherProfile?.id ?? fullProfile?.teacherProfile?.id ?? null) 
+    : null;
+  const leaderProfileIdFromRedux = isLeader 
+    ? (user?.leaderProfile?.id ?? fullProfile?.leaderProfile?.id ?? null) 
+    : null;
+
+  // Para professores, usar teacherProfileId; para líderes, usar leaderProfileId
+  const effectiveTeacherProfileId = isTeacher 
+    ? (teacherProfileIdFromRedux ?? teacherProfileId ?? null)
+    : null;
+  const effectiveLeaderProfileId = isLeader 
+    ? (leaderProfileIdFromRedux ?? null)
+    : null;
+
   const handleSave = async () => {
+    // Garantir que temos o teacherProfileId/leaderProfileId antes de enviar
+    let finalTeacherProfileId = effectiveTeacherProfileId;
+    let finalLeaderProfileId = effectiveLeaderProfileId;
+    
+    // Se não temos o ID, buscar do perfil completo
+    if (isTeacher && !finalTeacherProfileId) {
+      try {
+        const profile = await apiGetProfile();
+        finalTeacherProfileId = profile?.teacherProfile?.id ?? null;
+        if (finalTeacherProfileId) {
+          setFullProfile(profile);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+      }
+    } else if (isLeader && !finalLeaderProfileId) {
+      try {
+        const profile = await apiGetProfile();
+        finalLeaderProfileId = profile?.leaderProfile?.id ?? null;
+        if (finalLeaderProfileId) {
+          setFullProfile(profile);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+      }
+    }
+    
     const referenceDate = todayISO();
+    
+    const payloadCommon: any = {
+      referenceDate,
+      year,
+      visit,
+      present,
+      notes,
+    };
+    
+    // Enviar o ID correto baseado no role (obrigatório)
+    if (isTeacher && finalTeacherProfileId) {
+      payloadCommon.teacherProfileId = finalTeacherProfileId;
+    } else if (isLeader && finalLeaderProfileId) {
+      payloadCommon.leaderProfileId = finalLeaderProfileId;
+    } else {
+      // Se ainda não temos o ID, mostrar erro e não enviar
+      console.error('Não foi possível obter teacherProfileId ou leaderProfileId');
+      return;
+    }
+    
     if (current?.id) {
-      await onUpdate(current.id, {
-        referenceDate,
-        year,
-        visit,
-        present,
-        notes,
-        teacherProfileId: teacherProfileId ?? null,
-      });
+      await onUpdate(current.id, payloadCommon);
     } else {
       await onCreate({
         shelteredId,
-        teacherProfileId: teacherProfileId ?? null,
-        referenceDate,
-        year,
-        visit,
-        present,
-        notes,
+        ...payloadCommon,
       });
     }
   };
