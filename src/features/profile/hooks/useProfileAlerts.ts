@@ -11,9 +11,20 @@ interface UseProfileAlertsParams {
     completeProfile?: any;
 }
 
+import { useSelector } from 'react-redux';
+
 export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsParams) {
+    const emailVerificationAlert = useSelector((state: any) => state.auth.emailVerificationAlert);
     return useMemo(() => {
         const alerts: ProfileAlert[] = [];
+
+        if (emailVerificationAlert && emailVerificationAlert.verificationEmailSent) {
+            alerts.push({
+                id: 'email-verification',
+                message: 'Um email de verificação foi enviado para o seu endereço.',
+                to: '/verificar-email',
+            });
+        }
 
         if (profile && (!profile.image || !profile.image.url)) {
             alerts.push({
@@ -47,5 +58,5 @@ export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsP
         }
 
         return alerts;
-    }, [profile, completeProfile]);
+    }, [profile, completeProfile, emailVerificationAlert]);
 }

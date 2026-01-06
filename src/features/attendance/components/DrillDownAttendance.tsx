@@ -1,0 +1,404 @@
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Grid,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
+import BusinessIcon from '@mui/icons-material/Business';
+import GroupsIcon from '@mui/icons-material/Groups';
+import PeopleIcon from '@mui/icons-material/People';
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
+
+import { getSheltersTeamsMembers, getTeamSchedules } from '../api';
+import TeamSelection from './TeamSelection';
+import TeamMemberAttendance from './TeamMemberAttendance';
+import AttendanceModeSelector from './AttendanceModeSelector';
+import ListSheets from './ListSheets';
+
+import type {
+  SheltersTeamsMembersResponse,
+  ShelterWithTeamsDto,
+  TeamWithMembersDto,
+  TeamScheduleDto,
+  DrillDownState,
+  PaginatedResponseDto,
+  AttendanceMode,
+} from '../types';
+
+const DrillDownAttendance = memo(() => {
+  const [mode, setMode] = useState<AttendanceMode>(null);
+  const [hierarchyData, setHierarchyData] = useState<SheltersTeamsMembersResponse>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [drillDownState, setDrillDownState] = useState<DrillDownState>({
+    selectedShelter: null,
+    selectedTeam: null,
+    viewMode: 'shelters',
+  });
+
+  const [teamSchedules, setTeamSchedules] = useState<TeamScheduleDto[]>([]);
+  const [teamSchedulesPaginated, setTeamSchedulesPaginated] = useState<PaginatedResponseDto<TeamScheduleDto> | null>(null);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Carregar dados da hierarquia (apenas quando necessário para lançar pagelas)
+  const loadHierarchyData = useCallback(async () => {
+    if (mode !== 'register') return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getSheltersTeamsMembers();
+      setHierarchyData(data);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Erro ao carregar dados das equipes.';
+      setError(message);
+      setHierarchyData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [mode]);
+
+  // Carregar eventos da equipe selecionada
+  const loadTeamSchedules = useCallback(async (teamId: string) => {
+    try {
+      setLoadingSchedules(true);
+      // Buscar eventos com paginação (ordenação decrescente por data de visita)
+      const response = await getTeamSchedules(teamId, {
+        page: 1,
+        limit: 100, // Buscar muitos eventos para exibir
+        sortBy: 'visitDate',
+        sortOrder: 'desc',
+      });
+      setTeamSchedulesPaginated(response);
+      // Extrair apenas o array de schedules para compatibilidade
+      setTeamSchedules(response.data || []);
+    } catch (err: any) {
+      console.error('Erro ao carregar eventos da equipe:', err);
+      setTeamSchedules([]);
+      setTeamSchedulesPaginated(null);
+    } finally {
+      setLoadingSchedules(false);
+    }
+  }, []);
+
+  // Handlers para navegação
+  const handleTeamSelect = useCallback((shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => {
+    setDrillDownState({
+      selectedShelter: shelter,
+      selectedTeam: team,
+      viewMode: 'team-members',
+    });
+    loadTeamSchedules(team.teamId);
+  }, [loadTeamSchedules]);
+
+  const handleBackToTeams = useCallback(() => {
+    setDrillDownState(prev => ({
+      ...prev,
+      selectedTeam: null,
+      viewMode: 'shelters',
+    }));
+    setTeamSchedules([]);
+  }, []);
+
+  const handleBackToMode = useCallback(() => {
+    setMode(null);
+    setDrillDownState({
+      selectedShelter: null,
+      selectedTeam: null,
+      viewMode: 'shelters',
+    });
+    setTeamSchedules([]);
+    setHierarchyData([]);
+  }, []);
+
+  const handleModeSelect = useCallback((selectedMode: AttendanceMode) => {
+    setMode(selectedMode);
+  }, []);
+
+  const handleAttendanceRegistered = useCallback(() => {
+    // Recarregar dados após registrar presença
+    loadHierarchyData();
+    // Opcional: mostrar mensagem de sucesso ou atualizar estatísticas
+  }, [loadHierarchyData]);
+
+  // Calcular estatísticas
+  const stats = useMemo(() => {
+    const totalShelters = hierarchyData.length;
+    const totalTeams = hierarchyData.reduce((sum, s) => sum + s.teams.length, 0);
+    const totalMembers = hierarchyData.reduce((sum, s) =>
+      sum + s.teams.reduce((teamSum, t) => teamSum + t.members.length, 0), 0
+    );
+    return { totalShelters, totalTeams, totalMembers };
+  }, [hierarchyData]);
+
+  // Filtrar dados baseado na busca
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return hierarchyData;
+    
+    const term = searchTerm.toLowerCase();
+    return hierarchyData
+      .map(shelter => ({
+        ...shelter,
+        teams: shelter.teams.filter(team =>
+          shelter.shelterName.toLowerCase().includes(term) ||
+          team.description?.toLowerCase().includes(term) ||
+          team.members.some(m => m.name.toLowerCase().includes(term))
+        ),
+      }))
+      .filter(shelter => shelter.teams.length > 0);
+  }, [hierarchyData, searchTerm]);
+
+  // Carregar dados iniciais apenas quando modo for 'register'
+  useEffect(() => {
+    if (mode === 'register') {
+      loadHierarchyData();
+    }
+  }, [mode, loadHierarchyData]);
+
+  // Se nenhum modo foi selecionado, mostrar o seletor
+  if (mode === null) {
+    return <AttendanceModeSelector onModeSelect={handleModeSelect} />;
+  }
+
+  // Se modo for 'list', mostrar lista de pagelas
+  if (mode === 'list') {
+    return <ListSheets onBack={handleBackToMode} />;
+  }
+
+  // Loading state (apenas para modo 'register')
+  if (loading) {
+    return (
+      <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Stack spacing={3} alignItems="center">
+          <CircularProgress size={40} />
+          <Typography variant="body1" color="text.secondary">
+            Carregando equipes...
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  // Error state (apenas para modo 'register')
+  if (error) {
+    return (
+      <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}>
+        <Box sx={{ maxWidth: 600, width: '100%' }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="body1" gutterBottom>
+              Não foi possível carregar os dados das equipes.
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ cursor: 'pointer', textDecoration: 'underline', mt: 2 }}
+              onClick={loadHierarchyData}
+            >
+              Tentar novamente
+            </Typography>
+          </Paper>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Modo 'register': mostrar interface de lançamento
+  return (
+    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4 }, py: { xs: 2, md: 3 } }}>
+        {/* Header */}
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            Controle de Presença
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Gerencie a presença das equipes em seus abrigos de forma organizada e eficiente.
+          </Typography>
+        </Box>
+
+        {/* Cards de Estatísticas */}
+        {drillDownState.viewMode === 'shelters' && !loading && hierarchyData.length > 0 && (
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={4}>
+              <Card
+                variant="outlined"
+                sx={{
+                  bgcolor: 'primary.50',
+                  borderColor: 'primary.main',
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <BusinessIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color="primary.main">
+                        {stats.totalShelters}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Abrigo{stats.totalShelters !== 1 ? 's' : ''}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Card
+                variant="outlined"
+                sx={{
+                  bgcolor: 'secondary.50',
+                  borderColor: 'secondary.main',
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        bgcolor: 'secondary.main',
+                        color: 'secondary.contrastText',
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <GroupsIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color="secondary.main">
+                        {stats.totalTeams}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Equipe{stats.totalTeams !== 1 ? 's' : ''}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Card
+                variant="outlined"
+                sx={{
+                  bgcolor: 'success.50',
+                  borderColor: 'success.main',
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        bgcolor: 'success.main',
+                        color: 'success.contrastText',
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <PeopleIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color="success.main">
+                        {stats.totalMembers}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Membro{stats.totalMembers !== 1 ? 's' : ''}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Busca */}
+        {drillDownState.viewMode === 'shelters' && !loading && hierarchyData.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              placeholder="Buscar por abrigo, equipe ou membro..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'background.paper',
+                },
+              }}
+            />
+          </Box>
+        )}
+
+        {/* Navegação por drill-down */}
+        {drillDownState.viewMode === 'shelters' && (
+          <TeamSelection
+            data={filteredData}
+            loading={loading}
+            onTeamSelect={handleTeamSelect}
+            searchTerm={searchTerm}
+          />
+        )}
+
+        {drillDownState.viewMode === 'team-members' &&
+         drillDownState.selectedShelter &&
+         drillDownState.selectedTeam && (
+          <TeamMemberAttendance
+            shelter={drillDownState.selectedShelter}
+            team={drillDownState.selectedTeam}
+            schedules={Array.isArray(teamSchedules) ? teamSchedules : []}
+            loadingSchedules={loadingSchedules}
+            onBack={handleBackToTeams}
+            onAttendanceRegistered={handleAttendanceRegistered}
+          />
+        )}
+      </Box>
+    </Box>
+  );
+});
+
+DrillDownAttendance.displayName = 'DrillDownAttendance';
+
+export default DrillDownAttendance;

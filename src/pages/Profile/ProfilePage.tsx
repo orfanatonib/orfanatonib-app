@@ -75,10 +75,16 @@ const ProfilePage: React.FC = () => {
       if (window.location.hash === '#foto') setSelectedMenu(4);
       else if (window.location.hash === '#pessoais') setSelectedMenu(1);
       else if (window.location.hash === '#preferencias') setSelectedMenu(2);
+      else setSelectedMenu(0);
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedMenu]);
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {

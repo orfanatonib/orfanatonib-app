@@ -124,7 +124,7 @@ const MobileNavigation: React.FC = () => {
               }}
             >
               <Avatar
-                src={(user as any)?.image?.url}
+                src={user?.image?.url}
                 sx={{
                   width: 56,
                   height: 56,
@@ -182,7 +182,7 @@ const MobileNavigation: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText>Área do Membro</ListItemText>
               </MenuItem>
-              {isTeacher && (
+              {(isTeacher || isLeader) && (
                 <MenuItem
                   onClick={handleShelteredArea}
                   sx={{

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
+import { MediaItem } from '@/store/slices/types';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -27,7 +28,7 @@ interface TeacherProfileLite {
 interface LeaderProfileLite {
   id: string;
   active: boolean;
-  shelters?: ShelterLite[]; 
+  shelters?: ShelterLite[];
   team: {
     id: string;
     name: string;
@@ -48,6 +49,7 @@ interface User {
   completed?: boolean;
   teacherProfile?: TeacherProfileLite | null;
   leaderProfile?: LeaderProfileLite | null;
+  image?: MediaItem | null;
 }
 
 interface GoogleUser {
@@ -60,6 +62,10 @@ export interface LoginResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+  emailVerification?: {
+    verificationEmailSent: boolean;
+    message?: string;
+  };
 }
 
 interface AuthState {
@@ -71,6 +77,7 @@ interface AuthState {
   initialized: boolean;
   error: string | null;
   googleUser: GoogleUser | null;
+  emailVerificationAlert?: { verificationEmailSent: boolean; message?: string } | null;
 }
 
 const initialState: AuthState = {
@@ -82,6 +89,7 @@ const initialState: AuthState = {
   initialized: false,
   error: null,
   googleUser: null,
+  emailVerificationAlert: null,
 };
 
 const IS_DEV = import.meta.env.DEV === true;
@@ -164,14 +172,19 @@ const authSlice = createSlice({
   reducers: {
     login: (
       state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string; user?: User }>
+      action: PayloadAction<{ accessToken: string; refreshToken: string; user?: User; emailVerificationAlert?: { verificationEmailSent: boolean; message?: string } | null }>
     ) => {
-      const { accessToken, refreshToken, user } = action.payload;
+      const { accessToken, refreshToken, user, emailVerificationAlert } = action.payload;
       state.accessToken = clean(accessToken);
       state.refreshToken = clean(refreshToken);
       state.isAuthenticated = true;
       if (user) state.user = user;
       state.error = null;
+      if (emailVerificationAlert) {
+        state.emailVerificationAlert = emailVerificationAlert;
+      } else {
+        state.emailVerificationAlert = null;
+      }
       try {
         localStorage.setItem('accessToken', state.accessToken!);
         localStorage.setItem('refreshToken', state.refreshToken!);
@@ -185,10 +198,14 @@ const authSlice = createSlice({
       state.googleUser = null;
       state.error = null;
       state.initialized = true;
+      state.emailVerificationAlert = null;
       try {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       } catch { }
+    },
+    setEmailVerificationAlert: (state, action: PayloadAction<{ verificationEmailSent: boolean; message?: string } | null>) => {
+      state.emailVerificationAlert = action.payload;
     },
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
@@ -241,5 +258,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { login, logout, setError, setGoogleUser, clearGoogleUser } = authSlice.actions;
+export const { login, logout, setError, setGoogleUser, clearGoogleUser, setEmailVerificationAlert } = authSlice.actions;
 export default authSlice.reducer;

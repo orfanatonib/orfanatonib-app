@@ -43,10 +43,16 @@ const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, c
   const profileAlerts = useProfileAlerts({ profile, completeProfile });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
+
+  const handleMobileAlertClick = () => {
+    // Force MobileNavigation to close by re-mounting it
+    setMobileDrawerKey(prev => prev + 1);
+  };
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isAuthenticated) {
@@ -115,8 +121,8 @@ const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, c
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {isMobile ? (
             <>
-              <CompleteProfileAlert alerts={profileAlerts} />
-              <MobileNavigation />
+              <CompleteProfileAlert alerts={profileAlerts} onAlertClick={handleMobileAlertClick} />
+              <MobileNavigation key={mobileDrawerKey} />
             </>
           ) : (
             <DesktopNavigation />
@@ -192,7 +198,7 @@ const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, c
                       </ListItemIcon>
                       <ListItemText>Área do Membro</ListItemText>
                     </MenuItem>
-                    {isTeacher && (
+                    {(isTeacher || isLeader) && (
                       <MenuItem onClick={handleShelteredArea}>
                         <ListItemIcon>
                           <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />

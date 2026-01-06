@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { EmailVerificationAlert } from '@/components/common';
 import {
   Box,
   Button,
@@ -24,6 +25,7 @@ import {
   UserRole,
   setGoogleUser,
   fetchCurrentUser,
+  setEmailVerificationAlert,
 } from '@/store/slices/auth/authSlice';
 import { isValidEmail } from '@/utils/validators';
 
@@ -60,6 +62,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [emailVerification, setEmailVerification] = useState<{ verificationEmailSent: boolean; message?: string } | null>(null);
   const dispatch = useDispatch<AppDispatchType>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -123,18 +126,41 @@ const Login: React.FC = () => {
 
     setLoading(true);
     setErrorMessage(null);
+    setEmailVerification(null);
 
     try {
       const response = await api.post<LoginResponse>('/auth/login', { email, password });
 
+      console.log('Login response:', response.data);
+
       if (response.data.user.active === false) {
         handleUserInactive();
+
+        // Mostrar alerta de verificação de email mesmo quando usuário está inativo
+        if (response.data.emailVerification?.verificationEmailSent) {
+          console.log('Email verification detected for inactive user:', response.data.emailVerification);
+          setEmailVerification(response.data.emailVerification);
+        } else {
+          setEmailVerification(null);
+        }
+
+        setLoading(false);
         return;
+      }
+
+      // Checar emailVerification para usuário ativo
+      if (response.data.emailVerification?.verificationEmailSent) {
+        console.log('Email verification detected:', response.data.emailVerification);
+        setEmailVerification(response.data.emailVerification);
+        dispatch(setEmailVerificationAlert(response.data.emailVerification));
+      } else {
+        setEmailVerification(null);
+        dispatch(setEmailVerificationAlert(null));
       }
 
       const { accessToken, refreshToken, user: responseUser } = response.data;
       const mappedUser = mapUserRole(responseUser);
-      dispatch(login({ accessToken, refreshToken, user: mappedUser }));
+      dispatch(login({ accessToken, refreshToken, user: mappedUser, emailVerificationAlert: response.data.emailVerification }));
       await bootstrapAfterLogin(accessToken);
 
       const redirectPath = getRedirectPath(mappedUser.role);
@@ -142,6 +168,7 @@ const Login: React.FC = () => {
     } catch (error) {
       const msg = mapLoginError(error);
       setErrorMessage(msg);
+      setEmailVerification(null);
     } finally {
       setLoading(false);
     }
@@ -221,10 +248,15 @@ const Login: React.FC = () => {
               Área do Membro
             </Typography>
 
+
             {errorMessage && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {errorMessage}
               </Alert>
+            )}
+
+            {emailVerification && emailVerification.verificationEmailSent && (
+              <EmailVerificationAlert message="Seu email ainda não foi verificado. Verifique sua caixa de entrada." />
             )}
 
             <Box

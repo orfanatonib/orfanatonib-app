@@ -1,3 +1,4 @@
+import { AttendanceDashboard } from './features/attendance/pages';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +19,7 @@ import Contact from './pages/Contact/Contact';
 import Event from './pages/Event/Event';
 import Login from './pages/Login/Login';
 import TeacherArea from './pages/TeacherArea/TeacherArea';
+import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
 
 import MeditationPageCreator from './components/Adm/PageCreator/Templates/MeditationPageCreator/MeditationPageCreator';
@@ -165,6 +167,7 @@ function App() {
               <Route path="/eventos" element={<EventosPage />} />
               <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
               <Route path="/login" element={<Login />} />
+                <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
               <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
               <Route path="/cadastrar" element={<Register commonUser />} />
               <Route path="*" element={<Home />} />
@@ -172,6 +175,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/area-do-membro" element={<TeacherArea />} />
                 <Route path="/perfil" element={<ProfilePage />} />
+                <Route path="/presenca" element={<AttendanceDashboard />} />
                 <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
                 <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
                 <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
@@ -180,9 +184,10 @@ function App() {
                 <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
               </Route>
 
-              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
-                <Route path="/adm" element={<AdminLayout />}>
+              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}> 
+                <Route path="/adm" element={<AdminLayout />}> 
                   <Route index element={<AdminDashboardPage />} />
+                  <Route path="presenca" element={<AttendanceDashboard />} />
                   <Route path="meditacoes" element={<MeditationManager />} />
                   <Route path="comentarios" element={<CommentsManager />} />
                   <Route path="documentos" element={<DocumentsManager />} />

@@ -40,6 +40,7 @@ import {
   ExpandMore,
   CalendarMonth,
   Favorite,
+  EventAvailable,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -94,6 +95,7 @@ function AdminLayout() {
           { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
           { label: "Pagelas", to: "/adm/pagelas", icon: <Description /> },
           { label: "Agendamentos", to: "/adm/agendamentos", icon: <CalendarMonth /> },
+          { label: "Presenças", to: "/adm/presenca", icon: <EventAvailable /> },
         ],
       },
       {
@@ -144,6 +146,7 @@ function AdminLayout() {
     "/adm/abrigos",
     "/adm/pagelas",
     "/adm/agendamentos",
+    "/adm/presenca",
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
@@ -174,7 +177,8 @@ function AdminLayout() {
     if (
       path.startsWith("/adm/abrigos") ||
       path.startsWith("/adm/pagelas") ||
-      path.startsWith("/adm/agendamentos")
+      path.startsWith("/adm/agendamentos") ||
+      path.startsWith("/adm/presenca")
     ) {
       return "abrigos";
     }

@@ -18,6 +18,7 @@ import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
 import NoShelterLinkedPage from "./NoShelterLinkedPage";
+import { apiGetProfile } from "../profile/api";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
@@ -29,26 +30,160 @@ export default function ShelteredBrowserPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const canAccess = isAdmin || isLeader || isTeacher;
 
-  const teacherShelter =
-    user?.teacherProfile?.team?.shelter ??
-    user?.teacherProfile?.shelter ??
-    null;
+  // Estado para armazenar o perfil completo se necessário
+  const [fullProfile, setFullProfile] = React.useState<any>(null);
+  const [checkingShelter, setCheckingShelter] = React.useState(false);
+  const hasCheckedProfileRef = React.useRef(false);
+
+  // Verificar abrigo vinculado - tentar múltiplos caminhos possíveis
+  const teacherShelter = React.useMemo(() => {
+    // Primeiro tenta do perfil completo buscado
+    if (fullProfile?.teacherProfile?.team?.shelter?.id) {
+      return fullProfile.teacherProfile.team.shelter;
+    }
+    
+    // Depois tenta do Redux - Teacher
+    if (user?.teacherProfile) {
+      // Caminho padrão: teacherProfile.team.shelter
+      if ((user.teacherProfile as any)?.team?.shelter?.id) {
+        return (user.teacherProfile as any).team.shelter;
+      }
+      
+      // Caminho alternativo: teacherProfile.shelter (caso exista)
+      if ((user.teacherProfile as any)?.shelter?.id) {
+        return (user.teacherProfile as any).shelter;
+      }
+    }
+    
+    return null;
+  }, [user?.teacherProfile, fullProfile]);
+
+  // Verificar abrigo vinculado para líderes
+  const leaderShelter = React.useMemo(() => {
+    // Primeiro tenta do perfil completo buscado
+    // A API retorna leaderProfile.teams (array), então pega o primeiro team com shelter
+    if (fullProfile?.leaderProfile?.teams) {
+      const teamWithShelter = fullProfile.leaderProfile.teams.find((t: any) => t?.shelter?.id);
+      if (teamWithShelter?.shelter) {
+        return teamWithShelter.shelter;
+      }
+    }
+    
+    // Tenta também o caminho singular (caso exista)
+    if (fullProfile?.leaderProfile?.team?.shelter?.id) {
+      return fullProfile.leaderProfile.team.shelter;
+    }
+    
+    // Depois tenta do Redux - array de teams
+    if (user?.leaderProfile?.teams) {
+      const teamWithShelter = user.leaderProfile.teams.find((t: any) => t?.shelter?.id);
+      if (teamWithShelter?.shelter) {
+        return teamWithShelter.shelter;
+      }
+    }
+    
+    // Tenta também o caminho singular no Redux (caso exista)
+    if (user?.leaderProfile?.team?.shelter?.id) {
+      return user.leaderProfile.team.shelter;
+    }
+    
+    return null;
+  }, [user?.leaderProfile, fullProfile]);
+
+  // Buscar perfil completo se necessário (apenas uma vez)
+  React.useEffect(() => {
+    // Se já verificou antes, não verifica novamente
+    if (hasCheckedProfileRef.current) return;
+    
+    // Se já temos perfil completo, marca como verificado e retorna
+    if (fullProfile) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se já temos abrigo do Redux, marca como verificado e retorna
+    const hasTeacherShelter = isTeacher && (
+      (user?.teacherProfile as any)?.team?.shelter?.id || 
+      (user?.teacherProfile as any)?.shelter?.id
+    );
+    
+    const hasLeaderShelter = isLeader && (
+      user?.leaderProfile?.team?.shelter?.id ||
+      (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) && 
+       user.leaderProfile.teams.some((t: any) => t?.shelter?.id))
+    );
+    
+    const hasShelterFromRedux = hasTeacherShelter || hasLeaderShelter;
+    
+    if (hasShelterFromRedux) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se não é teacher ou leader, marca como verificado e retorna
+    if (!isTeacher && !isLeader) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se já está verificando, não faz nova verificação
+    if (checkingShelter) return;
+    
+    // Marca que já está verificando para evitar múltiplas requisições
+    hasCheckedProfileRef.current = true;
+    
+    // Tenta buscar do endpoint /profile para ter dados completos (apenas uma vez)
+    const checkShelterLink = async () => {
+      try {
+        setCheckingShelter(true);
+        const profileData = await apiGetProfile();
+        setFullProfile(profileData);
+      } catch (err) {
+        console.error('Erro ao buscar perfil completo:', err);
+        // Em caso de erro, permite tentar novamente se o componente remontar
+        hasCheckedProfileRef.current = false;
+      } finally {
+        setCheckingShelter(false);
+      }
+    };
+    
+    checkShelterLink();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executa apenas uma vez na montagem do componente
 
   const hasLinkedShelter = React.useMemo(() => {
-    if (isTeacher) return !!teacherShelter?.id;
-    if (isLeader) return !!user?.leaderProfile?.team?.shelter?.id;
+    if (isTeacher) {
+      const shelterId = teacherShelter?.id;
+      return !!shelterId;
+    }
+    if (isLeader) {
+      // Verifica múltiplos caminhos para o abrigo do líder
+      const shelterId = 
+        leaderShelter?.id || 
+        user?.leaderProfile?.team?.shelter?.id ||
+        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) 
+          ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.id
+          : null);
+      return !!shelterId;
+    }
     return true; // admin não depende disso
-  }, [isTeacher, isLeader, teacherShelter?.id, user?.leaderProfile?.team?.shelter?.id]);
+  }, [isTeacher, isLeader, teacherShelter?.id, leaderShelter?.id, user?.leaderProfile]);
 
   const shelterName = React.useMemo(() => {
     if (isTeacher && teacherShelter?.name) {
       return teacherShelter.name;
     }
-    if (isLeader && user?.leaderProfile?.team?.shelter?.name) {
-      return user.leaderProfile.team.shelter.name;
+    if (isLeader) {
+      const name = 
+        leaderShelter?.name || 
+        user?.leaderProfile?.team?.shelter?.name ||
+        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams)
+          ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.name
+          : null);
+      return name || null;
     }
     return null;
-  }, [isTeacher, isLeader, user, teacherShelter]);
+  }, [isTeacher, isLeader, user, teacherShelter, leaderShelter]);
 
   const {
     q,
