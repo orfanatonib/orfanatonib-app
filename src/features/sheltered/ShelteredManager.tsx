@@ -103,8 +103,11 @@ export default function ShelteredManager() {
     const payload = { ...creating };
     if (!payload.joinedAt) payload.joinedAt = null;
     if (!payload.shelterId) payload.shelterId = null as any;
-    await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
-    setCreating(null);
+    const success = await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
+    // Só fecha o modal se a operação foi bem-sucedida
+    if (success) {
+      setCreating(null);
+    }
   };
 
   const [editing, setEditing] = useState<EditShelteredForm | null>(null);
@@ -129,8 +132,11 @@ export default function ShelteredManager() {
   const submitEdit = async () => {
     if (!editing) return;
     const { id, ...rest } = editing;
-    await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
-    setEditing(null);
+    const success = await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
+    // Só fecha o modal se a operação foi bem-sucedida
+    if (success) {
+      setEditing(null);
+    }
   };
 
   const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(

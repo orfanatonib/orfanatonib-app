@@ -101,7 +101,7 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState("");
 
-  const createSheltered = useCallback(async (payload: CreateShelteredForm, page: number, limit: number, filters?: ShelteredFilters, sort?: ShelteredSort) => {
+  const createSheltered = useCallback(async (payload: CreateShelteredForm, page: number, limit: number, filters?: ShelteredFilters, sort?: ShelteredSort): Promise<boolean> => {
     setDialogLoading(true);
     setDialogError("");
     try {
@@ -109,26 +109,30 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
       const joinedAt = normalizeIsoDateString(payload.joinedAt ?? null) as string | null;
       if (!birthDate || !isValidIsoDate(birthDate)) {
         setDialogError("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
-        return;
+        setDialogLoading(false);
+        return false;
       }
       if (joinedAt && !isValidIsoDate(joinedAt)) {
         setDialogError('Data "No abrigo desde" inválida. Use o formato DD/MM/AAAA.');
-        return;
+        setDialogLoading(false);
+        return false;
       }
       const guardianPhone = digitsOnly(payload.guardianPhone);
       const postalCode = digitsOnly(payload.address?.postalCode);
       const nextAddress = payload.address ? { ...payload.address, postalCode } : payload.address;
       await apiCreateSheltered({ ...payload, birthDate, joinedAt, guardianPhone, address: nextAddress as any });
       await refetch(page, limit, filters, sort);
+      setDialogLoading(false);
+      return true;
     } catch (err: any) {
       const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
       setDialogError(backendMsg || err?.message || "Erro ao criar abrigado");
-    } finally {
       setDialogLoading(false);
+      return false;
     }
   }, [refetch]);
 
-  const updateSheltered = useCallback(async (id: string, payload: Omit<EditShelteredForm, "id">, page: number, limit: number, filters?: ShelteredFilters, sort?: ShelteredSort) => {
+  const updateSheltered = useCallback(async (id: string, payload: Omit<EditShelteredForm, "id">, page: number, limit: number, filters?: ShelteredFilters, sort?: ShelteredSort): Promise<boolean> => {
     setDialogLoading(true);
     setDialogError("");
     try {
@@ -138,14 +142,16 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
       if (birthDate !== undefined) {
         if (!birthDate || !isValidIsoDate(birthDate)) {
           setDialogError("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
-          return;
+          setDialogLoading(false);
+          return false;
         }
         nextPayload.birthDate = birthDate;
       }
       if (joinedAt !== undefined) {
         if (joinedAt && !isValidIsoDate(joinedAt)) {
           setDialogError('Data "No abrigo desde" inválida. Use o formato DD/MM/AAAA.');
-          return;
+          setDialogLoading(false);
+          return false;
         }
         nextPayload.joinedAt = joinedAt;
       }
@@ -162,11 +168,13 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
 
       await apiUpdateSheltered(id, nextPayload);
       await refetch(page, limit, filters, sort);
+      setDialogLoading(false);
+      return true;
     } catch (err: any) {
       const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
       setDialogError(backendMsg || err?.message || "Erro ao atualizar abrigado");
-    } finally {
       setDialogLoading(false);
+      return false;
     }
   }, [refetch]);
 
