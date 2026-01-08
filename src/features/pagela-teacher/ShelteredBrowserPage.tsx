@@ -18,10 +18,12 @@ import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
 import NoShelterLinkedPage from "./NoShelterLinkedPage";
-import { apiGetProfile } from "../profile/api";
+import { useDispatch } from "react-redux";
+import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
+  const dispatch = useDispatch();
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isAdmin = useSelector(selectIsAdmin);
@@ -132,14 +134,15 @@ export default function ShelteredBrowserPage() {
     // Marca que já está verificando para evitar múltiplas requisições
     hasCheckedProfileRef.current = true;
     
-    // Tenta buscar do endpoint /profile para ter dados completos (apenas uma vez)
+    // Atualiza o Redux via fetchCurrentUser para ter dados completos (apenas uma vez)
     const checkShelterLink = async () => {
       try {
         setCheckingShelter(true);
-        const profileData = await apiGetProfile();
-        setFullProfile(profileData);
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        // Atualiza o estado local com os dados do Redux atualizado
+        setFullProfile(updatedUser);
       } catch (err) {
-        console.error('Erro ao buscar perfil completo:', err);
+        console.error('Erro ao atualizar dados do usuário:', err);
         // Em caso de erro, permite tentar novamente se o componente remontar
         hasCheckedProfileRef.current = false;
       } finally {

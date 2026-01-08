@@ -8,7 +8,6 @@ import './App.css';
 import './styles/Global.css';
 
 import Navbar from './components/NavBar/Navbar';
-import { apiGetProfile, apiGetCompleteProfile } from './features/profile/api';
 import Footer from './components/Footer/Footer';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import PageRenderer from './components/PageRenderer/PageRenderer';
@@ -74,10 +73,8 @@ import ProfilesManager from './features/profile/ProfilesManager';
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
   const dynamicRoutes = useSelector((state: RootStateType) => state.routes.routes);
-  const { initialized, loadingUser, isAuthenticated } = useSelector((state: RootStateType) => state.auth);
+  const { initialized, loadingUser, isAuthenticated, user } = useSelector((state: RootStateType) => state.auth);
   const [forceReady, setForceReady] = useState(false);
-  const [profile, setProfile] = useState<any>(undefined);
-  const [completeProfile, setCompleteProfile] = useState<any>(undefined);
 
   useEffect(() => {
     dispatch(fetchRoutes());
@@ -91,16 +88,8 @@ function App() {
     return () => clearTimeout(fallbackTimeout);
   }, [dispatch]);
 
-  // Buscar dados dos endpoints quando autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      apiGetProfile().then(setProfile).catch(() => setProfile(undefined));
-      apiGetCompleteProfile().then(setCompleteProfile).catch(() => setCompleteProfile(undefined));
-    } else {
-      setProfile(undefined);
-      setCompleteProfile(undefined);
-    }
-  }, [isAuthenticated]);
+  // Dados do usuário agora vêm diretamente do Redux via /auth/me
+  // Não precisa mais buscar de endpoints separados
 
   const handleLogout = () => {
     dispatch(logout());
@@ -155,7 +144,7 @@ function App() {
         background: 'linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)',
         backgroundAttachment: 'fixed',
       }}>
-        <Navbar profile={profile} completeProfile={completeProfile} />
+        <Navbar />
 
         <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Toolbar />

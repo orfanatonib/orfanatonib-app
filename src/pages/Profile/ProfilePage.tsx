@@ -32,8 +32,8 @@ import {
   Favorite as FavoriteIcon,
 } from '@mui/icons-material';
 import { RootState } from '@/store/slices';
-import { apiGetProfile, apiGetCompleteProfile } from '@/features/profile/api';
-import { Profile, CompleteProfile } from '@/features/profile/types';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import ProfileEditForm from '@/features/profile/components/ProfileEditForm';
 import PasswordChangeForm from '@/features/profile/components/PasswordChangeForm';
 import ProfileImageUpload from '@/features/profile/components/ProfileImageUpload';
@@ -53,10 +53,9 @@ const ProfilePage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isAuthenticated, initialized } = useSelector((state: RootState) => state.auth);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [completeProfile, setCompleteProfile] = useState<CompleteProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Detect hash for direct tab selection
   const initialTab = React.useMemo(() => {
@@ -93,26 +92,41 @@ const ProfilePage: React.FC = () => {
   }, [isAuthenticated, initialized, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadProfile();
+    if (isAuthenticated && !user) {
+      // Se está autenticado mas não tem dados do usuário, busca via Redux
+      dispatch(fetchCurrentUser());
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user, dispatch]);
 
-  const loadProfile = async () => {
+  // Dados do perfil vêm diretamente do Redux (atualizado via /auth/me)
+  // Separando em variáveis para facilitar edição
+  const profile = user ? {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone || '',
+    role: user.role,
+    active: user.active,
+    completed: user.completed,
+    commonUser: user.commonUser,
+    createdAt: user.createdAt || '',
+    updatedAt: user.updatedAt || '',
+    image: user.image,
+  } : null;
+
+  const completeProfile = user ? {
+    personalData: user.personalData || null,
+    preferences: user.preferences || null,
+  } : null;
+
+  // Handler para atualizar dados após edição - atualiza Redux
+  const handleProfileUpdate = async () => {
     try {
-      setLoading(true);
       setError(null);
-      const [profileData, completeProfileData] = await Promise.all([
-        apiGetProfile(),
-        apiGetCompleteProfile().catch(() => null), // Pode não existir ainda
-      ]);
-      setProfile(profileData);
-      setCompleteProfile(completeProfileData);
+      await dispatch(fetchCurrentUser() as any);
     } catch (err: any) {
-      console.error('Error loading profile:', err);
-      setError(err?.response?.data?.message || 'Erro ao carregar perfil. Tente novamente mais tarde.');
-    } finally {
-      setLoading(false);
+      console.error('Error updating profile:', err);
+      setError(err?.response?.data?.message || 'Erro ao atualizar perfil.');
     }
   };
 
@@ -126,7 +140,7 @@ const ProfilePage: React.FC = () => {
         return (
           <ProfileEditForm
             profile={profile}
-            onUpdate={loadProfile}
+            onUpdate={handleProfileUpdate}
             onError={setError}
           />
         );
@@ -134,7 +148,7 @@ const ProfilePage: React.FC = () => {
         return (
           <PersonalDataForm
             personalData={completeProfile?.personalData}
-            onUpdate={loadProfile}
+            onUpdate={handleProfileUpdate}
             onError={setError}
           />
         );
@@ -142,7 +156,7 @@ const ProfilePage: React.FC = () => {
         return (
           <PreferencesForm
             preferences={completeProfile?.preferences}
-            onUpdate={loadProfile}
+            onUpdate={handleProfileUpdate}
             onError={setError}
           />
         );
@@ -154,7 +168,7 @@ const ProfilePage: React.FC = () => {
         return (
           <ProfileImageUpload
             currentImageUrl={profile?.image?.url}
-            onUpdate={loadProfile}
+            onUpdate={handleProfileUpdate}
             onError={setError}
           />
         );
@@ -163,7 +177,10 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  if (!initialized || loading) {
+  // Usar loadingUser do Redux
+  const isLoading = loadingUser || loading;
+  
+  if (!initialized || isLoading) {
     return (
       <Box
         sx={{

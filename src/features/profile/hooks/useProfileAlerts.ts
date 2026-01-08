@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 
 export interface ProfileAlert {
     id: string;
@@ -6,15 +7,10 @@ export interface ProfileAlert {
     to?: string;
 }
 
-interface UseProfileAlertsParams {
-    profile?: any;
-    completeProfile?: any;
-}
-
-import { useSelector } from 'react-redux';
-
-export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsParams) {
+export function useProfileAlerts() {
     const emailVerificationAlert = useSelector((state: any) => state.auth.emailVerificationAlert);
+    const user = useSelector((state: any) => state.auth.user);
+    
     return useMemo(() => {
         const alerts: ProfileAlert[] = [];
 
@@ -26,7 +22,8 @@ export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsP
             });
         }
 
-        if (profile && (!profile.image || !profile.image.url)) {
+        // Verificar foto usando dados do Redux (que vem de /auth/me)
+        if (user && (!user.image || !user.image.url)) {
             alerts.push({
                 id: 'missing-photo',
                 message: 'Adicione uma foto ao seu perfil.',
@@ -34,9 +31,10 @@ export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsP
             });
         }
 
-        if (completeProfile) {
-            const pd = completeProfile.personalData;
-            const pref = completeProfile.preferences;
+        // Verificar dados pessoais e preferências usando dados do Redux
+        if (user) {
+            const pd = user.personalData;
+            const pref = user.preferences;
             const requiredPD = ['birthDate', 'gender', 'gaLeaderName', 'gaLeaderContact'];
             const requiredPref = ['loveLanguages', 'temperaments', 'favoriteColor', 'favoriteFood', 'favoriteMusic', 'whatMakesYouSmile', 'skillsAndTalents'];
             const pdMissing = !pd || requiredPD.some((k) => !pd[k]);
@@ -58,5 +56,5 @@ export function useProfileAlerts({ profile, completeProfile }: UseProfileAlertsP
         }
 
         return alerts;
-    }, [profile, completeProfile, emailVerificationAlert]);
+    }, [user, emailVerificationAlert]);
 }

@@ -14,26 +14,49 @@ interface ShelterLite {
   number?: number;
 }
 
+interface TeamLite {
+  id: string;
+  numberTeam?: number;
+  description?: string | null;
+  shelter?: ShelterLite | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface TeacherProfileLite {
   id: string;
   active: boolean;
   shelter?: ShelterLite | null;
-  team: {
-    id: string;
-    name: string;
-    shelter?: ShelterLite | null;
-  } | null;
+  team?: TeamLite | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface LeaderProfileLite {
   id: string;
   active: boolean;
   shelters?: ShelterLite[];
-  team: {
-    id: string;
-    name: string;
-    shelter?: ShelterLite | null;
-  } | null;
+  team?: TeamLite | null;
+  teams?: TeamLite[] | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface PersonalData {
+  birthDate?: string | null;
+  gender?: string | null;
+  gaLeaderName?: string | null;
+  gaLeaderContact?: string | null;
+}
+
+interface Preferences {
+  loveLanguages?: string | null;
+  temperaments?: string | null;
+  favoriteColor?: string | null;
+  favoriteFood?: string | null;
+  favoriteMusic?: string | null;
+  whatMakesYouSmile?: string | null;
+  skillsAndTalents?: string | null;
 }
 
 interface User {
@@ -50,6 +73,8 @@ interface User {
   teacherProfile?: TeacherProfileLite | null;
   leaderProfile?: LeaderProfileLite | null;
   image?: MediaItem | null;
+  personalData?: PersonalData | null;
+  preferences?: Preferences | null;
 }
 
 interface GoogleUser {

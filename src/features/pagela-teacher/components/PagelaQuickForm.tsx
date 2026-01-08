@@ -18,9 +18,8 @@ import { Close, Save } from "@mui/icons-material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useSelector } from "react-redux";
-import { UserRole } from "@/store/slices/auth/authSlice";
-import { apiGetProfile } from "@/features/profile/api";
+import { useSelector, useDispatch } from "react-redux";
+import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO } from "../utils";
 
@@ -56,42 +55,33 @@ export default function PagelaQuickForm({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const dispatch = useDispatch();
   const user = useSelector((s: any) => s?.auth?.user);
   const userRole = user?.role;
   const isTeacher = userRole === UserRole.TEACHER;
   const isLeader = userRole === UserRole.LEADER;
   
-  const [fullProfile, setFullProfile] = React.useState<any>(null);
-  
-  // Buscar perfil completo se necessário
+  // Atualizar dados do Redux se necessário (busca /auth/me e atualiza o Redux)
   React.useEffect(() => {
-    const fetchProfile = async () => {
-      // Só busca se for teacher/leader e não tiver o ID no Redux
-      if (isTeacher && !user?.teacherProfile?.id) {
+    const refreshUserData = async () => {
+      // Só atualiza se não tiver o ID necessário no Redux
+      if ((isTeacher && !user?.teacherProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
         try {
-          const profile = await apiGetProfile();
-          setFullProfile(profile);
+          await dispatch(fetchCurrentUser()).unwrap();
         } catch (err) {
-          console.error('Erro ao buscar perfil completo:', err);
-        }
-      } else if (isLeader && !user?.leaderProfile?.id) {
-        try {
-          const profile = await apiGetProfile();
-          setFullProfile(profile);
-        } catch (err) {
-          console.error('Erro ao buscar perfil completo:', err);
+          console.error('Erro ao atualizar dados do usuário:', err);
         }
       }
     };
     
-    fetchProfile();
-  }, [isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
+    refreshUserData();
+  }, [dispatch, isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
   
   const teacherProfileIdFromRedux = isTeacher 
-    ? (user?.teacherProfile?.id ?? fullProfile?.teacherProfile?.id ?? null) 
+    ? (user?.teacherProfile?.id ?? null) 
     : null;
   const leaderProfileIdFromRedux = isLeader 
-    ? (user?.leaderProfile?.id ?? fullProfile?.leaderProfile?.id ?? null) 
+    ? (user?.leaderProfile?.id ?? null) 
     : null;
 
   // Para professores, usar teacherProfileId; para líderes, usar leaderProfileId
@@ -172,26 +162,20 @@ export default function PagelaQuickForm({
     let finalTeacherProfileId = effectiveTeacherProfileId;
     let finalLeaderProfileId = effectiveLeaderProfileId;
     
-    // Se não temos o ID, buscar do perfil completo
+    // Se não temos o ID, atualizar o Redux via fetchCurrentUser
     if (isTeacher && !finalTeacherProfileId) {
       try {
-        const profile = await apiGetProfile();
-        finalTeacherProfileId = profile?.teacherProfile?.id ?? null;
-        if (finalTeacherProfileId) {
-          setFullProfile(profile);
-        }
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalTeacherProfileId = updatedUser?.teacherProfile?.id ?? null;
       } catch (err) {
-        console.error('Erro ao buscar perfil:', err);
+        console.error('Erro ao atualizar dados do usuário:', err);
       }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
-        const profile = await apiGetProfile();
-        finalLeaderProfileId = profile?.leaderProfile?.id ?? null;
-        if (finalLeaderProfileId) {
-          setFullProfile(profile);
-        }
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
       } catch (err) {
-        console.error('Erro ao buscar perfil:', err);
+        console.error('Erro ao atualizar dados do usuário:', err);
       }
     }
 

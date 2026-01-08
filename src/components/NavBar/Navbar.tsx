@@ -33,14 +33,14 @@ import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
 
-const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, completeProfile }) => {
+const NavBar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  const profileAlerts = useProfileAlerts({ profile, completeProfile });
+  const profileAlerts = useProfileAlerts();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
@@ -147,7 +147,7 @@ const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, c
                       }}
                     >
                       <Avatar
-                        src={profile?.image?.url || undefined}
+                        src={user?.image?.url || undefined}
                         sx={{
                           width: 36,
                           height: 36,
@@ -164,7 +164,7 @@ const NavBar: React.FC<{ profile?: any; completeProfile?: any }> = ({ profile, c
                           },
                         }}
                       >
-                        {!profile?.image?.url ? (profile?.name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || 'U') : null}
+                        {!user?.image?.url ? (user?.name?.charAt(0).toUpperCase() || 'U') : null}
                       </Avatar>
                     </IconButton>
                   </Tooltip>
