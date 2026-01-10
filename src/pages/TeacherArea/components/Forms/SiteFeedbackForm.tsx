@@ -80,7 +80,7 @@ const SiteFeedbackForm: React.FC = () => {
             setSubmitted(true);
             resetForm();
             setTimeout(() => {
-                navigate('/area-do-professor');
+                navigate('/area-do-membro');
             }, 2000);
 
         } catch (error) {
@@ -100,7 +100,7 @@ const SiteFeedbackForm: React.FC = () => {
 
     const handleCancel = () => {
         resetForm();
-        navigate('/area-do-professor');
+        navigate('/area-do-membro');
     };
 
     return (

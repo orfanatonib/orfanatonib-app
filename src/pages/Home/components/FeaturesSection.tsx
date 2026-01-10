@@ -50,7 +50,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => {
               fontFamily: "'Poppins', sans-serif",
             }}
           >
-            Por que escolher o Orfanato NIB?
+            Por que escolher o Orfanatos NIB?
           </Typography>
         </motion.div>
 

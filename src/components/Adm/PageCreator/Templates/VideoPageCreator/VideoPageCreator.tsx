@@ -306,7 +306,6 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}
@@ -327,7 +326,6 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
           </Typography>
         </Box>
 
-        {/* Form Section */}
         <Paper
           elevation={2}
           sx={{
@@ -440,7 +438,6 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
           handleEditVideo={handleEditVideo}
         />
 
-        {/* Save Button */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
           <Button
             variant="outlined"

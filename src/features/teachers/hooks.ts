@@ -69,7 +69,7 @@ export function useTeacherProfiles(
       setTotal(data.total || 0);
     } catch (err: any) {
       if (mySeq !== seqRef.current) return;
-      setError(err?.response?.data?.message || err.message || "Erro ao listar professores");
+      setError(err?.response?.data?.message || err.message || "Erro ao listar membros");
     } finally {
       if (mySeq === seqRef.current) setLoading(false);
     }
@@ -100,7 +100,6 @@ export function useTeacherMutations(
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState("");
 
-  // Métodos de setShelter/clearShelter removidos - agora gerenciados via Teams
   return { dialogLoading, dialogError, setDialogError };
 }
 

@@ -89,7 +89,7 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const age = useMemo(() => calcAge(sheltered?.birthDate), [sheltered?.birthDate]);
+  const age = useMemo(() => calcAge(sheltered?.birthDate || undefined), [sheltered?.birthDate]);
 
   const waLink = useMemo(() => {
     if (!sheltered?.guardianPhone) return null;
@@ -162,7 +162,7 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
                   {sheltered.shelter ? (
                     <Chip size="small" label={`Abrigo ${sheltered.shelter.name}`} color="primary" variant="outlined" />
                   ) : (
-                    <Chip size="small" label="Sem shelter" variant="outlined" />
+                    <Chip size="small" label="Sem abrigo" variant="outlined" />
                   )}
                 </Stack>
               </Box>
@@ -178,7 +178,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
           <Alert severity="info">Nenhum abrigado selecionado.</Alert>
         ) : (
           <Stack spacing={2}>
-            {/* Contatos */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<PhoneIphone fontSize="small" />} title="Telefone do Responsável">
@@ -210,23 +209,21 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               </Grid>
             </Grid>
 
-            {/* Datas */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<Cake fontSize="small" />} title="Nascimento">
                   <Typography>
-                    {fmtDate(sheltered.birthDate)} {typeof age === "number" && `(${age} anos)`}
+                    {fmtDate(sheltered.birthDate || undefined)} {typeof age === "number" && `(${age} anos)`}
                   </Typography>
                 </LineCard>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<PhoneIcon fontSize="small" />} title="No Abrigo desde">
-                  <Typography>{fmtDate(sheltered.joinedAt || "")}</Typography>
+                  <Typography>{fmtDate(sheltered.joinedAt || undefined)}</Typography>
                 </LineCard>
               </Grid>
             </Grid>
 
-            {/* Endereço */}
             <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Home fontSize="small" />
@@ -234,18 +231,24 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               </Stack>
               {sheltered.address ? (
                 <Grid container spacing={1.25}>
-                  <Grid item xs={12} sm={8}>
-                    <Typography>{sheltered.address.street} {sheltered.address.number}</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography>{sheltered.address.district}</Typography>
-                  </Grid>
+                  {(sheltered.address.street || sheltered.address.number) && (
+                    <Grid item xs={12} sm={8}>
+                      <Typography>{sheltered.address.street || ""} {sheltered.address.number || ""}</Typography>
+                    </Grid>
+                  )}
+                  {sheltered.address.district && (
+                    <Grid item xs={12} sm={4}>
+                      <Typography>{sheltered.address.district}</Typography>
+                    </Grid>
+                  )}
                   <Grid item xs={12} sm={6}>
                     <Typography>{sheltered.address.city}/{sheltered.address.state}</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>{sheltered.address.postalCode}</Typography>
-                  </Grid>
+                  {sheltered.address.postalCode && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography>{sheltered.address.postalCode}</Typography>
+                    </Grid>
+                  )}
                   {sheltered.address.complement && (
                     <Grid item xs={12}>
                       <Typography>{sheltered.address.complement}</Typography>
@@ -267,7 +270,6 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
               )}
             </Paper>
 
-            {/* Metadados */}
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
                 <LineCard icon={<MenuBook fontSize="small" />} title="Criado em">

@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
 import { clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
-import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
+import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
 import api from '@/config/axiosConfig';
 
 export function IdeasSectionUserCreator() {
@@ -39,7 +39,7 @@ export function IdeasSectionUserCreator() {
 
   const handleBack = () => {
     dispatch(clearIdeasSectionData());
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
   };
 
   const handleShareIdea = async () => {
@@ -147,7 +147,7 @@ export function IdeasSectionUserCreator() {
       });
 
       setTimeout(() => {
-        navigate('/area-do-professor');
+        navigate('/area-do-membro');
       }, 2000);
     } catch (error) {
       console.error('Error sharing idea:', error);
@@ -239,7 +239,7 @@ export function IdeasSectionUserCreator() {
           Pode ser uma brincadeira, um versículo, uma forma especial de contar<br />
           uma história ou qualquer outra atividade para o seu Abrigo!<br /><br />
           Agora você também pode enviar <strong>vídeos, imagens e documentos</strong><br />
-          para mostrar como fez e ajudar outros professores a colocarem em prática. 📹📸📄
+          para mostrar como fez e ajudar outros membros a colocarem em prática. 📹📸📄
         </Typography>
 
 
@@ -276,10 +276,9 @@ export function IdeasSectionUserCreator() {
             borderRadius: '3px',
           },
         }}>
-          <IdeasMaterialSection
+          <IdeasMaterialSectionUser
             section={sectionData}
             onUpdate={handleSectionUpdate}
-            isCreationMode={true}
           />
 
           <Box sx={{
@@ -322,7 +321,7 @@ export function IdeasSectionUserCreator() {
             <Button
               variant="contained"
               onClick={handleShareIdea}
-              disabled={loading || !sectionData.title.trim() || !sectionData.description.trim() || sectionData.medias.length === 0}
+              disabled={loading}
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
               sx={{
                 px: { xs: 4, md: 6 },
@@ -359,6 +358,7 @@ export function IdeasSectionUserCreator() {
         autoHideDuration={6000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ zIndex: 1400 }}
       >
         <Alert
           onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}

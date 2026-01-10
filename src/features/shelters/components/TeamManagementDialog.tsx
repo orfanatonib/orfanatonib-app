@@ -343,7 +343,7 @@ export default function TeamManagementDialog({
     );
 
     if (availableTeachers.length === 0) {
-      setError("Não há professores disponíveis para adicionar");
+      setError("Não há membros disponíveis para adicionar");
       return;
     }
 
@@ -354,7 +354,7 @@ export default function TeamManagementDialog({
 
   const handleConfirmAddTeacher = async () => {
     if (!selectedTeamForTeacher || !selectedTeacherId) {
-      setError("Selecione um professor");
+      setError("Selecione um membro");
       return;
     }
 
@@ -382,14 +382,14 @@ export default function TeamManagementDialog({
       setSelectedTeacherId(null);
       await handleSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao adicionar professor");
+      setError(err?.response?.data?.message || err.message || "Erro ao adicionar membro");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRemoveTeacher = async (teamId: string, teacherId: string) => {
-    setError("Para remover um professor, vincule-o a outra equipe ou abrigo usando a opção de editar.");
+    setError("Para remover um membro, vincule-o a outra equipe ou abrigo usando a opção de editar.");
   };
 
   const allLeaders = teams.flatMap((t) => t.leaders);
@@ -438,7 +438,7 @@ export default function TeamManagementDialog({
                   {...params}
                   label="Selecionar Abrigo"
                   placeholder="Escolha um abrigo para gerenciar equipes"
-                  helperText={teacherId || leaderId ? "Selecione um abrigo para vincular o professor/líder" : "Selecione um abrigo para gerenciar suas equipes"}
+                  helperText={teacherId || leaderId ? "Selecione um abrigo para vincular o membro/líder" : "Selecione um abrigo para gerenciar suas equipes"}
                 />
               )}
             />
@@ -448,7 +448,7 @@ export default function TeamManagementDialog({
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2 }}>
           <Tab label="Equipes" value="teams" icon={<GroupIcon />} iconPosition="start" />
           <Tab label="Líderes" value="leaders" icon={<PersonIcon />} iconPosition="start" />
-          <Tab label="Professores" value="teachers" icon={<SchoolIcon />} iconPosition="start" />
+          <Tab label="Membros" value="teachers" icon={<SchoolIcon />} iconPosition="start" />
         </Tabs>
 
         {loading && (
@@ -541,7 +541,7 @@ export default function TeamManagementDialog({
 
                     <Box>
                       <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                        Professores ({team.teachers.length})
+                        Membros ({team.teachers.length})
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                         {team.teachers.map((teacher) => {
@@ -608,12 +608,12 @@ export default function TeamManagementDialog({
         {activeTab === "teachers" && (
           <Stack spacing={2}>
             <Typography variant="subtitle1" fontWeight={600}>
-              Todos os Professores ({allTeachers.length})
+              Todos os Membros ({allTeachers.length})
             </Typography>
             {allTeachers.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
                 <Typography color="text.secondary">
-                  Nenhum professor vinculado às equipes.
+                  Nenhum membro vinculado às equipes.
                 </Typography>
               </Paper>
             ) : (
@@ -642,7 +642,6 @@ export default function TeamManagementDialog({
         </Button>
       </DialogActions>
 
-      {/* Dialog para criar equipe */}
       <Dialog open={showCreateTeamDialog} onClose={() => setShowCreateTeamDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Criar Nova Equipe</DialogTitle>
         <DialogContent>
@@ -675,7 +674,6 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog para adicionar líder */}
       <Dialog open={showAddLeaderDialog} onClose={() => setShowAddLeaderDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Adicionar Líder à Equipe</DialogTitle>
         <DialogContent>
@@ -699,9 +697,8 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog para adicionar professor */}
       <Dialog open={showAddTeacherDialog} onClose={() => setShowAddTeacherDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Adicionar Professor à Equipe</DialogTitle>
+        <DialogTitle>Adicionar Membro à Equipe</DialogTitle>
         <DialogContent>
           <Autocomplete
             options={teacherOptions.filter(
@@ -711,7 +708,7 @@ export default function TeamManagementDialog({
             value={teacherOptions.find((t) => t.teacherProfileId === selectedTeacherId) || null}
             onChange={(_, newValue) => setSelectedTeacherId(newValue?.teacherProfileId || null)}
             renderInput={(params) => (
-              <TextField {...params} label="Selecione um professor" placeholder="Digite para buscar..." />
+              <TextField {...params} label="Selecione um membro" placeholder="Digite para buscar..." />
             )}
           />
         </DialogContent>
@@ -723,7 +720,6 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de confirmação para excluir equipe */}
       <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>

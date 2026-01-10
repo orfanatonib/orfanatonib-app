@@ -135,7 +135,6 @@ export default function VisitAudioPlayerView({ audio }: Props) {
           },
         }}
       >
-        {/* Header */}
         <Box
           display="flex"
           alignItems="center"
@@ -184,12 +183,10 @@ export default function VisitAudioPlayerView({ audio }: Props) {
           </Box>
         </Box>
 
-        {/* Audio Player */}
         <Box sx={{ mb: 3 }}>
           {renderAudioPlayer()}
         </Box>
 
-        {/* Description */}
         {audio.description && (
           <Typography
             variant="body2"
@@ -205,7 +202,6 @@ export default function VisitAudioPlayerView({ audio }: Props) {
           </Typography>
         )}
 
-        {/* Download Button */}
         <Box sx={{ mt: 'auto' }}>
           <DownloadButton
             url={audio.url}

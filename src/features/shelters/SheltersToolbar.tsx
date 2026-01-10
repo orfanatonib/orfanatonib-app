@@ -41,10 +41,8 @@ export default function SheltersToolbar({
     onChange((prev) => {
       const newFilters = { ...prev, [key]: value };
       
-      // Mapear filtros internos para filtros principais da API
       if (key === 'shelterSearchString') {
         newFilters.shelterName = value as string | undefined;
-        // Limpar filtro legado se estiver usando o novo
         if (value) {
           newFilters.nameSearchString = undefined;
           newFilters.searchString = undefined;
@@ -61,12 +59,10 @@ export default function SheltersToolbar({
 
   const handleClear = () => {
     onChange(() => ({
-      // Filtros principais
       shelterName: undefined,
       staffFilters: undefined,
       addressFilter: undefined,
       
-      // Filtros legados para compatibilidade (estes são os que aparecem nos campos)
       addressSearchString: undefined,
       userSearchString: undefined,
       shelterSearchString: undefined,
@@ -149,7 +145,7 @@ export default function SheltersToolbar({
           <TextField
             fullWidth
             size="small"
-            label="Staff (Líderes e Professores)"
+            label="Staff (Líderes e Membros)"
             value={filters.userSearchString ?? ""}
             onChange={(e) => handleChange("userSearchString", e.target.value || undefined)}
             placeholder="Nome, email ou telefone"

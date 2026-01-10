@@ -303,7 +303,6 @@ export default function SheltersCards(props: Props) {
                     <Divider sx={{ mx: { xs: 1.5, sm: 2 } }} />
                     <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                       <Stack spacing={2}>
-                        {/* Professores */}
                         <Paper
                           variant="outlined"
                           sx={{
@@ -318,7 +317,7 @@ export default function SheltersCards(props: Props) {
                             <Stack direction="row" spacing={0.75} alignItems="center">
                               <GroupIcon fontSize="small" color="primary" />
                               <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
-                                Professores ({teachers.length})
+                                Membros ({teachers.length})
                               </Typography>
                             </Stack>
 
@@ -330,12 +329,11 @@ export default function SheltersCards(props: Props) {
                                 variant: "outlined" as const,
                               }))}
                               maxVisible={5}
-                              emptyMessage="Nenhum professor vinculado."
+                              emptyMessage="Nenhum membro vinculado."
                             />
                           </Stack>
                         </Paper>
 
-                        {/* Endereço */}
                         {c.address && (
                           <Paper
                             variant="outlined"
@@ -377,7 +375,6 @@ export default function SheltersCards(props: Props) {
                           </Paper>
                         )}
 
-                        {/* Informações adicionais */}
                         <Paper
                           variant="outlined"
                           sx={{

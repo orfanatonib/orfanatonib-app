@@ -1,4 +1,3 @@
-// Tipos para o PagelaSheltersManager
 
 export interface ShelterDto {
   id: string;
@@ -82,7 +81,7 @@ export interface ShelterDto {
 export interface ShelteredDto {
   id: string;
   name: string;
-  birthDate: string;
+  birthDate?: string | null;
   guardianName?: string | null;
   gender: string;
   guardianPhone?: string | null;
@@ -93,12 +92,12 @@ export interface ShelteredDto {
   };
   address: {
     id: string;
-    street: string;
-    number: string;
-    district: string;
+    street?: string | null;
+    number?: string | null;
+    district?: string | null;
     city: string;
     state: string;
-    postalCode: string;
+    postalCode?: string | null;
     complement?: string | null;
   };
   createdAt: string;
@@ -133,7 +132,6 @@ export interface PagelaDto {
   updatedAt: string;
 }
 
-// Responses das APIs
 export interface SheltersResponse {
   items: ShelterDto[];
   total: number;
@@ -161,7 +159,6 @@ export interface PagelasResponse {
   limit: number;
 }
 
-// Filtros para as APIs
 export interface SheltersFilters {
   page?: number;
   limit?: number;

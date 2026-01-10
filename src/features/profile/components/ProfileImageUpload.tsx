@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import {
   Box,
   Button,
-  Paper,
   Typography,
   Avatar,
   CircularProgress,
@@ -14,6 +13,7 @@ import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
 import { apiUpdateProfileImage } from '../api';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import type { AppDispatch } from '@/store/slices';
@@ -34,6 +34,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,7 +42,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de arquivo
     if (!file.type.startsWith('image/')) {
       onError('Por favor, selecione apenas arquivos de imagem');
       return;
@@ -55,14 +55,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Detectar dispositivo e navegador
   const detectDevice = () => {
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
     const isAndroid = /android/i.test(userAgent);
     const isMobile = isIOS || isAndroid;
     
-    // Detectar navegador
     const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
     const isSafari = /Safari/.test(userAgent) && !isChrome;
     const isFirefox = /Firefox/.test(userAgent);
@@ -73,20 +71,17 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const handleCameraClick = async () => {
     const device = detectDevice();
     
-    // Para iOS Safari, usar input com capture (mais confiável)
     if (device.isIOS && device.isSafari) {
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       }
       return;
     }
     
-    // Verificar se a API de MediaDevices está disponível
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      // Fallback: usar input com capture
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       } else {
         onError('Seu navegador não suporta acesso à câmera. Tente usar a opção de selecionar da galeria.');
@@ -95,12 +90,11 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     }
 
     try {
-      // Configuração de vídeo baseada no dispositivo
       const videoConstraints: MediaTrackConstraints = device.isMobile
         ? { 
-            facingMode: { ideal: 'environment' }, // Câmera traseira
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            facingMode: { ideal: cameraFacingMode }, // mobile: permite alternar selfie/traseira
+            width: { ideal: 720 },
+            height: { ideal: 1280 }
           }
         : { 
             width: { ideal: 1280 },
@@ -111,8 +105,11 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         video: videoConstraints,
         audio: false
       });
+      let activeStream: MediaStream = stream;
+      let activeFacingMode: 'environment' | 'user' = cameraFacingMode;
+      let activeDeviceId: string | undefined =
+        activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
       
-      // Criar um canvas para capturar a foto
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -121,7 +118,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         throw new Error('Não foi possível criar o contexto do canvas');
       }
       
-      // Criar um modal simples para mostrar a câmera
       const modal = document.createElement('div');
       modal.id = 'camera-modal';
       modal.style.cssText = `
@@ -137,24 +133,33 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         align-items: center;
         justify-content: center;
         gap: 20px;
-        padding: 20px;
+        padding: ${device.isMobile ? '12px' : '20px'};
         box-sizing: border-box;
       `;
       
+      const videoWrapper = document.createElement('div');
+      videoWrapper.style.cssText = `
+        position: relative;
+        width: ${device.isMobile ? 'min(96vw, 440px)' : 'min(92vw, 980px)'};
+        aspect-ratio: ${device.isMobile ? '9 / 16' : '16 / 9'};
+        border-radius: 16px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+      `;
+
       const videoElement = document.createElement('video');
       videoElement.srcObject = stream;
       videoElement.style.cssText = `
-        max-width: 100%;
-        max-height: 70vh;
-        border-radius: 8px;
-        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         background: #000;
       `;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       videoElement.muted = true;
       
-      // Garantir que o vídeo esteja em landscape no mobile
       if (device.isMobile) {
         videoElement.setAttribute('playsinline', 'true');
         videoElement.setAttribute('webkit-playsinline', 'true');
@@ -198,19 +203,73 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cursor: pointer;
         min-width: 140px;
       `;
-      
-      const retakeButton = document.createElement('button');
-      retakeButton.textContent = 'Tirar Novamente';
-      retakeButton.style.cssText = `
-        padding: 14px 28px;
-        background: #666;
+
+      const switchCameraIconButton = document.createElement('button');
+      switchCameraIconButton.type = 'button';
+      switchCameraIconButton.setAttribute('aria-label', 'Trocar câmera');
+      switchCameraIconButton.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        border: 1.5px solid rgba(255,255,255,0.45);
+        background: rgba(0,0,0,0.82);
         color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
+        display: ${device.isMobile ? 'flex' : 'none'};
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        min-width: 140px;
+        z-index: 7;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.55);
+      `;
+      switchCameraIconButton.innerHTML = `
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 7h4V3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 7a8 8 0 0 1 13 3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 17h-4v4" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 17a8 8 0 0 1-13-3" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+
+      const maskOverlay = document.createElement('div');
+      maskOverlay.style.cssText = `
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 4;
+      `;
+      maskOverlay.innerHTML = `
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <!-- overlay suave para direcionar o olhar ao centro -->
+          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.28)"></rect>
+
+          <!-- Cabeça -->
+          <circle cx="50" cy="32" r="13"
+                  fill="transparent"
+                  stroke="rgba(255,255,255,0.70)"
+                  stroke-width="1.6"
+                  vector-effect="non-scaling-stroke"></circle>
+
+          <!-- Ombros (arco) -->
+          <path d="M22 86 C26 66 38 58 50 58 C62 58 74 66 78 86"
+                fill="transparent"
+                stroke="rgba(255,255,255,0.55)"
+                stroke-width="1.6"
+                vector-effect="non-scaling-stroke"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+
+          <!-- Linha base bem discreta (para sugerir o enquadramento) -->
+          <path d="M20 92 H80"
+                stroke="rgba(255,255,255,0.25)"
+                stroke-width="1.2"
+                vector-effect="non-scaling-stroke"
+                stroke-linecap="round"></path>
+        </svg>
       `;
       
       let videoReady = false;
@@ -222,7 +281,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       });
       
       const cleanup = () => {
-        stream.getTracks().forEach(track => {
+        activeStream.getTracks().forEach(track => {
           track.stop();
         });
         const existingModal = document.getElementById('camera-modal');
@@ -260,23 +319,89 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       cancelButton.onclick = () => {
         cleanup();
       };
-      
-      retakeButton.onclick = () => {
-        cleanup();
-        // Abrir a câmera novamente após um pequeno delay
-        setTimeout(() => handleCameraClick(), 300);
+
+      switchCameraIconButton.onclick = async () => {
+        if (!device.isMobile) return;
+        const nextFacingMode: 'environment' | 'user' = activeFacingMode === 'environment' ? 'user' : 'environment';
+        try {
+          activeStream.getTracks().forEach(track => track.stop());
+          videoReady = false;
+
+          let nextStream: MediaStream | null = null;
+          if (navigator.mediaDevices?.enumerateDevices) {
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+
+              const wantFront = nextFacingMode === 'user';
+              const frontRegex = /(front|user|facetime)/i;
+              const backRegex = /(back|rear|environment)/i;
+
+              const preferred = videoInputs.find((d) =>
+                wantFront ? frontRegex.test(d.label) : backRegex.test(d.label)
+              );
+
+              const fallbackOther = videoInputs.find((d) => d.deviceId && d.deviceId !== activeDeviceId);
+              const chosen = preferred ?? fallbackOther;
+
+              if (chosen?.deviceId) {
+                nextStream = await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    deviceId: { exact: chosen.deviceId },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                  },
+                  audio: false,
+                });
+              }
+            } catch {
+            }
+          }
+
+          if (!nextStream) {
+            const nextConstraints: MediaTrackConstraints = {
+              facingMode: { ideal: nextFacingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            };
+            nextStream = await navigator.mediaDevices.getUserMedia({
+              video: nextConstraints,
+              audio: false,
+            });
+          }
+
+          activeStream = nextStream;
+          activeFacingMode = nextFacingMode;
+          setCameraFacingMode(nextFacingMode);
+          activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
+          videoElement.srcObject = activeStream;
+        } catch (err: any) {
+          console.error('Erro ao trocar câmera:', err);
+          onError('Não foi possível trocar a câmera. Seu dispositivo pode não ter câmera frontal ou o navegador bloqueou.');
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: { ideal: activeFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+              audio: false,
+            });
+            activeStream = fallbackStream;
+            activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
+            videoElement.srcObject = activeStream;
+          } catch {
+            cleanup();
+          }
+        }
       };
       
-      // Adicionar botões ao container
-      buttonContainer.appendChild(retakeButton);
       buttonContainer.appendChild(captureButton);
       buttonContainer.appendChild(cancelButton);
       
-      modal.appendChild(videoElement);
+      videoWrapper.appendChild(videoElement);
+      videoWrapper.appendChild(maskOverlay);
+      videoWrapper.appendChild(switchCameraIconButton);
+      modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
       document.body.appendChild(modal);
       
-      // Tratamento de erro do vídeo
       videoElement.onerror = () => {
         onError('Erro ao carregar a câmera. Tente novamente ou use a opção de selecionar da galeria.');
         cleanup();
@@ -301,9 +426,8 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       
       onError(errorMessage);
       
-      // Fallback: tentar usar input com capture
       if (cameraInputRef.current) {
-        cameraInputRef.current.setAttribute('capture', 'environment');
+        cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
       }
     }
@@ -339,14 +463,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         cameraInputRef.current.value = '';
       }
       
-      // Atualizar o estado do Redux para atualizar o avatar na navbar
       try {
         await dispatch(fetchCurrentUser()).unwrap();
       } catch (err) {
         console.error('Erro ao atualizar usuário no Redux:', err);
       }
       
-      // Atualizar o preview com a nova imagem
       if (updatedProfile.image?.url) {
         setPreview(updatedProfile.image.url);
       }
@@ -367,14 +489,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-        }}
-      >
+      <Box sx={{ width: '100%' }}>
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Avatar
             src={preview || currentImageUrl}
@@ -487,37 +602,40 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         </Box>
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
             Imagem atualizada com sucesso!
           </Alert>
         )}
 
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleSubmit}
-          disabled={isSubmitting || !selectedFile}
-          startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <PhotoCameraIcon />}
-          sx={{
-            py: 1.5,
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-              boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
-            },
-            '&:disabled': {
-              background: 'rgba(0, 0, 0, 0.12)',
-              color: 'rgba(0, 0, 0, 0.26)',
-            },
-          }}
-        >
-          {isSubmitting ? 'Enviando...' : 'Enviar Foto'}
-        </Button>
-      </Paper>
+        <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleSubmit}
+            disabled={isSubmitting || !selectedFile}
+            startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <PhotoCameraIcon />}
+            sx={{
+              maxWidth: { xs: '100%', sm: 200 },
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+              },
+              '&:disabled': {
+                background: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)',
+              },
+            }}
+          >
+            {isSubmitting ? 'Enviando...' : 'Enviar Foto'}
+          </Button>
+        </Box>
+      </Box>
     </motion.div>
   );
 };

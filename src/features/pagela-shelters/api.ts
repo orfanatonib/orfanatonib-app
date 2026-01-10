@@ -9,7 +9,6 @@ import type {
 } from './types';
 
 export class PagelaSheltersApi {
-  // Endpoint 1: GET /shelters
   static async getShelters(filters: SheltersFilters = {}): Promise<SheltersResponse> {
     const params: any = {
       page: filters.page || 1,
@@ -18,7 +17,6 @@ export class PagelaSheltersApi {
       order: filters.order || 'ASC',
     };
 
-    // Só adiciona parâmetros se tiverem valores
     if (filters.searchString && filters.searchString.trim()) {
       params.searchString = filters.searchString;
     }
@@ -27,7 +25,6 @@ export class PagelaSheltersApi {
     return response.data;
   }
 
-  // Endpoint 2: GET /sheltered
   static async getSheltered(filters: ShelteredFilters = {}): Promise<ShelteredResponse> {
     const params: any = {
       page: filters.page || 1,
@@ -36,7 +33,6 @@ export class PagelaSheltersApi {
       order: filters.order || 'ASC',
     };
 
-    // Só adiciona parâmetros se tiverem valores
     if (filters.searchString && filters.searchString.trim()) {
       params.searchString = filters.searchString;
     }
@@ -48,14 +44,12 @@ export class PagelaSheltersApi {
     return response.data;
   }
 
-  // Endpoint 3: GET /pagelas/paginated
   static async getPagelas(filters: PagelasFilters = {}): Promise<PagelasResponse> {
     const params: any = {
       page: filters.page || 1,
       limit: filters.limit || 6, // Padrão: 6 itens (máximo: 200)
     };
 
-    // Só adiciona parâmetros se tiverem valores
     if (filters.searchString && filters.searchString.trim()) {
       params.searchString = filters.searchString;
     }

@@ -276,7 +276,6 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
                 }}
               />
 
-              {/* Decorative elements with animations */}
               <motion.div
                 className="pulse-circle"
                 animate={{

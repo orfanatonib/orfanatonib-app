@@ -54,7 +54,6 @@ export default function VisitDocumentViewer({ document }: Props) {
           },
         }}
       >
-        {/* Header */}
         <Box
           display="flex"
           alignItems="center"

@@ -214,7 +214,6 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -241,7 +240,6 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
           </Box>
         </motion.div>
 
-        {/* Configuration Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -368,7 +366,6 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -391,7 +388,6 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
           </Paper>
         </motion.div>
 
-        {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

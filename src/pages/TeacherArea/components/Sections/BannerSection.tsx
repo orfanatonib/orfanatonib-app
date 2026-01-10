@@ -12,24 +12,18 @@ const BannerSection: React.FC<BannerSectionProps> = ({ showMeditationBanner }) =
     >
       {showMeditationBanner ? (
         <>
-          <Grid item xs={12} sx={{ mb: 2 }}>
-            <IdeasSharingBanner forceColumnLayout={showMeditationBanner}/>
+          <Grid item xs={12} md={6}>
+            <IdeasSharingBanner variant="compact" />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <TeacherWeekBanner />
-          </Grid>
           <Grid item xs={12} md={6}>
             <TeacherMeditationBanner />
           </Grid>
         </>
       ) : (
         <>
-          <Grid item xs={12} md={6}>
-            <IdeasSharingBanner  variant="compact" />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TeacherWeekBanner />
+          <Grid item xs={12}>
+            <IdeasSharingBanner variant="compact" />
           </Grid>
         </>
       )}

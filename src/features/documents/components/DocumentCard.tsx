@@ -28,6 +28,9 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
       component={motion.div}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       sx={{
+        width: '100%',
+        minHeight: { xs: 200, sm: 220 },
+        maxHeight: { xs: 230, sm: 230 },
         borderRadius: 4,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         bgcolor: 'background.paper',
@@ -36,7 +39,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
         transition: 'all 0.3s ease',
         '&:hover': {
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
@@ -49,7 +51,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          p: { xs: 2, sm: 3 },
+          p: { xs: 1.5, sm: 2 },
         }}
       >
         <Typography
@@ -57,11 +59,11 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           fontWeight="bold"
           gutterBottom
           sx={{
-            fontSize: { xs: '1rem', sm: '1.25rem' },
+            fontSize: { xs: '0.95rem', sm: '1.1rem' },
             lineHeight: 1.3,
             mb: 1,
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 1,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
@@ -74,11 +76,11 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           sx={{
             flex: 1,
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            lineHeight: 1.6,
-            fontSize: { xs: '0.8rem', sm: '0.85rem' },
+            lineHeight: 1.5,
+            fontSize: { xs: '0.75rem', sm: '0.8rem' },
           }}
           title={document.description}
         >
@@ -88,9 +90,9 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
 
       <CardActions
         sx={{
-          p: { xs: 1.5, sm: 2 },
+          p: { xs: 1, sm: 1.5 },
           pt: 0,
-          gap: { xs: 0.5, sm: 1 },
+          gap: { xs: 0.25, sm: 0.5 },
           flexWrap: 'wrap',
           justifyContent: 'flex-end',
         }}

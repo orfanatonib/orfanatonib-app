@@ -36,7 +36,7 @@ type Props = {
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Professor",
+  [UserRole.TEACHER]: "Membro",
 };
 
 const initials = (name?: string) =>
@@ -347,7 +347,6 @@ export default function UsersCards(props: Props) {
                     <Divider sx={{ mx: { xs: 1, sm: 1.25 } }} />
                     <CardContent sx={{ p: { xs: 1.25, sm: 1.5 } }}>
                       <Stack spacing={2}>
-                        {/* Datas */}
                         <Paper
                           variant="outlined"
                           sx={{
@@ -376,7 +375,6 @@ export default function UsersCards(props: Props) {
                           </Stack>
                         </Paper>
 
-                        {/* Informações adicionais */}
                         <Paper
                           variant="outlined"
                           sx={{

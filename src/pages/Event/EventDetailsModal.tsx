@@ -15,6 +15,9 @@ import 'dayjs/locale/pt-br';
 
 dayjs.locale('pt-br');
 
+const fallbackImageUrl = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL;
+console.log('Fallback Image URL:', fallbackImageUrl);
+
 interface EventDetailsModalProps {
   open: boolean;
   onClose: () => void;
@@ -59,18 +62,17 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ open, onClose, ev
       </DialogTitle>
       <DialogContent>
         <Box mt={2}>
-          {event.media && (
-            <Box
-              sx={{
-                height: 180,
-                backgroundImage: `url(${event.media.url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                mb: 2,
-                borderRadius: '8px',
-              }}
-            />
-          )}
+          <Box
+            sx={{
+              height: 180,
+              backgroundImage: `url('${event.media?.url || fallbackImageUrl}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              mb: 2,
+              borderRadius: '8px',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
           <Typography variant="subtitle1" gutterBottom sx={{ fontFamily: 'Roboto, sans-serif' }}>
             <strong>Data:</strong> {dataFormatada}
           </Typography>

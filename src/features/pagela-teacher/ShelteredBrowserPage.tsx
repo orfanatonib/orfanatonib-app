@@ -17,9 +17,13 @@ import { CreateShelteredForm, EditShelteredForm, ShelteredResponseDto } from "..
 import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
+import NoShelterLinkedPage from "./NoShelterLinkedPage";
+import { useDispatch } from "react-redux";
+import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
+  const dispatch = useDispatch();
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isAdmin = useSelector(selectIsAdmin);
@@ -28,15 +32,161 @@ export default function ShelteredBrowserPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const canAccess = isAdmin || isLeader || isTeacher;
 
-  const shelterName = React.useMemo(() => {
-    if (isTeacher && user?.teacherProfile?.shelter?.name) {
-      return user.teacherProfile.shelter.name;
+  // Estado para armazenar o perfil completo se necessário
+  const [fullProfile, setFullProfile] = React.useState<any>(null);
+  const [checkingShelter, setCheckingShelter] = React.useState(false);
+  const hasCheckedProfileRef = React.useRef(false);
+
+  // Verificar abrigo vinculado - tentar múltiplos caminhos possíveis
+  const teacherShelter = React.useMemo(() => {
+    // Primeiro tenta do perfil completo buscado
+    if (fullProfile?.teacherProfile?.team?.shelter?.id) {
+      return fullProfile.teacherProfile.team.shelter;
     }
-    if (isLeader && user?.leaderProfile?.team?.shelter?.name) {
-      return user.leaderProfile.team.shelter.name;
+    
+    // Depois tenta do Redux - Teacher
+    if (user?.teacherProfile) {
+      // Caminho padrão: teacherProfile.team.shelter
+      if ((user.teacherProfile as any)?.team?.shelter?.id) {
+        return (user.teacherProfile as any).team.shelter;
+      }
+      
+      // Caminho alternativo: teacherProfile.shelter (caso exista)
+      if ((user.teacherProfile as any)?.shelter?.id) {
+        return (user.teacherProfile as any).shelter;
+      }
+    }
+    
+    return null;
+  }, [user?.teacherProfile, fullProfile]);
+
+  // Verificar abrigo vinculado para líderes
+  const leaderShelter = React.useMemo(() => {
+    // Primeiro tenta do perfil completo buscado
+    // A API retorna leaderProfile.teams (array), então pega o primeiro team com shelter
+    if (fullProfile?.leaderProfile?.teams) {
+      const teamWithShelter = fullProfile.leaderProfile.teams.find((t: any) => t?.shelter?.id);
+      if (teamWithShelter?.shelter) {
+        return teamWithShelter.shelter;
+      }
+    }
+    
+    // Tenta também o caminho singular (caso exista)
+    if (fullProfile?.leaderProfile?.team?.shelter?.id) {
+      return fullProfile.leaderProfile.team.shelter;
+    }
+    
+    // Depois tenta do Redux - array de teams
+    if (user?.leaderProfile?.teams) {
+      const teamWithShelter = user.leaderProfile.teams.find((t: any) => t?.shelter?.id);
+      if (teamWithShelter?.shelter) {
+        return teamWithShelter.shelter;
+      }
+    }
+    
+    // Tenta também o caminho singular no Redux (caso exista)
+    if (user?.leaderProfile?.team?.shelter?.id) {
+      return user.leaderProfile.team.shelter;
+    }
+    
+    return null;
+  }, [user?.leaderProfile, fullProfile]);
+
+  // Buscar perfil completo se necessário (apenas uma vez)
+  React.useEffect(() => {
+    // Se já verificou antes, não verifica novamente
+    if (hasCheckedProfileRef.current) return;
+    
+    // Se já temos perfil completo, marca como verificado e retorna
+    if (fullProfile) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se já temos abrigo do Redux, marca como verificado e retorna
+    const hasTeacherShelter = isTeacher && (
+      (user?.teacherProfile as any)?.team?.shelter?.id || 
+      (user?.teacherProfile as any)?.shelter?.id
+    );
+    
+    const hasLeaderShelter = isLeader && (
+      user?.leaderProfile?.team?.shelter?.id ||
+      (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) && 
+       user.leaderProfile.teams.some((t: any) => t?.shelter?.id))
+    );
+    
+    const hasShelterFromRedux = hasTeacherShelter || hasLeaderShelter;
+    
+    if (hasShelterFromRedux) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se não é teacher ou leader, marca como verificado e retorna
+    if (!isTeacher && !isLeader) {
+      hasCheckedProfileRef.current = true;
+      return;
+    }
+    
+    // Se já está verificando, não faz nova verificação
+    if (checkingShelter) return;
+    
+    // Marca que já está verificando para evitar múltiplas requisições
+    hasCheckedProfileRef.current = true;
+    
+    // Atualiza o Redux via fetchCurrentUser para ter dados completos (apenas uma vez)
+    const checkShelterLink = async () => {
+      try {
+        setCheckingShelter(true);
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        // Atualiza o estado local com os dados do Redux atualizado
+        setFullProfile(updatedUser);
+      } catch (err) {
+        console.error('Erro ao atualizar dados do usuário:', err);
+        // Em caso de erro, permite tentar novamente se o componente remontar
+        hasCheckedProfileRef.current = false;
+      } finally {
+        setCheckingShelter(false);
+      }
+    };
+    
+    checkShelterLink();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executa apenas uma vez na montagem do componente
+
+  const hasLinkedShelter = React.useMemo(() => {
+    if (isTeacher) {
+      const shelterId = teacherShelter?.id;
+      return !!shelterId;
+    }
+    if (isLeader) {
+      // Verifica múltiplos caminhos para o abrigo do líder
+      const shelterId = 
+        leaderShelter?.id || 
+        user?.leaderProfile?.team?.shelter?.id ||
+        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) 
+          ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.id
+          : null);
+      return !!shelterId;
+    }
+    return true; // admin não depende disso
+  }, [isTeacher, isLeader, teacherShelter?.id, leaderShelter?.id, user?.leaderProfile]);
+
+  const shelterName = React.useMemo(() => {
+    if (isTeacher && teacherShelter?.name) {
+      return teacherShelter.name;
+    }
+    if (isLeader) {
+      const name = 
+        leaderShelter?.name || 
+        user?.leaderProfile?.team?.shelter?.name ||
+        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams)
+          ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.name
+          : null);
+      return name || null;
     }
     return null;
-  }, [isTeacher, isLeader, user]);
+  }, [isTeacher, isLeader, user, teacherShelter, leaderShelter]);
 
   const {
     q,
@@ -115,14 +265,19 @@ export default function ShelteredBrowserPage() {
   const openEdit = async (shelteredId: string) => {
     try {
       const full: ShelteredResponseDto = await apiFetchSheltered(shelteredId);
+      const isoToBr = (raw?: string | null) => {
+        if (!raw) return raw ?? "";
+        const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
+      };
       setEditing({
         id: full.id,
         name: full.name ?? "",
         gender: (full.gender as any) ?? "M",
         guardianName: full.guardianName ?? "",
         guardianPhone: full.guardianPhone ?? "",
-        birthDate: full.birthDate ?? "",
-        joinedAt: (full as any).joinedAt ?? null,
+        birthDate: isoToBr(full.birthDate ?? ""),
+        joinedAt: (isoToBr((full as any).joinedAt) as any) || null,
         shelterId: (full as any)?.shelter?.id ?? null,
         address: full.address
           ? {
@@ -155,6 +310,10 @@ export default function ShelteredBrowserPage() {
   React.useEffect(() => {
     document.title = "Lançar Pagela • Selecionar Abrigado";
   }, []);
+
+  if (canAccess && !hasLinkedShelter) {
+    return <NoShelterLinkedPage />;
+  }
 
   return (
     <Box
@@ -230,23 +389,23 @@ export default function ShelteredBrowserPage() {
               Abrigados do Abrigo {shelterName}
             </Typography>
           )}
-          {canAccess && isAdmin && (
+          {canAccess && (
             <Button
               onClick={openCreate}
               startIcon={<PersonAdd />}
               variant="contained"
               sx={{ display: { xs: "none", md: "inline-flex" } }}
             >
-              Adicionar abrigado
+              Cadastrar abrigado
             </Button>
           )}
         </Box>
       </Box>
 
-      {canAccess && isAdmin && (
+      {canAccess && (
         <Fab
           color="primary"
-          aria-label="Adicionar abrigado"
+          aria-label="Cadastrar abrigado"
           onClick={openCreate}
           sx={{
             position: "fixed",
@@ -266,7 +425,7 @@ export default function ShelteredBrowserPage() {
             Acesso não autorizado
           </Typography>
           <Typography>
-            Você precisa ser um Administrador, Líder ou Professor para acessar esta área.
+            Você precisa ser um Administrador, Líder ou Membro para acessar esta área.
           </Typography>
         </Alert>
       ) : (
@@ -292,7 +451,6 @@ export default function ShelteredBrowserPage() {
             >
               Selecionar Abrigado
             </Typography>
-            {/* Busca e Filtros na mesma linha */}
             <Box 
               sx={{ 
                 display: "flex", 
@@ -301,7 +459,6 @@ export default function ShelteredBrowserPage() {
                 flexWrap: "wrap"
               }}
             >
-              {/* Campo de Busca - 40% */}
               <TextField
                 value={q}
                 onChange={(e) => onChangeQ(e.target.value)}
@@ -323,7 +480,6 @@ export default function ShelteredBrowserPage() {
                 }}
               />
               
-              {/* Filtro: Aceitou Jesus - 20% */}
               <FormControl 
                 size="small" 
                 sx={{ 
@@ -349,7 +505,6 @@ export default function ShelteredBrowserPage() {
                 </Select>
               </FormControl>
 
-              {/* Filtro: Status Ativo - 20% */}
               <FormControl 
                 size="small" 
                 sx={{ 
@@ -380,7 +535,6 @@ export default function ShelteredBrowserPage() {
                 </Select>
               </FormControl>
 
-              {/* Botão Limpar Filtros */}
               {(q || acceptedJesus !== "all" || active !== "all") && (
                 <Button
                   variant="outlined"
@@ -431,10 +585,29 @@ export default function ShelteredBrowserPage() {
               >
                 {q ? "Nenhum abrigado encontrado com os filtros aplicados." : "Nenhum abrigado cadastrado."}
               </Typography>
+
+              {!q && (
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonAdd />}
+                    onClick={openCreate}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 800,
+                      width: { xs: "100%", sm: "auto" },
+                      px: { xs: 2, sm: 3 },
+                      py: 1.25,
+                      borderRadius: 2,
+                    }}
+                  >
+                    Cadastrar abrigado
+                  </Button>
+                </Box>
+              )}
             </Box>
           ) : (
             <>
-              {/* Loading sutil no topo quando está carregando nova página */}
               <Fade in={loading && items.length > 0}>
                 <LinearProgress 
                   sx={{ 
@@ -448,7 +621,6 @@ export default function ShelteredBrowserPage() {
                 />
               </Fade>
               
-              {/* Grid com opacidade reduzida durante loading */}
               <Box sx={{ 
                 position: "relative", 
                 opacity: loading && items.length > 0 ? 0.6 : 1, 
@@ -472,7 +644,6 @@ export default function ShelteredBrowserPage() {
               
               {pagination.totalPages > 1 && (
                 <Stack spacing={2} alignItems="center" sx={{ mt: { xs: 3, md: 4 }, mb: { xs: 2, md: 2 }, position: "relative" }}>
-                  {/* Loading sutil na paginação */}
                   {loading && items.length > 0 && (
                     <Box sx={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
                       <CircularProgress size={16} thickness={4} />

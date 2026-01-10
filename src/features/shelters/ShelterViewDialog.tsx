@@ -167,7 +167,6 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
           </Typography>
         ) : (
           <Stack spacing={2}>
-            {/* Imagem do Abrigo */}
             {shelter.mediaItem && (
               <Box
                 sx={{
@@ -215,7 +214,6 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
               </Box>
             )}
 
-            {/* Descrição do Abrigo */}
             {shelter.description && (
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
                 <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 1 }}>
@@ -256,7 +254,6 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
               </Grid>
             </Grid>
 
-            {/* Status e Gerenciamento de Equipes */}
             <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
               <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
@@ -268,7 +265,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                   />
                   <Chip
                     size="small"
-                    label={`Professores: ${teachers.length}`}
+                    label={`Membros: ${teachers.length}`}
                     color={teachers.length > 0 ? "info" : "default"}
                     variant={teachers.length > 0 ? "filled" : "outlined"}
                   />
@@ -367,7 +364,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                   icon={<SchoolOutlined fontSize="small" />} 
                   title={
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="caption">Professores</Typography>
+                      <Typography variant="caption">Membros</Typography>
                       <Tooltip title="Gerenciar Equipes">
                         <IconButton
                           size="small"
@@ -403,7 +400,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                     </Stack>
                   ) : (
                     <Typography variant="body2" color="text.secondary">
-                      Nenhum professor vinculado
+                      Nenhum membro vinculado
                     </Typography>
                   )}
                 </LineCard>

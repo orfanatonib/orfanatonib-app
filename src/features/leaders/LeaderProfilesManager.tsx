@@ -18,7 +18,7 @@ import LeaderToolbar from "./components/LeaderToolbar";
 import LeaderTable from "./components/LeaderTable";
 import LeaderCards from "./components/LeaderCards";
 import LeaderViewDialog from "./components/LeaderViewDialog";
-import LeaderEditDialog from "./components/LeaderEditDialog";
+import LeaderMultiEditDialog from "./components/LeaderMultiEditDialog";
 import {
   useLeaderMutations,
   useLeaderProfiles,
@@ -216,7 +216,7 @@ export default function LeaderProfilesManager() {
         onClose={() => setViewing(null)}
       />
 
-      <LeaderEditDialog
+      <LeaderMultiEditDialog
         open={!!editingTeam}
         leader={editingTeam}
         onClose={() => setEditingTeam(null)}

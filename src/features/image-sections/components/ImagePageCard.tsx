@@ -75,7 +75,6 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
             <ImageIcon fontSize="large" color="disabled" />
           )}
 
-          {/* Status Badge */}
           <Chip
             icon={section.public ? <Public fontSize="small" /> : <Lock fontSize="small" />}
             label={section.public ? 'Público' : 'Privado'}
@@ -96,7 +95,6 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
             }}
           />
 
-          {/* Contador de Imagens */}
           <Chip
             label={`${section.mediaItems?.length || 0} ${section.mediaItems?.length === 1 ? 'imagem' : 'imagens'}`}
             size="small"

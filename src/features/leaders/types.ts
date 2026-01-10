@@ -49,33 +49,44 @@ export type TeamSimple = {
   updatedAt: string;
 };
 
-// Tipo conforme documentação: LeaderResponseDto
+export type TeamSimple = {
+  id: string;
+  numberTeam: number;
+  description?: string | null;
+  shelterId: string;
+  shelter?: ShelterWithTeachers;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ShelterWithTeamsAndTeachers = ShelterSimple & {
+  teams: {
+    id: string;
+    numberTeam: number;
+    description: string | null;
+    isLeader?: boolean; // Para /my-shelters - indica se o líder logado está nesta equipe
+    leaders?: MinimalUser[];
+    teachers?: MinimalTeacher[];
+  }[];
+  teachers?: MinimalTeacher[]; // Membros gerais do abrigo
+};
+
+export type LeaderShelterAssociation = {
+  id: string;
+  name: string;
+  teams: {
+    id: string;
+    numberTeam: number;
+    description: string | null;
+  }[];
+  teachers?: MinimalTeacher[]; // Membros do abrigo
+};
+
 export type LeaderProfile = {
   id: string;
   active: boolean;
   user: MinimalUser;
-  shelter?: {
-    id: string;
-    name: string;
-    team?: {
-      id: string;
-      numberTeam: number;
-      description: string | null;
-    };
-    teachers?: {           // Professores da equipe
-      id: string;
-      active: boolean;
-      user: {
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        active: boolean;
-        completed: boolean;
-        commonUser: boolean;
-      };
-    }[];
-  } | null;
+  shelters: LeaderShelterAssociation[]; // Múltiplos abrigos com suas equipes
   createdAt: string;
   updatedAt: string;
 };
@@ -89,23 +100,26 @@ export type PageDto<T> = {
 };
 
 export type LeaderFilters = {
-  leaderSearchString?: string;
-  shelterSearchString?: string;
-  hasShelter?: boolean;
-  teamId?: string;
-  teamName?: string;
-  hasTeam?: boolean;
-  // Filtros legados (compatibilidade)
+  page?: number;
+  limit?: number;
+  sort?: "name" | "updatedAt" | "createdAt";
+  order?: "asc" | "desc";
+
+  leaderSearchString?: string;  // Busca por nome, email ou telefone do líder
+  shelterSearchString?: string; // Busca por nome ou endereço do abrigo
+
+  hasShelter?: boolean;         // true: só líderes com abrigo, false: só sem abrigo
+  teamId?: string;             // Filtrar por ID específico da equipe
+  teamName?: string;           // Filtrar por número da equipe
+  hasTeam?: boolean;           // true: só líderes com equipe, false: só sem equipe
+
   searchString?: string;
   q?: string;
   active?: boolean;
   hasShelters?: boolean;
   shelterName?: string;
-  page?: number;
-  limit?: number;
-  sort?: "updatedAt" | "createdAt" | "name";
-  order?: "asc" | "desc";
 };
+
 
 /**
  * Tipo simplificado para listagem de líderes
@@ -113,10 +127,54 @@ export type LeaderFilters = {
  * Conforme documentação: LeaderSimpleListDto
  */
 export type LeaderSimpleListDto = {
-  leaderProfileId: string;  // UUID do perfil do líder
-  name: string;              // Nome do usuário (ou email se não tiver nome, ou "—" se não tiver nenhum)
-  vinculado: boolean;        // Se está vinculado a uma equipe/abrigo
+  leaderProfileId: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  vinculado: boolean;
+  shelters: LeaderShelterAssociation[]; // Adicionado conforme documentação
 };
 
-// Mantido para compatibilidade (deprecated)
+/**
+ * Payload para edição de associações de líder
+ * PUT /leader-profiles/:leaderId
+ */
+export type LeaderAssociationUpdateDto = {
+  shelterId: string;
+  teams: number[]; // Array de números de equipes
+}[];
+
+/**
+ * Resposta do endpoint /my-shelters para líderes logados
+ */
+export type MySheltersResponse = ShelterWithTeamsAndTeachers[];
+
+/**
+ * Resposta simplificada de abrigos para dropdowns
+ */
+export type ShelterSimpleResponse = {
+  id: string;
+  name: string;
+  teams: {
+    id: string;
+    numberTeam: number;
+    description: string | null;
+  }[];
+};
+
+/**
+ * Resposta completa do endpoint /teams
+ */
+export type TeamsCompleteResponse = {
+  id: string;
+  numberTeam: number;
+  description: string | null;
+  shelterId: string;
+  leaders: MinimalUser[];
+  teachers: MinimalTeacher[];
+  createdAt: string;
+  updatedAt: string;
+}[];
+
 export type LeaderSimpleApi = LeaderSimpleListDto;

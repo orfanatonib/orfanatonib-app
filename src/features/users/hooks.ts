@@ -12,6 +12,7 @@ import {
   UserRow,
   UpadateUserForm,
 } from "./types";
+import { digitsOnly } from "@/utils/masks";
 
 export function useUsers(
   pageIndex: number,
@@ -88,7 +89,7 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
 
     try {
       const { confirmPassword, ...payload } = form;
-      await apiCreateUser(payload);
+      await apiCreateUser({ ...payload, phone: digitsOnly(payload.phone) });
       await refreshPage();
     } catch (err: any) {
       setDialogError(
@@ -107,7 +108,7 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
 
       try {
         const { confirmPassword, ...payload } = form;
-        await apiUpdateUser(id, form);
+        await apiUpdateUser(id, { ...payload, phone: digitsOnly(payload.phone) } as any);
         await refreshPage();
       } catch (err: any) {
         setDialogError(

@@ -152,7 +152,6 @@ export default function MeditationCard({
           </CardContent>
         </Card>
 
-        {/* Expanded Content - Overlay */}
         {isExpanded && (
           <Card
             variant="outlined"

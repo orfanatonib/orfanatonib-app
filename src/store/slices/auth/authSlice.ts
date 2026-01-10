@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
+import { MediaItem } from '@/store/slices/types';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -13,26 +14,49 @@ interface ShelterLite {
   number?: number;
 }
 
+interface TeamLite {
+  id: string;
+  numberTeam?: number;
+  description?: string | null;
+  shelter?: ShelterLite | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface TeacherProfileLite {
   id: string;
   active: boolean;
   shelter?: ShelterLite | null;
-  team: {
-    id: string;
-    name: string;
-    shelter?: ShelterLite | null;
-  } | null;
+  team?: TeamLite | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface LeaderProfileLite {
   id: string;
   active: boolean;
-  shelters?: ShelterLite[]; // Array de abrigos do líder
-  team: {
-    id: string;
-    name: string;
-    shelter?: ShelterLite | null;
-  } | null;
+  shelters?: ShelterLite[];
+  team?: TeamLite | null;
+  teams?: TeamLite[] | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface PersonalData {
+  birthDate?: string | null;
+  gender?: string | null;
+  gaLeaderName?: string | null;
+  gaLeaderContact?: string | null;
+}
+
+interface Preferences {
+  loveLanguages?: string | null;
+  temperaments?: string | null;
+  favoriteColor?: string | null;
+  favoriteFood?: string | null;
+  favoriteMusic?: string | null;
+  whatMakesYouSmile?: string | null;
+  skillsAndTalents?: string | null;
 }
 
 interface User {
@@ -48,6 +72,9 @@ interface User {
   completed?: boolean;
   teacherProfile?: TeacherProfileLite | null;
   leaderProfile?: LeaderProfileLite | null;
+  image?: MediaItem | null;
+  personalData?: PersonalData | null;
+  preferences?: Preferences | null;
 }
 
 interface GoogleUser {
@@ -60,6 +87,10 @@ export interface LoginResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+  emailVerification?: {
+    verificationEmailSent: boolean;
+    message?: string;
+  };
 }
 
 interface AuthState {
@@ -71,6 +102,7 @@ interface AuthState {
   initialized: boolean;
   error: string | null;
   googleUser: GoogleUser | null;
+  emailVerificationAlert?: { verificationEmailSent: boolean; message?: string } | null;
 }
 
 const initialState: AuthState = {
@@ -82,6 +114,7 @@ const initialState: AuthState = {
   initialized: false,
   error: null,
   googleUser: null,
+  emailVerificationAlert: null,
 };
 
 const IS_DEV = import.meta.env.DEV === true;
@@ -105,11 +138,21 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { rejectValue: stri
     }
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await apiAxios.get<User>('/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
       return response.data;
     } catch (error: any) {
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        log('[Auth] Request timeout');
+        return rejectWithValue('Timeout ao verificar autenticação');
+      }
       const errorMessage = error?.response?.data?.message || 'Erro ao buscar usuário';
       log('[Auth] Error fetching user:', errorMessage);
       return rejectWithValue(errorMessage);
@@ -130,12 +173,19 @@ export const initAuth = createAsyncThunk<void, void, { rejectValue: string }>(
         dispatch(login({ accessToken, refreshToken }));
 
         try {
-          await dispatch(fetchCurrentUser()).unwrap();
+          const fetchPromise = dispatch(fetchCurrentUser()).unwrap();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Init timeout')), 12000)
+          );
+
+          await Promise.race([fetchPromise, timeoutPromise]);
         } catch (e) {
+          log('[Auth] Init failed, logging out:', e);
           dispatch(logout());
         }
       }
     } catch (e: any) {
+      log('[Auth] Init error:', e);
       return rejectWithValue('Falha ao inicializar auth');
     }
   }
@@ -147,14 +197,19 @@ const authSlice = createSlice({
   reducers: {
     login: (
       state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string; user?: User }>
+      action: PayloadAction<{ accessToken: string; refreshToken: string; user?: User; emailVerificationAlert?: { verificationEmailSent: boolean; message?: string } | null }>
     ) => {
-      const { accessToken, refreshToken, user } = action.payload;
+      const { accessToken, refreshToken, user, emailVerificationAlert } = action.payload;
       state.accessToken = clean(accessToken);
       state.refreshToken = clean(refreshToken);
       state.isAuthenticated = true;
       if (user) state.user = user;
       state.error = null;
+      if (emailVerificationAlert) {
+        state.emailVerificationAlert = emailVerificationAlert;
+      } else {
+        state.emailVerificationAlert = null;
+      }
       try {
         localStorage.setItem('accessToken', state.accessToken!);
         localStorage.setItem('refreshToken', state.refreshToken!);
@@ -168,10 +223,14 @@ const authSlice = createSlice({
       state.googleUser = null;
       state.error = null;
       state.initialized = true;
+      state.emailVerificationAlert = null;
       try {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       } catch { }
+    },
+    setEmailVerificationAlert: (state, action: PayloadAction<{ verificationEmailSent: boolean; message?: string } | null>) => {
+      state.emailVerificationAlert = action.payload;
     },
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
@@ -224,5 +283,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { login, logout, setError, setGoogleUser, clearGoogleUser } = authSlice.actions;
+export const { login, logout, setError, setGoogleUser, clearGoogleUser, setEmailVerificationAlert } = authSlice.actions;
 export default authSlice.reducer;

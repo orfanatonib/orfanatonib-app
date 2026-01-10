@@ -83,7 +83,6 @@ export default function VisitMaterialManager() {
       <BackHeader title="Materiais de Visita" />
 
       <Container maxWidth="xl" sx={{ pt: 4 }}>
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,7 +97,6 @@ export default function VisitMaterialManager() {
               bgcolor: 'background.paper',
             }}
           >
-            {/* Search Bar */}
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
@@ -132,7 +130,6 @@ export default function VisitMaterialManager() {
               />
             </Box>
 
-            {/* Tabs */}
             <Box sx={{ position: 'relative' }}>
               <Box
                 sx={{
@@ -177,7 +174,6 @@ export default function VisitMaterialManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {loading && materials.length === 0 ? (
           <Box
             sx={{

@@ -27,6 +27,8 @@ import {
 } from '@mui/icons-material';
 import DesktopNavigation from './DesktopNavigation';
 import MobileNavigation from './MobileNavigation';
+import CompleteProfileAlert from './CompleteProfileAlert';
+import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
@@ -37,12 +39,20 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  const profileAlerts = useProfileAlerts();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
+
+  const handleMobileAlertClick = () => {
+    // Force MobileNavigation to close by re-mounting it
+    setMobileDrawerKey(prev => prev + 1);
+  };
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isAuthenticated) {
@@ -60,7 +70,7 @@ const NavBar: React.FC = () => {
   };
 
   const handleTeacherArea = () => {
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
     handleClose();
   };
 
@@ -106,14 +116,23 @@ const NavBar: React.FC = () => {
             }
           }}
         >
-          Orfanato NIB
+          Orfanatos NIB
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
-          {isMobile ? <MobileNavigation /> : <DesktopNavigation />}
+          {isMobile ? (
+            <>
+              <CompleteProfileAlert alerts={profileAlerts} onAlertClick={handleMobileAlertClick} />
+              <MobileNavigation key={mobileDrawerKey} />
+            </>
+          ) : (
+            <DesktopNavigation />
+          )}
           {!isMobile && (
             <>
               {isAuthenticated ? (
                 <>
+                  {/* Sininho de alertas de perfil */}
+                  <CompleteProfileAlert alerts={profileAlerts} />
                   <Tooltip title="Menu do Usuário">
                     <IconButton
                       onClick={handleProfileClick}
@@ -128,7 +147,7 @@ const NavBar: React.FC = () => {
                       }}
                     >
                       <Avatar
-                        src={(user as any)?.image?.url}
+                        src={user?.image?.url || undefined}
                         sx={{
                           width: 36,
                           height: 36,
@@ -145,7 +164,7 @@ const NavBar: React.FC = () => {
                           },
                         }}
                       >
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                        {!user?.image?.url ? (user?.name?.charAt(0).toUpperCase() || 'U') : null}
                       </Avatar>
                     </IconButton>
                   </Tooltip>
@@ -177,9 +196,9 @@ const NavBar: React.FC = () => {
                       <ListItemIcon>
                         <SchoolIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
                       </ListItemIcon>
-                      <ListItemText>Área do Professor</ListItemText>
+                      <ListItemText>Área do Membro</ListItemText>
                     </MenuItem>
-                    {isTeacher && (
+                    {(isTeacher || isLeader) && (
                       <MenuItem onClick={handleShelteredArea}>
                         <ListItemIcon>
                           <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />

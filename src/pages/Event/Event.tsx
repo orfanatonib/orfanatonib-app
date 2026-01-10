@@ -29,8 +29,7 @@ import {
 } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PlaceIcon from '@mui/icons-material/Place';
-import EditCalendarIcon from '@mui/icons-material/EditCalendar';
-import CloseIcon from '@mui/icons-material/Close';
+// removed EditCalendarIcon and CloseIcon (no longer used here)
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
@@ -44,9 +43,12 @@ import 'dayjs/locale/pt-br';
 import api from '@/config/axiosConfig';
 import { setEvents } from '@/store/slices/events/eventsSlice';
 import EventDetailsModal from './EventDetailsModal';
+
+const fallbackImageUrl = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL;
+console.log('Fallback Image URL Event:', fallbackImageUrl);
 import EventFormModal from './EventFormModal';
 import { UserRole } from '@/store/slices/auth/authSlice';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 dayjs.locale('pt-br');
 
@@ -307,7 +309,7 @@ const Eventos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [mostrarAntigos, setMostrarAntigos] = useState(false);
   const [eventoSelecionado, setEventoSelecionado] = useState<any | null>(null);
-  const [editMode, setEditMode] = useState(false);
+  
 
   const [dialogAddEditOpen, setDialogAddEditOpen] = useState(false);
   const [dialogAddEditMode, setDialogAddEditMode] = useState<'add' | 'edit'>('add');
@@ -322,8 +324,18 @@ const Eventos: React.FC = () => {
     const fetchEventos = async () => {
       try {
         const response = await api.get('/events');
-        dispatch(setEvents(response.data));
-        setEventos(response.data);
+        const raw = response.data || [];
+        // Map events: if `date` is empty, fallback to media.createdAt or event.createdAt
+        const mapped = raw.map((e: any) => {
+          const hasDate = e?.date && String(e.date).trim();
+          const fallback = e?.media?.createdAt || e?.createdAt || null;
+          return {
+            ...e,
+            date: hasDate ? e.date : fallback,
+          };
+        });
+        dispatch(setEvents(mapped));
+        setEventos(mapped);
       } catch (error) {
         console.error('Error loading events:', error);
       } finally {
@@ -341,8 +353,7 @@ const Eventos: React.FC = () => {
     }
   }, [mostrarAntigos]);
 
-  const handleEnterEditMode = () => setEditMode(true);
-  const handleCancelEditMode = () => setEditMode(false);
+  
 
   const eventosOrdenados = [...eventos].sort(
     (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf()
@@ -385,17 +396,25 @@ const Eventos: React.FC = () => {
     setDeleteTargetEvent(null);
   };
 
-  const reloadEventsAndLeaveEditMode = async () => {
+    const reloadEventsAndLeaveEditMode = async () => {
     setLoading(true);
     try {
       const response = await api.get('/events');
-      dispatch(setEvents(response.data));
-      setEventos(response.data);
+      const raw = response.data || [];
+      const mapped = raw.map((e: any) => {
+        const hasDate = e?.date && String(e.date).trim();
+        const fallback = e?.media?.createdAt || e?.createdAt || null;
+        return {
+          ...e,
+          date: hasDate ? e.date : fallback,
+        };
+      });
+      dispatch(setEvents(mapped));
+      setEventos(mapped);
     } catch (err) {
       console.error('Error reloading events:', err);
     } finally {
       setLoading(false);
-      setEditMode(false);
     }
   };
 
@@ -428,27 +447,19 @@ const Eventos: React.FC = () => {
             <Box
               sx={{
                 height: { xs: 240, md: 320 },
-                backgroundImage: evento.media ? `url(${evento.media.url})` : 'none',
+                backgroundImage: evento.media?.url ? `url(${evento.media.url})` : `url('${fallbackImageUrl}')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundColor: evento.media ? 'transparent' : '#000000',
+                backgroundColor: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 position: 'relative',
                 borderRadius: '16px 16px 0 0',
                 overflow: 'hidden',
+                backgroundRepeat: 'no-repeat',
               }}
             >
-              {!evento.media && (
-                <Box sx={{ textAlign: 'center', color: 'white' }}>
-                  <EventIcon sx={{ fontSize: 48, mb: 1, opacity: 0.7 }} />
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Imagem do Evento
-                  </Typography>
-                </Box>
-              )}
-
               <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
                 <Chip
                   {...chipProps}
@@ -518,7 +529,7 @@ const Eventos: React.FC = () => {
           </CardContent>
 
           <CardActions sx={{ px: 3, pb: 3, pt: 0 }}>
-            {!editMode ? (
+            {!isAdmin ? (
               <Button
                 variant="contained"
                 fullWidth
@@ -606,7 +617,7 @@ const Eventos: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #000000 0%, #FFFF00 100%)',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 50%, #ffffff 100%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -649,7 +660,6 @@ const Eventos: React.FC = () => {
           background: gradients.subtle.greenWhiteSoft,
         }}
       >
-        {/* Título e Controles */}
         <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -696,20 +706,18 @@ const Eventos: React.FC = () => {
               </Box>
 
               <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', md: 'row' },
-                  gap: 2,
-                  alignItems: 'center',
-                }}
-              >
-                {isAdmin && (
-                  <Fragment>
-                    {!editMode ? (
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row' },
+                      gap: 2,
+                      alignItems: 'center',
+                    }}
+                  >
+                    {isAdmin && (
                       <Button
                         variant="contained"
-                        startIcon={<EditCalendarIcon />}
-                        onClick={handleEnterEditMode}
+                        startIcon={<AddIcon />}
+                        onClick={handleAddNewEvent}
                         sx={{
                           borderRadius: 3,
                           py: { xs: 1, md: 1.5 },
@@ -726,80 +734,11 @@ const Eventos: React.FC = () => {
                           transition: 'all 0.3s ease',
                         }}
                       >
-                        Editar Página
+                        Adicionar Evento
                       </Button>
-                    ) : (
-                      <Fragment>
-                        <Button
-                          variant="contained"
-                          startIcon={<AddIcon />}
-                          onClick={handleAddNewEvent}
-                          sx={{
-                            borderRadius: 3,
-                            py: { xs: 1, md: 1.5 },
-                            px: { xs: 2, md: 3 },
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            fontSize: { xs: '0.8rem', md: '1rem' },
-                            backgroundColor: '#009933',
-                            color: '#FFFFFF',
-                            '&:hover': {
-                              backgroundColor: '#007a29',
-                              transform: 'translateY(-2px)',
-                            },
-                            transition: 'all 0.3s ease',
-                          }}
-                        >
-                          Adicionar Evento
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          onClick={handleCancelEditMode}
-                          sx={{
-                            borderRadius: 3,
-                            py: { xs: 1, md: 1.5 },
-                            px: { xs: 2, md: 3 },
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            fontSize: { xs: '0.8rem', md: '1rem' },
-                            color: '#666666',
-                            borderColor: '#cccccc',
-                            backgroundColor: '#FFFFFF',
-                            '&:hover': {
-                              borderColor: '#999999',
-                              backgroundColor: '#f5f5f5',
-                              color: '#333333',
-                              transform: 'translateY(-2px)',
-                            },
-                            transition: 'all 0.3s ease',
-                          }}
-                        >
-                          Cancelar
-                        </Button>
-                      </Fragment>
                     )}
-                  </Fragment>
-                )}
 
-                {arrangement.eventosAntigosRestantes.length > 0 && (
-                  <Button
-                    variant="text"
-                    onClick={() => setMostrarAntigos(!mostrarAntigos)}
-                    sx={{
-                      color: '#333333',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      fontSize: { xs: '0.8rem', md: '0.95rem' },
-                      py: { xs: 0.5, md: 1 },
-                      px: { xs: 1, md: 2 },
-                      '&:hover': {
-                        backgroundColor: '#f5f5f5',
-                      },
-                    }}
-                  >
-                    {mostrarAntigos ? 'Esconder Eventos Antigos' : `Ver ${arrangement.eventosAntigosRestantes.length} Eventos Antigos`}
-                  </Button>
-                )}
+                {/* antigos listagem ficará abaixo; botão superior removido para simplificar a interface */}
               </Box>
             </Box>
           </motion.div>
@@ -879,7 +818,6 @@ const Eventos: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {/* FABs para Mobile */}
               {isMobile && isAdmin && (
                 <Box
                   sx={{
@@ -892,104 +830,32 @@ const Eventos: React.FC = () => {
                     zIndex: 9999,
                   }}
                 >
-                  <AnimatePresence>
-                    {!editMode ? (
-                      <motion.div
-                        key="edit-fab"
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0, rotate: 180 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Tooltip title="Editar Página">
-                          <Fab
-                            color="warning"
-                            aria-label="editar"
-                            onClick={handleEnterEditMode}
-                            size="medium"
-                            sx={{
-                              width: { xs: 48, md: 56 },
-                              height: { xs: 48, md: 56 },
-                              boxShadow: '0 8px 32px rgba(251, 146, 60, 0.3)',
-                              '&:hover': {
-                                transform: 'scale(1.1)',
-                                boxShadow: '0 12px 40px rgba(251, 146, 60, 0.4)',
-                              },
-                              transition: 'all 0.3s ease',
-                            }}
-                          >
-                            <EditCalendarIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
-                          </Fab>
-                        </Tooltip>
-                      </motion.div>
-                    ) : (
-                      <Fragment>
-                        <motion.div
-                          key="add-fab"
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ duration: 0.3, delay: 0.1 }}
-                        >
-                          <Tooltip title="Adicionar Evento">
-                            <Fab
-                              color="primary"
-                              aria-label="adicionar"
-                              onClick={handleAddNewEvent}
-                              size="medium"
-                              sx={{
-                                width: { xs: 48, md: 56 },
-                                height: { xs: 48, md: 56 },
-                                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-                                '&:hover': {
-                                  transform: 'scale(1.1)',
-                                  boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
-                                },
-                                transition: 'all 0.3s ease',
-                              }}
-                            >
-                              <AddIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
-                            </Fab>
-                          </Tooltip>
-                        </motion.div>
-                        <motion.div
-                          key="cancel-fab"
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ duration: 0.3, delay: 0.2 }}
-                        >
-                          <Tooltip title="Cancelar">
-                            <Fab
-                              color="default"
-                              aria-label="cancelar"
-                              onClick={handleCancelEditMode}
-                              size="medium"
-                              sx={{
-                                width: { xs: 48, md: 56 },
-                                height: { xs: 48, md: 56 },
-                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                                '&:hover': {
-                                  transform: 'scale(1.1)',
-                                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.2)',
-                                },
-                                transition: 'all 0.3s ease',
-                              }}
-                            >
-                              <CloseIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
-                            </Fab>
-                          </Tooltip>
-                        </motion.div>
-                      </Fragment>
-                    )}
-                  </AnimatePresence>
+                  <Tooltip title="Adicionar Evento">
+                    <Fab
+                      color="primary"
+                      aria-label="adicionar"
+                      onClick={handleAddNewEvent}
+                      size="medium"
+                      sx={{
+                        width: { xs: 48, md: 56 },
+                        height: { xs: 48, md: 56 },
+                        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                        '&:hover': {
+                          transform: 'scale(1.1)',
+                          boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
+                    </Fab>
+                  </Tooltip>
                 </Box>
               )}
 
-              {/* Layout Principal - Eventos Principais */}
               <Box sx={{ width: '100%', mb: 6 }}>
-                {/* Layout quando tem evento hoje */}
                 {arrangement.temHoje ? (
                   <Box sx={{ width: '100%' }}>
-                    {/* Evento Hoje - Destacado Sozinho */}
                     <motion.div
                       initial={{ opacity: 0, y: 30, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1070,7 +936,6 @@ const Eventos: React.FC = () => {
                                   },
                                 }}
                               >
-                                {/* Barra de Status Superior - Próximo */}
                                 <Box
                                   sx={{
                                     position: 'absolute',
@@ -1362,7 +1227,6 @@ const Eventos: React.FC = () => {
                   </AccordionSummary>
                   <AccordionDetails sx={{ p: 4 }}>
                     <Grid container spacing={{ xs: 3, md: 4 }}>
-                      {/* Mostrar todos os eventos futuros */}
                       {arrangement.proximoEvento && (
                         <Grid item xs={12} sm={6} md={4} key={`proximo-${arrangement.proximoEvento.id}`}>
                           <motion.div
@@ -1412,9 +1276,11 @@ const Eventos: React.FC = () => {
                 </Accordion>
               )}
 
-              {mostrarAntigos && arrangement.eventosAntigosRestantes.length > 0 && (
+              {arrangement.eventosAntigosRestantes.length > 0 && (
                 <Accordion
                   ref={eventosAntigosRef}
+                  expanded={mostrarAntigos}
+                  onChange={(_, expanded) => setMostrarAntigos(expanded)}
                   sx={{
                     mb: 4,
                     borderRadius: 4,

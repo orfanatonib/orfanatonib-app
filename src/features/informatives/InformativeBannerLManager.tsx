@@ -60,7 +60,6 @@ export default function InformativeBannerLManager() {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,7 +68,6 @@ export default function InformativeBannerLManager() {
           <BackHeader title="📢 Banners Informativos" />
         </motion.div>
 
-        {/* Search and Add Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -95,7 +93,6 @@ export default function InformativeBannerLManager() {
           </Paper>
         </motion.div>
 
-        {/* Content Section */}
         {loading && filtered.length === 0 ? (
           <Box
             sx={{

@@ -86,7 +86,7 @@ export default function CommentsGrid({
   }
 
   return (
-    <Grid container spacing={3} alignItems="stretch">
+    <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
       {comments.map((comment, index) => (
         <Grid
           item

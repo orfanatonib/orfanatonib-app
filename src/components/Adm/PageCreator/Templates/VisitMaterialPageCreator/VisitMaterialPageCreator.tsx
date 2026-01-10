@@ -238,7 +238,6 @@ export default function VisitMaterialPageCreator({
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}
@@ -259,7 +258,6 @@ export default function VisitMaterialPageCreator({
           </Typography>
         </Box>
 
-        {/* Form Section */}
         <Paper
           elevation={2}
           sx={{
@@ -415,7 +413,6 @@ export default function VisitMaterialPageCreator({
           </Grid>
         </Paper>
 
-        {/* Media Section */}
         <Paper
           elevation={2}
           sx={{
@@ -467,7 +464,6 @@ export default function VisitMaterialPageCreator({
           </Box>
         </Paper>
 
-        {/* Save Button */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
           <Button
             variant="outlined"

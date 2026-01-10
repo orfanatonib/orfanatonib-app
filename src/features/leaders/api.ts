@@ -1,10 +1,20 @@
 import api from "@/config/axiosConfig";
-import type { LeaderProfile, ShelterSimple, PageDto, LeaderSimpleListDto } from "./types";
+import type {
+  LeaderProfile,
+  ShelterSimple,
+  PageDto,
+  LeaderSimpleListDto,
+  LeaderAssociationUpdateDto,
+  MySheltersResponse,
+  ShelterSimpleResponse,
+  TeamsCompleteResponse,
+  TeamSimple
+} from "./types";
 
 export type ListLeadersParams = {
-  page: number; 
-  limit: number;
-  sort?: "updatedAt" | "createdAt" | "name";
+  page?: number;
+  limit?: number;
+  sort?: "name" | "updatedAt" | "createdAt";
   order?: "asc" | "desc";
   leaderSearchString?: string;
   shelterSearchString?: string;
@@ -51,33 +61,64 @@ export async function apiGetLeader(leaderId: string) {
 }
 
 
-export type ManageLeaderTeamDto = {
-  shelterId: string;    // UUID do abrigo (obrigatório)
-  numberTeam: number;   // Número da equipe: 1, 2, 3, 4... (obrigatório, mínimo: 1)
-};
-
 /**
- * Endpoint único para vincular líder a equipe de um abrigo
- * - Busca a equipe com o numberTeam especificado no abrigo
- * - Se a equipe não existir, cria uma nova equipe automaticamente
- * - Se o líder já estiver vinculado a outra equipe, remove da anterior e vincula à nova
+ * Endpoint para editar associações de líder a múltiplos abrigos e equipes
+ * PUT /leader-profiles/:leaderId
+ * Vincula um líder a múltiplas equipes de múltiplos abrigos simultaneamente
+ * IMPORTANTE: Remove automaticamente todas as associações atuais antes de criar as novas
  */
-export async function apiManageLeaderTeam(leaderId: string, payload: ManageLeaderTeamDto) {
+export async function apiUpdateLeaderAssociations(leaderId: string, payload: LeaderAssociationUpdateDto) {
   const { data } = await api.put<LeaderProfile>(`/leader-profiles/${leaderId}`, payload);
   return data;
 }
 
+export type ManageLeaderTeamDto = {
+  shelterId: string;
+  numberTeam: number;
+};
+
+export async function apiManageLeaderTeam(leaderId: string, payload: ManageLeaderTeamDto) {
+  const newPayload: LeaderAssociationUpdateDto = [{
+    shelterId: payload.shelterId,
+    teams: [payload.numberTeam]
+  }];
+  return apiUpdateLeaderAssociations(leaderId, newPayload);
+}
+
+/**
+ * Lista abrigos de forma simplificada com suas equipes
+ * GET /shelters/simple
+ * Ideal para dropdowns e seleções
+ */
 export async function apiListSheltersSimple() {
-  const { data } = await api.get<ShelterSimple[]>("/shelters/simple");
+  const { data } = await api.get<ShelterSimpleResponse[]>("/shelters/simple");
   return data;
 }
 
 /**
- * Busca os abrigos do líder logado
+ * Busca todas as equipes com detalhes completos
+ * GET /teams
+ * Retorna todas as equipes com seus abrigos, líderes e membros
+ */
+export async function apiListAllTeams() {
+  const { data } = await api.get<TeamsCompleteResponse>("/teams");
+  return data;
+}
+
+/**
+ * Busca equipes de um abrigo específico
+ * GET /teams/by-shelter/:shelterId
+ */
+export async function apiGetTeamsByShelter(shelterId: string) {
+  const { data } = await api.get<TeamSimple[]>(`/teams/by-shelter/${shelterId}`);
+  return data;
+}
+
+/**
+ * Busca os abrigos do líder logado com todas as equipes e status de participação
  * GET /leader-profiles/my-shelters
- * Retorna um array de abrigos completos (ShelterResponseDto)
  */
 export async function apiGetMyShelters() {
-  const { data } = await api.get<any[]>("/leader-profiles/my-shelters");
+  const { data } = await api.get<MySheltersResponse>("/leader-profiles/my-shelters");
   return data;
 }

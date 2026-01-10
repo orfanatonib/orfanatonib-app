@@ -103,20 +103,28 @@ export default function ShelteredManager() {
     const payload = { ...creating };
     if (!payload.joinedAt) payload.joinedAt = null;
     if (!payload.shelterId) payload.shelterId = null as any;
-    await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
-    setCreating(null);
+    const success = await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
+    // Só fecha o modal se a operação foi bem-sucedida
+    if (success) {
+      setCreating(null);
+    }
   };
 
   const [editing, setEditing] = useState<EditShelteredForm | null>(null);
   const startEdit = (c: ShelteredResponseDto) => {
+    const isoToBr = (raw?: string | null) => {
+      if (!raw) return raw ?? "";
+      const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
+    };
     setEditing({
       id: c.id,
       name: c.name,
       gender: c.gender,
       guardianName: c.guardianName,
       guardianPhone: c.guardianPhone,
-      birthDate: c.birthDate,
-      joinedAt: c.joinedAt,
+      birthDate: isoToBr(c.birthDate),
+      joinedAt: (isoToBr(c.joinedAt) as any) || null,
       shelterId: c.shelter?.id ?? null,
       address: c.address ? ({ ...c.address } as any) : undefined,
     });
@@ -124,8 +132,11 @@ export default function ShelteredManager() {
   const submitEdit = async () => {
     if (!editing) return;
     const { id, ...rest } = editing;
-    await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
-    setEditing(null);
+    const success = await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
+    // Só fecha o modal se a operação foi bem-sucedida
+    if (success) {
+      setEditing(null);
+    }
   };
 
   const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(

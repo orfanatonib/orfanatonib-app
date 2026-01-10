@@ -12,18 +12,18 @@ export type ShelteredResponseDto = {
   gender: "M" | "F";
   guardianName: string;
   guardianPhone: string;
-  birthDate: string;
+  birthDate?: string | null;
   joinedAt: string | null;
   shelter: { id: string; name: string } | null;
   address: {
     id: string;
-    street: string;
-    number?: string;
-    district: string;
+    street?: string | null;
+    number?: string | null;
+    district?: string | null;
     city: string;
     state: string;
-    postalCode: string;
-    complement?: string;
+    postalCode?: string | null;
+    complement?: string | null;
   } | null;
   pagelas?: Array<{
     id: string;
@@ -96,17 +96,17 @@ export type CreateShelteredForm = {
   gender: "M" | "F";
   guardianName: string;
   guardianPhone: string;
-  birthDate: string;
+  birthDate?: string | null;
   joinedAt?: string | null;
   shelterId?: string | null;
   address?: {
-    street: string;
-    number?: string;
-    district: string;
+    street?: string | null;
+    number?: string | null;
+    district?: string | null;
     city: string;
     state: string;
-    postalCode: string;
-    complement?: string;
+    postalCode?: string | null;
+    complement?: string | null;
   } | null;
 };
 

@@ -94,13 +94,10 @@ function PagelaSheltersManagerForLeader() {
 
   useEffect(() => {
     if (!isMobile) return;
-    // Se não tiver abrigo selecionado, não muda o step (fica em "sheltered" mas não mostra nada)
     if (!selectedShelter) return;
-    // Se tiver abrigo mas não tiver abrigado selecionado, mostra abrigados
     if (!selectedSheltered) {
       setMobileStep("sheltered");
     } else {
-      // Se tiver abrigado selecionado, mostra pagelas
       setMobileStep("pagelas");
     }
   }, [isMobile, selectedShelter, selectedSheltered]);
@@ -278,7 +275,6 @@ function PagelaSheltersManagerForLeader() {
         <Box sx={{ mt: { xs: 2, md: 3 } }}>
         {isMobile ? (
           <Box>
-            {/* Mobile Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -348,7 +344,6 @@ function PagelaSheltersManagerForLeader() {
           </Box>
         ) : (
           <Box>
-            {/* Desktop Breadcrumbs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -569,7 +564,6 @@ function PagelaSheltersManagerForAdmin() {
         <Box sx={{ mt: { xs: 2, md: 3 } }}>
         {isMobile ? (
           <Box>
-            {/* Mobile Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -623,7 +617,6 @@ function PagelaSheltersManagerForAdmin() {
           </Box>
         ) : (
           <Box>
-            {/* Desktop Breadcrumbs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

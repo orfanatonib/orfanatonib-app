@@ -38,7 +38,7 @@ export default function TeacherViewDialog({ open, teacher, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Detalhes do Professor</DialogTitle>
+      <DialogTitle>Detalhes do Membro</DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {!!teacher && (
@@ -126,8 +126,6 @@ export default function TeacherViewDialog({ open, teacher, onClose }: Props) {
         teacherId={teacher?.id}
         onClose={() => setTeamManagementOpen(false)}
         onSuccess={async () => {
-          // Não fechar o modal, apenas atualizar os dados se necessário
-          // O modal só fecha quando o usuário clicar em "Fechar"
         }}
       />
     </Dialog>

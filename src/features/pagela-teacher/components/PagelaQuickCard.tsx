@@ -23,6 +23,8 @@ import {
   EventAvailable,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import { useSelector, useDispatch } from "react-redux";
+import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO, toLabelWeek } from "../utils";
 
@@ -76,26 +78,91 @@ export default function PagelaQuickCard({
     setNotes(current?.notes ?? "");
   }, [current]);
 
+  const dispatch = useDispatch();
+  const user = useSelector((s: any) => s?.auth?.user);
+  const userRole = user?.role;
+  const isTeacher = userRole === UserRole.TEACHER;
+  const isLeader = userRole === UserRole.LEADER;
+  
+  // Atualizar dados do Redux se necessário (busca /auth/me e atualiza o Redux)
+  React.useEffect(() => {
+    const refreshUserData = async () => {
+      if ((isTeacher && !user?.teacherProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
+        try {
+          await dispatch(fetchCurrentUser()).unwrap();
+        } catch (err) {
+          console.error('Erro ao atualizar dados do usuário:', err);
+        }
+      }
+    };
+    
+    refreshUserData();
+  }, [dispatch, isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
+  
+  const teacherProfileIdFromRedux = isTeacher 
+    ? (user?.teacherProfile?.id ?? null) 
+    : null;
+  const leaderProfileIdFromRedux = isLeader 
+    ? (user?.leaderProfile?.id ?? null) 
+    : null;
+
+  // Para professores, usar teacherProfileId; para líderes, usar leaderProfileId
+  const effectiveTeacherProfileId = isTeacher 
+    ? (teacherProfileIdFromRedux ?? teacherProfileId ?? null)
+    : null;
+  const effectiveLeaderProfileId = isLeader 
+    ? (leaderProfileIdFromRedux ?? null)
+    : null;
+
   const handleSave = async () => {
+    // Garantir que temos o teacherProfileId/leaderProfileId antes de enviar
+    let finalTeacherProfileId = effectiveTeacherProfileId;
+    let finalLeaderProfileId = effectiveLeaderProfileId;
+    
+    // Se não temos o ID, atualizar o Redux via fetchCurrentUser
+    if (isTeacher && !finalTeacherProfileId) {
+      try {
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalTeacherProfileId = updatedUser?.teacherProfile?.id ?? null;
+      } catch (err) {
+        console.error('Erro ao atualizar dados do usuário:', err);
+      }
+    } else if (isLeader && !finalLeaderProfileId) {
+      try {
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
+      } catch (err) {
+        console.error('Erro ao atualizar dados do usuário:', err);
+      }
+    }
+    
     const referenceDate = todayISO();
+    
+    const payloadCommon: any = {
+      referenceDate,
+      year,
+      visit,
+      present,
+      notes,
+    };
+    
+    // Enviar o ID correto baseado no role (obrigatório)
+    if (isTeacher && finalTeacherProfileId) {
+      payloadCommon.teacherProfileId = finalTeacherProfileId;
+    } else if (isLeader && finalLeaderProfileId) {
+      payloadCommon.leaderProfileId = finalLeaderProfileId;
+    } else {
+      // Se ainda não temos o ID, mostrar erro e não enviar
+      console.error('Não foi possível obter teacherProfileId ou leaderProfileId');
+      return;
+    }
+    
     if (current?.id) {
-      await onUpdate(current.id, {
-        referenceDate,
-        year,
-        visit,
-        present,
-        notes,
-        teacherProfileId: teacherProfileId ?? null,
-      });
+      await onUpdate(current.id, payloadCommon);
     } else {
       await onCreate({
         shelteredId,
-        teacherProfileId: teacherProfileId ?? null,
-        referenceDate,
-        year,
-        visit,
-        present,
-        notes,
+        ...payloadCommon,
       });
     }
   };

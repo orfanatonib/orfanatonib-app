@@ -3,61 +3,87 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   Box,
-  Container,
   Paper,
   Typography,
   Avatar,
   CircularProgress,
   Alert,
-  Tabs,
-  Tab,
   useTheme,
   useMediaQuery,
+  Chip,
+  Stack,
+  Grid,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Container,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
   Person as PersonIcon,
   Lock as LockIcon,
   PhotoCamera as PhotoCameraIcon,
+  HomeOutlined as HomeOutlinedIcon,
+  GroupsOutlined as GroupsOutlinedIcon,
+  PlaceOutlined as PlaceOutlinedIcon,
+  Badge as BadgeIcon,
+  Favorite as FavoriteIcon,
 } from '@mui/icons-material';
 import { RootState } from '@/store/slices';
-import { apiGetProfile } from '@/features/profile/api';
-import { Profile } from '@/features/profile/types';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import ProfileEditForm from '@/features/profile/components/ProfileEditForm';
 import PasswordChangeForm from '@/features/profile/components/PasswordChangeForm';
 import ProfileImageUpload from '@/features/profile/components/ProfileImageUpload';
+import PersonalDataForm from '@/features/profile/components/PersonalDataForm';
+import PreferencesForm from '@/features/profile/components/PreferencesForm';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`profile-tabpanel-${index}`}
-      aria-labelledby={`profile-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+const menuItems = [
+  { icon: <PersonIcon />, label: 'Informações da Conta', shortLabel: 'Conta' },
+  { icon: <BadgeIcon />, label: 'Dados Pessoais', shortLabel: 'Pessoais' },
+  { icon: <FavoriteIcon />, label: 'Minhas Preferências', shortLabel: 'Preferências' },
+  { icon: <LockIcon />, label: 'Alterar Senha', shortLabel: 'Senha' },
+  { icon: <PhotoCameraIcon />, label: 'Foto de Perfil', shortLabel: 'Foto' },
+];
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isAuthenticated, initialized } = useSelector((state: RootState) => state.auth);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
+  const dispatch = useDispatch();
+  const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
+  // Detect hash for direct tab selection
+  const initialTab = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash === '#foto') return 4;
+      if (window.location.hash === '#pessoais') return 1;
+      if (window.location.hash === '#preferencias') return 2;
+    }
+    return 0;
+  }, []);
+  const [selectedMenu, setSelectedMenu] = useState(initialTab);
+
+  // If hash changes after mount, update tab
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash === '#foto') setSelectedMenu(4);
+      else if (window.location.hash === '#pessoais') setSelectedMenu(1);
+      else if (window.location.hash === '#preferencias') setSelectedMenu(2);
+      else setSelectedMenu(0);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedMenu]);
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {
@@ -66,30 +92,95 @@ const ProfilePage: React.FC = () => {
   }, [isAuthenticated, initialized, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadProfile();
+    if (isAuthenticated && !user) {
+      // Se está autenticado mas não tem dados do usuário, busca via Redux
+      dispatch(fetchCurrentUser());
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user, dispatch]);
 
-  const loadProfile = async () => {
+  // Dados do perfil vêm diretamente do Redux (atualizado via /auth/me)
+  // Separando em variáveis para facilitar edição
+  const profile = user ? {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone || '',
+    role: user.role,
+    active: user.active,
+    completed: user.completed,
+    commonUser: user.commonUser,
+    createdAt: user.createdAt || '',
+    updatedAt: user.updatedAt || '',
+    image: user.image,
+  } : null;
+
+  const completeProfile = user ? {
+    personalData: user.personalData || null,
+    preferences: user.preferences || null,
+  } : null;
+
+  // Handler para atualizar dados após edição - atualiza Redux
+  const handleProfileUpdate = async () => {
     try {
-      setLoading(true);
       setError(null);
-      const data = await apiGetProfile();
-      setProfile(data);
+      await dispatch(fetchCurrentUser() as any);
     } catch (err: any) {
-      console.error('Error loading profile:', err);
-      setError(err?.response?.data?.message || 'Erro ao carregar perfil. Tente novamente mais tarde.');
-    } finally {
-      setLoading(false);
+      console.error('Error updating profile:', err);
+      setError(err?.response?.data?.message || 'Erro ao atualizar perfil.');
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleMenuClick = (index: number) => {
+    setSelectedMenu(index);
   };
 
-  if (!initialized || loading) {
+  const renderContent = () => {
+    switch (selectedMenu) {
+      case 0:
+        return (
+          <ProfileEditForm
+            profile={profile}
+            onUpdate={handleProfileUpdate}
+            onError={setError}
+          />
+        );
+      case 1:
+        return (
+          <PersonalDataForm
+            personalData={completeProfile?.personalData}
+            onUpdate={handleProfileUpdate}
+            onError={setError}
+          />
+        );
+      case 2:
+        return (
+          <PreferencesForm
+            preferences={completeProfile?.preferences}
+            onUpdate={handleProfileUpdate}
+            onError={setError}
+          />
+        );
+      case 3:
+        return (
+          <PasswordChangeForm onError={setError} isCommonUser={profile?.commonUser ?? true} />
+        );
+      case 4:
+        return (
+          <ProfileImageUpload
+            currentImageUrl={profile?.image?.url}
+            onUpdate={handleProfileUpdate}
+            onError={setError}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Usar loadingUser do Redux
+  const isLoading = loadingUser || loading;
+  
+  if (!initialized || isLoading) {
     return (
       <Box
         sx={{
@@ -120,175 +211,214 @@ const ProfilePage: React.FC = () => {
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 50%, #ffffff 100%)',
-        py: { xs: 3, md: 5 },
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <Container maxWidth="md">
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 1.5, md: 2 },
+          p: { xs: 1.5, sm: 2, md: 3 },
+          maxWidth: 1400,
+          mx: 'auto',
+          width: '100%',
+        }}
+      >
+        {/* Sidebar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ display: 'flex', flexDirection: 'column' }}
         >
           <Paper
-            elevation={4}
+            elevation={3}
             sx={{
-              p: { xs: 2, sm: 3, md: 4 },
+              width: { xs: '100%', md: 240, lg: 260 },
               borderRadius: 3,
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.95) 100%)',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 255, 0.98) 100%)',
               border: '1px solid rgba(25, 118, 210, 0.1)',
+              flexShrink: 0,
             }}
           >
-            {/* Header */}
+            {/* User Header */}
             <Box
               sx={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                p: { xs: 1.5, sm: 2 },
                 display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'center', sm: 'flex-start' },
-                gap: 3,
-                mb: 4,
-                pb: 3,
-                borderBottom: '2px solid rgba(25, 118, 210, 0.1)',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1,
               }}
             >
               <Avatar
                 src={profile?.image?.url}
                 sx={{
-                  width: { xs: 100, sm: 120, md: 140 },
-                  height: { xs: 100, sm: 120, md: 140 },
-                  fontSize: { xs: '2.5rem', md: '3.5rem' },
-                  bgcolor: 'primary.main',
-                  border: '4px solid white',
-                  boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                  width: { xs: 60, sm: 70, md: 80 },
+                  height: { xs: 60, sm: 70, md: 80 },
+                  fontSize: { xs: '1.5rem', md: '2rem' },
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  border: '3px solid rgba(255,255,255,0.8)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
                 }}
               >
                 {profile?.name?.charAt(0).toUpperCase() || 'U'}
               </Avatar>
-              <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
+              <Box sx={{ textAlign: 'center' }}>
                 <Typography
-                  variant="h4"
-                  fontWeight={800}
+                  variant="subtitle1"
+                  fontWeight={700}
                   sx={{
-                    fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
-                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    mb: 1,
+                    color: 'white',
+                    fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                    textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    lineHeight: 1.3,
                   }}
                 >
                   {profile?.name || 'Carregando...'}
                 </Typography>
                 <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ 
-                    fontSize: { xs: '0.9rem', md: '1rem' }, 
-                    mb: 0.5,
+                  variant="caption"
+                  sx={{
+                    color: 'rgba(255,255,255,0.85)',
+                    fontSize: '0.7rem',
+                    display: 'block',
                     wordBreak: 'break-all',
-                    overflowWrap: 'break-word',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '100%',
                   }}
-                  title={profile?.email}
                 >
                   {profile?.email}
                 </Typography>
-                {profile?.phone && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ 
-                      fontSize: { xs: '0.85rem', md: '0.9rem' },
-                      wordBreak: 'break-all',
-                      overflowWrap: 'break-word',
-                    }}
-                  >
-                    {profile.phone}
-                  </Typography>
-                )}
               </Box>
             </Box>
 
-            {/* Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-              <Tabs
-                value={tabValue}
-                onChange={handleTabChange}
-                variant={isMobile ? 'fullWidth' : 'standard'}
-                scrollButtons="auto"
-                sx={{
-                  '& .MuiTabs-flexContainer': {
-                    gap: { xs: 0.5, sm: 0 },
-                  },
-                  '& .MuiTab-root': {
-                    fontSize: { xs: '0.65rem', sm: '0.9rem', md: '1rem' },
-                    minHeight: { xs: 40, sm: 48, md: 64 },
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: { xs: 0.5, sm: 2, md: 3 },
-                    flex: { xs: 1, sm: 'none' },
-                    maxWidth: { xs: 'none', sm: 'none' },
-                    '& .MuiTab-iconWrapper': {
-                      fontSize: { xs: '0.9rem', sm: '1.25rem', md: '1.5rem' },
-                      mb: { xs: 0, sm: 0.5 },
+            {/* Shelter Info */}
+            {profile?.role === 'teacher' && profile?.teacherProfile?.team?.shelter && (
+              <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
+                <Stack spacing={0.5}>
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
+                    <Typography variant="caption" fontWeight={700} noWrap>
+                      {profile.teacherProfile.team.shelter.name}
+                    </Typography>
+                  </Stack>
+                  <Chip
+                    icon={<GroupsOutlinedIcon />}
+                    label={`Equipe ${profile.teacherProfile.team.numberTeam}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ fontWeight: 700, height: 24, '& .MuiChip-label': { px: 1 } }}
+                  />
+                </Stack>
+              </Box>
+            )}
+
+            <Divider />
+
+            {/* Menu Items */}
+            <List sx={{ p: 0.5 }} dense>
+              {menuItems.map((item, index) => (
+                <ListItemButton
+                  key={index}
+                  selected={selectedMenu === index}
+                  onClick={() => handleMenuClick(index)}
+                  sx={{
+                    borderRadius: 1.5,
+                    mb: 0.25,
+                    py: 0.75,
+                    '&.Mui-selected': {
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: 'primary.dark',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'white',
+                      },
                     },
-                  },
-                }}
-              >
-                <Tab
-                  icon={<PersonIcon />}
-                  iconPosition={isMobile ? 'top' : 'start'}
-                  label={isMobile ? 'Informações' : 'Informações Pessoais'}
-                  id="profile-tab-0"
-                  aria-controls="profile-tabpanel-0"
-                />
-                <Tab
-                  icon={<LockIcon />}
-                  iconPosition={isMobile ? 'top' : 'start'}
-                  label={isMobile ? 'Senha' : 'Alterar Senha'}
-                  id="profile-tab-1"
-                  aria-controls="profile-tabpanel-1"
-                />
-                <Tab
-                  icon={<PhotoCameraIcon />}
-                  iconPosition={isMobile ? 'top' : 'start'}
-                  label={isMobile ? 'Foto' : 'Foto de Perfil'}
-                  id="profile-tab-2"
-                  aria-controls="profile-tabpanel-2"
-                />
-              </Tabs>
+                    '&:hover': {
+                      bgcolor: 'rgba(25, 118, 210, 0.08)',
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 32,
+                      color: selectedMenu === index ? 'white' : 'primary.main',
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={isSmall ? item.shortLabel : item.label}
+                    primaryTypographyProps={{
+                      fontWeight: selectedMenu === index ? 700 : 500,
+                      fontSize: '0.8rem',
+                    }}
+                  />
+                </ListItemButton>
+              ))}
+            </List>
+          </Paper>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              borderRadius: 3,
+              p: { xs: 2, sm: 2.5 },
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 255, 0.98) 100%)',
+              border: '1px solid rgba(25, 118, 210, 0.1)',
+            }}
+          >
+            {/* Content Header */}
+            <Box sx={{ mb: 2, pb: 1.5, borderBottom: '2px solid rgba(25, 118, 210, 0.1)' }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box
+                  sx={{
+                    p: 1,
+                    borderRadius: 1.5,
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {menuItems[selectedMenu].icon}
+                </Box>
+                <Typography variant="h6" fontWeight={700} color="primary.main">
+                  {menuItems[selectedMenu].label}
+                </Typography>
+              </Stack>
             </Box>
 
-            {/* Tab Panels */}
+            {/* Error Alert */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}
 
-            <TabPanel value={tabValue} index={0}>
-              <ProfileEditForm
-                profile={profile}
-                onUpdate={loadProfile}
-                onError={setError}
-              />
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={1}>
-              <PasswordChangeForm onError={setError} />
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={2}>
-              <ProfileImageUpload
-                currentImageUrl={profile?.image?.url}
-                onUpdate={loadProfile}
-                onError={setError}
-              />
-            </TabPanel>
+            {/* Content Area */}
+            <Box>
+              {renderContent()}
+            </Box>
           </Paper>
         </motion.div>
-      </Container>
+      </Box>
     </Box>
   );
 };

@@ -115,7 +115,7 @@ const IdeasSharingBanner: React.FC<IdeasSharingBannerProps> = ({ variant = 'full
           >
             Criou uma brincadeira incrível ou descobriu uma forma especial de contar uma história bíblica?
             <br />
-            Compartilhe sua criatividade com outros professores! Sua ideia pode transformar vidas!
+            Compartilhe sua criatividade com outros membros! Sua ideia pode transformar vidas!
           </Typography>
 
         </Box>

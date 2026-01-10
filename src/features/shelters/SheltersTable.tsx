@@ -77,7 +77,7 @@ function SheltersTableDesktop(props: Props) {
       },
       {
         id: "teachers",
-        header: "Professores",
+        header: "Membros",
         cell: ({ row }) => {
           const list = row.original.teachers ?? [];
           return (

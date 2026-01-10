@@ -13,9 +13,19 @@ frontend:
         # Instala deps (usa npm ci se houver package-lock)
         - if [ -f package-lock.json ]; then npm ci; else npm i; fi
 
-        # Gera .env para o Vite a partir das vars do Amplify Console (com override por branch)
-        - printf "VITE_API_URL=%s\nVITE_FEED_MINISTERIO_ID=%s\nVITE_GOOGLE_CLIENT_ID=%s\nVITE_SPECIAL_FAMILY_DAY_ID=%s\n" \
-            "$VITE_API_URL" "$VITE_FEED_MINISTERIO_ID" "$VITE_GOOGLE_CLIENT_ID" "$VITE_SPECIAL_FAMILY_DAY_ID" > .env
+        # Verifica variáveis e gera .env (YAML-safe, sem multiline printf)
+        - |
+          if [ -z "$VITE_API_URL" ] || [ -z "$VITE_FEED_MINISTERIO_ID" ] || [ -z "$VITE_GOOGLE_CLIENT_ID" ] || [ -z "$VITE_SPECIAL_FAMILY_DAY_ID" ]; then
+            echo "Erro: Uma ou mais variáveis de ambiente necessárias não estão definidas no Amplify Console"
+            echo "Variáveis necessárias: VITE_API_URL, VITE_FEED_MINISTERIO_ID, VITE_GOOGLE_CLIENT_ID, VITE_SPECIAL_FAMILY_DAY_ID"
+            exit 1
+          fi
+          cat > .env <<EOF
+          VITE_API_URL=$VITE_API_URL
+          VITE_FEED_MINISTERIO_ID=$VITE_FEED_MINISTERIO_ID
+          VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+          VITE_SPECIAL_FAMILY_DAY_ID=$VITE_SPECIAL_FAMILY_DAY_ID
+          EOF
     build:
       commands:
         - npm run build

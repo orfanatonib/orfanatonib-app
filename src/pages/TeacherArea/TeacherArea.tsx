@@ -53,11 +53,8 @@ const TeacherArea: React.FC = () => {
           zIndex: 1,
         }}
       >
-      {/* Informative Banner */}
       <InformativeBanner />
 
-      {/* Special Family Callout - Commented out for now */}
-      {/* <SpecialFamilyCallout /> */}
 
       <BannerSection 
         showWeekBanner={showWeek} 
@@ -117,7 +114,7 @@ const TeacherArea: React.FC = () => {
                   mb: 0.5,
                 }}
               >
-                🎓 Área do Professor
+                🎓 Área do Membro
               </Typography>
               <Typography
                 variant="body2"

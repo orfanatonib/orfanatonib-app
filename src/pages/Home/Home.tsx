@@ -4,7 +4,7 @@ import { gradients } from '@/theme';
 import { HeroSection, FeaturesSection, TestimonialsSection, CTASection } from './components';
 import VisitMaterialsBanner from './VisitMaterialsBanner';
 import CardsSection from './CardsSection';
-import SheltersSection from './SheltersSection';
+import SheltersSection from './components/SheltersSection';
 import { FEATURES } from './constants';
 import { useComments, useAuth } from './hooks';
 

@@ -51,41 +51,201 @@ export default function LeaderTable({
     },
     {
       id: "shelters",
-      header: "Abrigo",
+      header: "Abrigos",
       cell: ({ row }) => {
-        const shelter = row.original.shelter;
-        if (!shelter) return <Chip size="small" label="—" />;
-        return <Chip size="small" label={shelter.name ?? "—"} />;
-      },
-      meta: { width: 150 },
-    },
-    {
-      id: "team",
-      header: "Equipe",
-      cell: ({ row }) => {
-        const teamNumber = row.original.shelter?.team?.numberTeam;
-        return teamNumber !== undefined ? (
-          <Chip size="small" label={`Equipe ${teamNumber}`} color="info" variant="outlined" />
-        ) : (
-          <Typography variant="body2" color="text.secondary">—</Typography>
+        const shelters = row.original.shelters;
+        if (!shelters || shelters.length === 0) {
+          return <Chip size="small" label="—" />;
+        }
+
+        if (shelters.length === 1) {
+          return <Chip size="small" label={shelters[0].name} />;
+        }
+
+        return (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            {shelters.slice(0, 2).map((shelter) => (
+              <Chip key={shelter.id} size="small" label={shelter.name} />
+            ))}
+            {shelters.length > 2 && (
+              <Typography variant="caption" color="text.secondary">
+                +{shelters.length - 2} outros
+              </Typography>
+            )}
+          </Box>
         );
       },
-      meta: { width: 100 },
+      meta: { width: 180 },
+    },
+    {
+      id: "teams",
+      header: "Equipes",
+      cell: ({ row }) => {
+        const shelters = row.original.shelters;
+        if (!shelters || shelters.length === 0) {
+          return <Typography variant="body2" color="text.secondary">—</Typography>;
+        }
+
+        const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
+
+        if (totalTeams === 0) {
+          return <Typography variant="body2" color="text.secondary">—</Typography>;
+        }
+
+        if (totalTeams <= 3) {
+          return (
+            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+              {shelters.flatMap((shelter) =>
+                shelter.teams.map((team) => (
+                  <Chip
+                    key={`${shelter.id}-${team.numberTeam}`}
+                    size="small"
+                    label={`${team.numberTeam}`}
+                    color="info"
+                    variant="outlined"
+                    title={`Equipe ${team.numberTeam} - ${shelter.name}`}
+                  />
+                ))
+              )}
+            </Box>
+          );
+        }
+
+        const tooltipContent = (
+          <Box sx={{ p: 0.5 }}>
+            {shelters.map((shelter) => (
+              shelter.teams.length > 0 && (
+                <Box key={shelter.id} sx={{ mb: 1, "&:last-child": { mb: 0 } }}>
+                  <Typography variant="caption" fontWeight={600} sx={{ display: "block", mb: 0.5 }}>
+                    {shelter.name}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                    {shelter.teams.map((team) => (
+                      <Chip
+                        key={`${shelter.id}-${team.numberTeam}`}
+                        size="small"
+                        label={`Equipe ${team.numberTeam}`}
+                        color="info"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )
+            ))}
+          </Box>
+        );
+
+        return (
+          <Tooltip
+            title={tooltipContent}
+            arrow
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: "white",
+                  color: "text.primary",
+                  boxShadow: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  maxWidth: 400,
+                },
+              },
+              arrow: {
+                sx: {
+                  color: "white",
+                  "&::before": {
+                    border: "1px solid",
+                    borderColor: "divider",
+                  },
+                },
+              },
+            }}
+          >
+            <Typography
+              variant="body2"
+              color="primary"
+              sx={{ cursor: "pointer", fontWeight: 500 }}
+            >
+              {totalTeams} equipes
+            </Typography>
+          </Tooltip>
+        );
+      },
+      meta: { width: 120 },
     },
     {
       id: "teachers",
-      header: "Professores",
+      header: "Membros",
       cell: ({ row }) => {
-        const shelter = row.original.shelter;
-        const teachers = shelter?.teachers ?? [];
-        if (!teachers.length) return <Chip size="small" label="—" />;
-        return (
-          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-            {teachers.map((t) => {
-              const teacherName = t.user?.name || t.user?.email || "Sem nome";
-              return <Chip key={t.id} size="small" label={teacherName} />;
-            })}
+        const shelters = row.original.shelters;
+        const allTeachers = shelters?.flatMap(shelter => shelter.teachers || []) ?? [];
+
+        if (!allTeachers.length) return <Chip size="small" label="—" />;
+
+        if (allTeachers.length <= 2) {
+          return (
+            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+              {allTeachers.map((t) => {
+                const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                return <Chip key={t.id} size="small" label={teacherName} />;
+              })}
+            </Box>
+          );
+        }
+
+        const tooltipContent = (
+          <Box sx={{ p: 0.5 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+              {allTeachers.map((t) => {
+                const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                return (
+                  <Chip
+                    key={t.id}
+                    size="small"
+                    label={teacherName}
+                    sx={{ maxWidth: "100%" }}
+                  />
+                );
+              })}
+            </Box>
           </Box>
+        );
+
+        return (
+          <Tooltip
+            title={tooltipContent}
+            arrow
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: "white",
+                  color: "text.primary",
+                  boxShadow: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  maxWidth: 300,
+                },
+              },
+              arrow: {
+                sx: {
+                  color: "white",
+                  "&::before": {
+                    border: "1px solid",
+                    borderColor: "divider",
+                  },
+                },
+              },
+            }}
+          >
+            <Typography
+              variant="body2"
+              color="primary"
+              sx={{ cursor: "pointer", fontWeight: 500 }}
+            >
+              {allTeachers.length} membros
+            </Typography>
+          </Tooltip>
         );
       },
     },
@@ -132,7 +292,7 @@ export default function LeaderTable({
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip title={row.original.shelter?.id ? "Gerenciar Equipes do Abrigo" : "Gerenciar Equipes"}>
+            <Tooltip title="Gerenciar Associações">
               <IconButton 
                 size={isXs ? "small" : "medium"} 
                 onClick={() => onEdit(row.original)}

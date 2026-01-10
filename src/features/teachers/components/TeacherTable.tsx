@@ -108,7 +108,7 @@ export default function TeacherTable({
   const columns = useMemo<ColumnDef<TeacherProfile>[]>(() => [
     {
       id: "teacher",
-      header: "Professor",
+      header: "Membro",
       cell: ({ row }) => {
         const u = row.original.user;
         return (
@@ -265,7 +265,7 @@ export default function TeacherTable({
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Nenhum professor (com profile) encontrado nesta página.
+                    Nenhum membro (com profile) encontrado nesta página.
                   </Typography>
                 </TableCell>
               </TableRow>

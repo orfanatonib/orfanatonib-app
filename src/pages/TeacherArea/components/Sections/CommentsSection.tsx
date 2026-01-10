@@ -139,7 +139,7 @@ const CommentsSection: React.FC = () => {
   const placeholders: Record<string, string> = {
     name: 'Seu nome',
     comment: 'Escreva seu comentário aqui...',
-    shelter: 'Ex: Abrigo do Amor',
+    shelter: 'Ex: Abrigo São Lucas',
     neighborhood: 'Ex: Jardim das Flores',
   };
 
@@ -192,7 +192,6 @@ const CommentsSection: React.FC = () => {
         />
 
         <Box sx={{ position: 'relative', zIndex: 1 }}>
-          {/* Header */}
           <Box 
             sx={{ 
               display: 'flex', 
@@ -227,7 +226,7 @@ const CommentsSection: React.FC = () => {
                 letterSpacing: '-0.3px',
               }}
             >
-              Comentários dos Professores
+              Comentários dos Membros
             </Typography>
           </Box>
 
@@ -438,7 +437,6 @@ const CommentsSection: React.FC = () => {
             </Collapse>
           </Box>
 
-          {/* Comentários */}
           <AnimatePresence>
             {comments.length > 0 ? (
               <motion.div
@@ -620,7 +618,6 @@ const CommentsSection: React.FC = () => {
                                 </Box>
                               </Box>
 
-                              {/* Conteúdo do Comentário */}
                           <Box sx={{ flexGrow: 1, mb: { xs: 2, md: 2.5 } }}>
                                 <Paper
                               elevation={0}
@@ -660,7 +657,6 @@ const CommentsSection: React.FC = () => {
                                 </Paper>
                               </Box>
 
-                              {/* Footer com informações */}
                               <Box sx={{ mt: 'auto' }}>
                             <Stack direction="row" spacing={{ xs: 0.75, md: 1 }} flexWrap="wrap" useFlexGap>
                                   <Chip

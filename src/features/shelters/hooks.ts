@@ -57,13 +57,11 @@ export function useShelters(
   
   const debouncedFilters = useDebounce(filters, 500);
   
-  // Ref para evitar requests duplicadas
   const lastRequestRef = useRef<string>("");
 
   const fetchPage = useCallback(async (force = false) => {
     const requestKey = `${pageIndex}-${pageSize}-${JSON.stringify(sorting)}-${JSON.stringify(debouncedFilters)}`;
     
-    // Evitar requests duplicadas (exceto quando forçado)
     if (!force && lastRequestRef.current === requestKey) {
       return;
     }
@@ -219,4 +217,3 @@ export function useOptions() {
   return { leaders, teachers, loading, reloadOptions, loadRefs };
 }
 
-// Hook de atribuições removido - agora gerenciado via Teams

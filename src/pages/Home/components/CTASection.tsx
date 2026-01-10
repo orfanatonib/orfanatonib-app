@@ -92,7 +92,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
                 <Button
                   variant="contained"
                   component={Link}
-                  to="/area-do-professor"
+                  to="/area-do-membro"
                   size="large"
                   sx={{
                     px: { xs: 4, md: 6 },
@@ -109,7 +109,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Explorar Recursos
+                  Área do membro
                 </Button>
               </motion.div>
             ) : (

@@ -46,7 +46,7 @@ export default function CommentsToolbar({ search, onSearchChange, status, setSta
         <TextField
           fullWidth
           label="Buscar comentários"
-          placeholder="Buscar por nome, shelter ou bairro..."
+          placeholder="Buscar por nome, abrigo ou bairro..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           InputProps={{

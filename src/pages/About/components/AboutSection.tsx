@@ -74,7 +74,6 @@ const AboutSection: React.FC<AboutSectionProps> = ({ section, index }) => {
           flexDirection: 'column',
           '&:last-sheltered': { pb: { xs: 2, sm: 3, md: 4 } }
         }}>
-          {/* Ícone */}
           <Box
             sx={{
               display: 'flex',
@@ -97,7 +96,6 @@ const AboutSection: React.FC<AboutSectionProps> = ({ section, index }) => {
             </Box>
           </Box>
 
-          {/* Título */}
           <Typography
             variant={section.isMain ? 'h4' : 'h5'}
             component={section.isMain ? 'h1' : 'h2'}
@@ -117,7 +115,6 @@ const AboutSection: React.FC<AboutSectionProps> = ({ section, index }) => {
             {section.title}
           </Typography>
 
-          {/* Conteúdo */}
           <Typography
             variant="body1"
             sx={{

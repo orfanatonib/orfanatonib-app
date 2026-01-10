@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { AttendanceDashboard } from './features/attendance/pages';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, CircularProgress, Toolbar } from '@mui/material';
+import { Box, CircularProgress, Toolbar, Button, Typography } from '@mui/material';
 
 import './App.css';
 import './styles/Global.css';
@@ -17,6 +18,7 @@ import Contact from './pages/Contact/Contact';
 import Event from './pages/Event/Event';
 import Login from './pages/Login/Login';
 import TeacherArea from './pages/TeacherArea/TeacherArea';
+import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
 
 import MeditationPageCreator from './components/Adm/PageCreator/Templates/MeditationPageCreator/MeditationPageCreator';
@@ -29,7 +31,7 @@ import AdminDashboardPage from './components/Adm/AdminDashboardPage';
 import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
 
 import { fetchRoutes } from './store/slices/route/routeSlice';
-import { UserRole, initAuth } from './store/slices/auth/authSlice';
+import { UserRole, initAuth, logout } from './store/slices/auth/authSlice';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -64,40 +66,80 @@ import IdeasManager from './features/ideas-pages/IdeasManager';
 import VideosManager from './features/video-pages/VideosManager';
 import VisitMaterialManager from './features/visit-materials/VisitMaterialManager';
 import { ProfilePage } from './features/profile';
+import EventosPage from './pages/Event/EventosPage';
+import ShelterScheduleManager from './features/shelter-schedule/ShelterScheduleManager';
+import ProfilesManager from './features/profile/ProfilesManager';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
   const dynamicRoutes = useSelector((state: RootStateType) => state.routes.routes);
-  const { initialized, loadingUser } = useSelector((state: RootStateType) => state.auth);
+  const { initialized, loadingUser, isAuthenticated, user } = useSelector((state: RootStateType) => state.auth);
+  const [forceReady, setForceReady] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRoutes());
     dispatch(initAuth());
+
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('[App] Force ready after 15s timeout');
+      setForceReady(true);
+    }, 15000);
+
+    return () => clearTimeout(fallbackTimeout);
   }, [dispatch]);
 
-  if (!initialized || loadingUser) {
+  // Dados do usuário agora vêm diretamente do Redux via /auth/me
+  // Não precisa mais buscar de endpoints separados
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setForceReady(true);
+  };
+
+  if (!forceReady && (!initialized || loadingUser)) {
     return (
       <Box
         sx={{
           height: '100vh',
           width: '100vw',
           display: 'flex',
+          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           background: 'linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)',
           backgroundAttachment: 'fixed',
+          gap: 3,
+          px: 2,
         }}
       >
         <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Verificando autenticação...
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleLogout}
+          sx={{
+            mt: 2,
+            borderWidth: 2,
+            '&:hover': {
+              borderWidth: 2,
+              bgcolor: 'rgba(211, 47, 47, 0.04)',
+            }
+          }}
+        >
+          Sair
+        </Button>
       </Box>
     );
   }
 
   return (
     <BrowserRouter>
-      <Box sx={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
         flexDirection: 'column',
         background: 'linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)',
         backgroundAttachment: 'fixed',
@@ -111,16 +153,18 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/sobre" element={<About />} />
               <Route path="/contato" element={<Contact />} />
-              <Route path="/eventos" element={<Event />} />
+              <Route path="/eventos" element={<EventosPage />} />
               <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
               <Route path="/login" element={<Login />} />
+                <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
               <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
               <Route path="/cadastrar" element={<Register commonUser />} />
               <Route path="*" element={<Home />} />
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/area-do-professor" element={<TeacherArea />} />
+                <Route path="/area-do-membro" element={<TeacherArea />} />
                 <Route path="/perfil" element={<ProfilePage />} />
+                <Route path="/presenca" element={<AttendanceDashboard />} />
                 <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
                 <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
                 <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
@@ -129,9 +173,10 @@ function App() {
                 <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
               </Route>
 
-              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
-                <Route path="/adm" element={<AdminLayout />}>
+              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}> 
+                <Route path="/adm" element={<AdminLayout />}> 
                   <Route index element={<AdminDashboardPage />} />
+                  <Route path="presenca" element={<AttendanceDashboard />} />
                   <Route path="meditacoes" element={<MeditationManager />} />
                   <Route path="comentarios" element={<CommentsManager />} />
                   <Route path="documentos" element={<DocumentsManager />} />
@@ -141,18 +186,20 @@ function App() {
                   <Route path="paginas-materiais-visita" element={<VisitMaterialManager />} />
                   <Route path="paginas-fotos" element={<ImagePageManager />} />
                   <Route path="fotos-abrigos" element={<ImageSectionManager />} />
-                  <Route path="ideias-compartilhadas" element={<IdeasSectionManager  />} />
+                  <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
                   <Route path="paginas-videos" element={<VideosManager />} />
                   <Route path="paginas-ideias" element={<IdeasManager />} />
                   <Route path="criar-pagina" element={<SelecPageTemplate />} />
                   <Route path="usuarios" element={<UsersManager />} />
+                  <Route path="perfis" element={<ProfilesManager />} />
                   <Route path="lideres" element={<LeaderProfilesManager />} />
-                  <Route path="professores" element={<TeacherProfilesManager />} />
+                  <Route path="membros" element={<TeacherProfilesManager />} />
                   <Route path="abrigados" element={<ShelteredManager />} />
                   <Route path="abrigos" element={<SheltersManager />} />
-                  <Route path="abrigos/new" element={<ShelterFormPage />} />
+                  <Route path="abrigos/novo" element={<ShelterFormPage />} />
                   <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
                   <Route path="pagelas" element={<PagelaSheltersManager />} />
+                  <Route path="agendamentos" element={<ShelterScheduleManager />} />
 
                   <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
@@ -160,7 +207,7 @@ function App() {
                   <Route path="editar-pagina-visita" element={<VisitMaterialPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
                   <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
-                  <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage  />} />
+                  <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
                 </Route>
               </Route>
 

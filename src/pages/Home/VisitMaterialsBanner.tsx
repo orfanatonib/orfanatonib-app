@@ -8,12 +8,14 @@ import { motion } from 'framer-motion';
 import { MediaTargetType } from 'store/slices/types';
 
 const VisitMaterialsBanner: React.FC = () => {
+  return null;
+
   const routes = useSelector((state: RootState) => state.routes.routes);
   const { user } = useSelector((state: RootState) => state.auth);
   const currentVisitRoute = routes.find(
     (route) => route.entityType === MediaTargetType.VisitMaterialsPage && route.current === true
   );
-  
+
   if (!currentVisitRoute) return null;
 
   const getMonthPart = () => {
@@ -23,10 +25,10 @@ const VisitMaterialsBanner: React.FC = () => {
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
-    
+
     const monthName = monthNames[today.getMonth()];
     const isFirstHalf = dayOfMonth <= 15;
-    
+
     return {
       part: isFirstHalf ? 'primeira parte' : 'segunda parte',
       month: monthName
@@ -122,7 +124,7 @@ const VisitMaterialsBanner: React.FC = () => {
               textShadow: '0 2px 4px rgba(0,0,0,0.8)',
             }}
           >
-            Olá {user?.name || 'Professor'}, estamos na {part} do mês de:
+            Olá {user?.name || 'Membro'}, estamos na {part} do mês de:
           </Typography>
         </motion.div>
 
@@ -220,7 +222,6 @@ const VisitMaterialsBanner: React.FC = () => {
         </motion.div>
       </Container>
       
-      {/* Divisão Suave */}
       <Box
         sx={{
           position: 'absolute',
@@ -235,7 +236,6 @@ const VisitMaterialsBanner: React.FC = () => {
         }}
       />
       
-      {/* Ondas Decorativas */}
       <motion.div
         style={{
           position: 'absolute',

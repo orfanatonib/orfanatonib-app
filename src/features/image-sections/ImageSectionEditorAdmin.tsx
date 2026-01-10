@@ -129,7 +129,6 @@ export default function ImageSectionEditorAdmin() {
     dispatch(setData({ ...(sectionData || {}), ...updatedData } as SectionData));
   };
 
-  // Se não há dados para editar, redireciona para o manager
   useEffect(() => {
     if (!sectionData) {
       navigate('/adm/fotos-abrigos');
@@ -155,7 +154,6 @@ export default function ImageSectionEditorAdmin() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Header Administrativo */}
           <Paper
             elevation={2}
             sx={{
@@ -245,7 +243,6 @@ export default function ImageSectionEditorAdmin() {
             </Box>
           </Paper>
 
-          {/* Painel Principal */}
           <Paper
             elevation={1}
             sx={{
@@ -265,61 +262,107 @@ export default function ImageSectionEditorAdmin() {
               onClose={() => setNotification({ ...notification, open: false })}
             />
 
-            {/* Informações da Seção */}
             <Box
               sx={{
-                mb: 2,
-                p: { xs: 1.5, md: 2 },
-                bgcolor: '#f8fafc',
-                borderRadius: 2,
-                border: '1px solid #e2e8f0',
+                mb: 3,
+                p: 0,
+                display: 'flex',
+                gap: 2,
+                flexDirection: { xs: 'column', sm: 'row' },
               }}
             >
-              <Typography
-                variant="h6"
-                fontWeight={600}
-                sx={{ mb: 1.5, color: '#1e293b', fontSize: { xs: '1rem', md: '1.1rem' } }}
-              >
-                📋 Informações da Galeria Compartilhada
-              </Typography>
-              
               <Box
                 sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-                  gap: { xs: 1.5, md: 2 },
+                  flex: 1,
+                  p: 2,
+                  bgcolor: sectionData?.public ? '#f0fdf4' : '#fef2f2',
+                  borderRadius: 2,
+                  border: sectionData?.public ? '2px solid #86efac' : '2px solid #fecaca',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  },
                 }}
               >
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                    ID da Seção
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>
-                    {sectionData?.id || 'N/A'}
-                  </Typography>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    bgcolor: sectionData?.public ? '#22c55e' : '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {sectionData?.public ? '🌐' : '🔒'}
                 </Box>
-                
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
                     Status
                   </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: sectionData?.public ? '#059669' : '#dc2626',
-                      fontWeight: 600,
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: sectionData?.public ? '#16a34a' : '#dc2626',
+                      fontWeight: 700,
+                      fontSize: { xs: '1rem', md: '1.1rem' },
                     }}
                   >
-                    {sectionData?.public ? '🌐 Público' : '🔒 Privado'}
+                    {sectionData?.public ? 'Público' : 'Privado'}
                   </Typography>
                 </Box>
-                
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  p: 2,
+                  bgcolor: '#eff6ff',
+                  borderRadius: 2,
+                  border: '2px solid #bfdbfe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    bgcolor: '#3b82f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  📸
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
                     Imagens Compartilhadas
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                    {sectionData?.mediaItems?.length || 0} imagens
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#1e40af',
+                      fontWeight: 700,
+                      fontSize: { xs: '1rem', md: '1.1rem' },
+                    }}
+                  >
+                    {sectionData?.mediaItems?.length || 0} {sectionData?.mediaItems?.length === 1 ? 'imagem' : 'imagens'}
                   </Typography>
                 </Box>
               </Box>

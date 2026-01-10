@@ -61,7 +61,7 @@ export default function SheltersManager() {
   });
 
   const handleCreate = () => {
-    navigate("/adm/abrigos/new");
+    navigate("/adm/abrigos/novo");
   };
 
   const handleEdit = (shelter: ShelterResponseDto) => {

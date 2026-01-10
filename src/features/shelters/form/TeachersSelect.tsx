@@ -36,7 +36,7 @@ export default function TeachersSelect({
   value,
   options,
   onChange,
-  name = "Selecionar professores",
+  name = "Selecionar membros",
 }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
@@ -68,11 +68,8 @@ export default function TeachersSelect({
     () =>
       (options ?? []).filter(
         (opt) => {
-          // Se não está vinculado, sempre mostrar
           if (!opt.vinculado) return true;
           
-          // Se está vinculado, mostrar apenas se já está selecionado
-          // Isso permite manter líderes/professores já vinculados ao shelter atual
           return safeValue.includes(opt.teacherProfileId);
         }
       ),
@@ -130,7 +127,7 @@ export default function TeachersSelect({
     (selected: string[]) => {
       if (isXs) {
         const total = selected.length;
-        if (total === 0) return "Nenhum professor";
+        if (total === 0) return "Nenhum membro";
         if (total <= 2) {
           const names = selected
             .map((id) => {
@@ -203,7 +200,7 @@ export default function TeachersSelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={stopPropagation}
-              inputProps={{ "aria-label": "Buscar professor" }}
+              inputProps={{ "aria-label": "Buscar membro" }}
             />
           </Box>
 
@@ -237,7 +234,6 @@ export default function TeachersSelect({
           </Stack>
         </ListSubheader>
 
-        {/* LISTA */}
         {visibleOptions.length === 0 && (
           <MenuItem disabled dense>
             <ListItemText

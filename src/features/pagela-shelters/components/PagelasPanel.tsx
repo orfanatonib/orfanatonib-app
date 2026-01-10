@@ -60,7 +60,6 @@ export function PagelasPanel({
     if (onSearchChange) {
       onSearchChange(dq);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dq]);
 
   const handleSearchClear = useCallback(() => {
@@ -283,7 +282,7 @@ export function PagelasPanel({
                             fontStyle: 'italic'
                           }}
                         >
-                          Professor: {pagela.teacher.user.name}
+                          Membro: {pagela.teacher.user.name}
                         </Typography>
                       )}
                       </Box>
@@ -295,7 +294,6 @@ export function PagelasPanel({
                 )}
       </Box>
 
-            {/* Paginação no rodapé */}
             {totalPages > 1 && (
                 <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: "1px solid", borderColor: "divider" }}>
         <Pagination

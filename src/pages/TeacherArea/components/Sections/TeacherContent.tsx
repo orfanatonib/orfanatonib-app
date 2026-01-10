@@ -88,7 +88,7 @@ const TeacherContent: React.FC<TeacherContentProps> = ({ userName }) => {
                   mb: { xs: 1.5, md: 2.5 },
                 }}
               >
-                Olá, {userName || 'Professor'}!
+                Olá, {userName || 'Membro'}!
               </Typography>
             </motion.div>
 

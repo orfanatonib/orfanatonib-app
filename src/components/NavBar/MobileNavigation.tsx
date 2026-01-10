@@ -45,7 +45,7 @@ const MobileNavigation: React.FC = () => {
   };
 
   const handleTeacherArea = () => {
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
     closeDrawer();
   };
 
@@ -124,7 +124,7 @@ const MobileNavigation: React.FC = () => {
               }}
             >
               <Avatar
-                src={(user as any)?.image?.url}
+                src={user?.image?.url}
                 sx={{
                   width: 56,
                   height: 56,
@@ -162,7 +162,7 @@ const MobileNavigation: React.FC = () => {
                 >
                   {user.role === UserRole.ADMIN && 'Administrador'}
                   {user.role === UserRole.LEADER && 'Líder'}
-                  {user.role === UserRole.TEACHER && 'Professor'}
+                  {user.role === UserRole.TEACHER && 'Membro'}
                 </Typography>
               </Stack>
             </Box>
@@ -180,9 +180,9 @@ const MobileNavigation: React.FC = () => {
                 <ListItemIcon>
                   <SchoolIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
                 </ListItemIcon>
-                <ListItemText>Área do Professor</ListItemText>
+                <ListItemText>Área do Membro</ListItemText>
               </MenuItem>
-              {isTeacher && (
+              {(isTeacher || isLeader) && (
                 <MenuItem
                   onClick={handleShelteredArea}
                   sx={{

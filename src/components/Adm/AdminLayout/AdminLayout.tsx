@@ -38,6 +38,9 @@ import {
   Groups,
   NoteAdd,
   ExpandMore,
+  CalendarMonth,
+  Favorite,
+  EventAvailable,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -47,7 +50,7 @@ import { UserRole } from "@/store/slices/auth/authSlice";
 const drawerWidth = 240;
 
 type NavItem = { label: string; to: string; icon: ReactNode };
-type SectionId = "pages" | "conteudos" | "shelter" | "operacional";
+type SectionId = "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
 type Section = { id: SectionId; title: string; items: NavItem[] };
 type MobileTab = "tudo" | SectionId;
 
@@ -75,46 +78,61 @@ function AdminLayout() {
   const allSections = useMemo<Section[]>(
     () => [
       {
-        id: "pages",
-        title: "Páginas",
+        id: "pessoas",
+        title: "Pessoas",
         items: [
-          { label: "Materiais de visita", to: "/adm/paginas-materiais-visita", icon: <EventNote /> },
-          { label: "Páginas de fotos", to: "/adm/paginas-fotos", icon: <PhotoLibrary /> },
-          { label: "Fotos dos abrigos", to: "/adm/fotos-abrigos", icon: <Collections /> },
-          { label: "Ideias compartilhadas", to: "/adm/ideias-compartilhadas", icon: <Lightbulb /> },
-          { label: "Páginas de vídeos", to: "/adm/paginas-videos", icon: <VideoLibrary /> },
-          { label: "Páginas de ideias", to: "/adm/paginas-ideias", icon: <Lightbulb /> },
+          { label: "Usuários", to: "/adm/usuarios", icon: <Group /> },
+          { label: "Perfis", to: "/adm/perfis", icon: <Favorite /> },
+          { label: "Membros", to: "/adm/membros", icon: <School /> },
+          { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
+          { label: "Abrigados", to: "/adm/abrigados", icon: <Group /> },
         ],
       },
       {
-        id: "conteudos",
-        title: "Conteúdos",
+        id: "abrigos",
+        title: "Abrigos",
         items: [
+          { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
+          { label: "Pagelas", to: "/adm/pagelas", icon: <Description /> },
+          { label: "Agendamentos", to: "/adm/agendamentos", icon: <CalendarMonth /> },
+          { label: "Presenças", to: "/adm/presenca", icon: <EventAvailable /> },
+        ],
+      },
+      {
+        id: "conteudo",
+        title: "Conteúdo",
+        items: [
+          { label: "Criar Página", to: "/adm/criar-pagina", icon: <NoteAdd /> },
           { label: "Meditações", to: "/adm/meditacoes", icon: <MenuBook /> },
           { label: "Documentos", to: "/adm/documentos", icon: <Description /> },
           { label: "Informativos", to: "/adm/informativos", icon: <Campaign /> },
-          { label: "Criar Página", to: "/adm/criar-pagina", icon: <NoteAdd /> },
         ],
       },
       {
-        id: "shelter",
-        title: "Abrigo",
+        id: "midias",
+        title: "Mídias",
         items: [
-          { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
-          { label: "Pagelas", to: "/adm/pagelas", icon: <Groups /> },
-          { label: "Usuários", to: "/adm/usuarios", icon: <Group /> },
-          { label: "Professores", to: "/adm/professores", icon: <School /> },
-          { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
-          { label: "Abrigados", to: "/adm/abrigados", icon: <Groups /> },
+          { label: "Galerias de Fotos", to: "/adm/paginas-fotos", icon: <PhotoLibrary /> },
+          { label: "Fotos dos Abrigos", to: "/adm/fotos-abrigos", icon: <Collections /> },
+          { label: "Vídeos", to: "/adm/paginas-videos", icon: <VideoLibrary /> },
         ],
       },
       {
-        id: "operacional",
-        title: "Operacional",
+        id: "materiais",
+        title: "Materiais",
         items: [
-          { label: "Feedbacks", to: "/adm/feedbacks", icon: <RateReview /> },
+          { label: "Materiais de Visita", to: "/adm/paginas-materiais-visita", icon: <EventNote /> },
+          { label: "Páginas de Ideias", to: "/adm/paginas-ideias", icon: <Lightbulb /> },
+          { label: "Ideias Compartilhadas", to: "/adm/ideias-compartilhadas", icon: <Lightbulb /> },
+        ],
+      },
+      {
+        id: "interacoes",
+        title: "Interações",
+        items: [
           { label: "Comentários", to: "/adm/comentarios", icon: <Comment /> },
           { label: "Contatos", to: "/adm/contatos", icon: <ContactMail /> },
+          { label: "Feedbacks", to: "/adm/feedbacks", icon: <RateReview /> },
         ],
       },
     ],
@@ -123,9 +141,12 @@ function AdminLayout() {
 
   const leaderAllowed = new Set<string>([
     "/adm/abrigados",
-    "/adm/professores",
+    "/adm/membros",
+    "/adm/perfis",
     "/adm/abrigos",
     "/adm/pagelas",
+    "/adm/agendamentos",
+    "/adm/presenca",
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
@@ -142,26 +163,52 @@ function AdminLayout() {
   }, [allSections, isAdmin, isLeader]);
 
   const sectionOfPath = (path: string): SectionId => {
-    if (path.startsWith("/adm/paginas-") || path.startsWith("/adm/fotos-")) return "pages";
-    if (
-      path.startsWith("/adm/meditacoes") ||
-      path.startsWith("/adm/documentos") ||
-      path.startsWith("/adm/informativos") ||
-      path.startsWith("/adm/criar-pagina")
-    ) {
-      return "conteudos";
-    }
+    // Pessoas
     if (
       path.startsWith("/adm/usuarios") ||
-      path.startsWith("/adm/abrigos") ||
-      path.startsWith("/adm/pagelas") ||
-      path.startsWith("/adm/professores") ||
+      path.startsWith("/adm/perfis") ||
+      path.startsWith("/adm/membros") ||
       path.startsWith("/adm/lideres") ||
       path.startsWith("/adm/abrigados")
     ) {
-      return "shelter";
+      return "pessoas";
     }
-    return "operacional";
+    // Abrigos
+    if (
+      path.startsWith("/adm/abrigos") ||
+      path.startsWith("/adm/pagelas") ||
+      path.startsWith("/adm/agendamentos") ||
+      path.startsWith("/adm/presenca")
+    ) {
+      return "abrigos";
+    }
+    // Conteúdo
+    if (
+      path.startsWith("/adm/criar-pagina") ||
+      path.startsWith("/adm/meditacoes") ||
+      path.startsWith("/adm/documentos") ||
+      path.startsWith("/adm/informativos")
+    ) {
+      return "conteudo";
+    }
+    // Mídias
+    if (
+      path.startsWith("/adm/paginas-fotos") ||
+      path.startsWith("/adm/fotos-abrigos") ||
+      path.startsWith("/adm/paginas-videos")
+    ) {
+      return "midias";
+    }
+    // Materiais
+    if (
+      path.startsWith("/adm/paginas-materiais-visita") ||
+      path.startsWith("/adm/paginas-ideias") ||
+      path.startsWith("/adm/ideias-compartilhadas")
+    ) {
+      return "materiais";
+    }
+    // Interações (default)
+    return "interacoes";
   };
 
   const [expanded, setExpanded] = useState<SectionId | null>(sectionOfPath(location.pathname));
@@ -184,11 +231,13 @@ function AdminLayout() {
     isMobile && mobileTab !== "tudo" ? sections.filter((s) => s.id === mobileTab) : sections;
 
   const labelMap: Record<MobileTab, string> = {
-    tudo: "tudo",
-    pages: "pages",
-    conteudos: "conteúdos",
-    shelter: "shelter",
-    operacional: "operacional",
+    tudo: "Tudo",
+    pessoas: "Pessoas",
+    abrigos: "Abrigos",
+    conteudo: "Conteúdo",
+    midias: "Mídias",
+    materiais: "Materiais",
+    interacoes: "Interações",
   };
 
   const drawerContent = (
@@ -210,7 +259,7 @@ function AdminLayout() {
               gap: 0.5,
             }}
           >
-            {(["tudo", "pages", "conteudos", "shelter", "operacional"] as MobileTab[]).map((tab) => (
+            {(["tudo", "pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"] as MobileTab[]).map((tab) => (
               <Button
                 key={tab}
                 size="small"

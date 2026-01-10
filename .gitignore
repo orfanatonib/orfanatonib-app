@@ -24,6 +24,11 @@ node_modules/
 env/.env.local
 env/env.local
 
+# CloudFormation local secrets / overrides
+cloudformation/parameters.local.json
+cloudformation/parameters.secrets.json
+cloudformation/parameters.json
+
 # Logs
 logs
 *.log

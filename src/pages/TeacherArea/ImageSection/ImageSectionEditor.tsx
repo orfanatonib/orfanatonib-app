@@ -89,7 +89,6 @@ export default function ImageSectionEditor({
   return (
     <Box>
       <Grid container spacing={{ xs: 2, md: 3 }}>
-        {/* Formulário - Mobile First */}
         <Grid item xs={12} md={5}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -187,7 +186,6 @@ export default function ImageSectionEditor({
           </motion.div>
         </Grid>
 
-        {/* Galeria de Imagens - Mobile First */}
         <Grid item xs={12} md={7}>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -318,7 +316,6 @@ export default function ImageSectionEditor({
                               <DeleteIcon color="error" fontSize={isMobile ? "small" : "medium"} />
                             </IconButton>
                             
-                            {/* Overlay com número da imagem */}
                             <Box
                               sx={{
                                 position: 'absolute',
@@ -341,23 +338,50 @@ export default function ImageSectionEditor({
                     ))}
                   </Swiper>
                   
-                  {/* Custom Navigation Buttons */}
                   <Box
                     className="swiper-button-prev"
                     sx={{
-                      color: 'primary.main',
+                      color: 'white',
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      width: { xs: '32px', md: '40px' },
+                      height: { xs: '32px', md: '40px' },
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       '&::after': {
-                        fontSize: { xs: '16px', md: '20px' },
+                        fontSize: { xs: '18px', md: '24px' },
+                        fontWeight: 'bold',
                       },
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.8)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                      backdropFilter: 'blur(4px)',
                     }}
                   />
                   <Box
                     className="swiper-button-next"
                     sx={{
-                      color: 'primary.main',
+                      color: 'white',
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      width: { xs: '32px', md: '40px' },
+                      height: { xs: '32px', md: '40px' },
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       '&::after': {
-                        fontSize: { xs: '16px', md: '20px' },
+                        fontSize: { xs: '18px', md: '24px' },
+                        fontWeight: 'bold',
                       },
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.8)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s ease',
+                      backdropFilter: 'blur(4px)',
                     }}
                   />
                 </Box>

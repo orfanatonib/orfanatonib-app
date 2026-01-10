@@ -186,7 +186,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
       }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}
@@ -207,7 +206,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
           </Typography>
         </Box>
 
-        {/* Form Section */}
         <Paper
           elevation={2}
           sx={{
@@ -298,7 +296,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
           </Grid>
         </Paper>
 
-        {/* Sections */}
         {sections.length > 0 && (
           <Paper
             elevation={2}
@@ -357,7 +354,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
           </Paper>
         )}
 
-        {/* Add Section Button */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Button
             variant="outlined"
@@ -383,7 +379,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
           </Button>
         </Box>
 
-        {/* Save Button */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
           <Button
             variant="outlined"

@@ -51,7 +51,6 @@ export default function ContactsManager() {
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -60,7 +59,6 @@ export default function ContactsManager() {
           <BackHeader title="📞 Gerenciar Contatos" />
         </motion.div>
 
-        {/* Toolbar Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,7 +72,6 @@ export default function ContactsManager() {
           />
         </motion.div>
 
-        {/* Grid Section */}
         <ContactGrid
           items={filtered}
           loading={loading}

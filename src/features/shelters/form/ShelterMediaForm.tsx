@@ -1,33 +1,28 @@
 import React, { Fragment } from 'react';
-import { Grid, FormControl, InputLabel, Select, MenuItem, Button, Box, IconButton, Card, CardMedia } from '@mui/material';
-import { CloudUpload, Link as LinkIcon, Image as ImageIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Grid, Button, Box, IconButton, Card, CardMedia, Typography } from '@mui/material';
+import { CloudUpload, Image as ImageIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface Props {
-  uploadType: "upload" | "link";
-  setUploadType: (v: "upload" | "link") => void;
-  url: string;
-  setUrl: (v: string) => void;
   file: File | null;
   setFile: (f: File | null) => void;
   existingImageUrl?: string;
   onRemoveExistingImage?: () => void;
-  onUrlChange?: (url: string) => void;
   onFileChange?: (file: File | null) => void;
 }
 
 const ShelterMediaForm: React.FC<Props> = ({
-  uploadType, setUploadType, url, setUrl, file, setFile, existingImageUrl, onRemoveExistingImage, onUrlChange, onFileChange,
+  file, setFile, existingImageUrl, onRemoveExistingImage, onFileChange,
 }) => {
   const [showExisting, setShowExisting] = React.useState(!!existingImageUrl);
-  const previewUrl = file ? URL.createObjectURL(file) : (uploadType === "link" && url ? url : null);
+  const [imageError, setImageError] = React.useState(false);
+  const previewUrl = file ? URL.createObjectURL(file) : null;
 
-  // Resetar showExisting quando existingImageUrl mudar
   React.useEffect(() => {
     setShowExisting(!!existingImageUrl);
+    setImageError(false);
   }, [existingImageUrl]);
 
-  // Se tem imagem existente e não foi removida, mostrar apenas a imagem com botão X
-  if (showExisting && existingImageUrl && !file && (!url || url === existingImageUrl)) {
+  if (showExisting && existingImageUrl && !file) {
     return (
       <Fragment>
         <Grid item xs={12}>
@@ -40,21 +35,47 @@ const ShelterMediaForm: React.FC<Props> = ({
         </Grid>
 
         <Grid item xs={12}>
-          <Card sx={{ position: 'relative', borderRadius: 2 }}>
-            <CardMedia
-              component="img"
-              image={existingImageUrl}
-              alt="Imagem atual do abrigo"
-              sx={{
-                width: "100%",
-                height: "auto",
-                maxHeight: 300,
-                objectFit: "cover",
-              }}
-            />
+          <Card sx={{ position: 'relative', borderRadius: 2, border: imageError ? '2px solid' : 'none', borderColor: imageError ? 'error.main' : 'transparent' }}>
+            {imageError ? (
+              <Box
+                sx={{
+                  width: "100%",
+                  minHeight: 300,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'grey.100',
+                  gap: 2,
+                  py: 3,
+                }}
+              >
+                <ImageIcon sx={{ fontSize: 60, color: 'error.main' }} />
+                <Typography variant="body1" color="error.main" fontWeight={600}>
+                  Erro ao carregar a imagem
+                </Typography>
+                <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
+                  A imagem não pôde ser carregada. Clique no "X" para remover e adicionar uma nova.
+                </Typography>
+              </Box>
+            ) : (
+              <CardMedia
+                component="img"
+                image={existingImageUrl}
+                alt="Imagem atual do abrigo"
+                onError={() => setImageError(true)}
+                sx={{
+                  width: "100%",
+                  height: "auto",
+                  maxHeight: 300,
+                  objectFit: "cover",
+                }}
+              />
+            )}
             <IconButton
               onClick={() => {
                 setShowExisting(false);
+                setImageError(false);
                 if (onRemoveExistingImage) {
                   onRemoveExistingImage();
                 }
@@ -65,16 +86,18 @@ const ShelterMediaForm: React.FC<Props> = ({
                 right: 8,
                 bgcolor: 'error.main',
                 color: 'white',
+                zIndex: 10,
+                width: { xs: 40, sm: 44 },
+                height: { xs: 40, sm: 44 },
                 '&:hover': {
                   bgcolor: 'error.dark',
-                  transform: 'scale(1.1)',
+                  transform: 'scale(1.15)',
                 },
                 transition: 'all 0.2s',
-                boxShadow: 2,
+                boxShadow: 4,
               }}
-              size="small"
             >
-              <CloseIcon fontSize="small" />
+              <CloseIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
             </IconButton>
             <Box
               sx={{
@@ -86,6 +109,7 @@ const ShelterMediaForm: React.FC<Props> = ({
                 color: "white",
                 p: 1,
                 fontSize: '0.875rem',
+                zIndex: 5,
               }}
             >
               Clique no "X" para remover e adicionar nova imagem
@@ -96,7 +120,6 @@ const ShelterMediaForm: React.FC<Props> = ({
     );
   }
 
-  // Formulário normal de seleção de mídia
   return (
     <Fragment>
       <Grid item xs={12}>
@@ -107,85 +130,14 @@ const ShelterMediaForm: React.FC<Props> = ({
           </Box>
         </Box>
       </Grid>
-      
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel>Tipo de Imagem</InputLabel>
-          <Select 
-            value={uploadType} 
-            label="Tipo de Imagem" 
-            onChange={(e) => {
-              setUploadType(e.target.value as "upload" | "link");
-              // Limpar campos ao trocar de tipo
-              if (e.target.value === "upload") {
-                setUrl("");
-              } else {
-                setFile(null);
-              }
-            }}
-          >
-            <MenuItem value="upload">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CloudUpload fontSize="small" />
-                Upload (Enviar arquivo)
-              </Box>
-            </MenuItem>
-            <MenuItem value="link">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LinkIcon fontSize="small" />
-                Link (URL externa - Unsplash, etc)
-              </Box>
-            </MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-
-      {uploadType === "link" && (
+        
         <Grid item xs={12}>
-          <Box
-            component="input"
-            type="text"
-            value={url}
-            onChange={(e: any) => {
-              const newUrl = e.target.value;
-              setUrl(newUrl);
-              if (onUrlChange) onUrlChange(newUrl);
-            }}
-            placeholder="https://images.unsplash.com/photo-..."
-            sx={{
-              width: '100%',
-              padding: '16.5px 14px',
-              fontSize: '1rem',
-              fontFamily: 'inherit',
-              border: '1px solid',
-              borderColor: 'rgba(0, 0, 0, 0.23)',
-              borderRadius: '4px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              '&:hover': {
-                borderColor: 'rgba(0, 0, 0, 0.87)',
-              },
-              '&:focus': {
-                borderColor: 'primary.main',
-                borderWidth: '2px',
-                padding: '15.5px 13px',
-              },
-            }}
-          />
-          <Box sx={{ mt: 0.5, fontSize: '0.75rem', color: 'text.secondary', pl: 1.75 }}>
-            Cole o link da imagem (ex: Unsplash, Google Drive, etc)
-          </Box>
-        </Grid>
-      )}
-
-      {uploadType === "upload" && (
-        <Grid item xs={12}>
-          <Button 
-            component="label" 
-            variant="outlined" 
+          <Button
+            component="label"
+            variant="outlined"
             fullWidth
             startIcon={<CloudUpload />}
-            sx={{ 
+            sx={{
               py: 2,
               borderRadius: 2,
               borderStyle: 'dashed',
@@ -210,9 +162,7 @@ const ShelterMediaForm: React.FC<Props> = ({
             </Box>
           )}
         </Grid>
-      )}
 
-      {/* Preview da Imagem */}
       {previewUrl && (
         <Grid item xs={12}>
           <Box sx={{ 

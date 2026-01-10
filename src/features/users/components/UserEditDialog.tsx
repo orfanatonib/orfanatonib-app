@@ -7,6 +7,7 @@ import {
 import CircularProgress from "@mui/material/CircularProgress";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { UpadateUserForm } from "../types";
+import { maskPhoneBR } from "@/utils/masks";
 
 type Props = {
   open: boolean;
@@ -20,7 +21,7 @@ type Props = {
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Professor",
+  [UserRole.TEACHER]: "Membro",
   [UserRole.ADMIN]: "Administrador",
 };
 
@@ -74,8 +75,10 @@ export default function UserEditDialog({
             <TextField
               fullWidth
               label="Telefone"
-              value={value.phone}
-              onChange={(e) => onChange({ ...value, phone: e.target.value })}
+              inputMode="numeric"
+              value={maskPhoneBR(value.phone || "")}
+              onChange={(e) => onChange({ ...value, phone: maskPhoneBR(e.target.value) })}
+              placeholder="(DD) 9XXXX-XXXX"
             />
           </Grid>
 

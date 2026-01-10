@@ -153,7 +153,6 @@ export default function PageVideoView({ idToFetch }: VideoPageViewProps) {
         flexDirection: 'column',
       }}
     >
-      {/* Header Section - Full Width */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

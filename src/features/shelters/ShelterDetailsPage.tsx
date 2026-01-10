@@ -342,7 +342,6 @@ export default function ShelterDetailsPage() {
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <Grid container spacing={3}>
-            {/* Informações Principais e Endereço lado a lado */}
             <Grid item xs={12} lg={8}>
               <Paper
                 elevation={2}
@@ -417,7 +416,7 @@ export default function ShelterDetailsPage() {
                       />
                       <Chip
                         icon={<SchoolOutlined />}
-                        label={`${allTeachers.length} Professor(es)`}
+                        label={`${allTeachers.length} Membro(es)`}
                         color="secondary"
                         variant="outlined"
                       />
@@ -427,7 +426,6 @@ export default function ShelterDetailsPage() {
               </Paper>
             </Grid>
 
-            {/* Endereço */}
             <Grid item xs={12} lg={4}>
               <Paper
                 elevation={2}
@@ -506,7 +504,6 @@ export default function ShelterDetailsPage() {
               </Paper>
             </Grid>
 
-            {/* Minhas Equipes */}
             {leaderTeams.length > 0 && (
               <Grid item xs={12}>
                 <Paper
@@ -581,7 +578,7 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Professores ({team.teachers?.length || 0})
+                                  Membros ({team.teachers?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
                                   items={team.teachers?.map((teacher) => ({
@@ -594,7 +591,7 @@ export default function ShelterDetailsPage() {
                                     variant: "outlined" as const,
                                   })) || []}
                                   maxVisible={3}
-                                  emptyMessage="Nenhum professor"
+                                  emptyMessage="Nenhum membro"
                                 />
                               </Box>
                             </Stack>
@@ -607,7 +604,6 @@ export default function ShelterDetailsPage() {
               </Grid>
             )}
 
-            {/* Todas as Equipes */}
             {teams.length > 0 && (
               <Grid item xs={12}>
                 <Paper
@@ -684,7 +680,7 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Professores ({team.teachers?.length || 0})
+                                  Membros ({team.teachers?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
                                   items={team.teachers?.map((teacher) => ({
@@ -697,7 +693,7 @@ export default function ShelterDetailsPage() {
                                     variant: "outlined" as const,
                                   })) || []}
                                   maxVisible={3}
-                                  emptyMessage="Nenhum professor"
+                                  emptyMessage="Nenhum membro"
                                 />
                               </Box>
                             </Stack>
@@ -710,7 +706,6 @@ export default function ShelterDetailsPage() {
               </Grid>
             )}
 
-            {/* Informações Adicionais */}
             {shelter.createdAt && (
               <Grid item xs={12}>
                 <Paper

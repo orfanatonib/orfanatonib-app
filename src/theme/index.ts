@@ -1,7 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 import { gradients } from './gradients';
 
-// Cores personalizadas
 const colors = {
   primary: '#FFFF00',    // Amarelo
   secondary: '#000000',  // Preto

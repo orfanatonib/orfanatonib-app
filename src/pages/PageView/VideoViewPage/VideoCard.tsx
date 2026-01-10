@@ -59,7 +59,6 @@ const VideoCard = ({ video }: Props) => {
             },
           }}
         >
-          {/* Video Thumbnail */}
           <Box 
             sx={{ 
               position: 'relative', 
@@ -108,7 +107,6 @@ const VideoCard = ({ video }: Props) => {
               </Box>
             )}
             
-            {/* Play Overlay */}
             <Box 
               sx={{ 
                 position: 'absolute', 
@@ -149,9 +147,7 @@ const VideoCard = ({ video }: Props) => {
             </Box>
           </Box>
 
-          {/* Content */}
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            {/* Header with title and size */}
             <Box display="flex" alignItems="center" gap={1} mb={1}>
               <VideoFileIcon sx={{ fontSize: '1rem', color: 'primary.main' }} />
               {fileSize && (
@@ -197,7 +193,6 @@ const VideoCard = ({ video }: Props) => {
         </Paper>
       </motion.div>
 
-      {/* Video Modal */}
       <Dialog 
         fullWidth 
         maxWidth="lg" 

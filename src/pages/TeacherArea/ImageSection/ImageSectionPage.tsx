@@ -118,7 +118,7 @@ export default function ImageSectionPage() {
     try {
       await saveSection(formData);
 
-      navigate('/area-do-professor');
+      navigate('/area-do-membro');
     } catch (error) {
       console.error('Error saving section:', error);
       showError('Falha ao compartilhar as imagens do seu Abrigo. Tente novamente.');
@@ -132,7 +132,7 @@ export default function ImageSectionPage() {
   };
 
   const handleBack = () => {
-    navigate('/area-do-professor');
+    navigate('/area-do-membro');
   };
 
   return (
@@ -181,7 +181,7 @@ export default function ImageSectionPage() {
                   width: 40,
                   height: 40,
                 }}
-                aria-label="Voltar para área do professor"
+                aria-label="Voltar para área do membro"
               >
                 <ArrowBackIcon fontSize="inherit" />
               </IconButton>
@@ -218,7 +218,7 @@ export default function ImageSectionPage() {
                     width: 44,
                     height: 44,
                   }}
-                  aria-label="Voltar para área do professor"
+                  aria-label="Voltar para área do membro"
                 >
                   <ArrowBackIcon fontSize="inherit" />
                 </IconButton>
@@ -270,7 +270,7 @@ export default function ImageSectionPage() {
                     mx: 'auto',
                   }}
                 >
-                  Registre e compartilhe os momentos especiais das atividades do seu Abrigo para inspirar outros professores
+                  Registre e compartilhe os momentos especiais das atividades do seu Abrigo para inspirar outros membros
                 </Typography>
               </Box>
             </Box>
@@ -296,7 +296,7 @@ export default function ImageSectionPage() {
                 initialIsPublic={sectionData?.public ?? true}
                 initialMediaItems={sectionData?.mediaItems || []}
                 onChange={handleChange}
-                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Abrigados aprendendo sobre ressurreição"
+                captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa - Abrigados aprendendo sobre ressurreição"
                 descriptionPlaceholder="EX: Descreva as atividades realizadas no seu Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos, momentos especiais com as crianças e como elas reagiram às atividades."
               />
             </motion.div>

@@ -10,6 +10,7 @@ export type UserPublicDto = {
   active: boolean;
   completed: boolean;
   commonUser: boolean;
+  mediaItem?: MediaItemDto | null;
 };
 
 export type LeaderMiniDto = { 

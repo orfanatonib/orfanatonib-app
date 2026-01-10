@@ -21,6 +21,11 @@ export interface IdeasSection {
   createdAt: string;
   updatedAt: string;
   medias: MediaItem[];
+  user?: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
 }
 
 export interface IdeasPage {

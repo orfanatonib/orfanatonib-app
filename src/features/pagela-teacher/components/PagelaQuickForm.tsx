@@ -18,7 +18,8 @@ import { Close, Save } from "@mui/icons-material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO } from "../utils";
 
@@ -54,11 +55,42 @@ export default function PagelaQuickForm({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const teacherProfileIdFromRedux = useSelector(
-    (s: any) => s?.auth?.user?.teacherProfile?.id ?? null
-  ) as string | null;
+  const dispatch = useDispatch();
+  const user = useSelector((s: any) => s?.auth?.user);
+  const userRole = user?.role;
+  const isTeacher = userRole === UserRole.TEACHER;
+  const isLeader = userRole === UserRole.LEADER;
+  
+  // Atualizar dados do Redux se necessário (busca /auth/me e atualiza o Redux)
+  React.useEffect(() => {
+    const refreshUserData = async () => {
+      // Só atualiza se não tiver o ID necessário no Redux
+      if ((isTeacher && !user?.teacherProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
+        try {
+          await dispatch(fetchCurrentUser()).unwrap();
+        } catch (err) {
+          console.error('Erro ao atualizar dados do usuário:', err);
+        }
+      }
+    };
+    
+    refreshUserData();
+  }, [dispatch, isTeacher, isLeader, user?.teacherProfile?.id, user?.leaderProfile?.id]);
+  
+  const teacherProfileIdFromRedux = isTeacher 
+    ? (user?.teacherProfile?.id ?? null) 
+    : null;
+  const leaderProfileIdFromRedux = isLeader 
+    ? (user?.leaderProfile?.id ?? null) 
+    : null;
 
-  const effectiveTeacherProfileId = teacherProfileIdFromRedux ?? teacherProfileId ?? null;
+  // Para professores, usar teacherProfileId; para líderes, usar leaderProfileId
+  const effectiveTeacherProfileId = isTeacher 
+    ? (teacherProfileIdFromRedux ?? teacherProfileId ?? null)
+    : null;
+  const effectiveLeaderProfileId = isLeader 
+    ? (leaderProfileIdFromRedux ?? null)
+    : null;
 
   const [yearText, setYearText] = React.useState<string>("");
   const [visitText, setVisitText] = React.useState<string>("");
@@ -126,14 +158,45 @@ export default function PagelaQuickForm({
   const handleSave = async () => {
     if (!canSave) return;
 
-    const payloadCommon = {
+    // Garantir que temos o teacherProfileId/leaderProfileId antes de enviar
+    let finalTeacherProfileId = effectiveTeacherProfileId;
+    let finalLeaderProfileId = effectiveLeaderProfileId;
+    
+    // Se não temos o ID, atualizar o Redux via fetchCurrentUser
+    if (isTeacher && !finalTeacherProfileId) {
+      try {
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalTeacherProfileId = updatedUser?.teacherProfile?.id ?? null;
+      } catch (err) {
+        console.error('Erro ao atualizar dados do usuário:', err);
+      }
+    } else if (isLeader && !finalLeaderProfileId) {
+      try {
+        const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
+        finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
+      } catch (err) {
+        console.error('Erro ao atualizar dados do usuário:', err);
+      }
+    }
+
+    const payloadCommon: any = {
       referenceDate: todayISO(),
       year: parsedYear!,
       visit: parsedVisit!,
       present,
       notes,
-      teacherProfileId: effectiveTeacherProfileId,
     };
+    
+    // Enviar o ID correto baseado no role (obrigatório)
+    if (isTeacher && finalTeacherProfileId) {
+      payloadCommon.teacherProfileId = finalTeacherProfileId;
+    } else if (isLeader && finalLeaderProfileId) {
+      payloadCommon.leaderProfileId = finalLeaderProfileId;
+    } else {
+      // Se ainda não temos o ID, mostrar erro
+      console.error('Não foi possível obter teacherProfileId ou leaderProfileId');
+      return;
+    }
 
     if (editing && currentId) {
       await onUpdate(currentId, payloadCommon);

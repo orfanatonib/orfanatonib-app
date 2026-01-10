@@ -76,16 +76,15 @@ export default function TeacherToolbar({
       </Typography>
 
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="flex-end">
-        {/* Busca por Professor */}
         <Grid item xs={12} sm={6} md={4}>
           <TextField
             fullWidth
             size="small"
-            label="Busca por Professor"
+            label="Busca por Membro"
             value={filters.teacherSearchString ?? ""}
             onChange={(e) => handleChange("teacherSearchString", e.target.value || undefined)}
-            placeholder="Nome, email, telefone do professor"
-            inputProps={{ "aria-label": "Campo de busca por professor" }}
+            placeholder="Nome, email, telefone do membro"
+            inputProps={{ "aria-label": "Campo de busca por membro" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -118,7 +117,6 @@ export default function TeacherToolbar({
           />
         </Grid>
 
-        {/* Busca por Abrigo */}
         <Grid item xs={12} sm={6} md={4}>
           <TextField
             fullWidth
@@ -160,7 +158,6 @@ export default function TeacherToolbar({
           />
         </Grid>
 
-        {/* Filtro de Vínculo */}
         <Grid item xs={12} sm={6} md={2}>
           <TextField
             select
@@ -188,7 +185,6 @@ export default function TeacherToolbar({
           </TextField>
         </Grid>
 
-        {/* Botões de Ação */}
         <Grid item xs={12} sm={6} md={2}>
           {isXs ? (
             <Box sx={{ height: 40 }} />
@@ -229,7 +225,6 @@ export default function TeacherToolbar({
         </Grid>
       </Grid>
 
-      {/* FABs para Mobile */}
       {isXs && (
         <Box
           sx={{

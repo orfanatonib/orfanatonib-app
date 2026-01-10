@@ -20,7 +20,6 @@ import { Edit as EditIcon } from "@mui/icons-material";
 import { LeaderProfile } from "../types";
 import CircularProgress from "@mui/material/CircularProgress";
 import { fmtDate } from "@/utils/dates";
-import TeamManagementDialog from "../../shelters/components/TeamManagementDialog";
 
 type Props = {
   open: boolean;
@@ -32,14 +31,15 @@ type Props = {
 export default function LeaderViewDialog({ open, loading, leader, onClose }: Props) {
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
-  const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
 
-  // Professores agora são acessados via shelter
-  const teachers = React.useMemo(() => {
-    return leader?.shelter?.teachers || [];
+  const shelters = React.useMemo(() => {
+    return leader?.shelters || [];
   }, [leader]);
 
-  const shelterId = leader?.shelter?.id;
+  const totalShelters = shelters.length;
+  const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
+  const allTeachers = shelters.flatMap(shelter => shelter.teachers || []);
+  const totalTeachers = allTeachers.length;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -55,54 +55,97 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
 
             <Grid item xs={12}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <strong>Equipe</strong>
-                <Tooltip title="Gerenciar Equipes do Abrigo">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => setTeamManagementOpen(true)}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                <strong>Associações</strong>
+                <Typography variant="caption" color="text.secondary">
+                  (Use o botão editar na tabela principal)
+                </Typography>
               </Box>
             </Grid>
-            {leader.shelter && (
-              <>
-                <Grid item xs={12} md={6}>
-                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      Abrigo:
-                    </Typography>
-                    <Chip size="small" color="secondary" label={leader.shelter.name} />
-                  </Stack>
-                </Grid>
-                {leader.shelter.team?.numberTeam !== undefined && (
-                  <Grid item xs={12} md={6}>
-                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        Equipe:
-                      </Typography>
-                      <Chip size="small" color="info" label={`Equipe ${leader.shelter.team.numberTeam}`} />
-                    </Stack>
-                  </Grid>
-                )}
-              </>
+
+            {totalShelters > 0 ? (
+              <Grid item xs={12}>
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                  {totalShelters} abrigo{totalShelters > 1 ? 's' : ''}, {totalTeams} equipe{totalTeams > 1 ? 's' : ''}
+                </Typography>
+                <Stack spacing={2}>
+                  {shelters.map((shelter) => (
+                    <Box
+                      key={shelter.id}
+                      sx={{
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.default'
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            Abrigo:
+                          </Typography>
+                          <Chip size="small" color="secondary" label={shelter.name} />
+                        </Stack>
+
+                        {shelter.teams.length > 0 && (
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              Equipes:
+                            </Typography>
+                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                              {shelter.teams.map((team) => (
+                                <Chip
+                                  key={team.id}
+                                  size="small"
+                                  color="info"
+                                  label={`Equipe ${team.numberTeam}`}
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+
+                        {shelter.teachers && shelter.teachers.length > 0 && (
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              Membros:
+                            </Typography>
+                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                              {shelter.teachers.map((t) => {
+                                const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                                return (
+                                  <Chip key={t.id} size="small" color="success" label={teacherName} />
+                                );
+                              })}
+                            </Box>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              </Grid>
+            ) : (
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                  Não vinculado a nenhum abrigo
+                </Typography>
+              </Grid>
             )}
 
-            <Grid item xs={12}><strong>Professores</strong></Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                {teachers.length === 0 ? (
-                  <Chip label="—" />
-                ) : (
-                  teachers.map((t) => {
-                    const teacherName = t.user?.name || t.user?.email || "Sem nome";
-                    return <Chip key={t.id} label={teacherName} />;
-                  })
-                )}
-              </Box>
-            </Grid>
+            {totalTeachers > 0 && (
+              <>
+                <Grid item xs={12}><strong>Todos os Membros</strong></Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                    {allTeachers.map((t) => {
+                      const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                      return <Chip key={t.id} label={teacherName} />;
+                    })}
+                  </Box>
+                </Grid>
+              </>
+            )}
 
             {isMdUp && (
               <>
@@ -116,16 +159,6 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
       </DialogContent>
       <DialogActions><Button onClick={onClose}>Fechar</Button></DialogActions>
 
-      <TeamManagementDialog
-        open={teamManagementOpen}
-        shelterId={shelterId}
-        leaderId={leader?.id}
-        onClose={() => setTeamManagementOpen(false)}
-        onSuccess={async () => {
-          // Não fechar o modal, apenas atualizar os dados se necessário
-          // O modal só fecha quando o usuário clicar em "Fechar"
-        }}
-      />
     </Dialog>
   );
 }

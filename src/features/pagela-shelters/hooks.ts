@@ -196,7 +196,6 @@ export const usePagelaSheltersManager = () => {
   const [shelteredFilters, setShelteredFilters] = useState<ShelteredFilters>({});
   const [pagelasFilters, setPagelasFilters] = useState<PagelasFilters>({});
 
-  // Shelters
   const shelters = useShelters(sheltersFilters);
 
   const shelteredFiltersWithShelter = selectedShelter 
@@ -272,7 +271,6 @@ export const usePagelaSheltersManager = () => {
     shelteredFilters,
     pagelasFilters,
     
-    // Ações
     handleShelterSelect,
     handleShelteredSelect,
     handleBack,

@@ -7,6 +7,8 @@ import { MediaTargetType } from 'store/slices/types';
 import { motion } from 'framer-motion';
 
 const TeacherWeekBanner: React.FC = () => {
+  return null;
+
   const routes = useSelector((state: RootState) => state.routes.routes);
   const { user } = useSelector((state: RootState) => state.auth);
   const currentVisitRoute = routes.find(
@@ -20,10 +22,10 @@ const TeacherWeekBanner: React.FC = () => {
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
-    
+
     const monthName = monthNames[today.getMonth()];
     const isFirstHalf = dayOfMonth <= 15;
-    
+
     return {
       part: isFirstHalf ? 'primeira parte' : 'segunda parte',
       month: monthName
@@ -156,7 +158,7 @@ const TeacherWeekBanner: React.FC = () => {
               textShadow: '1px 1px 3px rgba(0, 0, 0, 0.3)',
             }}
           >
-            Olá {user?.name || 'Professor'}, estamos na {part} do mês de:
+            Olá {user?.name || 'Membro'}, estamos na {part} do mês de:
           </Typography>
 
           <Typography

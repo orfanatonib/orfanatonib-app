@@ -17,11 +17,12 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import axios from 'axios';
-import { IMaskInput } from 'react-imask';
 import { useSelector } from 'react-redux';
 
 import api from '@/config/axiosConfig';
 import { RootState } from '@/store/slices';
+import { digitsOnly, maskPhoneBR } from '@/utils/masks';
+import { isValidEmail, normalizeEmail } from '@/utils/validators';
 
 interface RegisterProps {
   commonUser: boolean;
@@ -61,19 +62,21 @@ const MESSAGES = {
 } as const;
 
 
-const PhoneMask = React.forwardRef<HTMLInputElement, any>(function PhoneMask(props, ref) {
-  return <IMaskInput {...props} mask="(00) 00000-0000" inputRef={ref} overwrite />;
-});
-
-
 const getSchema = (commonUser: boolean) =>
   Yup.object({
-    name: Yup.string().required('Nome é obrigatório'),
-    email: Yup.string().email('Email inválido').required('Email é obrigatório'),
+    name: Yup.string()
+      .required('Nome é obrigatório')
+      .min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    email: Yup.string()
+      .required('Email é obrigatório')
+      .test('valid-email', 'Email inválido', (val) => isValidEmail(val)),
     ...(commonUser && {
       confirmEmail: Yup.string()
-        .oneOf([Yup.ref('email')], 'Os emails não coincidem')
-        .required('Confirme o email'),
+        .required('Confirme o email')
+        .test('emails-match', 'Os emails não coincidem', function (val) {
+          const email = (this.parent as any)?.email;
+          return normalizeEmail(val) === normalizeEmail(email);
+        }),
       password: Yup.string()
         .min(6, 'Senha deve ter pelo menos 6 caracteres')
         .required('Senha obrigatória'),
@@ -83,15 +86,14 @@ const getSchema = (commonUser: boolean) =>
     }),
     phone: Yup.string()
       .test('len', 'Telefone inválido (DDD + número)', (val) => {
-        const digits = val?.replace(/\D/g, '');
-        return digits?.length === 10 || digits?.length === 11;
+        const digits = digitsOnly(val);
+        if (digits.startsWith("55")) return digits.length === 12 || digits.length === 13;
+        return digits.length === 10 || digits.length === 11;
       })
       .required('Telefone é obrigatório'),
-    role: (commonUser
-      ? Yup.mixed<RoleChoice>().oneOf(['', 'teacher', 'leader'])
-      : Yup.mixed<RoleChoice>()
-        .oneOf(['teacher', 'leader'])
-        .required('Selecione seu perfil')) as any,
+    role: (Yup.mixed<RoleChoice>()
+      .oneOf(['teacher', 'leader'])
+      .required('Selecione seu perfil')) as any,
   });
 
 
@@ -153,14 +155,17 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormData>({
     resolver: yupResolver(getSchema(commonUser)) as any,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -205,13 +210,18 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     const endpoint = commonUser ? '/auth/register' : '/auth/complete-register';
 
     try {
-      await api.post(endpoint, {
+      const response = await api.post(endpoint, {
         name: data.name,
-        email: data.email,
-        phone: data.phone,
+        email: normalizeEmail(data.email),
+        phone: digitsOnly(data.phone),
         password: commonUser ? data.password : undefined,
         role: data.role || undefined,
       });
+
+      // Verificar se o email de verificação foi enviado
+      if (response.data?.emailVerification?.verificationEmailSent) {
+        setEmailVerificationSent(true);
+      }
 
       setSuccess(true);
     } catch (error) {
@@ -227,28 +237,87 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
   };
 
   const renderSuccessScreen = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 3, gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 1, md: 2 }, gap: { xs: 2, md: 2.5 } }}>
+      {/* Mensagem principal de sucesso */}
       <Alert
         severity="success"
         sx={{
-          fontSize: isMobile ? '1rem' : '1.1rem',
+          fontSize: { xs: '0.9rem', md: '1.1rem' },
           fontWeight: 'bold',
-          p: { xs: 2, md: 2.5 },
+          p: { xs: 1.5, md: 2.5 },
           textAlign: 'center',
           borderRadius: 2,
           boxShadow: 2,
+          width: '100%',
         }}
       >
-        {MESSAGES.SUCCESS.TITLE} <br />
-        {MESSAGES.SUCCESS.SUBTITLE} <br />
-        {MESSAGES.SUCCESS.NOTIFICATION}
+        <Box sx={{ mb: { xs: 0.5, md: 1 }, fontSize: { xs: '0.95rem', md: '1.1rem' } }}>
+          {MESSAGES.SUCCESS.TITLE}
+        </Box>
+        <Box sx={{ fontSize: { xs: '0.85rem', md: '1rem' }, fontWeight: 500, mt: 0.5 }}>
+          {MESSAGES.SUCCESS.SUBTITLE}
+        </Box>
+        <Box sx={{ fontSize: { xs: '0.85rem', md: '1rem' }, fontWeight: 500, mt: 0.5 }}>
+          {MESSAGES.SUCCESS.NOTIFICATION}
+        </Box>
       </Alert>
 
+      {/* Seção de verificação de email */}
+      {emailVerificationSent && (
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 1.2, md: 1.5 },
+            p: { xs: 1.5, md: 2.5 },
+            backgroundColor: '#e3f2fd',
+            borderRadius: 2,
+            border: '1px solid #90caf9',
+          }}
+        >
+          <Typography
+            variant="body1"
+            sx={{
+              fontSize: { xs: '0.85rem', md: '1rem' },
+              textAlign: 'center',
+              color: '#1565c0',
+              fontWeight: 500,
+              lineHeight: 1.5,
+            }}
+          >
+            📧 Um email de verificação foi enviado para o seu endereço.
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="info"
+            fullWidth
+            onClick={() => navigate('/verificar-email')}
+            sx={{
+              py: { xs: 1, md: 1.2 },
+              fontWeight: 'bold',
+              fontSize: { xs: '0.8rem', md: '0.95rem' },
+              textTransform: 'none',
+            }}
+          >
+            Ver instruções de verificação
+          </Button>
+        </Box>
+      )}
+
+      {/* Botão voltar para login */}
       <Button
         variant="contained"
         color="primary"
+        fullWidth
         onClick={handleBackToLogin}
-        sx={{ mt: 1, px: 4, py: 1.25, fontWeight: 'bold' }}
+        sx={{
+          mt: { xs: 0.5, md: 1 },
+          py: { xs: 1.2, md: 1.5 },
+          fontWeight: 'bold',
+          fontSize: { xs: '0.9rem', md: '1rem' },
+        }}
       >
         Voltar para Login
       </Button>
@@ -257,7 +326,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
 
   const renderForm = () => (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {/* Nome */}
       <Controller
         name="name"
         control={control}
@@ -323,11 +391,10 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             margin="normal"
             error={!!errors.phone}
             helperText={errors.phone?.message}
-            slotProps={{
-              input: {
-                inputComponent: PhoneMask as any,
-              },
-            }}
+            inputMode="numeric"
+            value={maskPhoneBR(field.value || "")}
+            onChange={(e) => field.onChange(maskPhoneBR(e.target.value))}
+            placeholder="(DD) 9XXXX-XXXX"
           />
         )}
       />
@@ -343,12 +410,12 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             fullWidth
             margin="normal"
             error={!!errors.role}
-            helperText={errors.role?.message || 'Informe se você é Professor ou Líder'}
+            helperText={errors.role?.message || 'Informe se você é Membro ou Líder'}
           >
             <MenuItem value="">
               <em>Selecione</em>
             </MenuItem>
-            <MenuItem value="teacher">Professor</MenuItem>
+            <MenuItem value="teacher">Membro</MenuItem>
             <MenuItem value="leader">Líder</MenuItem>
           </TextField>
         )}
@@ -394,7 +461,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         type="submit"
         variant="contained"
         fullWidth
-        disabled={loading}
+        disabled={loading || !isValid}
         sx={{
           mt: { xs: 2, md: 3 },
           py: { xs: 1.5, md: 1 },

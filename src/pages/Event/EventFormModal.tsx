@@ -9,10 +9,12 @@ import {
   Box,
   IconButton,
   CircularProgress,
+  MenuItem,
   Snackbar,
   Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import api from '@/config/axiosConfig';
 
 interface EventFormModalProps {
@@ -26,6 +28,7 @@ interface EventFormModalProps {
     date: string;
     location: string;
     description: string;
+    audience?: string;
     media?: { url: string; originalName?: string; size?: number };
   };
 }
@@ -40,9 +43,14 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [audience, setAudience] = useState<'all' | 'teachers' | 'leaders'>('all');
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -53,26 +61,59 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   useEffect(() => {
     if (initialData && open) {
       setTitle(initialData.title || '');
-      setDate(initialData.date || '');
+      // Extrair data e hora do ISO string mantendo a data correta
+      if (initialData.date) {
+        // Usar dayjs ou manipular string para evitar problemas de timezone
+        const isoString = initialData.date;
+        
+        // Extrair YYYY-MM-DD e HH:MM da string ISO
+        // ISO format: 2026-01-08T19:36:00.000Z ou 2026-01-08T19:36:00
+        const dateMatch = isoString.match(/^(\d{4}-\d{2}-\d{2})/);
+        const timeMatch = isoString.match(/T(\d{2}:\d{2})/);
+        
+        if (dateMatch) setDate(dateMatch[1]); // YYYY-MM-DD
+        if (timeMatch) setTime(timeMatch[1]); // HH:MM
+      } else {
+        setDate('');
+        setTime('');
+      }
       setLocation(initialData.location || '');
       setDescription(initialData.description || '');
+      setAudience((initialData.audience as any) || 'all');
       setImageFile(null);
+      setExistingImageUrl(initialData.media?.url || null);
+      setRemoveImage(false);
     } else {
+      // Novo evento - usar data de hoje e hora padrão 19:36
       setTitle('');
-      setDate('');
+      const today = new Date().toISOString().split('T')[0];
+      setDate(today);
+      setTime('19:36');
       setLocation('');
       setDescription('');
+      setAudience('all');
       setImageFile(null);
+      setExistingImageUrl(null);
+      setRemoveImage(false);
     }
   }, [initialData, open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setImageFile(file);
+    if (file) {
+      setImageFile(file);
+      
+      // Criar preview da imagem
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async () => {
-    if (!title || !date || !location || !description) {
+    if (!title || !date || !time || !location || !description || !audience) {
       setSnackbar({
         open: true,
         message: 'Preencha todos os campos obrigatórios.',
@@ -90,10 +131,17 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
         formData.append('file', imageFile);
       }
 
+      // Combinar data e hora e converter para UTC
+      // O usuário seleciona horário local, mas o backend espera UTC
+      const dateTimeLocal = `${date}T${time}:00`;
+      const dateObj = new Date(dateTimeLocal);
+      const isoDateTimeUtc = dateObj.toISOString();
+
       const eventData = {
         ...(mode === 'edit' && initialData?.id ? { id: initialData.id } : {}),
         title: title.trim(),
-        date,
+        date: isoDateTimeUtc,
+        audience,
         location: location.trim(),
         description: description.trim(),
         media: {
@@ -103,9 +151,10 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
           uploadType: 'upload',
           isLocalFile: !!imageFile,
           ...(imageFile ? { originalName: imageFile.name, size: imageFile.size } : {}),
-          ...(mode === 'edit' && initialData?.media && !imageFile
+          ...(mode === 'edit' && initialData?.media && !imageFile && !removeImage
             ? { url: initialData.media.url }
             : {}),
+          ...(removeImage ? { url: null } : {}),
         },
       };
 
@@ -165,15 +214,33 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               fullWidth
               required
             />
-            <TextField
-              label="Data"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box display="flex" gap={2}>
+              <TextField
+                label="Data"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  placeholder: 'DD/MM/YYYY',
+                }}
+              />
+              <TextField
+                label="Hora (24h)"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  step: 60,
+                  pattern: '[0-23]:[0-59]',
+                }}
+              />
+            </Box>
             <TextField
               label="Local"
               value={location}
@@ -190,16 +257,106 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               rows={3}
               required
             />
-            <Button variant="outlined" component="label">
-              {imageFile?.name || 'Selecionar Imagem'}
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-              />
-            </Button>
+            <TextField
+              label="Público"
+              select
+              value={audience}
+              onChange={(e) => setAudience(e.target.value as 'all' | 'teachers' | 'leaders')}
+              fullWidth
+              required
+            >
+              <MenuItem value="all">Público em Geral</MenuItem>
+              <MenuItem value="teachers">Membros</MenuItem>
+              <MenuItem value="leaders">Líderes</MenuItem>
+            </TextField>
+            
+            {/* Seção de Imagem */}
+            <Box>
+              {existingImageUrl && !removeImage && !imagePreview && (
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Imagem Atual:</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => setRemoveImage(true)}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                  <img
+                    src={existingImageUrl}
+                    alt="Imagem do evento"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </Box>
+              )}
+              
+              {imagePreview && (
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Nova Imagem (Preview):</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                  <img
+                    src={imagePreview}
+                    alt="Preview da nova imagem"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </Box>
+              )}
+              
+              {removeImage && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => {
+                    setRemoveImage(false);
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                  sx={{ mb: 2 }}
+                >
+                  Cancelar Remoção
+                </Button>
+              )}
+              
+              {!imagePreview && (
+                <Button variant="outlined" component="label" fullWidth>
+                  {imageFile?.name || 'Selecionar Imagem'}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                  />
+                </Button>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
