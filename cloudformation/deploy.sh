@@ -29,15 +29,15 @@ set -euo pipefail
 # CONFIGURAÇÕES
 # =============================================================================
 
-PROFILE="clubinho-aws"
-REGION="us-east-1"
+PROFILE="orfanato-aws"
+REGION="us-east-2"
 AMPLIFY_STACK_NAME="orfanatonib-amplify"
 DNS_STACK_NAME="orfanatonib-dns"
 AMPLIFY_TEMPLATE="amplify-app.yaml"
 DNS_TEMPLATE="route53-dns.yaml"
 AMPLIFY_PARAMS="parameters.json"
 GITHUB_TOKEN_ENV="AMPLIFY_GITHUB_TOKEN"
-HOSTED_ZONE_ID="Z0258077265U2L3HPAGYP"
+HOSTED_ZONE_ID="Z015502515FBLQ8HSK4UW"
 ROOT_DOMAIN="orfanatonib.com"
 STAGING_PREFIX="staging"
 
