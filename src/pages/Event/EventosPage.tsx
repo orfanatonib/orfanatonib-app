@@ -19,6 +19,7 @@ import EventIcon from "@mui/icons-material/Event";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 
 import { motion } from "framer-motion";
 
@@ -282,10 +283,19 @@ export default function EventosPage() {
             width: "95%",
             mx: "auto",
             pb: { xs: 4, md: 6 },
-           px: { xs: 0.5, md: 1 },
+            px: { xs: 0.5, md: 1 },
           }}
         >
-          {naoTemEventos ? (
+          {viewMode === "calendar" ? (
+            <EventsCalendarView
+              eventos={eventosOrdenados}
+              isAdmin={isAdmin}
+              onOpenDetails={(e) => setEventoSelecionado(e)}
+              onAdd={openAddModal}
+              onEdit={openEditModal}
+              onDelete={openDeleteModal}
+            />
+          ) : naoTemEventos ? (
             <Paper
               elevation={0}
               sx={{
@@ -330,7 +340,7 @@ export default function EventosPage() {
                 </Button>
               )}
             </Paper>
-          ) : viewMode === "cards" ? (
+          ) : (
             <EventsCardsView
               eventos={eventosOrdenados}
               isAdmin={isAdmin}
@@ -338,15 +348,6 @@ export default function EventosPage() {
               onEdit={openEditModal}
               onDelete={openDeleteModal}
               onAdd={openAddModal}
-            />
-          ) : (
-            <EventsCalendarView
-              eventos={eventosOrdenados}
-              isAdmin={isAdmin}
-              onOpenDetails={(e) => setEventoSelecionado(e)}
-              onAdd={openAddModal}
-              onEdit={openEditModal}
-              onDelete={openDeleteModal}
             />
           )}
         </Box>

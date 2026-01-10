@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Box, 
-  useTheme, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  useTheme,
   useMediaQuery,
   Avatar,
   IconButton,
@@ -32,6 +32,7 @@ import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
+import { useIsFeatureEnabled } from '@/features/feature-flags';
 
 const NavBar: React.FC = () => {
   const theme = useTheme();
@@ -48,6 +49,7 @@ const NavBar: React.FC = () => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
+  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
 
   const handleMobileAlertClick = () => {
     // Force MobileNavigation to close by re-mounting it
@@ -107,9 +109,9 @@ const NavBar: React.FC = () => {
           variant="h6"
           component="a"
           href="/"
-          sx={{ 
-            color: '#FFFF00', 
-            textDecoration: 'none', 
+          sx={{
+            color: '#FFFF00',
+            textDecoration: 'none',
             fontWeight: 'bold',
             '&:hover': {
               color: '#FFFFFF'
@@ -198,7 +200,7 @@ const NavBar: React.FC = () => {
                       </ListItemIcon>
                       <ListItemText>Área do Membro</ListItemText>
                     </MenuItem>
-                    {(isTeacher || isLeader) && (
+                    {(isTeacher || isLeader) && isPagelasEnabled && (
                       <MenuItem onClick={handleShelteredArea}>
                         <ListItemIcon>
                           <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />

@@ -15,7 +15,6 @@ import PageRenderer from './components/PageRenderer/PageRenderer';
 import Home from './pages/Home/Home';
 import About from './pages/About/About';
 import Contact from './pages/Contact/Contact';
-import Event from './pages/Event/Event';
 import Login from './pages/Login/Login';
 import TeacherArea from './pages/TeacherArea/TeacherArea';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
@@ -32,6 +31,8 @@ import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
 
 import { fetchRoutes } from './store/slices/route/routeSlice';
 import { UserRole, initAuth, logout } from './store/slices/auth/authSlice';
+import { fetchFeatureFlags } from './store/slices/feature-flags/featureFlagsSlice';
+import { FeatureFlagRoute } from './features/feature-flags';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -88,8 +89,11 @@ function App() {
     return () => clearTimeout(fallbackTimeout);
   }, [dispatch]);
 
-  // Dados do usuário agora vêm diretamente do Redux via /auth/me
-  // Não precisa mais buscar de endpoints separados
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchFeatureFlags());
+    }
+  }, [dispatch, isAuthenticated]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -156,7 +160,7 @@ function App() {
               <Route path="/eventos" element={<EventosPage />} />
               <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
               <Route path="/login" element={<Login />} />
-                <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
+              <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
               <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
               <Route path="/cadastrar" element={<Register commonUser />} />
               <Route path="*" element={<Home />} />
@@ -168,13 +172,27 @@ function App() {
                 <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
                 <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
                 <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
-                <Route path="/area-dos-abrigados" element={<ShelteredBrowserPage />} />
-                <Route path="/area-dos-abrigados/:shelteredId" element={<ShelteredPagelasPage />} />
+                <Route
+                  path="/area-dos-abrigados"
+                  element={
+                    <FeatureFlagRoute featureKey="shelter-pagelas">
+                      <ShelteredBrowserPage />
+                    </FeatureFlagRoute>
+                  }
+                />
+                <Route
+                  path="/area-dos-abrigados/:shelteredId"
+                  element={
+                    <FeatureFlagRoute featureKey="shelter-pagelas">
+                      <ShelteredPagelasPage />
+                    </FeatureFlagRoute>
+                  }
+                />
                 <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
               </Route>
 
-              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}> 
-                <Route path="/adm" element={<AdminLayout />}> 
+              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
+                <Route path="/adm" element={<AdminLayout />}>
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="presenca" element={<AttendanceDashboard />} />
                   <Route path="meditacoes" element={<MeditationManager />} />
@@ -194,11 +212,25 @@ function App() {
                   <Route path="perfis" element={<ProfilesManager />} />
                   <Route path="lideres" element={<LeaderProfilesManager />} />
                   <Route path="membros" element={<TeacherProfilesManager />} />
-                  <Route path="abrigados" element={<ShelteredManager />} />
+                  <Route
+                    path="abrigados"
+                    element={
+                      <FeatureFlagRoute featureKey="shelter-management">
+                        <ShelteredManager />
+                      </FeatureFlagRoute>
+                    }
+                  />
                   <Route path="abrigos" element={<SheltersManager />} />
                   <Route path="abrigos/novo" element={<ShelterFormPage />} />
                   <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
-                  <Route path="pagelas" element={<PagelaSheltersManager />} />
+                  <Route
+                    path="pagelas"
+                    element={
+                      <FeatureFlagRoute featureKey="shelter-pagelas">
+                        <PagelaSheltersManager />
+                      </FeatureFlagRoute>
+                    }
+                  />
                   <Route path="agendamentos" element={<ShelterScheduleManager />} />
 
                   <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />

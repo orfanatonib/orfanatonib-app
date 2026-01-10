@@ -5,6 +5,7 @@ import { Button, Stack } from '@mui/material';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
+import { useIsFeatureEnabled } from '@/features/feature-flags';
 
 interface Props {
   closeMenu?: () => void;
@@ -20,6 +21,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
+  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
 
   const handleClick = () => closeMenu?.();
 
@@ -51,8 +53,8 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
           justifyContent: isMobile ? 'flex-start' : 'center',
           fontWeight: 'bold',
           fontSize: { xs: '0.9rem', md: '0.85rem', lg: '0.9rem' },
-          color: isMobile 
-            ? (active ? '#000000' : '#FFFF00') 
+          color: isMobile
+            ? (active ? '#000000' : '#FFFF00')
             : (active ? '#000000' : '#FFFF00'),
           backgroundColor: active ? '#FFFF00' : 'transparent',
           ...(active && !isMobile ? { boxShadow: 'none' } : null),
@@ -63,11 +65,11 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
           whiteSpace: 'nowrap',
           borderRadius: isMobile && active ? 1 : 0,
           '&:hover': {
-            backgroundColor: isMobile 
-              ? (active ? '#CCCC00' : 'rgba(255, 255, 0, 0.1)') 
+            backgroundColor: isMobile
+              ? (active ? '#CCCC00' : 'rgba(255, 255, 0, 0.1)')
               : (active ? '#CCCC00' : 'rgba(255, 255, 0, 0.1)'),
-            color: isMobile 
-              ? (active ? '#000000' : '#FFFFFF') 
+            color: isMobile
+              ? (active ? '#000000' : '#FFFFFF')
               : (active ? '#000000' : '#FFFFFF')
           }
         }}

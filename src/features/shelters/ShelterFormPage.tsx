@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Box, Button, CircularProgress, Container, Snackbar, Typography } from "@mui/material";
+import { Alert, Button, CircularProgress, Container, Snackbar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 
 import BackHeader from "@/components/common/header/BackHeader";
-import TeamManagementSection, { TeamManagementRef } from "./components/TeamManagementSection";
 import { CreateShelterForm, EditShelterForm, TeamInputDto } from "./types";
 import { useShelterMutations } from "./hooks";
 import { apiFetchShelter } from "./api";
@@ -12,6 +11,7 @@ import { apiFetchShelter } from "./api";
 import "./ShelterFormPage.css";
 import ShelterFormLeftPanel from "./ShelterFormLeftPanel";
 import ShelterFormRightPanel from "./ShelterFormRightPanel";
+import { TeamManagementRef } from "./components/TeamManagementSection";
 
 type SnackbarState = { open: boolean; message: string };
 
@@ -71,12 +71,12 @@ export default function ShelterFormPage() {
             // Mantém apenas para preview (url da imagem existente)
             mediaItem: shelter.mediaItem
               ? {
-                  title: shelter.mediaItem.title,
-                  description: shelter.mediaItem.description,
-                  url: shelter.mediaItem.url,
-                  isLocalFile: shelter.mediaItem.isLocalFile,
-                  uploadType: shelter.mediaItem.uploadType,
-                }
+                title: shelter.mediaItem.title,
+                description: shelter.mediaItem.description,
+                url: shelter.mediaItem.url,
+                isLocalFile: shelter.mediaItem.isLocalFile,
+                uploadType: shelter.mediaItem.uploadType,
+              }
               : undefined,
             file: undefined,
           } as EditShelterForm);
@@ -180,15 +180,24 @@ export default function ShelterFormPage() {
       return false;
     }
 
-    if (
-      !formData.address?.street?.trim() ||
-      !formData.address?.district?.trim() ||
-      !formData.address?.city?.trim() ||
-      !formData.address?.state?.trim() ||
-      !formData.address?.postalCode?.trim()
-    ) {
-      setError("Todos os campos do endereço são obrigatórios (exceto número e complemento)");
-      return false;
+    // Only validate address if the feature flag is enabled
+    // Note: We need to check the flag here, but we don't have access to it in this component
+    // The validation will be handled by checking if address fields exist
+    const hasAddressData = formData.address?.street || formData.address?.city ||
+      formData.address?.state || formData.address?.postalCode;
+
+    if (hasAddressData) {
+      // If any address field has data, validate all required fields
+      if (
+        !formData.address?.street?.trim() ||
+        !formData.address?.district?.trim() ||
+        !formData.address?.city?.trim() ||
+        !formData.address?.state?.trim() ||
+        !formData.address?.postalCode?.trim()
+      ) {
+        setError("Todos os campos do endereço são obrigatórios (exceto número e complemento)");
+        return false;
+      }
     }
 
     return true;

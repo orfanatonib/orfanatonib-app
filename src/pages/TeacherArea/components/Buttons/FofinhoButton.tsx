@@ -15,6 +15,7 @@ import {
   Badge as BadgeIcon,
   ChildCare as ShelteredCareIcon,
 } from '@mui/icons-material';
+import { useIsFeatureEnabled } from '@/features/feature-flags';
 
 type MUIButtonColor =
   | 'primary'
@@ -192,9 +193,16 @@ const ButtonSection: React.FC<ButtonSectionProps> = ({ references }) => {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
+  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
+
   const buttonsToRender = references
     .map((ref) => buttonMap[ref])
-    .filter((btn): btn is FofinhoButtonProps => !!btn);
+    .filter((btn): btn is FofinhoButtonProps => {
+      if (!btn) return false;
+      if (btn.to === '/area-dos-abrigados' && !isPagelasEnabled) return false;
+      return true;
+    });
 
   if (buttonsToRender.length === 0) return null;
   if (buttonsToRender.length === 1) {

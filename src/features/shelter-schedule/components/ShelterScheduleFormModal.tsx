@@ -28,6 +28,7 @@ import "dayjs/locale/pt-br";
 
 import { useMyTeams } from "../hooks";
 import { ShelterScheduleResponseDto, CreateShelterScheduleDto } from "../types";
+import { useIsFeatureEnabled } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
 
@@ -52,6 +53,9 @@ export default function ShelterScheduleFormModal({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
+  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+
+  console.log('[ShelterScheduleFormModal] shelter-address flag:', isAddressEnabled);
 
   const [teamId, setTeamId] = useState("");
   const [visitNumber, setVisitNumber] = useState<number | "">(1);
@@ -98,7 +102,7 @@ export default function ShelterScheduleFormModal({
   // Função para combinar data e hora
   const combineDateAndTime = (date: Dayjs | null, time: Dayjs | null): string | undefined => {
     if (!date) return undefined;
-    
+
     let combined = date.startOf("day");
     if (time) {
       combined = combined.hour(time.hour()).minute(time.minute());
@@ -196,9 +200,9 @@ export default function ShelterScheduleFormModal({
                 onChange={(e) => setTeamId(e.target.value)}
                 label="Equipe"
               >
-                {teams.map((team) => (
+                {teams.filter(team => team.shelter).map((team) => (
                   <MenuItem key={team.id} value={team.id}>
-                    Equipe {team.numberTeam} - {team.shelter.name}
+                    Equipe {team.numberTeam} - {team.shelter?.name || 'Sem abrigo'}
                   </MenuItem>
                 ))}
               </Select>
@@ -246,7 +250,7 @@ export default function ShelterScheduleFormModal({
               <Typography variant="body2" fontWeight="medium">
                 {selectedTeam.shelter.name}
               </Typography>
-              {selectedTeam.shelter.address && (
+              {isAddressEnabled && selectedTeam.shelter.address && (
                 <Typography variant="caption" color="text.secondary">
                   {selectedTeam.shelter.address.street}, {selectedTeam.shelter.address.number} -{" "}
                   {selectedTeam.shelter.address.city}/{selectedTeam.shelter.address.state}

@@ -9,15 +9,14 @@ import ShelterLocationCard from './ShelterLocationCard';
 import ShelterTeamsSummaryCard from './ShelterTeamsSummaryCard';
 import ShelterPeopleCarouselCard from './ShelterPeopleCarouselCard';
 import ShelterInfoCard from './ShelterInfoCard';
+import { useIsFeatureEnabled } from '@/features/feature-flags';
 
 interface ShelterPageViewProps {
   idToFetch: string;
 }
 
 const FALLBACK_SHELTER_IMAGE =
-  (import.meta as any).env?.VITE_SHELTER_FALLBACK_IMAGE_URL ||
-  'https://orfanatos-nib-storage.s3.us-east-1.amazonaws.com/aux/banner-orfanatos.png';
-
+  (import.meta as any).env?.VITE_SHELTER_FALLBACK_IMAGE_URL;
 export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
   const {
     initialized,
@@ -31,6 +30,11 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     getLeaderTeams,
     getTeacherTeams,
   } = useShelterPage(idToFetch);
+
+  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+
+  console.log('[ShelterPageView] shelter-address flag:', isAddressEnabled);
+  console.log('[ShelterPageView] shelter?.address:', shelter?.address);
 
   const handleBack = () => window.history.back();
 
@@ -86,32 +90,68 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
 
       <Container maxWidth="lg" className="shelterPage__main">
         <Grid container spacing={2.5}>
-          <Grid item xs={12} md={8}>
-            {address ? <ShelterLocationCard address={address} /> : null}
-            <ShelterTeamsSummaryCard teamsQuantity={shelter.teamsQuantity || 0} />
-          </Grid>
+          {isAddressEnabled && address ? (
+            <>
+              <Grid item xs={12} md={8}>
+                <ShelterLocationCard address={address} />
+                <ShelterTeamsSummaryCard teamsQuantity={shelter.teamsQuantity || 0} />
+              </Grid>
 
-          <Grid item xs={12} md={4}>
-            <ShelterPeopleCarouselCard
-              title="Líderes"
-              count={uniqueLeaders.length}
-              theme="blue"
-              icon={<PersonOutline className="shelterPage__sectionIcon" />}
-              people={uniqueLeaders}
-              getTeams={getLeaderTeams}
-            />
+              <Grid item xs={12} md={4}>
+                <ShelterPeopleCarouselCard
+                  title="Líderes"
+                  count={uniqueLeaders.length}
+                  theme="blue"
+                  icon={<PersonOutline className="shelterPage__sectionIcon" />}
+                  people={uniqueLeaders}
+                  getTeams={getLeaderTeams}
+                />
 
-            <ShelterPeopleCarouselCard
-              title="Membros"
-              count={uniqueTeachers.length}
-              theme="purple"
-              icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
-              people={uniqueTeachers}
-              getTeams={getTeacherTeams}
-            />
+                <ShelterPeopleCarouselCard
+                  title="Membros"
+                  count={uniqueTeachers.length}
+                  theme="purple"
+                  icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
+                  people={uniqueTeachers}
+                  getTeams={getTeacherTeams}
+                />
 
-            <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
-          </Grid>
+                <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
+              </Grid>
+            </>
+          ) : (
+            <>
+              <Grid item xs={12}>
+                <ShelterTeamsSummaryCard teamsQuantity={shelter.teamsQuantity || 0} />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShelterPeopleCarouselCard
+                  title="Líderes"
+                  count={uniqueLeaders.length}
+                  theme="blue"
+                  icon={<PersonOutline className="shelterPage__sectionIcon" />}
+                  people={uniqueLeaders}
+                  getTeams={getLeaderTeams}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShelterPeopleCarouselCard
+                  title="Membros"
+                  count={uniqueTeachers.length}
+                  theme="purple"
+                  icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
+                  people={uniqueTeachers}
+                  getTeams={getTeacherTeams}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
+              </Grid>
+            </>
+          )}
         </Grid>
       </Container>
     </Box>
