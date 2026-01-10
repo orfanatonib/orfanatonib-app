@@ -31,9 +31,9 @@ jobs:
       - name: Get Amplify App ID
         id: get-app-id
         run: |
-          APP_ID=$(aws amplify list-apps --region ${{ env.AWS_REGION }} --query "apps[?name=='clubinhonib-app'].appId" --output text)
+          APP_ID=$(aws amplify list-apps --region ${{ env.AWS_REGION }} --query "apps[?name=='orfanatonib-app'].appId" --output text)
           if [ -z "$APP_ID" ]; then
-            echo "❌ Amplify app 'clubinhonib-app' not found!"
+            echo "❌ Amplify app 'orfanatonib-app' not found!"
             exit 1
           fi
           echo "app-id=$APP_ID" >> $GITHUB_OUTPUT
@@ -598,9 +598,9 @@ jobs:
       - name: Get Amplify App ID
         id: get-app-id
         run: |
-          APP_ID=$(aws amplify list-apps --region ${{ env.AWS_REGION }} --query "apps[?name=='clubinhonib-app'].appId" --output text)
+          APP_ID=$(aws amplify list-apps --region ${{ env.AWS_REGION }} --query "apps[?name=='orfanatonib-app'].appId" --output text)
           if [ -z "$APP_ID" ]; then
-            echo "❌ Amplify app 'clubinhonib-app' not found!"
+            echo "❌ Amplify app 'orfanatonib-app' not found!"
             exit 1
           fi
           echo "app-id=$APP_ID" >> $GITHUB_OUTPUT
