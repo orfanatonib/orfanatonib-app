@@ -68,7 +68,7 @@ export default function ShelterFormPage() {
             description: shelter.description || "",
             teamsQuantity: shelter.teamsQuantity || 1,
             address: shelter.address,
-            // Mantém apenas para preview (url da imagem existente)
+
             mediaItem: shelter.mediaItem
               ? {
                 title: shelter.mediaItem.title,
@@ -137,7 +137,7 @@ export default function ShelterFormPage() {
 
     setFormData({
       ...formData,
-      // Mantém metadata mínima (o payload final é montado no submit)
+
       mediaItem: newFile
         ? { title: "Foto do Abrigo", description: "Imagem do abrigo", uploadType: "upload", url: "" }
         : formData.mediaItem,
@@ -146,7 +146,7 @@ export default function ShelterFormPage() {
   };
 
   const handleRemoveExistingImage = () => {
-    // Remove no estado local. (Backend precisa interpretar remoção caso você queira remover de verdade)
+
     setFile(null);
 
     if (!formData) return;
@@ -180,9 +180,7 @@ export default function ShelterFormPage() {
       return false;
     }
 
-    // Only validate address if the feature flag is enabled
-    // Note: We need to check the flag here, but we don't have access to it in this component
-    // The validation will be handled by checking if address fields exist
+
     const hasAddressData = formData.address?.street || formData.address?.city ||
       formData.address?.state || formData.address?.postalCode;
 
