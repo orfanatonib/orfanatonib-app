@@ -42,7 +42,7 @@ export type AppEvent = {
   id: string;
   title: string;
   location: string;
-  date: string; // ISO
+  date: string;
   description: string;
   media?: { url: string; originalName?: string; size?: number };
   createdAt?: string;
@@ -179,7 +179,7 @@ export default function EventosPage() {
   return (
     <Fragment>
       <Box sx={{ minHeight: "100vh", background: gradients.subtle.greenWhiteSoft }}>
-        {/* HEADER */}
+
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 2.5, md: 4 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
             <Box
@@ -277,7 +277,7 @@ export default function EventosPage() {
           </motion.div>
         </Container>
 
-        {/* BODY */}
+
         <Box
           sx={{
             width: "95%",
@@ -352,7 +352,7 @@ export default function EventosPage() {
           )}
         </Box>
 
-        {/* MODAIS */}
+
         {eventoSelecionado && (
           <EventDetailsModal
             open={Boolean(eventoSelecionado)}
