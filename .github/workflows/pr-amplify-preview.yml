@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
 
 permissions:
   contents: write
@@ -107,7 +107,7 @@ jobs:
           aws amplify update-branch \
             --app-id "$APP_ID" \
             --branch-name "$BRANCH_NAME" \
-            --environment-variables VITE_API_URL=https://staging-api.clubinhonib.com,VITE_FEED_MINISTERIO_ID=afa51053-1296-4c89-9059-a8ad8bd1ec90,VITE_GOOGLE_CLIENT_ID=135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com,VITE_SPECIAL_FAMILY_DAY_ID=a2f9913a-e123-46b2-b6f4-a4138686042f \
+            --environment-variables VITE_API_URL=https://staging-api.orfanatonib.com,VITE_FEED_MINISTERIO_ID=afa51053-1296-4c89-9059-a8ad8bd1ec90,VITE_GOOGLE_CLIENT_ID=135271087774-favt17acohq7ope35eu48v41mi7lbshj.apps.googleusercontent.com,VITE_SPECIAL_FAMILY_DAY_ID=a2f9913a-e123-46b2-b6f4-a4138686042f \
             --region ${{ env.AWS_REGION }}
           echo "✅ Environment variables configured"
 
@@ -129,12 +129,12 @@ jobs:
         id: get-hosted-zone
         run: |
           HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name \
-            --dns-name "clubinhonib.com" \
+            --dns-name "orfanatonib.com" \
             --query 'HostedZones[0].Id' \
             --output text 2>/dev/null | sed 's|/hostedzone/||' || echo "")
           
           if [ -z "$HOSTED_ZONE_ID" ]; then
-            HOSTED_ZONE_ID="Z04342831HLGP0JZ4VI5K"
+            HOSTED_ZONE_ID="Z015502515FBLQ8HSK4UW"
             echo "⚠️ Using default Hosted Zone ID: $HOSTED_ZONE_ID"
           fi
           
@@ -150,7 +150,7 @@ jobs:
           
           DOMAIN_EXISTS=$(aws amplify get-domain-association \
             --app-id "$APP_ID" \
-            --domain-name "clubinhonib.com" \
+            --domain-name "orfanatonib.com" \
             --region ${{ env.AWS_REGION }} \
             --query 'domainAssociation.domainName' \
             --output text 2>/dev/null || echo "")
@@ -159,7 +159,7 @@ jobs:
             echo "📝 Creating main domain association in Amplify..."
             aws amplify create-domain-association \
               --app-id "$APP_ID" \
-              --domain-name "clubinhonib.com" \
+              --domain-name "orfanatonib.com" \
               --sub-domain-settings prefix=,branchName=main \
               --region ${{ env.AWS_REGION }} || true
             echo "⏳ Waiting for domain association to be created..."
@@ -212,7 +212,7 @@ jobs:
           BRANCH_NAME=${{ steps.create-branch.outputs.branch-name }}
           HOSTED_ZONE_ID=${{ steps.get-hosted-zone.outputs.hosted-zone-id }}
           CLOUDFRONT_DOMAIN=${{ steps.get-cloudfront.outputs.cloudfront-domain }}
-          SUBDOMAIN="${BRANCH_NAME}.clubinhonib.com"
+          SUBDOMAIN="${BRANCH_NAME}.orfanatonib.com"
           
           echo "🌐 Subdomain will be: $SUBDOMAIN"
           
@@ -257,7 +257,7 @@ jobs:
           
           EXISTING_DOMAIN_INFO=$(aws amplify get-domain-association \
             --app-id "$APP_ID" \
-            --domain-name "clubinhonib.com" \
+            --domain-name "orfanatonib.com" \
             --region ${{ env.AWS_REGION }} \
             --output json 2>/dev/null || echo "{}")
           
@@ -308,7 +308,7 @@ jobs:
             
             aws amplify update-domain-association \
               --app-id "$APP_ID" \
-              --domain-name "clubinhonib.com" \
+              --domain-name "orfanatonib.com" \
               --sub-domain-settings "$SUBDOMAIN_SETTINGS" \
               --region ${{ env.AWS_REGION }}
             
@@ -391,7 +391,7 @@ jobs:
             
             DOMAIN_INFO=$(aws amplify get-domain-association \
               --app-id "$APP_ID" \
-              --domain-name "clubinhonib.com" \
+              --domain-name "orfanatonib.com" \
               --region ${{ env.AWS_REGION }} \
               --output json 2>/dev/null || echo "{}")
             
@@ -437,7 +437,7 @@ jobs:
           
           DOMAIN_INFO=$(aws amplify get-domain-association \
             --app-id "$APP_ID" \
-            --domain-name "clubinhonib.com" \
+            --domain-name "orfanatonib.com" \
             --region ${{ env.AWS_REGION }} \
             --output json)
           
@@ -610,12 +610,12 @@ jobs:
         id: get-hosted-zone
         run: |
           HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name \
-            --dns-name "clubinhonib.com" \
+            --dns-name "orfanatonib.com" \
             --query 'HostedZones[0].Id' \
             --output text 2>/dev/null | sed 's|/hostedzone/||' || echo "")
           
           if [ -z "$HOSTED_ZONE_ID" ]; then
-            HOSTED_ZONE_ID="Z04342831HLGP0JZ4VI5K"
+            HOSTED_ZONE_ID="Z015502515FBLQ8HSK4UW"
             echo "⚠️ Using default Hosted Zone ID: $HOSTED_ZONE_ID"
           fi
           
@@ -629,7 +629,7 @@ jobs:
           BRANCH_NAME="$BRANCH_NAME_SANITIZED"
           APP_ID=${{ steps.get-app-id.outputs.app-id }}
           HOSTED_ZONE_ID=${{ steps.get-hosted-zone.outputs.hosted-zone-id }}
-          SUBDOMAIN="${BRANCH_NAME}.clubinhonib.com"
+          SUBDOMAIN="${BRANCH_NAME}.orfanatonib.com"
           
           echo "🧹 Cleaning up resources from closed PR (merge included)..."
           echo "🔒 PROTECTING: Essential production and staging subdomains will always be preserved!"
@@ -646,7 +646,7 @@ jobs:
           echo "🗑️ Removing PR subdomain from Amplify domain association..."
           EXISTING_DOMAIN_INFO=$(aws amplify get-domain-association \
             --app-id "$APP_ID" \
-            --domain-name "clubinhonib.com" \
+            --domain-name "orfanatonib.com" \
             --region ${{ env.AWS_REGION }} \
             --output json 2>/dev/null || echo "{}")
           
@@ -684,7 +684,7 @@ jobs:
             
             aws amplify update-domain-association \
               --app-id "$APP_ID" \
-              --domain-name "clubinhonib.com" \
+              --domain-name "orfanatonib.com" \
               --sub-domain-settings "$SUBDOMAIN_SETTINGS" \
               --region ${{ env.AWS_REGION }} || echo "Error removing subdomain from Amplify (may not exist)"
           else
