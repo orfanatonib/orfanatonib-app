@@ -13,10 +13,7 @@ import {
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { FeatureFlag } from '@/store/slices/feature-flags/featureFlagsSlice';
 
-/**
- * Example component showing how to use feature flags
- * This can be used as a reference or as an admin page to view all feature flags
- */
+
 export const FeatureFlagsPage: React.FC = () => {
     const { flags, loading, error, refetch, clearError: handleClearError } = useFeatureFlags({
         autoFetch: true,

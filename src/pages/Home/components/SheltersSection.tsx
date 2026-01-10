@@ -37,7 +37,7 @@ const SheltersSection: React.FC = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const isAddressEnabled = useIsFeatureEnabled('shelter-address');
 
-  console.log('[SheltersSection] shelter-address flag:', isAddressEnabled);
+
 
   const shelterCards = useMemo(() => {
     return (routes || []).filter(

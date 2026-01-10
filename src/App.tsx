@@ -82,7 +82,7 @@ function App() {
     dispatch(initAuth());
 
     const fallbackTimeout = setTimeout(() => {
-      console.warn('[App] Force ready after 15s timeout');
+
       setForceReady(true);
     }, 15000);
 

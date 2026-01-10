@@ -33,8 +33,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
 
   const isAddressEnabled = useIsFeatureEnabled('shelter-address');
 
-  console.log('[ShelterPageView] shelter-address flag:', isAddressEnabled);
-  console.log('[ShelterPageView] shelter?.address:', shelter?.address);
+
 
   const handleBack = () => window.history.back();
 

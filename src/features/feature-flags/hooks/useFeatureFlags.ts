@@ -33,13 +33,6 @@ interface UseFeatureFlagsReturn {
     reset: () => void;
 }
 
-/**
- * Custom hook to manage feature flags
- * @param options - Configuration options
- * @param options.autoFetch - Automatically fetch flags on mount (default: true)
- * @param options.refetchInterval - Auto-refetch interval in milliseconds (optional)
- * @returns Feature flags state and control functions
- */
 export const useFeatureFlags = (options: UseFeatureFlagsOptions = {}): UseFeatureFlagsReturn => {
     const { autoFetch = true, refetchInterval } = options;
     const dispatch = useDispatch<AppDispatch>();
@@ -61,14 +54,12 @@ export const useFeatureFlags = (options: UseFeatureFlagsOptions = {}): UseFeatur
         dispatch(resetFeatureFlags());
     };
 
-    // Auto-fetch on mount
     useEffect(() => {
         if (autoFetch) {
             refetch();
         }
     }, [autoFetch]);
 
-    // Auto-refetch interval
     useEffect(() => {
         if (refetchInterval && refetchInterval > 0) {
             const intervalId = setInterval(() => {
@@ -90,34 +81,18 @@ export const useFeatureFlags = (options: UseFeatureFlagsOptions = {}): UseFeatur
     };
 };
 
-/**
- * Hook to get enabled feature flags only
- */
 export const useEnabledFeatureFlags = (): FeatureFlag[] => {
     return useSelector(selectEnabledFeatureFlags);
 };
 
-/**
- * Hook to get a specific feature flag by key
- * @param key - Feature flag key
- */
 export const useFeatureFlag = (key: string): FeatureFlag | undefined => {
     return useSelector(selectFeatureFlagByKey(key));
 };
 
-/**
- * Hook to check if a feature is enabled
- * @param key - Feature flag key
- * @returns true if the feature is enabled, false otherwise
- */
 export const useIsFeatureEnabled = (key: string): boolean => {
     return useSelector(selectIsFeatureEnabled(key));
 };
 
-/**
- * Hook to get feature flags by environment
- * @param environment - Environment name (e.g., 'staging', 'production')
- */
 export const useFeatureFlagsByEnvironment = (environment: string): FeatureFlag[] => {
     return useSelector(selectFeatureFlagsByEnvironment(environment));
 };

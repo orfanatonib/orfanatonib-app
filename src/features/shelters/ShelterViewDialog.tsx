@@ -83,8 +83,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
   const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
   const isAddressEnabled = useIsFeatureEnabled('shelter-address');
 
-  console.log('[ShelterViewDialog] shelter-address flag:', isAddressEnabled);
-  console.log('[ShelterViewDialog] shelter?.address:', shelter?.address);
+
 
   const address = shelter?.address;
   const teachers = shelter?.teachers ?? [];

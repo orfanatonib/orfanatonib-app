@@ -1,5 +1,5 @@
-import { RootState } from '../index';
-import { FeatureFlag } from './featureFlagsSlice';
+import { RootState } from '../slices';
+import { FeatureFlag } from '../slices/feature-flags/featureFlagsSlice';
 
 
 export const selectAllFeatureFlags = (state: RootState): FeatureFlag[] =>

@@ -10,10 +10,6 @@ interface FeatureFlagRouteProps {
     showMessage?: boolean;
 }
 
-/**
- * Component that protects a route based on a feature flag
- * If the feature is disabled, redirects to fallback path or shows a message
- */
 export const FeatureFlagRoute: React.FC<FeatureFlagRouteProps> = ({
     featureKey,
     children,

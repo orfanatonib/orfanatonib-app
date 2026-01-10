@@ -1,4 +1,3 @@
-// Re-export everything from the feature flags module
 export * from './hooks/useFeatureFlags';
 export * from './utils/featureFlagUtils';
 export { FeatureFlagRoute } from './components/FeatureFlagRoute';
