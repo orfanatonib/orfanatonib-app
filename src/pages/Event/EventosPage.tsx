@@ -19,6 +19,7 @@ import EventIcon from "@mui/icons-material/Event";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 
 import { motion } from "framer-motion";
 
@@ -41,7 +42,7 @@ export type AppEvent = {
   id: string;
   title: string;
   location: string;
-  date: string; // ISO
+  date: string;
   description: string;
   media?: { url: string; originalName?: string; size?: number };
   createdAt?: string;
@@ -178,7 +179,7 @@ export default function EventosPage() {
   return (
     <Fragment>
       <Box sx={{ minHeight: "100vh", background: gradients.subtle.greenWhiteSoft }}>
-        {/* HEADER */}
+
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 2.5, md: 4 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
             <Box
@@ -276,16 +277,25 @@ export default function EventosPage() {
           </motion.div>
         </Container>
 
-        {/* BODY */}
+
         <Box
           sx={{
             width: "95%",
             mx: "auto",
             pb: { xs: 4, md: 6 },
-           px: { xs: 0.5, md: 1 },
+            px: { xs: 0.5, md: 1 },
           }}
         >
-          {naoTemEventos ? (
+          {viewMode === "calendar" ? (
+            <EventsCalendarView
+              eventos={eventosOrdenados}
+              isAdmin={isAdmin}
+              onOpenDetails={(e) => setEventoSelecionado(e)}
+              onAdd={openAddModal}
+              onEdit={openEditModal}
+              onDelete={openDeleteModal}
+            />
+          ) : naoTemEventos ? (
             <Paper
               elevation={0}
               sx={{
@@ -330,7 +340,7 @@ export default function EventosPage() {
                 </Button>
               )}
             </Paper>
-          ) : viewMode === "cards" ? (
+          ) : (
             <EventsCardsView
               eventos={eventosOrdenados}
               isAdmin={isAdmin}
@@ -339,19 +349,10 @@ export default function EventosPage() {
               onDelete={openDeleteModal}
               onAdd={openAddModal}
             />
-          ) : (
-            <EventsCalendarView
-              eventos={eventosOrdenados}
-              isAdmin={isAdmin}
-              onOpenDetails={(e) => setEventoSelecionado(e)}
-              onAdd={openAddModal}
-              onEdit={openEditModal}
-              onDelete={openDeleteModal}
-            />
           )}
         </Box>
 
-        {/* MODAIS */}
+
         {eventoSelecionado && (
           <EventDetailsModal
             open={Boolean(eventoSelecionado)}

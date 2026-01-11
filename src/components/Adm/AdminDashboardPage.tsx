@@ -45,6 +45,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type SectionId = "all" | "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
 
@@ -113,6 +114,9 @@ export default function AdminDashboardPage() {
   const isLeader = !!isAuthenticated && role === UserRole.LEADER;
   const isSimpleMode = isLeader && !isAdmin;
 
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+
   const [query, setQuery] = React.useState("");
   const [section, setSection] = React.useState<SectionId>("all");
   const [showTop, setShowTop] = React.useState(false);
@@ -136,6 +140,9 @@ export default function AdminDashboardPage() {
   ]);
 
   const canSeeCard = (card: CardData): boolean => {
+    if (card.path === '/adm/abrigados' && !isShelterManagementEnabled) return false;
+    if (card.path === '/adm/pagelas' && !isPagelasEnabled) return false;
+
     if (isAdmin) return true;
     if (isLeader) return leaderAllowed.has(card.path);
     return false;
@@ -168,7 +175,7 @@ export default function AdminDashboardPage() {
   }, [section, normalizedQuery, visibleCards]);
 
   const hasResults =
-    grouped.pessoas.length + grouped.abrigos.length + grouped.conteudo.length + 
+    grouped.pessoas.length + grouped.abrigos.length + grouped.conteudo.length +
     grouped.midias.length + grouped.materiais.length + grouped.interacoes.length > 0;
 
   const MobileList: React.FC = () => {

@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Box, Button, CircularProgress, Container, Snackbar, Typography } from "@mui/material";
+import { Alert, Button, CircularProgress, Container, Snackbar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 
 import BackHeader from "@/components/common/header/BackHeader";
-import TeamManagementSection, { TeamManagementRef } from "./components/TeamManagementSection";
 import { CreateShelterForm, EditShelterForm, TeamInputDto } from "./types";
 import { useShelterMutations } from "./hooks";
 import { apiFetchShelter } from "./api";
@@ -12,6 +11,7 @@ import { apiFetchShelter } from "./api";
 import "./ShelterFormPage.css";
 import ShelterFormLeftPanel from "./ShelterFormLeftPanel";
 import ShelterFormRightPanel from "./ShelterFormRightPanel";
+import { TeamManagementRef } from "./components/TeamManagementSection";
 
 type SnackbarState = { open: boolean; message: string };
 
@@ -68,15 +68,15 @@ export default function ShelterFormPage() {
             description: shelter.description || "",
             teamsQuantity: shelter.teamsQuantity || 1,
             address: shelter.address,
-            // Mantém apenas para preview (url da imagem existente)
+
             mediaItem: shelter.mediaItem
               ? {
-                  title: shelter.mediaItem.title,
-                  description: shelter.mediaItem.description,
-                  url: shelter.mediaItem.url,
-                  isLocalFile: shelter.mediaItem.isLocalFile,
-                  uploadType: shelter.mediaItem.uploadType,
-                }
+                title: shelter.mediaItem.title,
+                description: shelter.mediaItem.description,
+                url: shelter.mediaItem.url,
+                isLocalFile: shelter.mediaItem.isLocalFile,
+                uploadType: shelter.mediaItem.uploadType,
+              }
               : undefined,
             file: undefined,
           } as EditShelterForm);
@@ -137,7 +137,7 @@ export default function ShelterFormPage() {
 
     setFormData({
       ...formData,
-      // Mantém metadata mínima (o payload final é montado no submit)
+
       mediaItem: newFile
         ? { title: "Foto do Abrigo", description: "Imagem do abrigo", uploadType: "upload", url: "" }
         : formData.mediaItem,
@@ -146,7 +146,7 @@ export default function ShelterFormPage() {
   };
 
   const handleRemoveExistingImage = () => {
-    // Remove no estado local. (Backend precisa interpretar remoção caso você queira remover de verdade)
+
     setFile(null);
 
     if (!formData) return;
@@ -177,17 +177,6 @@ export default function ShelterFormPage() {
 
     if (!formData.name?.trim()) {
       setError("O nome do abrigo é obrigatório");
-      return false;
-    }
-
-    if (
-      !formData.address?.street?.trim() ||
-      !formData.address?.district?.trim() ||
-      !formData.address?.city?.trim() ||
-      !formData.address?.state?.trim() ||
-      !formData.address?.postalCode?.trim()
-    ) {
-      setError("Todos os campos do endereço são obrigatórios (exceto número e complemento)");
       return false;
     }
 

@@ -46,6 +46,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 const drawerWidth = 240;
 
@@ -64,12 +65,15 @@ function AdminLayout() {
   const isAdmin = !!isAuthenticated && user?.role === UserRole.ADMIN;
   const isLeader = !!isAuthenticated && user?.role === UserRole.LEADER;
 
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("tudo");
   const toggleDrawer = () => setMobileOpen((v) => !v);
 
-  const HEADER_H = 64; 
-  const FOOTER_H = 88; 
+  const HEADER_H = 64;
+  const FOOTER_H = 88;
   const cssVars = {
     "--app-header-h": `${HEADER_H}px`,
     "--app-footer-h": `${FOOTER_H}px`,
@@ -150,6 +154,9 @@ function AdminLayout() {
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
+    if (item.to === '/adm/abrigados' && !isShelterManagementEnabled) return false;
+    if (item.to === '/adm/pagelas' && !isPagelasEnabled) return false;
+
     if (isAdmin) return true;
     if (isLeader) return leaderAllowed.has(item.to);
     return false;

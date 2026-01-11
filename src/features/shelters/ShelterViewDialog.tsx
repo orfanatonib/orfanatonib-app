@@ -42,6 +42,7 @@ import { ShelterResponseDto } from "./types";
 import { fmtDate } from "@/utils/dates";
 import { CopyButton, initials } from "@/utils/components";
 import TeamManagementDialog from "./components/TeamManagementDialog";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type Props = {
   open: boolean;
@@ -57,7 +58,7 @@ function LineCard({
   children,
 }: {
   icon: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -80,7 +81,10 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
-  
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+
+
   const address = shelter?.address;
   const teachers = shelter?.teachers ?? [];
   const leaders = shelter?.leaders ?? [];
@@ -288,7 +292,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
               </Stack>
             </Paper>
 
-            {address && (
+            {isAddressEnabled && address && (
               <Grid container spacing={1.25}>
                 <Grid item xs={12}>
                   <LineCard icon={<PlaceOutlined fontSize="small" />} title="Endereço">
@@ -311,8 +315,8 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
 
             <Grid container spacing={1.25}>
               <Grid item xs={12}>
-                <LineCard 
-                  icon={<PersonOutline fontSize="small" />} 
+                <LineCard
+                  icon={<PersonOutline fontSize="small" />}
                   title={
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="caption">Líderes</Typography>
@@ -360,8 +364,8 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
 
             <Grid container spacing={1.25}>
               <Grid item xs={12}>
-                <LineCard 
-                  icon={<SchoolOutlined fontSize="small" />} 
+                <LineCard
+                  icon={<SchoolOutlined fontSize="small" />}
                   title={
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="caption">Membros</Typography>
@@ -428,8 +432,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
         shelter={shelter}
         onClose={() => setTeamManagementOpen(false)}
         onSuccess={async () => {
-          if (onClose) {
-          }
+          // No action needed on success
         }}
       />
     </Dialog>

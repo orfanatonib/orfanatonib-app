@@ -17,6 +17,7 @@ import { SortingState } from "@tanstack/react-table";
 import { ShelterResponseDto } from "./types";
 import { formatDate } from "@/utils/dateUtils";
 import { CopyButton } from "@/utils/components";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type Props = {
   isAdmin: boolean;
@@ -37,6 +38,10 @@ type Props = {
 export default function SheltersCards(props: Props) {
   const { isAdmin, rows, total, pageIndex, pageSize, setPageIndex, setPageSize, sorting, setSorting, onOpenView, onStartEdit, onAskDelete } = props;
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+  console.log('[SheltersCards] shelter-address flag:', isAddressEnabled);
+  console.log('[SheltersCards] rows with addresses:', rows.filter(r => r.address).length);
   const toggle = (id: string) =>
     setOpen((prev) => {
       const n = new Set(prev);
@@ -89,7 +94,7 @@ export default function SheltersCards(props: Props) {
           const expanded = open.has(c.id);
           const leaders = c.leaders ?? [];
           const teachers = c.teachers ?? [];
-          const addrPreview = c.address ? `${c.address.city} / ${c.address.state}` : "—";
+          const addrPreview = isAddressEnabled && c.address ? `${c.address.city} / ${c.address.state}` : null;
 
           return (
             <Grid item xs={12} key={c.id}>
@@ -142,17 +147,17 @@ export default function SheltersCards(props: Props) {
                     {c.name.charAt(0).toUpperCase()}
                   </Avatar>
 
-                  <Stack 
-                    direction="row" 
-                    spacing={0.5} 
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
                     alignItems="center"
                     sx={{ minWidth: 0, flex: 1 }}
                   >
                     <CalendarMonthOutlined sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -181,10 +186,10 @@ export default function SheltersCards(props: Props) {
                       "&:hover": { bgcolor: "action.hover" },
                     }}
                   >
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{ 
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
                         fontWeight: 600,
                         display: { xs: "none", sm: "block" }
                       }}
@@ -216,20 +221,20 @@ export default function SheltersCards(props: Props) {
                   >
                     <SupervisorAccount sx={{ fontSize: 18, color: "primary.main", flexShrink: 0 }} />
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography 
+                      <Typography
                         variant="body2"
-                        sx={{ 
+                        sx={{
                           fontWeight: 600,
                           color: "text.primary",
-                          whiteSpace: "nowrap", 
-                          overflow: "hidden", 
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
                           textOverflow: "ellipsis"
                         }}
                         title={leaders.length > 0 ? leaders.map(l => l.user?.name || l.user?.email || "—").join(", ") : "—"}
                       >
-                        {leaders.length === 0 ? "—" : 
-                         leaders.length === 1 ? (leaders[0]?.user?.name || leaders[0]?.user?.email || "—") :
-                         `${leaders.length} líderes`}
+                        {leaders.length === 0 ? "—" :
+                          leaders.length === 1 ? (leaders[0]?.user?.name || leaders[0]?.user?.email || "—") :
+                            `${leaders.length} líderes`}
                       </Typography>
                     </Box>
                     {leaders.length === 1 && leaders[0]?.user?.phone && (
@@ -260,41 +265,45 @@ export default function SheltersCards(props: Props) {
                         icon={<GroupIcon sx={{ fontSize: 12 }} />}
                         label={`${teachers.length || 0}`}
                         color="info"
-                        sx={{ 
-                          fontWeight: 600, 
+                        sx={{
+                          fontWeight: 600,
                           fontSize: "0.7rem",
                           height: 20,
                           "& .MuiChip-label": { px: 0.5 }
                         }}
                       />
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        icon={<LocationOnOutlined sx={{ fontSize: 12 }} />}
-                        label={addrPreview}
-                        sx={{ 
-                          fontWeight: 600, 
-                          fontSize: "0.7rem",
-                          height: 20,
-                          "& .MuiChip-label": { px: 0.5 }
-                        }}
-                      />
+                      {isAddressEnabled && addrPreview && (
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          icon={<LocationOnOutlined sx={{ fontSize: 12 }} />}
+                          label={addrPreview}
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: "0.7rem",
+                            height: 20,
+                            "& .MuiChip-label": { px: 0.5 }
+                          }}
+                        />
+                      )}
                     </Stack>
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                      <LocationOnOutlined sx={{ fontSize: 14, color: "text.secondary" }} />
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary" 
-                        sx={{ 
-                          fontWeight: 500,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis"
-                        }}
-                      >
-                        {addrPreview}
-                      </Typography>
-                    </Stack>
+                    {isAddressEnabled && addrPreview && (
+                      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                        <LocationOnOutlined sx={{ fontSize: 14, color: "text.secondary" }} />
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            fontWeight: 500,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
+                          {addrPreview}
+                        </Typography>
+                      </Stack>
+                    )}
                   </Box>
                 )}
 
@@ -334,7 +343,7 @@ export default function SheltersCards(props: Props) {
                           </Stack>
                         </Paper>
 
-                        {c.address && (
+                        {isAddressEnabled && c.address && (
                           <Paper
                             variant="outlined"
                             sx={{
@@ -386,16 +395,16 @@ export default function SheltersCards(props: Props) {
                           }}
                         >
                           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap rowGap={1}>
-                            <Chip 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              size="small"
+                              variant="outlined"
                               label={`Criado: ${formatDate(c.createdAt)}`}
                               color="default"
                               sx={{ fontWeight: 500 }}
                             />
-                            <Chip 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              size="small"
+                              variant="outlined"
                               label={`Atualizado: ${formatDate(c.updatedAt)}`}
                               color="default"
                               sx={{ fontWeight: 500 }}
@@ -424,13 +433,13 @@ export default function SheltersCards(props: Props) {
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
                     Abrigo {c.name}
                   </Typography>
-                  
+
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Visualizar detalhes">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => onOpenView(c)}
-                        sx={{ 
+                        sx={{
                           color: "primary.main",
                           "&:hover": { bgcolor: "primary.50" }
                         }}
@@ -439,10 +448,10 @@ export default function SheltersCards(props: Props) {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Editar abrigo">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => onStartEdit(c)}
-                        sx={{ 
+                        sx={{
                           color: "info.main",
                           "&:hover": { bgcolor: "info.50" }
                         }}
@@ -452,11 +461,11 @@ export default function SheltersCards(props: Props) {
                     </Tooltip>
                     {isAdmin && (
                       <Tooltip title="Excluir abrigo">
-                        <IconButton 
-                          size="small" 
-                          color="error" 
+                        <IconButton
+                          size="small"
+                          color="error"
                           onClick={() => onAskDelete(c)}
-                          sx={{ 
+                          sx={{
                             "&:hover": { bgcolor: "error.50" }
                           }}
                         >

@@ -16,7 +16,7 @@ import 'dayjs/locale/pt-br';
 dayjs.locale('pt-br');
 
 const fallbackImageUrl = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL;
-console.log('Fallback Image URL:', fallbackImageUrl);
+
 
 interface EventDetailsModalProps {
   open: boolean;

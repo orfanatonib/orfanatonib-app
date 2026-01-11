@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-  Drawer, 
-  IconButton, 
-  Box, 
-  Avatar, 
-  Typography, 
-  Stack, 
+import {
+  Drawer,
+  IconButton,
+  Box,
+  Avatar,
+  Typography,
+  Stack,
   Divider,
   MenuItem,
   ListItemIcon,
@@ -25,6 +25,7 @@ import NavLinks from './NavLinks';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 const MobileNavigation: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -35,6 +36,7 @@ const MobileNavigation: React.FC = () => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const toggleDrawer = () => setOpen(s => !s);
   const closeDrawer = () => setOpen(false);
@@ -75,7 +77,7 @@ const MobileNavigation: React.FC = () => {
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
       <IconButton
         onClick={toggleDrawer}
-        sx={{ 
+        sx={{
           color: '#FFFF00',
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 0, 0.1)',
@@ -182,7 +184,7 @@ const MobileNavigation: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText>Área do Membro</ListItemText>
               </MenuItem>
-              {(isTeacher || isLeader) && (
+              {(isTeacher || isLeader) && isPagelasEnabled && (
                 <MenuItem
                   onClick={handleShelteredArea}
                   sx={{

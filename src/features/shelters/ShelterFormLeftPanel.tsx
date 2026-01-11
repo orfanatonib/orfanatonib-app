@@ -2,6 +2,7 @@ import React from "react";
 import { Alert, Box, Button, Divider, Paper, TextField, Typography, CircularProgress, Grid } from "@mui/material";
 import AddressFields from "./form/AddressFields";
 import ShelterMediaForm from "./form/ShelterMediaForm";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 
 type Props = {
@@ -49,6 +50,12 @@ export default function ShelterFormLeftPanel({
   onSubmit,
   showActions = true,
 }: Props) {
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+  console.log('[ShelterFormLeftPanel - ADMIN FORM] shelter-address flag:', isAddressEnabled);
+  console.log('[ShelterFormLeftPanel - ADMIN FORM] Address fields will be', isAddressEnabled ? 'SHOWN' : 'HIDDEN');
+  console.log('[ShelterFormLeftPanel - ADMIN FORM] address data:', address);
+
   return (
     <Paper elevation={2} className="shelterFormCard">
       {!!error && (
@@ -81,17 +88,21 @@ export default function ShelterFormLeftPanel({
           placeholder="Descrição do abrigo, missão, objetivos..."
         />
 
-        <Divider className="shelterFormCard__divider" />
+        {isAddressEnabled && (
+          <>
+            <Divider className="shelterFormCard__divider" />
 
-        <Typography variant="subtitle1" fontWeight={700} className="shelterFormCard__sectionTitle">
-          Endereço
-        </Typography>
+            <Typography variant="subtitle1" fontWeight={700} className="shelterFormCard__sectionTitle">
+              Endereço
+            </Typography>
 
-        <Box className="shelterFormAddress">
-          <Grid container spacing={2}>
-            <AddressFields value={address ?? {}} onChange={onChangeAddress} />
-          </Grid>
-        </Box>
+            <Box className="shelterFormAddress">
+              <Grid container spacing={2}>
+                <AddressFields value={address ?? {}} onChange={onChangeAddress} />
+              </Grid>
+            </Box>
+          </>
+        )}
 
         <Divider className="shelterFormCard__dividerLarge" />
 
