@@ -180,24 +180,6 @@ export default function ShelterFormPage() {
       return false;
     }
 
-
-    const hasAddressData = formData.address?.street || formData.address?.city ||
-      formData.address?.state || formData.address?.postalCode;
-
-    if (hasAddressData) {
-      // If any address field has data, validate all required fields
-      if (
-        !formData.address?.street?.trim() ||
-        !formData.address?.district?.trim() ||
-        !formData.address?.city?.trim() ||
-        !formData.address?.state?.trim() ||
-        !formData.address?.postalCode?.trim()
-      ) {
-        setError("Todos os campos do endereço são obrigatórios (exceto número e complemento)");
-        return false;
-      }
-    }
-
     return true;
   };
 
