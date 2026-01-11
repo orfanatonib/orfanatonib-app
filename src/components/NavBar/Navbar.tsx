@@ -52,7 +52,6 @@ const NavBar: React.FC = () => {
   const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
 
   const handleMobileAlertClick = () => {
-    // Force MobileNavigation to close by re-mounting it
     setMobileDrawerKey(prev => prev + 1);
   };
 
@@ -133,7 +132,6 @@ const NavBar: React.FC = () => {
             <>
               {isAuthenticated ? (
                 <>
-                  {/* Sininho de alertas de perfil */}
                   <CompleteProfileAlert alerts={profileAlerts} />
                   <Tooltip title="Menu do Usuário">
                     <IconButton
