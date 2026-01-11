@@ -32,7 +32,7 @@ import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 const NavBar: React.FC = () => {
   const theme = useTheme();
@@ -49,7 +49,7 @@ const NavBar: React.FC = () => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const handleMobileAlertClick = () => {
     setMobileDrawerKey(prev => prev + 1);

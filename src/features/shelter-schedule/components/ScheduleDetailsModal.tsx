@@ -26,7 +26,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 
 import { ShelterScheduleResponseDto } from "../types";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
 
@@ -46,7 +46,7 @@ export default function ScheduleDetailsModal({
   onEdit,
 }: ScheduleDetailsModalProps) {
   const theme = useTheme();
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   console.log('[ScheduleDetailsModal] shelter-address flag:', isAddressEnabled);
   console.log('[ScheduleDetailsModal] schedule.shelter.address:', schedule?.shelter?.address);

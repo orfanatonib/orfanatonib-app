@@ -1,4 +1,5 @@
 export * from './hooks/useFeatureFlags';
+export * from './types';
 export * from './utils/featureFlagUtils';
 export { FeatureFlagRoute } from './components/FeatureFlagRoute';
 export type { FeatureFlag } from '@/store/slices/feature-flags/featureFlagsSlice';

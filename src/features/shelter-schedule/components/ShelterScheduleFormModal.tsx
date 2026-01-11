@@ -28,7 +28,7 @@ import "dayjs/locale/pt-br";
 
 import { useMyTeams } from "../hooks";
 import { ShelterScheduleResponseDto, CreateShelterScheduleDto } from "../types";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
 
@@ -53,7 +53,7 @@ export default function ShelterScheduleFormModal({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   console.log('[ShelterScheduleFormModal] shelter-address flag:', isAddressEnabled);
 

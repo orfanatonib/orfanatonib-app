@@ -9,7 +9,7 @@ import ShelterLocationCard from './ShelterLocationCard';
 import ShelterTeamsSummaryCard from './ShelterTeamsSummaryCard';
 import ShelterPeopleCarouselCard from './ShelterPeopleCarouselCard';
 import ShelterInfoCard from './ShelterInfoCard';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 interface ShelterPageViewProps {
   idToFetch: string;
@@ -31,7 +31,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     getTeacherTeams,
   } = useShelterPage(idToFetch);
 
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
 
 

@@ -32,7 +32,7 @@ import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
 import { fetchRoutes } from './store/slices/route/routeSlice';
 import { UserRole, initAuth, logout } from './store/slices/auth/authSlice';
 import { fetchFeatureFlags } from './store/slices/feature-flags/featureFlagsSlice';
-import { FeatureFlagRoute } from './features/feature-flags';
+import { FeatureFlagRoute, FeatureFlagKeys } from './features/feature-flags';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -175,7 +175,7 @@ function App() {
                 <Route
                   path="/area-dos-abrigados"
                   element={
-                    <FeatureFlagRoute featureKey="shelter-pagelas">
+                    <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
                       <ShelteredBrowserPage />
                     </FeatureFlagRoute>
                   }
@@ -183,7 +183,7 @@ function App() {
                 <Route
                   path="/area-dos-abrigados/:shelteredId"
                   element={
-                    <FeatureFlagRoute featureKey="shelter-pagelas">
+                    <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
                       <ShelteredPagelasPage />
                     </FeatureFlagRoute>
                   }
@@ -215,7 +215,7 @@ function App() {
                   <Route
                     path="abrigados"
                     element={
-                      <FeatureFlagRoute featureKey="shelter-management">
+                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}>
                         <ShelteredManager />
                       </FeatureFlagRoute>
                     }
@@ -226,7 +226,7 @@ function App() {
                   <Route
                     path="pagelas"
                     element={
-                      <FeatureFlagRoute featureKey="shelter-pagelas">
+                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
                         <PagelaSheltersManager />
                       </FeatureFlagRoute>
                     }

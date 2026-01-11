@@ -5,7 +5,7 @@ import { Button, Stack } from '@mui/material';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 interface Props {
   closeMenu?: () => void;
@@ -21,7 +21,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
 
   const handleClick = () => closeMenu?.();
 

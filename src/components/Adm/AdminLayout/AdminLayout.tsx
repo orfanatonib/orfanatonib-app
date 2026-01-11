@@ -46,7 +46,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 const drawerWidth = 240;
 
@@ -65,8 +65,8 @@ function AdminLayout() {
   const isAdmin = !!isAuthenticated && user?.role === UserRole.ADMIN;
   const isLeader = !!isAuthenticated && user?.role === UserRole.LEADER;
 
-  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
-  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("tudo");

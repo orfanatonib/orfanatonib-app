@@ -1,10 +1,10 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { Box, Typography, Paper } from '@mui/material';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 interface FeatureFlagRouteProps {
-    featureKey: string;
+    featureKey: FeatureFlagKeys | string;
     children: React.ReactElement;
     fallbackPath?: string;
     showMessage?: boolean;

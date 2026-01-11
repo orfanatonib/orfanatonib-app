@@ -15,7 +15,7 @@ import {
   Badge as BadgeIcon,
   ChildCare as ShelteredCareIcon,
 } from '@mui/icons-material';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 type MUIButtonColor =
   | 'primary'
@@ -193,8 +193,8 @@ const ButtonSection: React.FC<ButtonSectionProps> = ({ references }) => {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
-  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const buttonsToRender = references
     .map((ref) => buttonMap[ref])

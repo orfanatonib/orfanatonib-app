@@ -12,7 +12,7 @@ import {
 
 import { RootState } from '@/store/slices';
 import { MediaTargetType } from 'store/slices/types';
-import { useIsFeatureEnabled } from '@/features/feature-flags';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 import './../styles/SheltersSection.css';
 
@@ -35,7 +35,7 @@ const SheltersSection: React.FC = () => {
   const navigate = useNavigate();
   const routes = useSelector((state: RootState) => state.routes.routes);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
 
 

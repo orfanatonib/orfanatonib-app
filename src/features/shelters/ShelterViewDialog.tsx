@@ -42,7 +42,7 @@ import { ShelterResponseDto } from "./types";
 import { fmtDate } from "@/utils/dates";
 import { CopyButton, initials } from "@/utils/components";
 import TeamManagementDialog from "./components/TeamManagementDialog";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type Props = {
   open: boolean;
@@ -81,7 +81,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
 
 

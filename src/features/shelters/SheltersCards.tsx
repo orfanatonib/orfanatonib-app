@@ -17,7 +17,7 @@ import { SortingState } from "@tanstack/react-table";
 import { ShelterResponseDto } from "./types";
 import { formatDate } from "@/utils/dateUtils";
 import { CopyButton } from "@/utils/components";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type Props = {
   isAdmin: boolean;
@@ -38,7 +38,7 @@ type Props = {
 export default function SheltersCards(props: Props) {
   const { isAdmin, rows, total, pageIndex, pageSize, setPageIndex, setPageSize, sorting, setSorting, onOpenView, onStartEdit, onAskDelete } = props;
   const [open, setOpen] = useState<Set<string>>(new Set());
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   console.log('[SheltersCards] shelter-address flag:', isAddressEnabled);
   console.log('[SheltersCards] rows with addresses:', rows.filter(r => r.address).length);

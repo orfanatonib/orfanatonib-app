@@ -45,7 +45,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type SectionId = "all" | "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
 
@@ -114,8 +114,8 @@ export default function AdminDashboardPage() {
   const isLeader = !!isAuthenticated && role === UserRole.LEADER;
   const isSimpleMode = isLeader && !isAdmin;
 
-  const isShelterManagementEnabled = useIsFeatureEnabled('shelter-management');
-  const isPagelasEnabled = useIsFeatureEnabled('shelter-pagelas');
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const [query, setQuery] = React.useState("");
   const [section, setSection] = React.useState<SectionId>("all");

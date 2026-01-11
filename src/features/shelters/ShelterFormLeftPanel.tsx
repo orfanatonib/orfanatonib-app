@@ -2,7 +2,7 @@ import React from "react";
 import { Alert, Box, Button, Divider, Paper, TextField, Typography, CircularProgress, Grid } from "@mui/material";
 import AddressFields from "./form/AddressFields";
 import ShelterMediaForm from "./form/ShelterMediaForm";
-import { useIsFeatureEnabled } from "@/features/feature-flags";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 
 type Props = {
@@ -50,7 +50,7 @@ export default function ShelterFormLeftPanel({
   onSubmit,
   showActions = true,
 }: Props) {
-  const isAddressEnabled = useIsFeatureEnabled('shelter-address');
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   console.log('[ShelterFormLeftPanel - ADMIN FORM] shelter-address flag:', isAddressEnabled);
   console.log('[ShelterFormLeftPanel - ADMIN FORM] Address fields will be', isAddressEnabled ? 'SHOWN' : 'HIDDEN');
