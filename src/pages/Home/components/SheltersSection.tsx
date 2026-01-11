@@ -12,6 +12,7 @@ import {
 
 import { RootState } from '@/store/slices';
 import { MediaTargetType } from 'store/slices/types';
+import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 import './../styles/SheltersSection.css';
 
@@ -34,6 +35,9 @@ const SheltersSection: React.FC = () => {
   const navigate = useNavigate();
   const routes = useSelector((state: RootState) => state.routes.routes);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+
 
   const shelterCards = useMemo(() => {
     return (routes || []).filter(
@@ -155,7 +159,7 @@ const SheltersSection: React.FC = () => {
                     {currentCard.title || 'Sem título'}
                   </Typography>
 
-                  {currentCard.subtitle ? (
+                  {isAddressEnabled && currentCard.subtitle ? (
                     <div className="sheltersSection__location">
                       <LocationIcon className="sheltersSection__locationIcon" />
                       <Typography variant="h6" className="sheltersSection__locationText">

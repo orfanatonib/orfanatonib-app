@@ -28,6 +28,7 @@ import "dayjs/locale/pt-br";
 
 import { useMyTeams } from "../hooks";
 import { ShelterScheduleResponseDto, CreateShelterScheduleDto } from "../types";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
 
@@ -52,6 +53,9 @@ export default function ShelterScheduleFormModal({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+  console.log('[ShelterScheduleFormModal] shelter-address flag:', isAddressEnabled);
 
   const [teamId, setTeamId] = useState("");
   const [visitNumber, setVisitNumber] = useState<number | "">(1);
@@ -95,10 +99,9 @@ export default function ShelterScheduleFormModal({
     }
   }, [open, initialData, teams]);
 
-  // Função para combinar data e hora
   const combineDateAndTime = (date: Dayjs | null, time: Dayjs | null): string | undefined => {
     if (!date) return undefined;
-    
+
     let combined = date.startOf("day");
     if (time) {
       combined = combined.hour(time.hour()).minute(time.minute());
@@ -107,7 +110,6 @@ export default function ShelterScheduleFormModal({
   };
 
   const handleSubmit = async () => {
-    // Validação - equipe, número da visita e conteúdo da lição são obrigatórios
     if (!teamId || !visitNumber || !lessonContent.trim()) {
       setFormError("Preencha os campos obrigatórios: Equipe, Número da Visita e Conteúdo da Lição.");
       return;
@@ -152,7 +154,6 @@ export default function ShelterScheduleFormModal({
       </DialogTitle>
 
       <DialogContent dividers>
-        {/* Banner Informativo - apenas para líderes */}
         {!hideInfoBanner && (
           <Box
             sx={{
@@ -187,7 +188,6 @@ export default function ShelterScheduleFormModal({
         )}
 
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
-          {/* Equipe e Número da Visita */}
           <Box display="flex" gap={1.5} flexDirection={{ xs: "column", sm: "row" }}>
             <FormControl fullWidth required disabled={teamsLoading} sx={{ flex: 2 }}>
               <InputLabel>Equipe</InputLabel>
@@ -196,9 +196,9 @@ export default function ShelterScheduleFormModal({
                 onChange={(e) => setTeamId(e.target.value)}
                 label="Equipe"
               >
-                {teams.map((team) => (
+                {teams.filter(team => team.shelter).map((team) => (
                   <MenuItem key={team.id} value={team.id}>
-                    Equipe {team.numberTeam} - {team.shelter.name}
+                    Equipe {team.numberTeam} - {team.shelter?.name || 'Sem abrigo'}
                   </MenuItem>
                 ))}
               </Select>
@@ -216,7 +216,6 @@ export default function ShelterScheduleFormModal({
             />
           </Box>
 
-          {/* Conteúdo da Lição */}
           <TextField
             label="Conteúdo da Lição"
             value={lessonContent}
@@ -229,7 +228,6 @@ export default function ShelterScheduleFormModal({
             helperText="Descreva o conteúdo que será ministrado na visita"
           />
 
-          {/* Info do Abrigo selecionado */}
           {selectedTeam && (
             <Box
               sx={{
@@ -246,7 +244,7 @@ export default function ShelterScheduleFormModal({
               <Typography variant="body2" fontWeight="medium">
                 {selectedTeam.shelter.name}
               </Typography>
-              {selectedTeam.shelter.address && (
+              {isAddressEnabled && selectedTeam.shelter.address && (
                 <Typography variant="caption" color="text.secondary">
                   {selectedTeam.shelter.address.street}, {selectedTeam.shelter.address.number} -{" "}
                   {selectedTeam.shelter.address.city}/{selectedTeam.shelter.address.state}
@@ -255,9 +253,7 @@ export default function ShelterScheduleFormModal({
             </Box>
           )}
 
-          {/* Datas */}
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-            {/* Data e Hora da Reunião - PRIMEIRO */}
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
               Reunião
             </Typography>
@@ -288,7 +284,6 @@ export default function ShelterScheduleFormModal({
               />
             </Box>
 
-            {/* Data e Hora da Visita - SEGUNDO */}
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
               Visita
             </Typography>
@@ -320,7 +315,6 @@ export default function ShelterScheduleFormModal({
             </Box>
           </LocalizationProvider>
 
-          {/* Sala da Reunião */}
           <TextField
             label="Sala da Reunião"
             value={meetingRoom}
@@ -330,7 +324,6 @@ export default function ShelterScheduleFormModal({
             helperText="Deixe em branco para usar 'NIB - Nova Igreja Batista'"
           />
 
-          {/* Observações */}
           <TextField
             label="Observações"
             value={observation}

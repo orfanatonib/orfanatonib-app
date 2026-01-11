@@ -20,6 +20,7 @@ import {
 
 import { ShelterScheduleResponseDto } from "../types";
 import VisitCard from "./VisitCard";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 interface TeamGroup {
   teamId: string;
@@ -63,6 +64,10 @@ export default function ShelterCard({
   onDelete,
 }: ShelterCardProps) {
   const theme = useTheme();
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+  console.log('[ShelterCard] shelter-address flag:', isAddressEnabled);
+  console.log('[ShelterCard] shelter.address:', shelter.address);
 
   return (
     <Paper

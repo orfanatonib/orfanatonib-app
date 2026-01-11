@@ -26,6 +26,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 
 import { ShelterScheduleResponseDto } from "../types";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
 
@@ -45,6 +46,10 @@ export default function ScheduleDetailsModal({
   onEdit,
 }: ScheduleDetailsModalProps) {
   const theme = useTheme();
+  const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
+
+  console.log('[ScheduleDetailsModal] shelter-address flag:', isAddressEnabled);
+  console.log('[ScheduleDetailsModal] schedule.shelter.address:', schedule?.shelter?.address);
 
   const formatDateTime = (dateStr?: string | null) => {
     if (!dateStr) return null;
@@ -114,7 +119,7 @@ export default function ScheduleDetailsModal({
           <Typography variant="body1" fontWeight="medium">
             {schedule.shelter.name}
           </Typography>
-          {schedule.shelter.address && (
+          {isAddressEnabled && schedule.shelter.address && (
             <Typography variant="caption" color="text.secondary" display="block">
               {schedule.shelter.address.street}, {schedule.shelter.address.number} -{" "}
               {schedule.shelter.address.city}/{schedule.shelter.address.state}
