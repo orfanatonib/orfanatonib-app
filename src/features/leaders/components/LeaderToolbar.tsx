@@ -264,7 +264,6 @@ export default function LeaderToolbar({
             </FormControl>
           </Grid>
 
-          {}
           <Grid
             item
             xs={12}

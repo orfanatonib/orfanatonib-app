@@ -143,7 +143,6 @@ export default function VisitCard({
             {dayjs(schedule.date).format("DD/MM")} {schedule.category === 'meeting' ? '(Reunião)' : ''}
           </Typography>
         </Box>
-        {}
       </CardContent>
     </Card>
   );

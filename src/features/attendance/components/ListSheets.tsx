@@ -133,7 +133,6 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
 
   return (
     <Box sx={{ width: '100%', p: { xs: 1, sm: 3 } }}>
-      {}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
         <IconButton
           onClick={onBack}

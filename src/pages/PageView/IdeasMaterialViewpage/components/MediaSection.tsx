@@ -70,7 +70,6 @@ function MediaTypeCard({
 
   return (
     <>
-      {}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -105,7 +104,6 @@ function MediaTypeCard({
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, flex: 1 }}>
-                {}
                 <Box
                   sx={{
                     display: "flex",
@@ -164,7 +162,6 @@ function MediaTypeCard({
         </Card>
       </motion.div>
 
-      {}
       <Modal
         open={isExpanded}
         onClose={onToggle}
@@ -200,7 +197,6 @@ function MediaTypeCard({
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 style={{ minHeight: "100%" }}
               >
-                {}
                 <Box
                   sx={{
                     position: "sticky",
@@ -277,7 +273,6 @@ function MediaTypeCard({
                   </Container>
                 </Box>
 
-                {}
                 <Container maxWidth="xl" sx={{ py: { xs: 3, sm: 4 } }}>
                   <Grid container spacing={3}>
                     {items.map((item, index) => (
@@ -396,7 +391,6 @@ export default function MediaSection({
 
   return (
     <Box sx={{ position: "relative", zIndex: isExpanded ? 1000 : 1 }}>
-      {}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -423,7 +417,6 @@ export default function MediaSection({
           }}
           onClick={() => onToggleSection(sectionId)}
         >
-          {}
           <Box
             sx={{
               background: `linear-gradient(${sectionColor.gradient})`,
@@ -510,7 +503,6 @@ export default function MediaSection({
                     justifyContent: { xs: "space-between", sm: "flex-end" },
                   }}
                 >
-                  {}
                   {user && (
                     <Tooltip title="Saiba mais" arrow placement="top">
                       <Box
@@ -594,7 +586,6 @@ export default function MediaSection({
         </Card>
       </motion.div>
 
-      {}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -627,7 +618,6 @@ export default function MediaSection({
               }}
             >
               <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                {}
                 <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
                   <Tooltip title="Fechar" arrow placement="left">
                     <IconButton
@@ -687,7 +677,6 @@ export default function MediaSection({
         )}
       </AnimatePresence>
 
-      {}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -710,7 +699,6 @@ export default function MediaSection({
         )}
       </AnimatePresence>
 
-      {}
       {user && (
         <UserInfoModal
           open={userModalOpen}

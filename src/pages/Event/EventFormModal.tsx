@@ -265,7 +265,6 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               <MenuItem value="leaders">Líderes</MenuItem>
             </TextField>
             
-            {}
             <Box>
               {existingImageUrl && !removeImage && !imagePreview && (
                 <Box sx={{ mb: 2 }}>

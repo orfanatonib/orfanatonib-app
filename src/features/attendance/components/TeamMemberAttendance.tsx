@@ -79,15 +79,12 @@ const MemberAttendanceCard = memo(({
     <Box sx={{ transition: 'all 0.2s ease-in-out' }}>
       <Stack spacing={0}>
         <Box sx={{ p: { xs: 1, sm: 1.5 } }}>
-          {}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             alignItems={{ xs: 'stretch', sm: 'center' }}
             spacing={{ xs: 1.5, sm: 2 }}
           >
-            {}
             <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
-              {}
               <Box
                 sx={{
                   width: 40,
@@ -120,7 +117,6 @@ const MemberAttendanceCard = memo(({
                 )}
               </Box>
 
-              {}
               <Box flex={1} minWidth={0} sx={{ overflow: 'hidden' }}>
                 <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
                   <Typography
@@ -145,7 +141,6 @@ const MemberAttendanceCard = memo(({
               </Box>
             </Stack>
 
-            {}
             <Stack
               direction="row"
               spacing={1}
@@ -189,7 +184,6 @@ const MemberAttendanceCard = memo(({
           </Stack>
         </Box>
 
-        {}
         <Collapse in={showComment}>
           <Box
             sx={{
@@ -675,7 +669,6 @@ const TeamMemberAttendance = memo(({
       </Box>
 
       <Grid container spacing={3} sx={{ flex: 1, overflow: 'hidden' }}>
-        {}
         <Grid item xs={12} md={4} lg={3}>
           <Stack spacing={3}>
 
@@ -872,7 +865,6 @@ const TeamMemberAttendance = memo(({
               </CardContent>
             </Card>
 
-            {}
             <Box
               sx={{
                 display: { xs: 'none', md: 'block' },
@@ -1063,7 +1055,6 @@ const TeamMemberAttendance = memo(({
         </Grid>
       </Grid>
 
-      {}
       <Box
         sx={{
           display: { xs: 'block', md: 'none' },

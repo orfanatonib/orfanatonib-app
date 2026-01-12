@@ -221,7 +221,6 @@ const ProfilePage: React.FC = () => {
           width: '100%',
         }}
       >
-        {}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -239,7 +238,6 @@ const ProfilePage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            {}
             <Box
               sx={{
                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
@@ -290,7 +288,6 @@ const ProfilePage: React.FC = () => {
               </Box>
             </Box>
 
-            {}
             {profile?.role === 'member' && profile?.memberProfile?.team?.shelter && (
               <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
                 <Stack spacing={0.5}>
@@ -314,7 +311,6 @@ const ProfilePage: React.FC = () => {
 
             <Divider />
 
-            {}
             <List sx={{ p: 0.5 }} dense>
               {menuItems.map((item, index) => (
                 <ListItemButton
@@ -361,7 +357,6 @@ const ProfilePage: React.FC = () => {
           </Paper>
         </motion.div>
 
-        {}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -377,7 +372,6 @@ const ProfilePage: React.FC = () => {
               border: '1px solid rgba(25, 118, 210, 0.1)',
             }}
           >
-            {}
             <Box sx={{ mb: 2, pb: 1.5, borderBottom: '2px solid rgba(25, 118, 210, 0.1)' }}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box
@@ -399,14 +393,12 @@ const ProfilePage: React.FC = () => {
               </Stack>
             </Box>
 
-            {}
             {error && (
               <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}
 
-            {}
             <Box>
               {renderContent()}
             </Box>
@@ -418,4 +410,3 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
-

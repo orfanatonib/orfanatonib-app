@@ -55,7 +55,6 @@ export default function ShelterPeopleCarouselCard({ title, count, theme, icon, p
           </div>
 
           <div className="shelterPage__scrollerWrap">
-            {}
             {people.length > 1 ? (
               <IconButton
                 aria-label="Anterior"
@@ -104,7 +103,6 @@ export default function ShelterPeopleCarouselCard({ title, count, theme, icon, p
               })}
             </div>
 
-            {}
             {people.length > 1 ? (
               <IconButton
                 aria-label="Próximo"

@@ -79,7 +79,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           },
         }}
       >
-        {}
         <Box
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -111,7 +110,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           </Typography>
         </Box>
 
-        {}
         <Box
           sx={{
             display: "flex",
@@ -136,7 +134,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
         </Box>
 
         <DialogContent sx={{ pt: 0, pb: 3, px: 3 }}>
-          {}
           <Typography
             variant="h6"
             fontWeight="bold"
@@ -148,9 +145,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
 
           <Divider sx={{ my: 2 }} />
 
-          {}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            {}
             <Box
               sx={{
                 display: "flex",
@@ -190,7 +185,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
               </IconButton>
             </Box>
 
-            {}
             {user.phone && (
               <Box
                 sx={{
@@ -224,7 +218,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
             )}
           </Box>
 
-          {}
           <Box sx={{ display: "flex", gap: 1.5, mt: 3 }}>
             <Button
               variant="outlined"
@@ -261,7 +254,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
         </DialogContent>
       </Dialog>
 
-      {}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}

@@ -735,7 +735,6 @@ const Eventos: React.FC = () => {
                       </Button>
                     )}
 
-                {}
               </Box>
             </Box>
           </motion.div>

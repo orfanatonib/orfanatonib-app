@@ -920,4 +920,3 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
 TeamManagementSection.displayName = "TeamManagementSection";
 
 export default TeamManagementSection;
-

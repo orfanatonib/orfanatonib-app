@@ -155,7 +155,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
       <Box sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            {}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="love-languages-label">Linguagens do Amor</InputLabel>
@@ -182,7 +181,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               </FormControl>
             </Grid>
 
-            {}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="temperaments-label">Temperamentos</InputLabel>
@@ -212,7 +210,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               </FormControl>
             </Grid>
 
-            {}
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -223,7 +220,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {}
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -234,7 +230,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {}
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
@@ -245,7 +240,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -259,7 +253,6 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth

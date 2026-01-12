@@ -641,4 +641,3 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 };
 
 export default ProfileImageUpload;
-

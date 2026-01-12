@@ -43,7 +43,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
       }}
     >
       <Box sx={{ maxWidth: 1000, width: '100%' }}>
-        {}
         <Box sx={{ mb: 3 }}>
           <IconButton
             onClick={() => navigate('/adm')}
@@ -61,7 +60,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
           </IconButton>
         </Box>
 
-        {}
         <Stack spacing={2} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
           <Typography
             variant="h3"
@@ -92,7 +90,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
         </Stack>
 
         <Grid container spacing={{ xs: 3, md: 4 }}>
-          {}
           <Grid item xs={12} sm={6}>
             <Card
               elevation={0}
@@ -129,7 +126,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                   textAlign: 'center',
                 }}
               >
-                {}
                 <Box
                   className="icon-wrapper"
                   sx={{
@@ -176,7 +172,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
             </Card>
           </Grid>
 
-          {}
           <Grid item xs={12} sm={6}>
             <Card
               elevation={0}
@@ -213,7 +208,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                   textAlign: 'center',
                 }}
               >
-                {}
                 <Box
                   className="icon-wrapper"
                   sx={{
@@ -268,4 +262,3 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
 AttendanceModeSelector.displayName = 'AttendanceModeSelector';
 
 export default AttendanceModeSelector;
-

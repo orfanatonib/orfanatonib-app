@@ -322,4 +322,3 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
 };
 
 export default PasswordChangeForm;
-

@@ -283,7 +283,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         },
       }}
     >
-      {}
       <Box
         sx={{
           background: genderStyle.gradient,
@@ -294,7 +293,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           textAlign: 'center',
         }}
       >
-        {}
         <IconButton
           onClick={onClose}
           size="small"
@@ -310,7 +308,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           <CloseIcon fontSize="small" />
         </IconButton>
 
-        {}
         {birthdayStatus === 'today' && (
           <motion.div
             initial={{ scale: 0 }}
@@ -333,7 +330,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </motion.div>
         )}
 
-        {}
         {birthdayStatus === 'today' && (
           <Box sx={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
             {[...Array(12)].map((_, i) => (
@@ -355,7 +351,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         )}
       </Box>
 
-      {}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: -4, position: 'relative', zIndex: 1 }}>
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -378,9 +373,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         </motion.div>
       </Box>
 
-      {}
       <Box sx={{ px: 2.5, pt: 1.5, pb: 2.5 }}>
-        {}
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
             {profile.name}
@@ -419,7 +412,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Stack>
         </Box>
 
-        {}
         {(profile.email || profile.phone) && (
           <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
             {profile.phone && (
@@ -499,7 +491,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Stack>
         )}
 
-        {}
         {hasGaInfo && (
           <Box 
             sx={{ 
@@ -533,7 +524,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Box>
         )}
 
-        {}
         {hasPreferences && (
           <>
             <Divider sx={{ mb: 1.5 }} />
@@ -594,7 +584,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
               )}
             </Grid>
 
-            {}
             {(profile.preferences?.whatMakesYouSmile || profile.preferences?.skillsAndTalents) && (
               <Box sx={{ mt: 1.5 }}>
                 {profile.preferences?.whatMakesYouSmile && (
@@ -677,7 +666,6 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
       }}
     >
       <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }}>
-        {}
         <Box
           sx={{
             width: { xs: 28, sm: 32 },
@@ -694,7 +682,6 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
           {emoji}
         </Box>
 
-        {}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography 
             variant="caption" 
@@ -713,7 +700,6 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
           </Typography>
         </Box>
 
-        {}
         <Stack direction="row" spacing={-0.8}>
           {profiles.slice(0, visibleAvatars).map((profile) => {
             const days = getDaysUntilBirthday(profile.personalData?.birthDate);
@@ -835,7 +821,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
           },
         }}
       >
-        {}
         {birthdayStatus === 'today' && (
           <Box
             sx={{
@@ -854,7 +839,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
           </Box>
         )}
 
-        {}
         <Box sx={{ p: 2 }}>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Avatar
@@ -885,7 +869,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
             </Box>
           </Stack>
 
-          {}
           <Stack spacing={0.3} sx={{ mt: 1.5 }}>
             <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <EmailIcon sx={{ fontSize: 12, opacity: 0.5 }} />
@@ -909,7 +892,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
             )}
           </Stack>
 
-          {}
           {profile.preferences && (
             <Stack direction="row" spacing={0.5} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
               {profile.preferences.temperaments && (
@@ -1096,7 +1078,6 @@ const ProfilesManager: React.FC = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      {}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <Box sx={{ mb: 2, textAlign: 'center' }}>
           <Typography 
@@ -1124,7 +1105,6 @@ const ProfilesManager: React.FC = () => {
         </Alert>
       )}
 
-      {}
       {!loadingBirthdays && (birthdayToday.length > 0 || birthdayWeek.length > 0 || birthdayMonth.length > 0) && (
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
@@ -1155,7 +1135,6 @@ const ProfilesManager: React.FC = () => {
         </Stack>
       )}
 
-      {}
       <Paper 
         elevation={0} 
         sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(255,255,255,0.8)' }}
@@ -1230,7 +1209,6 @@ const ProfilesManager: React.FC = () => {
         </Stack>
       </Paper>
 
-      {}
       <Collapse in={showFilters}>
         <Paper 
           elevation={0} 
@@ -1266,7 +1244,6 @@ const ProfilesManager: React.FC = () => {
         </Paper>
       </Collapse>
 
-      {}
       {profiles.length === 0 && !loading ? (
         <Paper elevation={0} sx={{ p: 6, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)' }}>
           <PersonIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
@@ -1286,7 +1263,6 @@ const ProfilesManager: React.FC = () => {
             </AnimatePresence>
           </Grid>
 
-          {}
           {meta && (
             <Paper 
               elevation={0} 
@@ -1305,7 +1281,6 @@ const ProfilesManager: React.FC = () => {
                 spacing={{ xs: 1.5, sm: 2 }}
                 sx={{ position: 'relative' }}
               >
-                {}
                 {meta.totalPages > 1 && (
                   <Pagination 
                     count={meta.totalPages} 
@@ -1320,7 +1295,6 @@ const ProfilesManager: React.FC = () => {
                   />
                 )}
                 
-                {}
                 <Stack 
                   direction="row" 
                   spacing={1} 
@@ -1363,7 +1337,6 @@ const ProfilesManager: React.FC = () => {
         </>
       )}
 
-      {}
       {loading && profiles.length > 0 && (
         <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
           <Paper elevation={8} sx={{ p: 2, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'white' }}>
@@ -1373,7 +1346,6 @@ const ProfilesManager: React.FC = () => {
         </Box>
       )}
 
-      {}
       <ProfileDetailModal
         profile={selectedProfile}
         open={!!selectedProfile}

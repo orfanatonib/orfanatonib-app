@@ -88,7 +88,6 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         },
       }}
     >
-      {}
       <IdeasPageHeader
         title={title}
         subtitle={subtitle}
@@ -99,7 +98,6 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         onDelete={() => setDeleteConfirmOpen(true)}
       />
 
-      {}
       <Box sx={{ flex: 1, py: { xs: 2, sm: 3, md: 5 }, position: "relative", zIndex: 1 }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
           <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -131,7 +129,6 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         </Container>
       </Box>
 
-      {}
       <DeleteConfirmDialog
         open={deleteConfirmOpen}
         title={ideasPage.title}

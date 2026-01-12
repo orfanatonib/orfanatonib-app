@@ -79,7 +79,6 @@ export default function ShelterCard({
         "&:hover": { boxShadow: 6 },
       }}
     >
-      {}
       <Box
         onClick={() => onToggleExpand(shelter.shelterId)}
         sx={{
@@ -140,7 +139,6 @@ export default function ShelterCard({
         </Box>
       </Box>
 
-      {}
       <Collapse in={isExpanded}>
         <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
           {shelter.teams.map((team, teamIndex) => (
@@ -160,7 +158,6 @@ export default function ShelterCard({
                 </Typography>
               </Box>
 
-              {}
               <Box
                 sx={{
                   display: "grid",

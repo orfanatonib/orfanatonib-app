@@ -735,4 +735,3 @@ export default function TeamManagementDialog({
     </Dialog>
   );
 }
-

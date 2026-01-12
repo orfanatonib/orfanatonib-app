@@ -254,7 +254,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
           },
         }}
       >
-        {}
         <Box
           sx={{
             px: 2,
@@ -297,7 +296,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             },
           }}
         >
-          {}
           {alerts?.map((alert) => (
             <MenuItem
               key={alert.id}
@@ -347,12 +345,10 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           ))}
 
-          {}
           {alerts?.length > 0 && pendingCount > 0 && (
             <Divider sx={{ borderColor: 'rgba(255, 255, 0, 0.2)', my: 0.5 }} />
           )}
 
-          {}
           {isMember && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
@@ -431,7 +427,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           )}
 
-          {}
           {isLeaderOrAdmin && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
@@ -509,7 +504,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           )}
 
-          {}
           {!alerts?.length && pendingCount === 0 && (
             <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
               <Typography
@@ -526,7 +520,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
         </Box>
       </Menu>
 
-      {}
       {isMember && (
         <Dialog
           open={pendingDialogOpen}
@@ -695,7 +688,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
                     </ToggleButton>
                   </ToggleButtonGroup>
 
-                  {}
                   {type === 'absent' && (
                     <TextField
                       label="Motivo da falta"

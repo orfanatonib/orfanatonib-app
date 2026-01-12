@@ -175,7 +175,6 @@ export default function EventsCalendarView({
           <Divider />
 
           <Box className="events-calendar-box">
-            {}
             <Box className="custom-calendar-header">
               <IconButton onClick={handlePrevMonth} className="month-nav-button">
                 <ChevronLeftIcon />
@@ -186,7 +185,6 @@ export default function EventsCalendarView({
               </IconButton>
             </Box>
 
-            {}
             <Box className="weekday-labels">
               {weekDayLabels.map((label, idx) => (
                 <Box key={idx} className={`weekday-label ${idx === 0 ? "sunday" : ""}`}>
@@ -195,7 +193,6 @@ export default function EventsCalendarView({
               ))}
             </Box>
 
-            {}
             <Box className="calendar-grid">
               {weeks.map((week, weekIdx) => (
                 <motion.div

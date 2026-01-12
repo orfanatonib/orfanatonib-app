@@ -233,7 +233,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
 
   const renderSuccessScreen = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 1, md: 2 }, gap: { xs: 2, md: 2.5 } }}>
-      {}
       <Alert
         severity="success"
         sx={{
@@ -257,7 +256,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         </Box>
       </Alert>
 
-      {}
       {emailVerificationSent && (
         <Box
           sx={{
@@ -301,7 +299,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         </Box>
       )}
 
-      {}
       <Button
         variant="contained"
         color="primary"
