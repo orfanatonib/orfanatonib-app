@@ -50,8 +50,6 @@ interface AttendanceRow {
   comment: string;
 }
 
-// Função auxiliar removida - usando formatScheduleLabel do types.ts
-
 const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props) => {
   const [scheduleId, setScheduleId] = useState<string>(schedules[0]?.id || '');
   const [rows, setRows] = useState<AttendanceRow[]>([]);
@@ -71,13 +69,11 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
   );
   const selectedSchedule = useMemo(() => schedules.find(s => s.id === scheduleId), [schedules, scheduleId]);
 
-  // Validações baseadas nas regras de negócio
   const scheduleValidation = useMemo((): ValidationResult => {
     if (!selectedSchedule) return { isValid: false, errors: ['Selecione um evento'] };
     return validateScheduleDates(selectedSchedule);
   }, [selectedSchedule]);
 
-  // Validação dos comentários de todos os membros
   const rowsValidation = useMemo((): ValidationResult => {
     const errors: string[] = [];
     rows.forEach((row, index) => {
@@ -94,15 +90,13 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
 
   const isFormValid = useMemo(() => {
     return scheduleValidation.isValid &&
-           rowsValidation.isValid &&
-           rows.length > 0 &&
-           !formState.loading &&
-           !disabled;
+      rowsValidation.isValid &&
+      rows.length > 0 &&
+      !formState.loading &&
+      !disabled;
   }, [scheduleValidation.isValid, rowsValidation.isValid, rows.length, formState.loading, disabled]);
 
   Doc:
-
-  
 
   useEffect(() => {
     if (schedules.length > 0) {
@@ -141,11 +135,10 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações finais antes do envio
     if (!scheduleId) {
       setFormState(prev => ({
         ...prev,
-        error: 'Selecione um evento para registrar a pagela.',
+        error: 'Selecione um evento para registrar a frequência.',
         feedback: null,
       }));
       return;
@@ -164,7 +157,7 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
     if (!sanitized.length) {
       setFormState(prev => ({
         ...prev,
-        error: 'Adicione pelo menos um membro para registrar a pagela.',
+        error: 'Adicione pelo menos um membro para registrar a frequência.',
         feedback: null,
       }));
       return;
@@ -190,6 +183,7 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
       const dto: RegisterTeamAttendanceDto = {
         teamId,
         scheduleId,
+        category: selectedSchedule!.category as 'visit' | 'meeting',
         attendances: sanitized.map(r => ({
           memberId: r.memberId,
           type: r.type,
@@ -204,11 +198,11 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
         loading: false,
         feedback: {
           status: 'success',
-          message: `Pagela registrada com sucesso para ${sanitized.length} membro${sanitized.length > 1 ? 's' : ''}!`,
+          message: `Frequência registrada com sucesso para ${sanitized.length} membro${sanitized.length > 1 ? 's' : ''}!`,
         },
       }));
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar pagela. Verifique os dados e tente novamente.';
+      const message = err?.response?.data?.message || 'Erro ao registrar frequência. Verifique os dados e tente novamente.';
       setFormState(prev => ({
         ...prev,
         loading: false,
@@ -251,11 +245,11 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
                 helperText={
                   !scheduleValidation.isValid
                     ? scheduleValidation.errors.join(', ')
-                    : 'Escolha a reunião/visita para registrar a pagela.'
+                    : 'Escolha a reunião/visita para registrar a frequência.'
                 }
                 aria-describedby="team-schedule-helper-text"
                 inputProps={{
-                  'aria-label': 'Selecionar evento para pagela do time',
+                  'aria-label': 'Selecionar evento para frequência do time',
                 }}
               >
                 {scheduleOptions.map(option => (
@@ -388,11 +382,11 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
                   startIcon={formState.loading ? <CircularProgress size={16} color="inherit" /> : null}
                   aria-label={
                     formState.loading
-                      ? 'Enviando pagela do time'
-                      : `Salvar pagela para ${rows.length} membro${rows.length !== 1 ? 's' : ''}`
+                      ? 'Enviando frequência do time'
+                      : `Salvar frequência para ${rows.length} membro${rows.length !== 1 ? 's' : ''}`
                   }
                 >
-                  {formState.loading ? 'Enviando...' : 'Salvar Pagela'}
+                  {formState.loading ? 'Enviando...' : 'Salvar Frequência'}
                 </Button>
                 <Divider orientation="vertical" flexItem />
                 <Typography variant="caption" color="text.secondary">

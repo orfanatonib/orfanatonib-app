@@ -73,7 +73,7 @@ export default function ShelterScheduleFormModal({
   useEffect(() => {
     if (open) {
       if (initialData) {
-        // Edição
+        
         setTeamId(initialData.shelter.team.id);
         setVisitNumber(initialData.visitNumber);
         setVisitDate(initialData.visitDate ? dayjs(initialData.visitDate) : null);
@@ -84,7 +84,7 @@ export default function ShelterScheduleFormModal({
         setObservation(initialData.observation || "");
         setMeetingRoom(initialData.meetingRoom || "");
       } else {
-        // Novo
+        
         setTeamId(teams.length === 1 ? teams[0].id : "");
         setVisitNumber(1);
         setVisitDate(null);

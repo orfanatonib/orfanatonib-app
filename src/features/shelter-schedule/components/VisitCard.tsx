@@ -137,20 +137,12 @@ export default function VisitCard({
           {schedule.lessonContent}
         </Typography>
 
-        {schedule.visitDate && (
-          <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-            <EventIcon sx={{ fontSize: 12, color: "success.main" }} />
-            <Typography variant="caption" color="text.secondary">
-              {dayjs(schedule.visitDate).format("DD/MM")}
-            </Typography>
-          </Box>
-        )}
-
-        {!schedule.visitDate && !schedule.meetingDate && (
-          <Typography variant="caption" color="text.disabled" mt={1} display="block">
-            Sem data definida
+        <Box display="flex" alignItems="center" gap={0.5} mt={1}>
+          <EventIcon sx={{ fontSize: 12, color: schedule.category === 'visit' ? "success.main" : "info.main" }} />
+          <Typography variant="caption" color="text.secondary">
+            {dayjs(schedule.date).format("DD/MM")} {schedule.category === 'meeting' ? '(Reunião)' : ''}
           </Typography>
-        )}
+        </Box>
       </CardContent>
     </Card>
   );

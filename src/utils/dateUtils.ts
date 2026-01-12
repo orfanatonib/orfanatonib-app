@@ -43,7 +43,6 @@ export const weekdayLabel = (weekday?: string | null): string => {
   return WEEKDAY_PT[weekday] || weekday;
 };
 
-
 export const ageFrom = (birth?: string | null) => {
   if (!birth) return null;
   const b = new Date(birth);
@@ -91,9 +90,6 @@ export const timeDifference = (date?: string | null) => {
 export const ageDetailed = timeDifference;
 export const tenureFrom = timeDifference;
 
-/**
- * Máscara para data brasileira (dd/MM/yyyy)
- */
 export const maskDateBR = (value: string): string => {
   const digits = value.replace(/\D/g, '');
   if (digits.length <= 2) return digits;
@@ -101,14 +97,10 @@ export const maskDateBR = (value: string): string => {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
 };
 
-/**
- * Valida se uma data no formato brasileiro é válida
- */
 export const isValidBRDate = (brDate: string): boolean => {
-  // Verifica formato completo dd/MM/yyyy
+  
   if (!brDate || brDate.length !== 10) return false;
 
-  // Verifica se tem as barras nas posições corretas
   if (brDate[2] !== '/' || brDate[5] !== '/') return false;
 
   const parts = brDate.split('/');
@@ -116,48 +108,37 @@ export const isValidBRDate = (brDate: string): boolean => {
 
   const [dayStr, monthStr, yearStr] = parts;
 
-  // Verifica se cada parte tem o tamanho correto
   if (dayStr.length !== 2 || monthStr.length !== 2 || yearStr.length !== 4) return false;
 
   const day = Number(dayStr);
   const month = Number(monthStr);
   const year = Number(yearStr);
 
-  // Verifica se são números válidos
   if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
 
-  // Valida ranges
   if (month < 1 || month > 12) return false;
   if (day < 1 || day > 31) return false;
   if (year < 1900 || year > new Date().getFullYear()) return false;
 
-  // Valida se a data existe no calendário
   const date = new Date(year, month - 1, day);
   return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
 };
 
-/**
- * Converte uma data do formato ISO (yyyy-MM-dd) para o formato brasileiro (dd/MM/yyyy)
- */
 export const isoToBR = (isoDate: string): string => {
   if (!isoDate) return '';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
 };
 
-/**
- * Converte uma data do formato brasileiro (dd/MM/yyyy) para o formato ISO (yyyy-MM-dd)
- */
 export const brToISO = (brDate: string): string => {
   if (!brDate) return '';
 
-  // Valida antes de converter
   if (!isValidBRDate(brDate)) {
     throw new Error('Data brasileira inválida para conversão');
   }
 
   const [day, month, year] = brDate.split('/');
-  // Garante que dia e mês sempre tenham 2 dígitos
+  
   const dayPadded = day.padStart(2, '0');
   const monthPadded = month.padStart(2, '0');
   return `${year}-${monthPadded}-${dayPadded}`;

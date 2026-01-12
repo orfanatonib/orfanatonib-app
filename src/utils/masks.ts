@@ -3,7 +3,7 @@ export function digitsOnly(input: unknown): string {
 }
 
 export function maskDateBR(raw: string): string {
-  const digits = digitsOnly(raw).slice(0, 8); // ddmmyyyy
+  const digits = digitsOnly(raw).slice(0, 8); 
   const dd = digits.slice(0, 2);
   const mm = digits.slice(2, 4);
   const yyyy = digits.slice(4, 8);
@@ -30,7 +30,7 @@ export function maskPhoneBR(raw: string): string {
   const digitsAll = digitsOnly(raw).slice(0, 13);
   const hasCC = digitsAll.startsWith("55") && digitsAll.length > 11;
   const cc = hasCC ? "55" : "";
-  const digits = hasCC ? digitsAll.slice(2) : digitsAll; // até 11
+  const digits = hasCC ? digitsAll.slice(2) : digitsAll; 
 
   const ddd = digits.slice(0, 2);
   const rest = digits.slice(2);
@@ -39,7 +39,7 @@ export function maskPhoneBR(raw: string): string {
   if (!ddd) formatted = "";
   else if (digits.length <= 2) formatted = `(${ddd}`;
   else {
-    const isMobile = rest.length >= 9; // 9 dígitos após DDD
+    const isMobile = rest.length >= 9; 
     const part1Len = isMobile ? 5 : 4;
     const part1 = rest.slice(0, part1Len);
     const part2 = rest.slice(part1Len, part1Len + 4);
@@ -48,5 +48,4 @@ export function maskPhoneBR(raw: string): string {
 
   return cc ? `+${cc} ${formatted}`.trim() : formatted;
 }
-
 

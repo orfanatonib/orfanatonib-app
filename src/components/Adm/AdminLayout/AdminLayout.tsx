@@ -170,7 +170,7 @@ function AdminLayout() {
   }, [allSections, isAdmin, isLeader]);
 
   const sectionOfPath = (path: string): SectionId => {
-    // Pessoas
+    
     if (
       path.startsWith("/adm/usuarios") ||
       path.startsWith("/adm/perfis") ||
@@ -180,7 +180,7 @@ function AdminLayout() {
     ) {
       return "pessoas";
     }
-    // Abrigos
+    
     if (
       path.startsWith("/adm/abrigos") ||
       path.startsWith("/adm/pagelas") ||
@@ -189,7 +189,7 @@ function AdminLayout() {
     ) {
       return "abrigos";
     }
-    // Conteúdo
+    
     if (
       path.startsWith("/adm/criar-pagina") ||
       path.startsWith("/adm/meditacoes") ||
@@ -198,7 +198,7 @@ function AdminLayout() {
     ) {
       return "conteudo";
     }
-    // Mídias
+    
     if (
       path.startsWith("/adm/paginas-fotos") ||
       path.startsWith("/adm/fotos-abrigos") ||
@@ -206,7 +206,7 @@ function AdminLayout() {
     ) {
       return "midias";
     }
-    // Materiais
+    
     if (
       path.startsWith("/adm/paginas-materiais-visita") ||
       path.startsWith("/adm/paginas-ideias") ||
@@ -214,7 +214,7 @@ function AdminLayout() {
     ) {
       return "materiais";
     }
-    // Interações (default)
+    
     return "interacoes";
   };
 

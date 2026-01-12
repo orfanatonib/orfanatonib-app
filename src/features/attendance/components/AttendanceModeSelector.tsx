@@ -43,7 +43,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
       }}
     >
       <Box sx={{ maxWidth: 1000, width: '100%' }}>
-        {/* Back Button */}
         <Box sx={{ mb: 3 }}>
           <IconButton
             onClick={() => navigate('/adm')}
@@ -61,7 +60,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
           </IconButton>
         </Box>
 
-        {/* Header Section */}
         <Stack spacing={2} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
           <Typography
             variant="h3"
@@ -76,7 +74,7 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
               mb: 1,
             }}
           >
-            Controle de Presença
+            Controle de Frequência
           </Typography>
           <Typography
             variant="body1"
@@ -92,7 +90,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
         </Stack>
 
         <Grid container spacing={{ xs: 3, md: 4 }}>
-          {/* Opção: Listar Pagelas */}
           <Grid item xs={12} sm={6}>
             <Card
               elevation={0}
@@ -129,7 +126,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                   textAlign: 'center',
                 }}
               >
-                {/* Icon Wrapper */}
                 <Box
                   className="icon-wrapper"
                   sx={{
@@ -158,7 +154,7 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                     mb: 2,
                   }}
                 >
-                  Listar Pagelas
+                  Listar Frequências
                 </Typography>
                 <Typography
                   variant="body2"
@@ -170,34 +166,12 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                     minHeight: { xs: 60, md: 48 },
                   }}
                 >
-                  Visualize todas as pagelas (registros de presença) organizadas por abrigo, equipe e agendamento
+                  Visualize todas as frequências (registros de presença) organizadas por abrigo, equipe e agendamento
                 </Typography>
-
-                {/* Action Button */}
-                <Button
-                  className="action-button"
-                  variant="contained"
-                  color="primary"
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    mt: 'auto',
-                    borderRadius: 3,
-                    px: 3,
-                    py: 1,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    opacity: 0.9,
-                    transition: 'all 0.3s ease',
-                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                  }}
-                >
-                  Ver Pagelas
-                </Button>
               </CardActionArea>
             </Card>
           </Grid>
 
-          {/* Opção: Lançar Pagelas */}
           <Grid item xs={12} sm={6}>
             <Card
               elevation={0}
@@ -234,7 +208,6 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                   textAlign: 'center',
                 }}
               >
-                {/* Icon Wrapper */}
                 <Box
                   className="icon-wrapper"
                   sx={{
@@ -263,7 +236,7 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                     mb: 2,
                   }}
                 >
-                  Lançar Pagelas
+                  Lançar Frequências
                 </Typography>
                 <Typography
                   variant="body2"
@@ -275,29 +248,8 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
                     minHeight: { xs: 60, md: 48 },
                   }}
                 >
-                  Registre presença ou falta para os professores de uma equipe em um evento específico
+                  Registre presença ou falta para os membros de uma equipe em um evento específico
                 </Typography>
-
-                {/* Action Button */}
-                <Button
-                  className="action-button"
-                  variant="contained"
-                  color="success"
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    mt: 'auto',
-                    borderRadius: 3,
-                    px: 3,
-                    py: 1,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    opacity: 0.9,
-                    transition: 'all 0.3s ease',
-                    boxShadow: `0 4px 12px ${alpha(theme.palette.success.main, 0.3)}`,
-                  }}
-                >
-                  Lançar Presenças
-                </Button>
               </CardActionArea>
             </Card>
           </Grid>
@@ -310,5 +262,3 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
 AttendanceModeSelector.displayName = 'AttendanceModeSelector';
 
 export default AttendanceModeSelector;
-
-

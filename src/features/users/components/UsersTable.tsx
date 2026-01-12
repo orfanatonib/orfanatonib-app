@@ -52,9 +52,8 @@ type Props = {
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
 };
-
 
 export default function UsersTable(props: Props) {
   const theme = useTheme();

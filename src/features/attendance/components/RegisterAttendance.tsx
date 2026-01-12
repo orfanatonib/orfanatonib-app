@@ -33,7 +33,6 @@ import {
   formatDateBR
 } from '../utils';
 
-// Função auxiliar para formatação de datas
 const formatDateBR = (iso?: string) => {
   if (!iso) return 'Data a definir';
   try {
@@ -63,7 +62,6 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
     [schedules, scheduleId]
   );
 
-  // Validações baseadas nas regras de negócio
   const scheduleValidation = useMemo((): ValidationResult => {
     if (!selectedSchedule) return { isValid: false, errors: ['Selecione um evento'] };
     return validateScheduleDates(selectedSchedule);
@@ -85,7 +83,6 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações finais antes do envio
     if (!scheduleId) {
       setFormState(prev => ({
         ...prev,

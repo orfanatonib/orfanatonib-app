@@ -47,7 +47,7 @@ const NavBar: React.FC = () => {
   const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
+  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
@@ -70,7 +70,7 @@ const NavBar: React.FC = () => {
     handleClose();
   };
 
-  const handleTeacherArea = () => {
+  const handleMemberArea = () => {
     navigate('/area-do-membro');
     handleClose();
   };
@@ -192,13 +192,13 @@ const NavBar: React.FC = () => {
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   >
-                    <MenuItem onClick={handleTeacherArea}>
+                    <MenuItem onClick={handleMemberArea}>
                       <ListItemIcon>
                         <SchoolIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
                       </ListItemIcon>
                       <ListItemText>Área do Membro</ListItemText>
                     </MenuItem>
-                    {(isTeacher || isLeader) && isPagelasEnabled && (
+                    {(isMember || isLeader) && isPagelasEnabled && (
                       <MenuItem onClick={handleShelteredArea}>
                         <ListItemIcon>
                           <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />

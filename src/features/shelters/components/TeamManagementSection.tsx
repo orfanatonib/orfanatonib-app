@@ -31,11 +31,11 @@ import {
 } from "@mui/icons-material";
 import ChipsListWithExpand from "./ChipsListWithExpand";
 import { apiListLeadersSimple } from "@/features/leaders/api";
-import { apiListTeachersSimple } from "@/features/teachers/api";
+import { apiListMembersSimple } from "@/features/members/api";
 import { apiFetchShelter } from "../api";
 import { ShelterResponseDto } from "../types";
 import { LeaderSimpleListDto } from "@/features/leaders/types";
-import { TeacherSimpleListDto } from "@/features/teachers/types";
+import { MemberSimpleListDto } from "@/features/members/types";
 
 type Props = {
   shelterId: string | null;
@@ -54,17 +54,17 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [leaderOptions, setLeaderOptions] = useState<LeaderSimpleListDto[]>([]);
-    const [teacherOptions, setTeacherOptions] = useState<TeacherSimpleListDto[]>([]);
+    const [memberOptions, setMemberOptions] = useState<MemberSimpleListDto[]>([]);
     
     const [showAddLeaderDialog, setShowAddLeaderDialog] = useState(false);
-    const [showAddTeacherDialog, setShowAddTeacherDialog] = useState(false);
+    const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
     const [showDeleteTeamDialog, setShowDeleteTeamDialog] = useState(false);
     const [teamToDelete, setTeamToDelete] = useState<number | null>(null);
     const [selectedTeamNumber, setSelectedTeamNumber] = useState<number | null>(null);
     const [selectedLeaderIds, setSelectedLeaderIds] = useState<string[]>([]);
-    const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
     const [leaderSearchTerm, setLeaderSearchTerm] = useState("");
-    const [teacherSearchTerm, setTeacherSearchTerm] = useState("");
+    const [memberSearchTerm, setMemberSearchTerm] = useState("");
 
     useImperativeHandle(ref, () => ({
       getCurrentTeams: () => teams,
@@ -89,7 +89,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             allTeams.push({
               numberTeam: i,
               leaders: [],
-              teachers: [],
+              members: [],
             });
           }
         }
@@ -105,12 +105,12 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
 
     const loadOptions = useCallback(async () => {
       try {
-        const [leaders, teachers] = await Promise.all([
+        const [leaders, members] = await Promise.all([
           apiListLeadersSimple(),
-          apiListTeachersSimple(),
+          apiListMembersSimple(),
         ]);
         setLeaderOptions(leaders || []);
-        setTeacherOptions(teachers || []);
+        setMemberOptions(members || []);
       } catch (err: any) {
         console.error("Error loading options:", err);
       }
@@ -125,7 +125,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           initialTeams.push({
             numberTeam: i,
             leaders: [],
-            teachers: [],
+            members: [],
           });
         }
         setTeams(initialTeams);
@@ -140,7 +140,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           allTeams.push({
             numberTeam: i,
             leaders: [],
-            teachers: [],
+            members: [],
           });
         }
         setTeams(allTeams);
@@ -163,7 +163,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
               allTeams.push({
                 numberTeam: i,
                 leaders: [],
-                teachers: [],
+                members: [],
               });
             }
           }
@@ -201,7 +201,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 id: leader.leaderProfileId,
                 active: true,
                 user: {
-                  id: leader.leaderProfileId, // Usando leaderProfileId como fallback
+                  id: leader.leaderProfileId, 
                   name: leader.user.name,
                   email: "",
                   phone: "",
@@ -236,43 +236,43 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
       );
     };
 
-    const handleAddTeacher = (teamNumber: number) => {
+    const handleAddMember = (teamNumber: number) => {
       setSelectedTeamNumber(teamNumber);
-      setSelectedTeacherIds([]);
-      setShowAddTeacherDialog(true);
+      setSelectedMemberIds([]);
+      setShowAddMemberDialog(true);
     };
 
-    const handleConfirmAddTeacher = () => {
-      if (!selectedTeamNumber || selectedTeacherIds.length === 0) {
+    const handleConfirmAddMember = () => {
+      if (!selectedTeamNumber || selectedMemberIds.length === 0) {
         setError("Selecione pelo menos um membro");
         return;
       }
 
       setError("");
       
-      const selectedTeachers = teacherOptions.filter(teacher => 
-        selectedTeacherIds.includes(teacher.teacherProfileId)
+      const selectedMembers = memberOptions.filter(member => 
+        selectedMemberIds.includes(member.memberProfileId)
       );
 
       setTeams(prevTeams => {
-        const teamsWithoutSelectedTeachers = prevTeams.map(team => ({
+        const teamsWithoutSelectedMembers = prevTeams.map(team => ({
           ...team,
-          teachers: (team.teachers || []).filter((t: any) => 
-            !selectedTeacherIds.includes(t.id)
+          members: (team.members || []).filter((t: any) => 
+            !selectedMemberIds.includes(t.id)
           ),
         }));
 
-        return teamsWithoutSelectedTeachers.map(team => {
+        return teamsWithoutSelectedMembers.map(team => {
           if (team.numberTeam === selectedTeamNumber) {
-            const existingTeacherIds = (team.teachers || []).map((t: any) => t.id);
-            const newTeachers = selectedTeachers
-              .filter(teacher => !existingTeacherIds.includes(teacher.teacherProfileId))
-              .map(teacher => ({
-                id: teacher.teacherProfileId,
+            const existingMemberIds = (team.members || []).map((t: any) => t.id);
+            const newMembers = selectedMembers
+              .filter(member => !existingMemberIds.includes(member.memberProfileId))
+              .map(member => ({
+                id: member.memberProfileId,
                 active: true,
                 user: {
-                  id: teacher.teacherProfileId, // Usando teacherProfileId como fallback
-                  name: teacher.name,
+                  id: member.memberProfileId, 
+                  name: member.name,
                   email: "",
                   phone: "",
                   active: true,
@@ -283,24 +283,24 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             
             return {
               ...team,
-              teachers: [...(team.teachers || []), ...newTeachers],
+              members: [...(team.members || []), ...newMembers],
             };
           }
           return team;
         });
       });
 
-      setShowAddTeacherDialog(false);
+      setShowAddMemberDialog(false);
       setSelectedTeamNumber(null);
-      setSelectedTeacherIds([]);
-      setTeacherSearchTerm("");
+      setSelectedMemberIds([]);
+      setMemberSearchTerm("");
     };
 
-    const handleRemoveTeacher = (teamNumber: number, teacherId: string) => {
+    const handleRemoveMember = (teamNumber: number, memberId: string) => {
       setTeams(prevTeams => 
         prevTeams.map(team => 
           team.numberTeam === teamNumber
-            ? { ...team, teachers: (team.teachers || []).filter((t: any) => t.id !== teacherId) }
+            ? { ...team, members: (team.members || []).filter((t: any) => t.id !== memberId) }
             : team
         )
       );
@@ -350,26 +350,26 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
       return leaderOptions;
     }, [leaderOptions]);
 
-    const getAvailableTeachers = useCallback((teamNumber: number) => {
+    const getAvailableMembers = useCallback((teamNumber: number) => {
       const team = teams.find((t: any) => t.numberTeam === teamNumber);
-      const teamTeacherIds = team?.teachers?.map((t: any) => t.id) || [];
-      const teachersInOtherTeams = new Set<string>();
+      const teamMemberIds = team?.members?.map((t: any) => t.id) || [];
+      const membersInOtherTeams = new Set<string>();
       
       teams.forEach((t: any) => {
-        if (t.numberTeam !== teamNumber && t.teachers) {
-          t.teachers.forEach((teacher: any) => {
-            teachersInOtherTeams.add(teacher.id);
+        if (t.numberTeam !== teamNumber && t.members) {
+          t.members.forEach((member: any) => {
+            membersInOtherTeams.add(member.id);
           });
         }
       });
       
-      return teacherOptions.filter((t) => {
-        if (teachersInOtherTeams.has(t.teacherProfileId)) {
+      return memberOptions.filter((t) => {
+        if (membersInOtherTeams.has(t.memberProfileId)) {
           return false;
         }
-        return !t.vinculado || teamTeacherIds.includes(t.teacherProfileId);
+        return !t.vinculado || teamMemberIds.includes(t.memberProfileId);
       });
-    }, [teams, teacherOptions]);
+    }, [teams, memberOptions]);
 
     if (teamsQuantity < 1) {
       return null;
@@ -395,7 +395,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             const teamNumber = i + 1;
             const team = teams.find((t) => t.numberTeam === teamNumber);
             const teamLeaders = team?.leaders || [];
-            const teamTeachers = team?.teachers || [];
+            const teamMembers = team?.members || [];
 
             return (
               <Grid item xs={12} sm={6} md={6} lg={4} key={teamNumber}>
@@ -590,13 +590,13 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                       >
                         <SchoolIcon fontSize="small" color="secondary" sx={{ flexShrink: 0 }} />
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          Membros ({teamTeachers.length})
+                          Membros ({teamMembers.length})
                         </span>
                       </Typography>
                       <Tooltip title="Adicionar membro">
                         <IconButton
                           size="small"
-                          onClick={() => handleAddTeacher(teamNumber)}
+                          onClick={() => handleAddMember(teamNumber)}
                           disabled={loading}
                           sx={{
                             color: "secondary.main",
@@ -611,12 +611,12 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                       </Tooltip>
                     </Box>
                     <ChipsListWithExpand
-                      items={teamTeachers.map((teacher: any) => ({
-                        id: teacher.id,
-                        label: teacher.user?.name || teacher.user?.email || "Sem nome",
+                      items={teamMembers.map((member: any) => ({
+                        id: member.id,
+                        label: member.user?.name || member.user?.email || "Sem nome",
                         color: "secondary" as const,
                         variant: "outlined" as const,
-                        onDelete: () => handleRemoveTeacher(teamNumber, teacher.id),
+                        onDelete: () => handleRemoveMember(teamNumber, member.id),
                       }))}
                       maxVisible={5}
                       emptyMessage="Nenhum membro"
@@ -735,11 +735,11 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
         </Dialog>
 
         <Dialog 
-          open={showAddTeacherDialog} 
+          open={showAddMemberDialog} 
           onClose={() => {
-            setShowAddTeacherDialog(false);
-            setSelectedTeacherIds([]);
-            setTeacherSearchTerm("");
+            setShowAddMemberDialog(false);
+            setSelectedMemberIds([]);
+            setMemberSearchTerm("");
           }} 
           maxWidth="sm" 
           fullWidth
@@ -759,8 +759,8 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
               <TextField
                 fullWidth
                 placeholder="Buscar membros..."
-                value={teacherSearchTerm}
-                onChange={(e) => setTeacherSearchTerm(e.target.value)}
+                value={memberSearchTerm}
+                onChange={(e) => setMemberSearchTerm(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -771,9 +771,9 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 size="small"
               />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                {selectedTeacherIds.length} membro(es) selecionado(s)
+                {selectedMemberIds.length} membro(es) selecionado(s)
               </Typography>
-              {selectedTeamNumber && getAvailableTeachers(selectedTeamNumber).length === 0 && (
+              {selectedTeamNumber && getAvailableMembers(selectedTeamNumber).length === 0 && (
                 <Alert severity="info" sx={{ mt: 1 }}>
                   Todos os membros disponíveis já estão em outras equipes
                 </Alert>
@@ -781,20 +781,20 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             </Box>
             <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
               <List dense>
-                {selectedTeamNumber && getAvailableTeachers(selectedTeamNumber)
-                  .filter((teacher) =>
-                    teacher.name.toLowerCase().includes(teacherSearchTerm.toLowerCase())
+                {selectedTeamNumber && getAvailableMembers(selectedTeamNumber)
+                  .filter((member) =>
+                    member.name.toLowerCase().includes(memberSearchTerm.toLowerCase())
                   )
-                  .map((teacher) => {
-                    const isSelected = selectedTeacherIds.includes(teacher.teacherProfileId);
+                  .map((member) => {
+                    const isSelected = selectedMemberIds.includes(member.memberProfileId);
                     return (
-                      <ListItem key={teacher.teacherProfileId} disablePadding>
+                      <ListItem key={member.memberProfileId} disablePadding>
                         <ListItemButton
                           onClick={() => {
                             if (isSelected) {
-                              setSelectedTeacherIds(selectedTeacherIds.filter((id) => id !== teacher.teacherProfileId));
+                              setSelectedMemberIds(selectedMemberIds.filter((id) => id !== member.memberProfileId));
                             } else {
-                              setSelectedTeacherIds([...selectedTeacherIds, teacher.teacherProfileId]);
+                              setSelectedMemberIds([...selectedMemberIds, member.memberProfileId]);
                             }
                           }}
                           dense
@@ -805,18 +805,18 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                             tabIndex={-1}
                             disableRipple
                           />
-                          <ListItemText primary={teacher.name} />
+                          <ListItemText primary={member.name} />
                         </ListItemButton>
                       </ListItem>
                     );
                   })}
-                {selectedTeamNumber && getAvailableTeachers(selectedTeamNumber).filter((teacher) =>
-                  teacher.name.toLowerCase().includes(teacherSearchTerm.toLowerCase())
+                {selectedTeamNumber && getAvailableMembers(selectedTeamNumber).filter((member) =>
+                  member.name.toLowerCase().includes(memberSearchTerm.toLowerCase())
                 ).length === 0 && (
                   <ListItem>
                     <ListItemText 
                       primary={
-                        getAvailableTeachers(selectedTeamNumber).length === 0
+                        getAvailableMembers(selectedTeamNumber).length === 0
                           ? "Nenhum membro disponível (todos já estão em outras equipes)"
                           : "Nenhum membro encontrado"
                       }
@@ -830,21 +830,21 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2 } }}>
             <Button 
               onClick={() => {
-                setShowAddTeacherDialog(false);
-                setSelectedTeacherIds([]);
-                setTeacherSearchTerm("");
+                setShowAddMemberDialog(false);
+                setSelectedMemberIds([]);
+                setMemberSearchTerm("");
               }} 
               sx={{ minWidth: { xs: "auto", sm: 100 } }}
             >
               Cancelar
             </Button>
             <Button
-              onClick={handleConfirmAddTeacher}
+              onClick={handleConfirmAddMember}
               variant="contained"
-              disabled={selectedTeacherIds.length === 0 || loading}
+              disabled={selectedMemberIds.length === 0 || loading}
               sx={{ minWidth: { xs: "auto", sm: 100 } }}
             >
-              {loading ? <CircularProgress size={20} /> : `Adicionar ${selectedTeacherIds.length > 0 ? `(${selectedTeacherIds.length})` : ""}`}
+              {loading ? <CircularProgress size={20} /> : `Adicionar ${selectedMemberIds.length > 0 ? `(${selectedMemberIds.length})` : ""}`}
             </Button>
           </DialogActions>
         </Dialog>
@@ -868,9 +868,9 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
             {teamToDelete && (() => {
               const teamData = teams.find(t => t.numberTeam === teamToDelete);
               const leadersCount = teamData?.leaders?.length || 0;
-              const teachersCount = teamData?.teachers?.length || 0;
+              const membersCount = teamData?.members?.length || 0;
               
-              if (leadersCount > 0 || teachersCount > 0) {
+              if (leadersCount > 0 || membersCount > 0) {
                 return (
                   <Alert severity="warning" sx={{ mt: 2 }}>
                     <Typography variant="body2">
@@ -878,7 +878,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                     </Typography>
                     <Typography variant="body2" component="ul" sx={{ mt: 1, pl: 2 }}>
                       {leadersCount > 0 && <li>{leadersCount} líder(es)</li>}
-                      {teachersCount > 0 && <li>{teachersCount} membro(es)</li>}
+                      {membersCount > 0 && <li>{membersCount} membro(es)</li>}
                     </Typography>
                     <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
                       Todos os membros serão removidos junto com a equipe.
@@ -920,4 +920,3 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
 TeamManagementSection.displayName = "TeamManagementSection";
 
 export default TeamManagementSection;
-

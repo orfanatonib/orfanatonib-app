@@ -54,12 +54,10 @@ const PersonalDataForm: React.FC<PersonalDataFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof UpdatePersonalDataDto, string>> = {};
 
-    // birthDate validation (optional but if provided must be valid)
     if (birthDate && !birthDate.isValid()) {
       newErrors.birthDate = 'Data inválida';
     }
 
-    // gaLeaderContact validation (optional)
     if (formData.gaLeaderContact) {
       const phoneDigits = digitsOnly(formData.gaLeaderContact);
       if (phoneDigits.length > 0 && phoneDigits.length < 8) {
@@ -84,7 +82,6 @@ const PersonalDataForm: React.FC<PersonalDataFormProps> = ({
     try {
       const payload: UpdatePersonalDataDto = {};
 
-      // Converte birthDate para ISO string
       const newBirthDate = birthDate ? birthDate.format('YYYY-MM-DD') : '';
       const currentBirthDate = personalData?.birthDate || '';
       if (newBirthDate !== currentBirthDate) {

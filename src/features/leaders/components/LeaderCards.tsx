@@ -15,7 +15,6 @@ import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { CopyButton, initials } from "@/utils/components";
 
-
 type Props = {
   rows: LeaderProfile[];
   total: number;
@@ -85,8 +84,8 @@ export default function LeaderCards(props: Props) {
           const shelters = c.shelters || [];
           const totalShelters = shelters.length;
           const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
-          const allTeachers = shelters.flatMap(shelter => shelter.teachers || []);
-          const totalTeachers = allTeachers.length;
+          const allMembers = shelters.flatMap(shelter => shelter.members || []);
+          const totalMembers = allMembers.length;
           const wa = buildWhatsappLink({ id: c.id, name: c.user?.name, phone: c.user?.phone } as any, loggedUser?.name);
 
           return (
@@ -358,12 +357,12 @@ export default function LeaderCards(props: Props) {
                           )}
                         </Box>
                       )}
-                      {totalTeachers > 0 && (
+                      {totalMembers > 0 && (
                         <Chip
                           size="small"
                           variant="filled"
                           icon={<GroupOutlined sx={{ fontSize: 12 }} />}
-                          label={`Membros: ${totalTeachers}`}
+                          label={`Membros: ${totalMembers}`}
                           color="success"
                           sx={{ 
                             fontWeight: 600, 
@@ -441,11 +440,11 @@ export default function LeaderCards(props: Props) {
                                         sx={{ fontWeight: 500, fontSize: "0.75rem" }}
                                       />
                                     )}
-                                    {shelter.teachers && shelter.teachers.length > 0 && (
+                                    {shelter.members && shelter.members.length > 0 && (
                                       <Chip
                                         size="small"
                                         variant="outlined"
-                                        label={`${shelter.teachers.length} membro(s)`}
+                                        label={`${shelter.members.length} membro(s)`}
                                         color="success"
                                         sx={{ fontWeight: 500, fontSize: "0.75rem" }}
                                       />
@@ -472,7 +471,7 @@ export default function LeaderCards(props: Props) {
                                     </Box>
                                   )}
 
-                                  {shelter.teachers && shelter.teachers.length > 0 && (
+                                  {shelter.members && shelter.members.length > 0 && (
                                     <Box>
                                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5, display: "block" }}>
                                         Membros:
@@ -496,14 +495,14 @@ export default function LeaderCards(props: Props) {
                                           },
                                         }}
                                       >
-                                        {shelter.teachers.map((t) => {
-                                          const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                                        {shelter.members.map((t) => {
+                                          const memberName = t.user?.name || t.user?.email || "Sem nome";
                                           return (
                                             <Chip
                                               key={t.id}
                                               size="small"
                                               variant="outlined"
-                                              label={teacherName}
+                                              label={memberName}
                                               sx={{
                                                 fontWeight: 500,
                                                 fontSize: "0.7rem",
@@ -514,7 +513,7 @@ export default function LeaderCards(props: Props) {
                                                   whiteSpace: "nowrap",
                                                 }
                                               }}
-                                              title={teacherName}
+                                              title={memberName}
                                             />
                                           );
                                         })}

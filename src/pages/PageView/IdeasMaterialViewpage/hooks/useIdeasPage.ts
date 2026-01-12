@@ -32,7 +32,6 @@ export function useIdeasPage({ idToFetch }: UseIdeasPageOptions): UseIdeasPageRe
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
 
-  // Fetch da página de ideias
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,7 +50,6 @@ export function useIdeasPage({ idToFetch }: UseIdeasPageOptions): UseIdeasPageRe
     fetchData();
   }, [idToFetch, dispatch]);
 
-  // Deletar página
   const handleDeletePage = async () => {
     try {
       if (!ideasPage?.id) return;
@@ -67,12 +65,10 @@ export function useIdeasPage({ idToFetch }: UseIdeasPageOptions): UseIdeasPageRe
     }
   };
 
-  // Editar página
   const handleEdit = () => {
     navigate("/adm/editar-pagina-ideias", { state: { fromTemplatePage: false } });
   };
 
-  // Voltar
   const handleBack = () => {
     navigate(-1);
   };

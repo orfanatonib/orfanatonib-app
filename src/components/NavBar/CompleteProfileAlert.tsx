@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
@@ -38,7 +37,7 @@ import { UserRole } from '@/store/slices/auth/authSlice';
 export interface ProfileAlert {
   id: string;
   message: string;
-  to?: string; // optional redirect path
+  to?: string; 
 }
 
 export interface CompleteProfileAlertProps {
@@ -52,7 +51,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   const open = Boolean(anchorEl);
   const { isAuthenticated, user } = useSelector((state: RootStateType) => state.auth);
 
-  // Estados para professores/membros
   const [pendings, setPendings] = useState<PendingForMemberDto[]>([]);
   const [loadingPendings, setLoadingPendings] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
@@ -63,15 +61,13 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // Estados para líderes/admin
   const [leaderPendings, setLeaderPendings] = useState<PendingForLeaderDto[]>([]);
   const [loadingLeaderPendings, setLoadingLeaderPendings] = useState(false);
 
-  const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
+  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeaderOrAdmin = isAuthenticated && (user?.role === UserRole.LEADER || user?.role === UserRole.ADMIN);
 
-  // Contagem de pendências baseada no papel do usuário
-  const pendingCount = isTeacher ? pendings.length : leaderPendings.length;
+  const pendingCount = isMember ? pendings.length : leaderPendings.length;
   const badgeCount = alerts.length + pendingCount;
   const hasAnyAlert = badgeCount > 0;
 
@@ -80,9 +76,8 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
     [pendings, selectedId]
   );
 
-  // Carregar pendências para professores/membros
   const loadPendings = async () => {
-    if (!isAuthenticated || !isTeacher) return;
+    if (!isAuthenticated || !isMember) return;
     setLoadingPendings(true);
     setPendingError(null);
     try {
@@ -98,22 +93,20 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
     }
   };
 
-  // Carregar pendências para líderes/admin (pendências de lançamento de pagela)
   const loadLeaderPendings = async () => {
     if (!isAuthenticated || !isLeaderOrAdmin) return;
     setLoadingLeaderPendings(true);
     try {
-      // Primeiro, buscar os times do líder
-      const teams = await listTeams();
       
-      // Buscar pendências para cada time
+      const teams = await listTeams();
+
       const allPendings: PendingForLeaderDto[] = [];
       for (const team of teams) {
         try {
           const teamPendings = await getPendingForLeader(team.teamId);
           allPendings.push(...teamPendings);
         } catch (err) {
-          // Ignorar erros de times específicos, continuar com os outros
+          
           console.warn(`Erro ao buscar pendências para o time ${team.teamId}:`, err);
         }
       }
@@ -128,12 +121,12 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   };
 
   useEffect(() => {
-    if (isTeacher) {
+    if (isMember) {
       loadPendings();
     } else if (isLeaderOrAdmin) {
       loadLeaderPendings();
     }
-  }, [isAuthenticated, isTeacher, isLeaderOrAdmin]); // carregar na montagem da navbar
+  }, [isAuthenticated, isMember, isLeaderOrAdmin]); 
 
   const handleOpenPendingDialog = () => {
     setPendingDialogOpen(true);
@@ -144,7 +137,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
     if (!hasAnyAlert) {
-      if (isTeacher) {
+      if (isMember) {
         loadPendings();
       } else if (isLeaderOrAdmin) {
         loadLeaderPendings();
@@ -173,8 +166,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
       setFeedback('Presença registrada. Se já existia registro, foi atualizada.');
       setComment('');
       await loadPendings();
-      
-      // Fechar modal automaticamente após 5 segundos
+
       setTimeout(() => {
         setPendingDialogOpen(false);
         setSelectedId('');
@@ -234,9 +226,9 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             border: '1px solid rgba(255, 255, 0, 0.3)',
             borderRadius: 2,
             overflow: 'hidden',
-            overflowX: 'hidden', // Prevenir scroll horizontal
+            overflowX: 'hidden', 
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            // Estilizar scrollbar para melhor visibilidade
+            
             '&::-webkit-scrollbar': {
               width: '10px',
             },
@@ -257,12 +249,11 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
         MenuListProps={{
           sx: {
             py: 1,
-            overflowX: 'hidden', // Prevenir scroll horizontal
+            overflowX: 'hidden', 
             width: '100%',
           },
         }}
       >
-        {/* Header do menu */}
         <Box
           sx={{
             px: 2,
@@ -289,7 +280,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
           sx={{
             maxHeight: 'calc(75vh - 60px)',
             overflowY: 'auto',
-            overflowX: 'hidden', // Prevenir scroll horizontal
+            overflowX: 'hidden', 
             '&::-webkit-scrollbar': {
               width: '10px',
             },
@@ -305,7 +296,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             },
           }}
         >
-          {/* Alertas de perfil */}
           {alerts?.map((alert) => (
             <MenuItem
               key={alert.id}
@@ -355,13 +345,11 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           ))}
 
-          {/* Separador se houver alertas e pendências */}
           {alerts?.length > 0 && pendingCount > 0 && (
             <Divider sx={{ borderColor: 'rgba(255, 255, 0, 0.2)', my: 0.5 }} />
           )}
 
-          {/* Item de menu para professores/membros - apenas se houver pendências */}
-          {isTeacher && pendingCount > 0 && (
+          {isMember && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
                 loadPendings();
@@ -399,7 +387,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
                         overflowWrap: 'break-word',
                         whiteSpace: 'normal',
                         flex: '1 1 auto',
-                        minWidth: 0, // Permite que o texto encolha
+                        minWidth: 0, 
                       }}
                     >
                       Pendências de presença
@@ -439,7 +427,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           )}
 
-          {/* Item de menu para líderes/admin - apenas se houver pendências */}
           {isLeaderOrAdmin && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
@@ -517,7 +504,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             </MenuItem>
           )}
 
-          {/* Mensagem quando não há notificações */}
           {!alerts?.length && pendingCount === 0 && (
             <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
               <Typography
@@ -534,8 +520,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
         </Box>
       </Menu>
 
-      {/* Dialog apenas para professores/membros */}
-      {isTeacher && (
+      {isMember && (
         <Dialog
           open={pendingDialogOpen}
           onClose={() => {
@@ -567,7 +552,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             sx={{
               maxHeight: '70vh',
               overflow: 'auto',
-              // Estilizar scrollbar para melhor visibilidade
+              
               '&::-webkit-scrollbar': {
                 width: '8px',
               },
@@ -667,7 +652,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
                     onChange={(_, value) => {
                       if (value) {
                         setType(value);
-                        // Limpar comentário se mudar para presente
+                        
                         if (value === 'present') {
                           setComment('');
                         }
@@ -703,7 +688,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
                     </ToggleButton>
                   </ToggleButtonGroup>
 
-                  {/* Mostrar campo de comentário apenas quando "falta" estiver selecionado */}
                   {type === 'absent' && (
                     <TextField
                       label="Motivo da falta"

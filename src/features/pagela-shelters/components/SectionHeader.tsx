@@ -5,7 +5,6 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PersonIcon from "@mui/icons-material/Person";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 
-
 export function SectionHeader({ context, title, subtitle }: { context: "shelters" | "sheltered" | "pagelas"; title: string; subtitle?: string; }) {
 const icon = context === "shelters" ? <PeopleAltIcon /> : context === "sheltered" ? <PersonIcon /> : <EventAvailableIcon />;
 return (

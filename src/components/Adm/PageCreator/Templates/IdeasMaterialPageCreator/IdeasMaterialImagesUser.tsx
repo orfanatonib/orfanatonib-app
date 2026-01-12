@@ -75,7 +75,6 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
 
     if (hasError) return;
 
-    // Gerar título e descrição dinamicamente
     const imageNumber = editingIndex !== null ? editingIndex + 1 : images.length + 1;
     const generatedTitle = ideaTitle.trim()
       ? `Imagem ${imageNumber} da ideia "${ideaTitle}"`

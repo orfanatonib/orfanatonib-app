@@ -9,4 +9,3 @@ export function isValidEmail(email: unknown): boolean {
   return EMAIL_REGEX.test(v);
 }
 
-

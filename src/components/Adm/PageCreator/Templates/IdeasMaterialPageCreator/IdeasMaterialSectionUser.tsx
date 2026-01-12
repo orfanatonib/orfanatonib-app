@@ -26,7 +26,6 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
     setMedias(section.medias || []);
   }, [section]);
 
-  // Atualizar títulos das mídias quando o título da ideia mudar
   useEffect(() => {
     if (medias.length > 0) {
       const mediaCounters = {
@@ -92,7 +91,6 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
     setMedias(newMedias);
     onUpdate({ ...section, title, description, medias: newMedias });
 
-    // Se adicionou uma mídia, limpa o estado de pending
     if (newMedias.length > lastMediaCountRef.current) {
       setPendingMedia(false);
     }

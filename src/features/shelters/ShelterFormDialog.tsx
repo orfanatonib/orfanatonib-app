@@ -8,7 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import AddressFields from "./form/AddressFields";
 import ShelterMediaForm from "./form/ShelterMediaForm";
 import {
-  LeaderOption, CreateShelterForm, EditShelterForm, TeacherOption
+  LeaderOption, CreateShelterForm, EditShelterForm, MemberOption
 } from "./types";
 import { useSelector } from "react-redux";
 import { selectIsAdmin } from "@/store/selectors/routeSelectors";
@@ -23,31 +23,30 @@ type Props = {
   error: string;
   loading: boolean;
   leaderOptions: LeaderOption[];
-  teacherOptions: TeacherOption[];
+  memberOptions: MemberOption[];
 };
 
 export default function ShelterFormDialog({
   mode, open, value, onChange, onCancel, onSubmit,
-  error, loading, leaderOptions, teacherOptions,
+  error, loading, leaderOptions, memberOptions,
 }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-  const teachersKey = React.useMemo(
-    () => (teacherOptions ?? [])
-      .map(t => `${t.teacherProfileId}:${t.vinculado ? 1 : 0}`)
+  const membersKey = React.useMemo(
+    () => (memberOptions ?? [])
+      .map(t => `${t.memberProfileId}:${t.vinculado ? 1 : 0}`)
       .join("|"),
-    [teacherOptions]
+    [memberOptions]
   );
   const isAdmin = useSelector(selectIsAdmin);
   const isCreate = mode === "create";
 
-
-  const [uploadType] = useState<"upload">("upload"); // Upload only
+  const [uploadType] = useState<"upload">("upload"); 
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (value?.mediaItem) {
-      // Upload only: não suportamos link
+      
     } else {
       setFile(null);
     }

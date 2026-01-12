@@ -1,4 +1,3 @@
-// src/pages/shelters/components/ShelterTeamsSummaryCard.tsx
 import React from 'react';
 import { Card, CardContent, Typography } from '@mui/material';
 import { GroupOutlined } from '@mui/icons-material';

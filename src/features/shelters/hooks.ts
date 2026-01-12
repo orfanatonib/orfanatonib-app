@@ -7,12 +7,12 @@ import {
   apiListLeadersSimple,
   apiUpdateShelter,
 } from "./api";
-import { apiListTeachersSimple } from "../teachers/api";
+import { apiListMembersSimple } from "../members/api";
 import {
   ShelterResponseDto,
   CreateShelterForm,
   EditShelterForm,
-  TeacherOption,
+  MemberOption,
   ShelterFilters,
   ShelterSort,
   LeaderOption,
@@ -39,7 +39,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return () => {
       clearTimeout(handler);
     };
-  }, [JSON.stringify(value), delay]); // Usar JSON.stringify para detectar mudanças em objetos
+  }, [JSON.stringify(value), delay]); 
 
   return debouncedValue;
 }
@@ -84,7 +84,7 @@ export function useShelters(
     } finally {
       setLoading(false);
     }
-  }, [pageIndex, pageSize, sorting, JSON.stringify(debouncedFilters)]); // Usar JSON.stringify para detectar mudanças
+  }, [pageIndex, pageSize, sorting, JSON.stringify(debouncedFilters)]); 
 
   useEffect(() => {
     fetchPage();
@@ -173,7 +173,7 @@ export function useShelterMutations(
 
 export function useOptions() {
   const [leaders, setLeaders] = useState<LeaderOption[]>([]);
-  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [members, setMembers] = useState<MemberOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -182,9 +182,9 @@ export function useOptions() {
     
     setLoading(true);
     try {
-      const [coordsApi, teachersApi] = await Promise.all([
+      const [coordsApi, membersApi] = await Promise.all([
         apiListLeadersSimple(),
-        apiListTeachersSimple(),
+        apiListMembersSimple(),
       ]);
 
       const mappedCoords: LeaderOption[] = (coordsApi ?? []).map((c) => ({
@@ -192,15 +192,14 @@ export function useOptions() {
         name: c.name,
       }));
 
-      const mappedTeachers: TeacherOption[] = (teachersApi ?? []).map((t: any) => ({
-        teacherProfileId: t.teacherProfileId,
+      const mappedMembers: MemberOption[] = (membersApi ?? []).map((t: any) => ({
+        memberProfileId: t.memberProfileId,
         name: t.name,
         vinculado: !!t.vinculado,
       }));
 
-      
       setLeaders(mappedCoords);
-      setTeachers(mappedTeachers);
+      setMembers(mappedMembers);
       setLoaded(true);
     } catch (error) {
         console.error('Error loading options:', error);
@@ -214,6 +213,6 @@ export function useOptions() {
     await loadRefs();
   }, [loadRefs]);
 
-  return { leaders, teachers, loading, reloadOptions, loadRefs };
+  return { leaders, members, loading, reloadOptions, loadRefs };
 }
 

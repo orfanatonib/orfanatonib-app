@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import type { Weekday } from "@/features/shelters/types";
 
@@ -11,7 +10,6 @@ export const WEEKDAY_PT: Record<Weekday, string> = {
     saturday: "Sábado",
     sunday: "Domingo",
 };
-
 
 export function useDebounced<T>(value: T, delay = 350) {
     const [v, setV] = useState(value);

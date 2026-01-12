@@ -148,7 +148,7 @@ export const usePagelas = (filters: PagelasFilters | undefined = undefined, enab
       const result = await PagelaSheltersApi.getPagelas({
         ...currentFilters,
         page,
-        limit: 6, // Padrão: 6 itens
+        limit: 6, 
       });
       setData(result);
       setCurrentPage(page);
@@ -201,8 +201,7 @@ export const usePagelaSheltersManager = () => {
   const shelteredFiltersWithShelter = selectedShelter 
     ? { ...shelteredFilters, shelterId: selectedShelter.id }
     : undefined;
-  
-  
+
   const sheltered = useSheltered(shelteredFiltersWithShelter, !!selectedShelter);
 
   const pagelasFiltersWithSheltered = selectedSheltered
@@ -211,8 +210,7 @@ export const usePagelaSheltersManager = () => {
         shelteredId: selectedSheltered.id,
       }
     : undefined;
-  
-  
+
   const pagelas = usePagelas(pagelasFiltersWithSheltered, !!selectedSheltered);
 
   const handleShelterSelect = (shelter: ShelterDto | null) => {

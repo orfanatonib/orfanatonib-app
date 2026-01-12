@@ -94,10 +94,10 @@ const AttendanceHeader = memo(({
 
               <Box>
                 <Typography variant="h5" sx={{ lineHeight: 1.1 }}>
-                  Controle de Presença
+                  Controle de Frequência
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Registre presença, envie pagela e monitore pendências — tudo em um só lugar.
+                  Registre presença, envie os registros e monitore pendências — tudo em um só lugar.
                 </Typography>
               </Box>
             </Stack>
