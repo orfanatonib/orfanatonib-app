@@ -85,17 +85,12 @@ export type MemberQuery = {
   hasTeam?: boolean;
   page?: number;
   limit?: number;
-  sort?: "updatedAt" | "createdAt" | "name"; // Padrão: updatedAt
-  order?: "asc" | "desc"; // Padrão: desc
+  sort?: "updatedAt" | "createdAt" | "name"; 
+  order?: "asc" | "desc"; 
 };
 
-/**
- * Tipo simplificado para listagem de membros
- * Usado no endpoint GET /member-profiles/simple
- * Conforme documentação: MemberSimpleListDto
- */
 export type MemberSimpleListDto = {
-  memberProfileId: string;  // UUID do perfil do membro
-  name: string;              // Nome do usuário (ou email se não tiver nome, ou "—" se não tiver nenhum)
-  vinculado: boolean;        // Se está vinculado a uma equipe/abrigo
+  memberProfileId: string;  
+  name: string;              
+  vinculado: boolean;        
 };

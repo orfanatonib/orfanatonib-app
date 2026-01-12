@@ -41,7 +41,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
     const newErrors: Partial<Record<keyof ChangePasswordDto | 'confirmPassword', string>> = {};
 
     const should = (key: 'currentPassword' | 'newPassword' | 'confirmPassword') =>
-      touched?.[key] ?? true; // default: validar tudo
+      touched?.[key] ?? true; 
 
     if (should('currentPassword') && isCommonUser) {
       if (!next.currentPassword.trim()) newErrors.currentPassword = 'Senha atual é obrigatória';

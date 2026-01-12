@@ -94,15 +94,15 @@ export type Shelter = {
   id: string;
   name: string;
   address: Address;
-  teamsQuantity?: number; // Quantidade de equipes
+  teamsQuantity?: number; 
   teams?: Array<{
     id: string;
-    numberTeam: number; // ⭐ Número da equipe (1, 2, 3, 4...) - tipo NUMBER
+    numberTeam: number; 
     leaders?: LeaderProfile[];
     members?: MemberProfile[];
   }>;
-  leaders?: LeaderProfile[]; // Calculado (agregação de todas as teams)
-  members?: MemberProfile[]; // Calculado (agregação de todas as teams)
+  leaders?: LeaderProfile[]; 
+  members?: MemberProfile[]; 
   createdAt: string;
   updatedAt: string;
 };

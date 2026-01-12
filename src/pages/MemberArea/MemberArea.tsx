@@ -55,7 +55,6 @@ const MemberArea: React.FC = () => {
       >
       <InformativeBanner />
 
-
       <BannerSection 
         showWeekBanner={showWeek} 
         showMeditationBanner={showMeditation} 

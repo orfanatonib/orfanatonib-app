@@ -1,14 +1,10 @@
-// Funções auxiliares para validação e formatação do módulo de presença
-
 import type { ScheduleDates, TeamScheduleDto, ValidationResult } from './types';
 
-// Constantes de validação
 export const ATTENDANCE_RULES = {
   MAX_COMMENT_LENGTH: 500,
   REQUIRED_SCHEDULE_DATE: true,
 } as const;
 
-// Funções auxiliares de validação
 export const validateScheduleDates = (dates: ScheduleDates): ValidationResult => {
   const errors: string[] = [];
 
@@ -56,7 +52,6 @@ export const formatScheduleLabel = (schedule: TeamScheduleDto): string => {
   return `${kind} #${schedule.visitNumber} • ${readableDate}${extra ? ` • ${extra}` : ''}`;
 };
 
-// Função auxiliar para formatação de datas
 export const formatDateBR = (iso?: string) => {
   if (!iso) return 'Data a definir';
   try {

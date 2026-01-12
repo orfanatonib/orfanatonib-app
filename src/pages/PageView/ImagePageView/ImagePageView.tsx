@@ -198,7 +198,6 @@ export default function PageSectionView({ idToFetch, feed }: PageSectionProps) {
     return () => controller.abort();
   }, [page, idToFetch, defaultSectionId, dispatch, feed]);
 
-
   const handleBack = () => {
     navigate(-1);
   };

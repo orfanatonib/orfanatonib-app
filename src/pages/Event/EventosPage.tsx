@@ -277,7 +277,6 @@ export default function EventosPage() {
           </motion.div>
         </Container>
 
-
         <Box
           sx={{
             width: "95%",
@@ -351,7 +350,6 @@ export default function EventosPage() {
             />
           )}
         </Box>
-
 
         {eventoSelecionado && (
           <EventDetailsModal

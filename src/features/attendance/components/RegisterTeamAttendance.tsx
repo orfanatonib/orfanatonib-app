@@ -50,8 +50,6 @@ interface AttendanceRow {
   comment: string;
 }
 
-// Função auxiliar removida - usando formatScheduleLabel do types.ts
-
 const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props) => {
   const [scheduleId, setScheduleId] = useState<string>(schedules[0]?.id || '');
   const [rows, setRows] = useState<AttendanceRow[]>([]);
@@ -71,13 +69,11 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
   );
   const selectedSchedule = useMemo(() => schedules.find(s => s.id === scheduleId), [schedules, scheduleId]);
 
-  // Validações baseadas nas regras de negócio
   const scheduleValidation = useMemo((): ValidationResult => {
     if (!selectedSchedule) return { isValid: false, errors: ['Selecione um evento'] };
     return validateScheduleDates(selectedSchedule);
   }, [selectedSchedule]);
 
-  // Validação dos comentários de todos os membros
   const rowsValidation = useMemo((): ValidationResult => {
     const errors: string[] = [];
     rows.forEach((row, index) => {
@@ -101,8 +97,6 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
   }, [scheduleValidation.isValid, rowsValidation.isValid, rows.length, formState.loading, disabled]);
 
   Doc:
-
-
 
   useEffect(() => {
     if (schedules.length > 0) {
@@ -141,7 +135,6 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações finais antes do envio
     if (!scheduleId) {
       setFormState(prev => ({
         ...prev,

@@ -126,7 +126,7 @@ export default function IdeasPageHeader({
           </Box>
 
           <Box textAlign="center">
-            {/* Ícone animado */}
+            {}
             <motion.div
               animate={{ 
                 rotate: [0, -10, 10, -10, 0],

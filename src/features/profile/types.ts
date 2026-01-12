@@ -81,68 +81,46 @@ export type UpdateProfileImageDto = {
   isLocalFile?: boolean;
 };
 
-// ============================================
-// Complete Profile Types (PersonalData + UserPreferences)
-// ============================================
-
-/**
- * Dados pessoais do usuário
- */
 export type PersonalData = {
-  birthDate?: string;        // Formato: "YYYY-MM-DD"
-  gender?: string;           // Gênero (opcional)
-  gaLeaderName?: string;     // Nome do líder de GA
-  gaLeaderContact?: string;  // Contato do líder de GA
+  birthDate?: string;        
+  gender?: string;           
+  gaLeaderName?: string;     
+  gaLeaderContact?: string;  
 };
 
-/**
- * Preferências do usuário
- */
 export type UserPreferences = {
-  loveLanguages?: string;      // Linguagens do amor (ex: "Atos de serviço, presente")
-  temperaments?: string;       // Temperamentos (ex: "Melancólica Sanguínea")
-  favoriteColor?: string;      // Cor favorita
-  favoriteFood?: string;       // Comida favorita
-  favoriteMusic?: string;      // Música favorita
-  whatMakesYouSmile?: string;  // O que te faz sorrir
-  skillsAndTalents?: string;   // Habilidades e talentos
+  loveLanguages?: string;      
+  temperaments?: string;       
+  favoriteColor?: string;      
+  favoriteFood?: string;       
+  favoriteMusic?: string;      
+  whatMakesYouSmile?: string;  
+  skillsAndTalents?: string;   
 };
 
-/**
- * Perfil completo retornado pela API /profiles/me
- */
 export type CompleteProfile = {
-  id: string;                    // UUID do usuário
+  id: string;                    
   email: string;
   phone: string;
   name: string;
-  role?: string;                 // Role do usuário (admin, member, leader)
+  role?: string;                 
   personalData?: PersonalData;
   preferences?: UserPreferences;
 };
 
-/**
- * Item de perfil na listagem GET /profiles
- */
 export type CompleteProfileListItem = CompleteProfile & {
-  role: string;                  // Role é obrigatório na listagem
+  role: string;                  
 };
 
-/**
- * DTO para criar/atualizar dados pessoais
- */
 export type CreatePersonalDataDto = {
-  birthDate?: string;        // Formato: "YYYY-MM-DD"
-  gender?: string;           // Gênero
+  birthDate?: string;        
+  gender?: string;           
   gaLeaderName?: string;
   gaLeaderContact?: string;
 };
 
 export type UpdatePersonalDataDto = CreatePersonalDataDto;
 
-/**
- * DTO para criar/atualizar preferências
- */
 export type CreateUserPreferencesDto = {
   loveLanguages?: string;
   temperaments?: string;
@@ -155,68 +133,44 @@ export type CreateUserPreferencesDto = {
 
 export type UpdateUserPreferencesDto = CreateUserPreferencesDto;
 
-/**
- * DTO para criar perfil completo (POST /profiles)
- */
 export type CreateCompleteProfileDto = {
   personalData?: CreatePersonalDataDto;
   preferences?: CreateUserPreferencesDto;
 };
 
-/**
- * DTO para atualizar perfil completo (PUT /profiles/me)
- */
 export type UpdateCompleteProfileDto = {
   personalData?: UpdatePersonalDataDto;
   preferences?: UpdateUserPreferencesDto;
 };
 
-// ============================================
-// Pagination & Filtering Types
-// ============================================
-
-/**
- * Query parameters para listagem de perfis com paginação e filtros
- * GET /profiles
- */
 export type QueryProfilesDto = {
-  // Paginação
-  page?: number;                 // Número da página (padrão: 1, mínimo: 1)
-  limit?: number;                // Itens por página (padrão: 10, mínimo: 1)
   
-  // Filtros de busca
-  q?: string;                    // Busca geral em nome e email
-  name?: string;                 // Filtro por nome (parcial, case-insensitive)
-  email?: string;                // Filtro por email (parcial, case-insensitive)
-  role?: string;                 // Filtro por role (admin, member, leader)
-  
-  // Filtros de preferências
-  loveLanguages?: string;        // Filtro por linguagens do amor (parcial)
-  temperaments?: string;         // Filtro por temperamento (parcial)
-  favoriteColor?: string;        // Filtro por cor favorita (parcial)
-  
-  // Ordenação
-  sortBy?: 'name' | 'email' | 'createdAt' | 'birthDate';  // Campo para ordenação (padrão: 'name')
-  order?: 'ASC' | 'DESC';        // Ordem (padrão: 'ASC')
+  page?: number;                 
+  limit?: number;                
+
+  q?: string;                    
+  name?: string;                 
+  email?: string;                
+  role?: string;                 
+
+  loveLanguages?: string;        
+  temperaments?: string;         
+  favoriteColor?: string;        
+
+  sortBy?: 'name' | 'email' | 'createdAt' | 'birthDate';  
+  order?: 'ASC' | 'DESC';        
 };
 
-/**
- * Metadados de paginação
- */
 export type PaginationMeta = {
-  currentPage: number;           // Página atual
-  itemsPerPage: number;          // Itens por página
-  totalItems: number;            // Total de itens (considerando filtros)
-  totalPages: number;            // Total de páginas
-  hasNextPage: boolean;          // Tem próxima página?
-  hasPreviousPage: boolean;      // Tem página anterior?
+  currentPage: number;           
+  itemsPerPage: number;          
+  totalItems: number;            
+  totalPages: number;            
+  hasNextPage: boolean;          
+  hasPreviousPage: boolean;      
 };
 
-/**
- * Resposta paginada de perfis
- * GET /profiles
- */
 export type PaginatedProfilesResponse = {
-  items: CompleteProfileListItem[];  // Array de perfis
-  meta: PaginationMeta;              // Metadados de paginação
+  items: CompleteProfileListItem[];  
+  meta: PaginationMeta;              
 };

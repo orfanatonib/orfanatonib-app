@@ -160,7 +160,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
               </Grid>
             </Paper>
 
-            {/* Seção do Usuário que compartilhou */}
+            {}
             {section.user && (
               <Paper 
                 elevation={0} 
@@ -192,7 +192,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
                       {section.user.name}
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} mt={1} flexWrap="wrap">
-                      {/* Email */}
+                      {}
                       <Chip
                         icon={<Email fontSize="small" />}
                         label={section.user.email}
@@ -210,7 +210,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
                           '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) }
                         }}
                       />
-                      {/* Telefone/WhatsApp */}
+                      {}
                       {section.user.phone && (
                         <Chip
                           icon={<WhatsApp fontSize="small" sx={{ color: '#25D366' }} />}

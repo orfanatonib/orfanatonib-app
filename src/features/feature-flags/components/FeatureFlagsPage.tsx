@@ -13,7 +13,6 @@ import {
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { FeatureFlag } from '@/store/slices/feature-flags/featureFlagsSlice';
 
-
 export const FeatureFlagsPage: React.FC = () => {
     const { flags, loading, error, refetch, clearError: handleClearError } = useFeatureFlags({
         autoFetch: true,

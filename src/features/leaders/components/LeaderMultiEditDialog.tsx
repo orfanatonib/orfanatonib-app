@@ -162,7 +162,7 @@ export default function LeaderMultiEditDialog({
 
   const validateAssociations = (): string | null => {
     if (associations.length === 0) {
-      return null; // Permitir desvincular de todos os abrigos
+      return null; 
     }
 
     for (const assoc of associations) {

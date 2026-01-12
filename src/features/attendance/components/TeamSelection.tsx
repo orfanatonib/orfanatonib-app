@@ -55,7 +55,7 @@ const TeamCard = memo(({
       sx={{
         mb: 2,
         height: 'fit-content',
-        borderWidth: 1, // Standard border width
+        borderWidth: 1, 
         borderColor: isExpanded ? 'primary.main' : 'divider',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
@@ -68,10 +68,10 @@ const TeamCard = memo(({
         avatar={
           <Box
             sx={{
-              width: 48, // Consistent with ListSheets
+              width: 48, 
               height: 48,
               borderRadius: 2,
-              bgcolor: isExpanded ? 'primary.main' : 'primary.main', // Consistent primary color
+              bgcolor: isExpanded ? 'primary.main' : 'primary.main', 
               color: 'primary.contrastText',
               display: 'grid',
               placeItems: 'center',
@@ -124,7 +124,7 @@ const TeamCard = memo(({
           ) : (
             <Grid container spacing={2}>
               {shelter.teams.map(team => (
-                <Grid item xs={12} sm={6} md={6} key={team.teamId}> {/* Expanded card takes full width of column, allowing 2 teams side-by-side inside */}
+                <Grid item xs={12} sm={6} md={6} key={team.teamId}> {}
                   <Card
                     variant="outlined"
                     sx={{
@@ -133,7 +133,7 @@ const TeamCard = memo(({
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      bgcolor: 'action.hover', // Light grey background
+                      bgcolor: 'action.hover', 
                       border: '1px solid',
                       borderColor: 'divider',
                       '&:hover': {
@@ -163,7 +163,7 @@ const TeamCard = memo(({
                           sx={{
                             p: 1,
                             borderRadius: 1,
-                            bgcolor: 'background.paper', // White background for members area
+                            bgcolor: 'background.paper', 
                             border: '1px solid',
                             borderColor: 'divider',
                           }}
@@ -229,15 +229,14 @@ const TeamCard = memo(({
 });
 
 const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }: TeamSelectionProps) => {
-  // Changed Set<string> to string | null for exclusive expansion
+  
   const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
 
-  // Auto-expand shelter if search returns only one result or if there's only one shelter in data
   useEffect(() => {
     if (data.length === 1) {
       setExpandedShelterId(data[0].shelterId);
     } else if (searchTerm && searchTerm.trim()) {
-      const filteredShelters = data; // Assuming data is already filtered from parent or we can check logic
+      const filteredShelters = data; 
       if (filteredShelters.length === 1) {
         setExpandedShelterId(filteredShelters[0].shelterId);
       }
@@ -248,7 +247,6 @@ const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }:
     setExpandedShelterId(prev => (prev === shelterId ? null : shelterId));
   };
 
-  // Header comum
   const header = (
     <Stack spacing={1} sx={{ mb: { xs: 2, md: 3 } }}>
       <Stack direction="row" alignItems="center" spacing={2}>

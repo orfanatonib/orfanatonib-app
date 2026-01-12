@@ -6,20 +6,13 @@ import { TextFieldProps } from '@mui/material/TextField';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/pt-br';
 
-// Configura dayjs para usar português brasileiro
 dayjs.locale('pt-br');
 
-/**
- * Converte uma string ISO (yyyy-MM-dd) para Dayjs
- */
 export const isoToDayjs = (isoDate: string | null | undefined): Dayjs | null => {
   if (!isoDate) return null;
   return dayjs(isoDate);
 };
 
-/**
- * Converte Dayjs para string ISO (yyyy-MM-dd)
- */
 export const dayjsToISO = (date: Dayjs | null): string => {
   if (!date || !date.isValid()) return '';
   return date.format('YYYY-MM-DD');
@@ -39,24 +32,6 @@ export interface BRDatePickerProps {
   size?: 'small' | 'medium';
 }
 
-/**
- * Componente DatePicker configurado para formato brasileiro (DD/MM/YYYY)
- * com locale pt-BR para meses e dias da semana em português.
- *
- * @example
- * ```tsx
- * const [date, setDate] = useState<Dayjs | null>(null);
- *
- * <BRDatePicker
- *   label="Data de Nascimento"
- *   value={date}
- *   onChange={setDate}
- *   maxDate={dayjs()}
- *   error={!!errors.date}
- *   helperText={errors.date}
- * />
- * ```
- */
 const BRDatePicker: React.FC<BRDatePickerProps> = ({
   label,
   value,

@@ -78,7 +78,6 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
 
     if (hasError) return;
 
-    // Gerar título e descrição dinamicamente
     const documentNumber = editingIndex !== null ? editingIndex + 1 : documents.length + 1;
     const generatedTitle = ideaTitle.trim()
       ? `Documento ${documentNumber} da ideia "${ideaTitle}"`

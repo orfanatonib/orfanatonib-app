@@ -14,7 +14,6 @@ import { LoadingSpinner } from '../components/Modals';
 import { NotificationModal } from '../components/Modals';
 import ImageSectionEditor from './ImageSectionEditor';
 
-
 interface NotificationState {
   open: boolean;
   message: string;

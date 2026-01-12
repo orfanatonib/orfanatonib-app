@@ -31,21 +31,21 @@ function genderPastel(seed: string, gender?: string) {
   
   if (g === "F") {
     return {
-      solid: "#e91e63", // Rosa vibrante
-      soft: "#f8bbd0", // Rosa claro
-      light: "#fce4ec", // Rosa muito claro
+      solid: "#e91e63", 
+      soft: "#f8bbd0", 
+      light: "#fce4ec", 
     };
   } else if (g === "M") {
     return {
-      solid: "#2196f3", // Azul vibrante
-      soft: "#90caf9", // Azul claro
-      light: "#e3f2fd", // Azul muito claro
+      solid: "#2196f3", 
+      soft: "#90caf9", 
+      light: "#e3f2fd", 
     };
   } else {
     return {
-      solid: "#9e9e9e", // Cinza
-      soft: "#e0e0e0", // Cinza claro
-      light: "#f5f5f5", // Cinza muito claro
+      solid: "#9e9e9e", 
+      soft: "#e0e0e0", 
+      light: "#f5f5f5", 
     };
   }
 }

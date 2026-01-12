@@ -35,9 +35,9 @@ function genderPastel(seed: string, gender: string | undefined) {
     };
   } else {
     return {
-      solid: "#9e9e9e", // Cinza
-      soft: "#e0e0e0", // Cinza claro
-      light: "#f5f5f5", // Cinza muito claro
+      solid: "#9e9e9e", 
+      soft: "#e0e0e0", 
+      light: "#f5f5f5", 
     };
   }
 }

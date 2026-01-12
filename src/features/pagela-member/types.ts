@@ -8,7 +8,7 @@ export type Pagela = {
   };
   member: {
     id: string;
-    user: Record<string, any>; // O backend está retornando user: {} vazio
+    user: Record<string, any>; 
   };
   referenceDate: string;
   year: number;
@@ -20,10 +20,9 @@ export type Pagela = {
 export type PageDto<T> = { 
   items: T[]; 
   total: number; 
-  page: string; // O backend está retornando page como string
-  limit: string; // O backend está retornando limit como string
+  page: string; 
+  limit: string; 
 };
-
 
 export type CreatePagelaPayload = {
   shelteredId: string;

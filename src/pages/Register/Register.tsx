@@ -61,7 +61,6 @@ const MESSAGES = {
   },
 } as const;
 
-
 const getSchema = (commonUser: boolean) =>
   Yup.object({
     name: Yup.string()
@@ -96,7 +95,6 @@ const getSchema = (commonUser: boolean) =>
       .required('Selecione seu perfil')) as any,
   });
 
-
 const cacheGoogleUser = (name: string, email: string): void => {
   try {
     const cache: GoogleUserCache = {
@@ -129,7 +127,6 @@ const getGoogleUserCache = (): GoogleUserCache | null => {
     return null;
   }
 };
-
 
 const clearGoogleUserCache = (): void => {
   try {
@@ -196,7 +193,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     }
   }, [googleUser, commonUser, setValue]);
 
-
   useEffect(() => {
     if (success && !commonUser) {
       clearGoogleUserCache();
@@ -218,7 +214,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         role: data.role || undefined,
       });
 
-      // Verificar se o email de verificação foi enviado
       if (response.data?.emailVerification?.verificationEmailSent) {
         setEmailVerificationSent(true);
       }
@@ -238,7 +233,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
 
   const renderSuccessScreen = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 1, md: 2 }, gap: { xs: 2, md: 2.5 } }}>
-      {/* Mensagem principal de sucesso */}
+      {}
       <Alert
         severity="success"
         sx={{
@@ -262,7 +257,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         </Box>
       </Alert>
 
-      {/* Seção de verificação de email */}
+      {}
       {emailVerificationSent && (
         <Box
           sx={{
@@ -306,7 +301,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         </Box>
       )}
 
-      {/* Botão voltar para login */}
+      {}
       <Button
         variant="contained"
         color="primary"
@@ -493,7 +488,6 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       </Button>
     </form>
   );
-
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

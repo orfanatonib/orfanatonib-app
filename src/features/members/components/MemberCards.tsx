@@ -42,8 +42,6 @@ import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { CopyButton, initials } from "@/utils/components";
 
-
-
 type Props = {
   rows: MemberProfile[];
   total: number;
@@ -168,7 +166,7 @@ export default function MemberCards({
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, // Espaço para a barra colorida
+                    mt: 0.5, 
                   }}
                 >
                   <Avatar

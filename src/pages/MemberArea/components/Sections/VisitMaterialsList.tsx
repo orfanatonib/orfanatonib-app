@@ -26,7 +26,6 @@ import { listVisitMaterials, ListVisitMaterialsParams } from '@/features/visit-m
 import { VisitMaterialPageData } from '@/store/slices/visit-material/visitMaterialSlice';
 import { FofinhoButton } from '../Buttons';
 
-
 const VisitMaterialsList = () => {
     const navigate = useNavigate();
     const theme = useTheme();

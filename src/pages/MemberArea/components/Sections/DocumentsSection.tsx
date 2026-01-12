@@ -81,7 +81,6 @@ const DocumentsSection: React.FC = () => {
     }
   };
 
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}

@@ -95,7 +95,7 @@ export function PagelasPanel({
           sx={{ 
             mb: { xs: 1, sm: 1.5 },
             fontSize: { xs: '1.1rem', sm: '1.25rem' },
-            display: { xs: 'none', sm: 'block' } // Esconde no mobile
+            display: { xs: 'none', sm: 'block' } 
           }}
         >
           Pagelas

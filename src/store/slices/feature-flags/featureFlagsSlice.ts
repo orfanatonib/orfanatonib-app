@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
 
-
 export interface FeatureFlag {
     id: string;
     key: string;
@@ -27,7 +26,6 @@ const initialState: FeatureFlagsState = {
     error: null,
     lastFetched: null,
 };
-
 
 export const fetchFeatureFlags = createAsyncThunk<
     FeatureFlag[],

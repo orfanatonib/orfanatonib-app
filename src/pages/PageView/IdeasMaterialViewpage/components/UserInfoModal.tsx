@@ -36,7 +36,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
   const [copied, setCopied] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  // Pegar iniciais do nome para o avatar
   const getInitials = (name: string) => {
     const parts = name.split(" ");
     if (parts.length >= 2) {
@@ -45,7 +44,6 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Copiar para clipboard
   const handleCopy = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -57,14 +55,12 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
     }
   };
 
-  // Abrir WhatsApp
   const handleWhatsApp = () => {
     if (!user.phone) return;
     const link = buildIdeasWhatsappLink(user.name, ideaTitle, user.phone);
     if (link) window.open(link, "_blank");
   };
 
-  // Abrir email
   const handleEmail = () => {
     window.open(`mailto:${user.email}`, "_blank");
   };
@@ -83,7 +79,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           },
         }}
       >
-        {/* Header com gradiente */}
+        {}
         <Box
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -115,7 +111,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           </Typography>
         </Box>
 
-        {/* Avatar sobreposto */}
+        {}
         <Box
           sx={{
             display: "flex",
@@ -140,7 +136,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
         </Box>
 
         <DialogContent sx={{ pt: 0, pb: 3, px: 3 }}>
-          {/* Nome */}
+          {}
           <Typography
             variant="h6"
             fontWeight="bold"
@@ -152,9 +148,9 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
 
           <Divider sx={{ my: 2 }} />
 
-          {/* Info cards */}
+          {}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            {/* Email */}
+            {}
             <Box
               sx={{
                 display: "flex",
@@ -194,7 +190,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
               </IconButton>
             </Box>
 
-            {/* Telefone */}
+            {}
             {user.phone && (
               <Box
                 sx={{
@@ -228,7 +224,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
             )}
           </Box>
 
-          {/* Botões de ação */}
+          {}
           <Box sx={{ display: "flex", gap: 1.5, mt: 3 }}>
             <Button
               variant="outlined"
@@ -265,7 +261,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
         </DialogContent>
       </Dialog>
 
-      {/* Snackbar de confirmação */}
+      {}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}

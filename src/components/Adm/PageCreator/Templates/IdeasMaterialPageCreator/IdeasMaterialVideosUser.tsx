@@ -84,7 +84,6 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
 
     if (hasError) return;
 
-    // Gerar título e descrição dinamicamente
     const videoNumber = editingIndex !== null ? editingIndex + 1 : videos.length + 1;
     const generatedTitle = ideaTitle.trim()
       ? `Vídeo ${videoNumber} da ideia "${ideaTitle}"`

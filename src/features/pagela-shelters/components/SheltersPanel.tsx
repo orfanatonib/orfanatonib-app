@@ -91,7 +91,7 @@ export function SheltersPanel({
                     sx={{ 
                         mb: { xs: 1.5, sm: 2 },
                         fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                        display: { xs: 'none', sm: 'block' } // Esconde no mobile
+                        display: { xs: 'none', sm: 'block' } 
                     }}
                 >
                     Abrigos

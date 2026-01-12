@@ -1,18 +1,13 @@
-// Tipos e DTOs para o módulo de Presença (Attendance)
-
-// Enum para tipos de presença
 export enum AttendanceType {
   PRESENT = 'present',
   ABSENT = 'absent',
 }
 
-// Tipos base para validação de datas
 export interface ScheduleDates {
   visitDate?: string;
   meetingDate?: string;
 }
 
-// DTOs para registro de presença
 export interface RegisterAttendanceDto {
   scheduleId: string;
   type: AttendanceType;
@@ -30,7 +25,6 @@ export interface RegisterTeamAttendanceDto {
   }>;
 }
 
-// DTOs de resposta da API
 export interface AttendanceResponseDto {
   id: string;
   type: AttendanceType;
@@ -53,12 +47,11 @@ export interface AttendanceResponseDto {
 
 export interface AttendanceResponseArray extends Array<AttendanceResponseDto> { }
 
-// DTOs para pendências
 export interface PendingMemberDto {
   memberId: string;
   memberName: string;
   memberEmail: string;
-  role: 'member'; // sempre 'member' (líderes não têm pendências)
+  role: 'member'; 
 }
 
 export interface PendingForLeaderDto {
@@ -89,7 +82,6 @@ export interface PendingForMemberDto {
   shelterName: string;
 }
 
-// DTOs auxiliares para UI
 export interface LeaderTeamDto {
   teamId: string;
   teamNumber: number;
@@ -112,7 +104,6 @@ export interface TeamMembersResponse {
   members: TeamMemberDto[];
 }
 
-// Novos tipos para hierarquia completa (drill-down)
 export interface TeamWithMembersDto {
   teamId: string;
   teamNumber: number;
@@ -128,23 +119,20 @@ export interface ShelterWithTeamsDto {
 
 export type SheltersTeamsMembersResponse = ShelterWithTeamsDto[];
 
-// Tipos auxiliares para UI de drill-down
 export interface DrillDownState {
   selectedShelter: ShelterWithTeamsDto | null;
   selectedTeam: TeamWithMembersDto | null;
   viewMode: 'shelters' | 'team-members' | 'team-attendance';
 }
 
-// Modo de operação: listar ou lançar frequências
 export type AttendanceMode = 'list' | 'register' | null;
 
-// Tipos para estatísticas de presença
 export interface AttendanceStatsDto {
   totalEvents: number;
   totalAttendanceRecords: number;
   presentCount: number;
   absentCount: number;
-  attendanceRate: number; // em %
+  attendanceRate: number; 
   pendingCount: number;
 }
 
@@ -177,7 +165,6 @@ export interface TeamScheduleDto extends ScheduleDates {
   totalMembers?: number;
 }
 
-// DTOs para Listagem Hierárquica de Frequências
 export interface AttendanceRecordDto {
   id: string;
   type: AttendanceType;
@@ -225,7 +212,6 @@ export interface ShelterWithTeamsSheetsDto {
 
 export type HierarchicalSheetsResponse = ShelterWithTeamsSheetsDto[];
 
-// DTOs para paginação
 export interface PaginationMeta {
   page: number;
   limit: number;
@@ -240,12 +226,11 @@ export interface PaginatedResponseDto<T> {
   meta: PaginationMeta;
 }
 
-// Filtros para schedules
 export interface AttendanceFiltersDto {
   page?: number;
   limit?: number;
-  startDate?: string; // YYYY-MM-DD
-  endDate?: string; // YYYY-MM-DD
+  startDate?: string; 
+  endDate?: string; 
   type?: AttendanceType;
   teamId?: string;
   memberId?: string;
@@ -253,7 +238,6 @@ export interface AttendanceFiltersDto {
   sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
 }
 
-// Tipos utilitários para validação
 export type ScheduleType = 'visit' | 'meeting';
 
 export interface ValidationResult {
@@ -261,15 +245,11 @@ export interface ValidationResult {
   errors: string[];
 }
 
-// Constantes para validação
 export const ATTENDANCE_RULES = {
   MAX_COMMENT_LENGTH: 500,
   REQUIRED_SCHEDULE_DATE: true,
 } as const;
 
-// Funções auxiliares de validação (movidas para utils.ts para evitar conflitos de importação)
-
-// Tipos para estados dos componentes
 export interface LoadingState {
   loading: boolean;
   error: string | null;

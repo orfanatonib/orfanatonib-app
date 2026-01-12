@@ -15,7 +15,6 @@ import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { CopyButton, initials } from "@/utils/components";
 
-
 type Props = {
   rows: LeaderProfile[];
   total: number;

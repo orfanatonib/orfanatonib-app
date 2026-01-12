@@ -30,14 +30,11 @@ const AUTO_PLAY_INTERVAL = 3000;
 
 const FALLBACK_SHELTER_IMAGE = (import.meta as any).env?.VITE_SHELTER_FALLBACK_IMAGE_URL;
 
-
 const SheltersSection: React.FC = () => {
   const navigate = useNavigate();
   const routes = useSelector((state: RootState) => state.routes.routes);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
-
-
 
   const shelterCards = useMemo(() => {
     return (routes || []).filter(

@@ -1,4 +1,3 @@
-// src/pages/shelters/ShelterPageView.tsx
 import React from 'react';
 import { Alert, Box, CircularProgress, Container, Grid } from '@mui/material';
 import { PersonOutline, SchoolOutlined } from '@mui/icons-material';
@@ -32,8 +31,6 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
   } = useShelterPage(idToFetch);
 
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
-
-
 
   const handleBack = () => window.history.back();
 

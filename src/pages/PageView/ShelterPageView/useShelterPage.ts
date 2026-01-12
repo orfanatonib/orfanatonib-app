@@ -1,4 +1,3 @@
-// src/pages/shelters/hooks/useShelterPage.ts
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -17,14 +16,12 @@ export const useShelterPage = (idToFetch: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // auth guard
   useEffect(() => {
     if (initialized && !loadingUser && !isAuthenticated) {
       navigate('/login', { state: { from: location }, replace: true });
     }
   }, [initialized, loadingUser, isAuthenticated, navigate, location]);
 
-  // fetch
   useEffect(() => {
     const run = async () => {
       try {
@@ -85,17 +82,15 @@ export const useShelterPage = (idToFetch: string) => {
   }, [shelter?.teams]);
 
   return {
-    // auth
+    
     initialized,
     loadingUser,
     isAuthenticated,
 
-    // data state
     shelter,
     loading,
     error,
 
-    // derived
     uniqueLeaders,
     uniqueMembers,
     getLeaderTeams,

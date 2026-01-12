@@ -242,7 +242,6 @@ export function IdeasSectionUserCreator() {
           para mostrar como fez e ajudar outros membros a colocarem em prática. 📹📸📄
         </Typography>
 
-
       </Box>
 
       <Box sx={{

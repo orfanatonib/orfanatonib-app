@@ -31,7 +31,7 @@ export function useShelteredBrowser() {
   const [acceptedJesus, setAcceptedJesus] = useState<"all" | "accepted" | "not_accepted">("all");
   const [active, setActive] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10); // 10 itens por página
+  const [limit] = useState(10); 
   const [items, setItems] = useState<ShelteredSimpleResponseDto[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -177,7 +177,7 @@ export function useShelteredPagelas(
   useEffect(() => {
     if (initial?.limit !== undefined) {
       setLimit(initial.limit);
-      setPage(1); // Resetar página quando o limite mudar
+      setPage(1); 
     }
   }, [initial?.limit]);
   const setYear = useCallback((v?: number) => { setYearState(v); setPage(1); }, []);

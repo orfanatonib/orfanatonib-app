@@ -29,7 +29,7 @@ import {
 } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PlaceIcon from '@mui/icons-material/Place';
-// removed EditCalendarIcon and CloseIcon (no longer used here)
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
@@ -309,7 +309,6 @@ const Eventos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [mostrarAntigos, setMostrarAntigos] = useState(false);
   const [eventoSelecionado, setEventoSelecionado] = useState<any | null>(null);
-  
 
   const [dialogAddEditOpen, setDialogAddEditOpen] = useState(false);
   const [dialogAddEditMode, setDialogAddEditMode] = useState<'add' | 'edit'>('add');
@@ -325,7 +324,7 @@ const Eventos: React.FC = () => {
       try {
         const response = await api.get('/events');
         const raw = response.data || [];
-        // Map events: if `date` is empty, fallback to media.createdAt or event.createdAt
+        
         const mapped = raw.map((e: any) => {
           const hasDate = e?.date && String(e.date).trim();
           const fallback = e?.media?.createdAt || e?.createdAt || null;
@@ -352,8 +351,6 @@ const Eventos: React.FC = () => {
       }, 100);
     }
   }, [mostrarAntigos]);
-
-  
 
   const eventosOrdenados = [...eventos].sort(
     (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf()
@@ -738,7 +735,7 @@ const Eventos: React.FC = () => {
                       </Button>
                     )}
 
-                {/* antigos listagem ficará abaixo; botão superior removido para simplificar a interface */}
+                {}
               </Box>
             </Box>
           </motion.div>
@@ -1094,7 +1091,6 @@ const Eventos: React.FC = () => {
                   </Grid>
                 )}
               </Box>
-
 
               {(arrangement.eventosRestantes.length > 0 || arrangement.segundoFuturo || arrangement.terceiroFuturo) && (
                 <Accordion

@@ -496,4 +496,3 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   );
 }
 
-

@@ -1,4 +1,3 @@
-// src/pages/shelters/components/ShelterInfoCard.tsx
 import React from 'react';
 import { Card, CardContent, Divider, Typography } from '@mui/material';
 import { motion } from 'framer-motion';

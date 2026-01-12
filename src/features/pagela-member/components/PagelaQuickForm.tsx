@@ -60,11 +60,10 @@ export default function PagelaQuickForm({
   const userRole = user?.role;
   const isMember = userRole === UserRole.MEMBER;
   const isLeader = userRole === UserRole.LEADER;
-  
-  // Atualizar dados do Redux se necessário (busca /auth/me e atualiza o Redux)
+
   React.useEffect(() => {
     const refreshUserData = async () => {
-      // Só atualiza se não tiver o ID necessário no Redux
+      
       if ((isMember && !user?.memberProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
         try {
           await dispatch(fetchCurrentUser()).unwrap();
@@ -84,7 +83,6 @@ export default function PagelaQuickForm({
     ? (user?.leaderProfile?.id ?? null) 
     : null;
 
-  // Para professores, usar memberProfileId; para líderes, usar leaderProfileId
   const effectiveMemberProfileId = isMember 
     ? (memberProfileIdFromRedux ?? memberProfileId ?? null)
     : null;
@@ -158,11 +156,9 @@ export default function PagelaQuickForm({
   const handleSave = async () => {
     if (!canSave) return;
 
-    // Garantir que temos o memberProfileId/leaderProfileId antes de enviar
     let finalMemberProfileId = effectiveMemberProfileId;
     let finalLeaderProfileId = effectiveLeaderProfileId;
-    
-    // Se não temos o ID, atualizar o Redux via fetchCurrentUser
+
     if (isMember && !finalMemberProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
@@ -186,14 +182,13 @@ export default function PagelaQuickForm({
       present,
       notes,
     };
-    
-    // Enviar o ID correto baseado no role (obrigatório)
+
     if (isMember && finalMemberProfileId) {
       payloadCommon.memberProfileId = finalMemberProfileId;
     } else if (isLeader && finalLeaderProfileId) {
       payloadCommon.leaderProfileId = finalLeaderProfileId;
     } else {
-      // Se ainda não temos o ID, mostrar erro
+      
       console.error('Não foi possível obter memberProfileId ou leaderProfileId');
       return;
     }

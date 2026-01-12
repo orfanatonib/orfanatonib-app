@@ -92,7 +92,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     try {
       const videoConstraints: MediaTrackConstraints = device.isMobile
         ? { 
-            facingMode: { ideal: cameraFacingMode }, // mobile: permite alternar selfie/traseira
+            facingMode: { ideal: cameraFacingMode }, 
             width: { ideal: 720 },
             height: { ideal: 1280 }
           }

@@ -61,18 +61,16 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   useEffect(() => {
     if (initialData && open) {
       setTitle(initialData.title || '');
-      // Extrair data e hora do ISO string mantendo a data correta
+      
       if (initialData.date) {
-        // Usar dayjs ou manipular string para evitar problemas de timezone
-        const isoString = initialData.date;
         
-        // Extrair YYYY-MM-DD e HH:MM da string ISO
-        // ISO format: 2026-01-08T19:36:00.000Z ou 2026-01-08T19:36:00
+        const isoString = initialData.date;
+
         const dateMatch = isoString.match(/^(\d{4}-\d{2}-\d{2})/);
         const timeMatch = isoString.match(/T(\d{2}:\d{2})/);
         
-        if (dateMatch) setDate(dateMatch[1]); // YYYY-MM-DD
-        if (timeMatch) setTime(timeMatch[1]); // HH:MM
+        if (dateMatch) setDate(dateMatch[1]); 
+        if (timeMatch) setTime(timeMatch[1]); 
       } else {
         setDate('');
         setTime('');
@@ -84,7 +82,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       setExistingImageUrl(initialData.media?.url || null);
       setRemoveImage(false);
     } else {
-      // Novo evento - usar data de hoje e hora padrão 19:36
+      
       setTitle('');
       const today = new Date().toISOString().split('T')[0];
       setDate(today);
@@ -102,8 +100,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      
-      // Criar preview da imagem
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -131,8 +128,6 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
         formData.append('file', imageFile);
       }
 
-      // Combinar data e hora e converter para UTC
-      // O usuário seleciona horário local, mas o backend espera UTC
       const dateTimeLocal = `${date}T${time}:00`;
       const dateObj = new Date(dateTimeLocal);
       const isoDateTimeUtc = dateObj.toISOString();
@@ -270,7 +265,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               <MenuItem value="leaders">Líderes</MenuItem>
             </TextField>
             
-            {/* Seção de Imagem */}
+            {}
             <Box>
               {existingImageUrl && !removeImage && !imagePreview && (
                 <Box sx={{ mb: 2 }}>

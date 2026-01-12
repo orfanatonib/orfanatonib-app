@@ -46,7 +46,6 @@ const roleLabels: Record<UserRole, string> = {
   [UserRole.MEMBER]: "Membro",
 };
 
-
 function LineCard({
   icon,
   title,
@@ -147,7 +146,6 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
 
               </Box>
             </Stack>
-
 
           </Stack>
         )}

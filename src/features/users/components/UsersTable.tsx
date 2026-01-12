@@ -55,7 +55,6 @@ const roleLabels: Record<UserRole, string> = {
   [UserRole.MEMBER]: "Membro",
 };
 
-
 export default function UsersTable(props: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"), { noSsr: true });

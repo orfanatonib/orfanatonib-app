@@ -108,7 +108,7 @@ export default function ScheduleDetailsModal({
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
-        {/* Abrigo */}
+        {}
         <Box mb={3}>
           <Box display="flex" alignItems="center" gap={1} mb={1}>
             <HomeIcon color="primary" sx={{ fontSize: 20 }} />
@@ -127,7 +127,7 @@ export default function ScheduleDetailsModal({
           )}
         </Box>
 
-        {/* Conteúdo da Lição */}
+        {}
         <Box mb={3}>
           <Box display="flex" alignItems="center" gap={1} mb={1}>
             <LessonIcon color="primary" sx={{ fontSize: 20 }} />
@@ -138,7 +138,7 @@ export default function ScheduleDetailsModal({
           <Typography variant="body1">{schedule.lessonContent}</Typography>
         </Box>
 
-        {/* Data/Hora da Visita */}
+        {}
         <Box mb={3}>
           <Box display="flex" alignItems="center" gap={1} mb={1}>
             <EventIcon color="success" sx={{ fontSize: 20 }} />
@@ -151,7 +151,7 @@ export default function ScheduleDetailsModal({
           </Typography>
         </Box>
 
-        {/* Data/Hora da Reunião */}
+        {}
         <Box mb={3}>
           <Box display="flex" alignItems="center" gap={1} mb={1}>
             <ScheduleIcon color="info" sx={{ fontSize: 20 }} />
@@ -164,7 +164,7 @@ export default function ScheduleDetailsModal({
           </Typography>
         </Box>
 
-        {/* Sala da Reunião */}
+        {}
         {schedule.meetingRoom && (
           <Box mb={3}>
             <Box display="flex" alignItems="center" gap={1} mb={1}>
@@ -177,7 +177,7 @@ export default function ScheduleDetailsModal({
           </Box>
         )}
 
-        {/* Observações */}
+        {}
         {schedule.observation && (
           <Box>
             <Typography variant="subtitle2" color="text.secondary" mb={1}>

@@ -32,14 +32,13 @@ import IdeasVideoPlayerView from "./IdeasVideoPlayerView";
 import UserInfoModal from "./UserInfoModal";
 import { MediaType, getMediaColor, getMediaEmoji, getMediaLabel } from "../utils";
 
-// Cores mais suaves e harmoniosas para cada seção (tons mais escuros)
 const sectionColors = [
-  { primary: "#4F46E5", secondary: "#7C3AED", gradient: "135deg, #4F46E5 0%, #7C3AED 100%" }, // Indigo/Violet escuro
-  { primary: "#0284C7", secondary: "#0891B2", gradient: "135deg, #0284C7 0%, #0891B2 100%" }, // Sky/Cyan escuro
-  { primary: "#059669", secondary: "#10B981", gradient: "135deg, #059669 0%, #10B981 100%" }, // Emerald escuro
-  { primary: "#D97706", secondary: "#F59E0B", gradient: "135deg, #D97706 0%, #F59E0B 100%" }, // Amber escuro
-  { primary: "#DB2777", secondary: "#EC4899", gradient: "135deg, #DB2777 0%, #EC4899 100%" }, // Pink escuro
-  { primary: "#7C3AED", secondary: "#8B5CF6", gradient: "135deg, #7C3AED 0%, #8B5CF6 100%" }, // Violet escuro
+  { primary: "#4F46E5", secondary: "#7C3AED", gradient: "135deg, #4F46E5 0%, #7C3AED 100%" }, 
+  { primary: "#0284C7", secondary: "#0891B2", gradient: "135deg, #0284C7 0%, #0891B2 100%" }, 
+  { primary: "#059669", secondary: "#10B981", gradient: "135deg, #059669 0%, #10B981 100%" }, 
+  { primary: "#D97706", secondary: "#F59E0B", gradient: "135deg, #D97706 0%, #F59E0B 100%" }, 
+  { primary: "#DB2777", secondary: "#EC4899", gradient: "135deg, #DB2777 0%, #EC4899 100%" }, 
+  { primary: "#7C3AED", secondary: "#8B5CF6", gradient: "135deg, #7C3AED 0%, #8B5CF6 100%" }, 
 ];
 
 interface MediaTypeCardProps {
@@ -71,7 +70,7 @@ function MediaTypeCard({
 
   return (
     <>
-      {/* Card compacto */}
+      {}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -106,7 +105,7 @@ function MediaTypeCard({
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, flex: 1 }}>
-                {/* Ícone com fundo colorido */}
+                {}
                 <Box
                   sx={{
                     display: "flex",
@@ -165,7 +164,7 @@ function MediaTypeCard({
         </Card>
       </motion.div>
 
-      {/* Modal Fullscreen Overlay */}
+      {}
       <Modal
         open={isExpanded}
         onClose={onToggle}
@@ -201,7 +200,7 @@ function MediaTypeCard({
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 style={{ minHeight: "100%" }}
               >
-                {/* Header fixo */}
+                {}
                 <Box
                   sx={{
                     position: "sticky",
@@ -278,7 +277,7 @@ function MediaTypeCard({
                   </Container>
                 </Box>
 
-                {/* Conteúdo */}
+                {}
                 <Container maxWidth="xl" sx={{ py: { xs: 3, sm: 4 } }}>
                   <Grid container spacing={3}>
                     {items.map((item, index) => (
@@ -363,19 +362,16 @@ export default function MediaSection({
   const [expandDirection, setExpandDirection] = useState<"down" | "up">("down");
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Cor da seção baseada no índice
   const sectionColor = sectionColors[sectionIndex % sectionColors.length];
 
-  // Calcular direção de expansão quando expandir
   useEffect(() => {
     if (isExpanded && cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const spaceBelow = windowHeight - rect.bottom;
       const spaceAbove = rect.top;
-      const expandedHeight = 400; // altura estimada do conteúdo expandido
-      
-      // Se não tem espaço suficiente abaixo mas tem acima, expande para cima
+      const expandedHeight = 400; 
+
       if (spaceBelow < expandedHeight && spaceAbove > spaceBelow) {
         setExpandDirection("up");
       } else {
@@ -384,26 +380,23 @@ export default function MediaSection({
     }
   }, [isExpanded]);
 
-  // Pegar primeiro e último nome
   const getDisplayName = (name: string) => {
     const parts = name.trim().split(" ");
     if (parts.length === 1) return parts[0];
     return `${parts[0]} ${parts[parts.length - 1]}`;
   };
 
-  // Iniciais do usuário
   const getInitials = (name: string) => {
     const parts = name.trim().split(" ");
     if (parts.length === 1) return parts[0][0].toUpperCase();
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   };
 
-  // Total de itens
   const totalItems = videos.length + documents.length + images.length;
 
   return (
     <Box sx={{ position: "relative", zIndex: isExpanded ? 1000 : 1 }}>
-      {/* Card da seção */}
+      {}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -430,7 +423,7 @@ export default function MediaSection({
           }}
           onClick={() => onToggleSection(sectionId)}
         >
-          {/* Header colorido da seção */}
+          {}
           <Box
             sx={{
               background: `linear-gradient(${sectionColor.gradient})`,
@@ -517,7 +510,7 @@ export default function MediaSection({
                     justifyContent: { xs: "space-between", sm: "flex-end" },
                   }}
                 >
-                  {/* Indicador de quem compartilhou - clicável para ver mais info */}
+                  {}
                   {user && (
                     <Tooltip title="Saiba mais" arrow placement="top">
                       <Box
@@ -601,7 +594,7 @@ export default function MediaSection({
         </Card>
       </motion.div>
 
-      {/* Conteúdo expandido - expande para cima ou para baixo */}
+      {}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -634,7 +627,7 @@ export default function MediaSection({
               }}
             >
               <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                {/* Header com botão fechar */}
+                {}
                 <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
                   <Tooltip title="Fechar" arrow placement="left">
                     <IconButton
@@ -694,7 +687,7 @@ export default function MediaSection({
         )}
       </AnimatePresence>
 
-      {/* Backdrop quando expandido */}
+      {}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -717,7 +710,7 @@ export default function MediaSection({
         )}
       </AnimatePresence>
 
-      {/* Modal de informações do usuário */}
+      {}
       {user && (
         <UserInfoModal
           open={userModalOpen}

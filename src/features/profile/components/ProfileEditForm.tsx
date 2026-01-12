@@ -95,7 +95,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       const nextPhoneDigits = digitsOnly(formData.phone);
       const prevPhoneDigits = digitsOnly(profile?.phone);
       if (nextPhoneDigits && nextPhoneDigits !== prevPhoneDigits) {
-        payload.phone = nextPhoneDigits; // enviar limpo para o back
+        payload.phone = nextPhoneDigits; 
       }
 
       if (Object.keys(payload).length === 0) {

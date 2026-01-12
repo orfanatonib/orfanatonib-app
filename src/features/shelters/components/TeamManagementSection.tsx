@@ -201,7 +201,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 id: leader.leaderProfileId,
                 active: true,
                 user: {
-                  id: leader.leaderProfileId, // Usando leaderProfileId como fallback
+                  id: leader.leaderProfileId, 
                   name: leader.user.name,
                   email: "",
                   phone: "",
@@ -271,7 +271,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
                 id: member.memberProfileId,
                 active: true,
                 user: {
-                  id: member.memberProfileId, // Usando memberProfileId como fallback
+                  id: member.memberProfileId, 
                   name: member.name,
                   email: "",
                   phone: "",

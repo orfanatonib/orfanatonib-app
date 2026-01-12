@@ -51,7 +51,6 @@ export default function MemberMeditationBanner() {
     return null;
   }
 
-
   const handleOpenPreview = async () => {
     try {
       setLoading(true);

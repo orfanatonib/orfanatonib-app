@@ -33,37 +33,31 @@ export default function ShelteredFormDialog({
   const user = useSelector((state: RootState) => state.auth.user);
   const isMember = user?.role === UserRole.MEMBER;
   const isLeader = user?.role === UserRole.LEADER;
-  
-  // Verificar abrigo do member
+
   const memberShelter = React.useMemo(() => {
     if (!user?.memberProfile) return null;
-    
-    // Caminho padrão: memberProfile.team.shelter
+
     if ((user.memberProfile as any)?.team?.shelter?.id) {
       return (user.memberProfile as any).team.shelter;
     }
-    
-    // Caminho alternativo: memberProfile.shelter (caso exista)
+
     if ((user.memberProfile as any)?.shelter?.id) {
       return (user.memberProfile as any).shelter;
     }
     
     return null;
   }, [user?.memberProfile]);
-  
-  // Verificar abrigo do líder
+
   const leaderShelter = React.useMemo(() => {
     if (!user?.leaderProfile) return null;
-    
-    // A API retorna leaderProfile.teams (array), então pega o primeiro team com shelter
+
     if (user.leaderProfile.teams && Array.isArray(user.leaderProfile.teams)) {
       const teamWithShelter = user.leaderProfile.teams.find((t: any) => t?.shelter?.id);
       if (teamWithShelter?.shelter) {
         return teamWithShelter.shelter;
       }
     }
-    
-    // Tenta também o caminho singular (caso exista)
+
     if ((user.leaderProfile as any)?.team?.shelter?.id) {
       return (user.leaderProfile as any).team.shelter;
     }
@@ -80,7 +74,6 @@ export default function ShelteredFormDialog({
   const [shelterDetailErr, setShelterDetailErr] = React.useState<string>("");
   const [showErrors, setShowErrors] = React.useState(false);
 
-  // Estados para os DatePickers
   const [birthDate, setBirthDate] = React.useState<Dayjs | null>(null);
   const [joinedAt, setJoinedAt] = React.useState<Dayjs | null>(null);
 
@@ -89,27 +82,24 @@ export default function ShelteredFormDialog({
 
   const effectiveShelterId = (value as any)?.shelterId ?? null;
 
-  // Para member: sempre define o abrigo vinculado (não pode alterar)
-  // Para leader: define apenas se não tiver um abrigo já selecionado
   React.useEffect(() => {
     if (!value) return;
     if (!isMember && !isLeader) return;
     
     if (isMember && effectiveShelterForUser) {
-      // Member: sempre força o abrigo vinculado
+      
       if ((value as any).shelterId !== effectiveShelterForUser) {
         setField("shelterId", effectiveShelterForUser);
       }
     } else if (isLeader && effectiveShelterForUser && !(value as any).shelterId) {
-      // Leader: apenas pré-seleciona se não tiver um abrigo já escolhido
+      
       setField("shelterId", effectiveShelterForUser);
     }
   }, [value, isMember, isLeader, effectiveShelterForUser]);
 
   React.useEffect(() => {
     if (!open) return;
-    
-    // Sempre chama o endpoint quando o modal abre
+
     let cancelled = false;
     (async () => {
       try {
@@ -123,19 +113,17 @@ export default function ShelteredFormDialog({
             detalhe: s.name,
             leader: false,
           }));
-          
-          // Para member: verifica na resposta da API se o professor está vinculado a algum abrigo
+
           if (isMember && user?.id) {
             const memberProfileId = (user.memberProfile as any)?.id;
             const userId = user.id;
-            
-            // Busca o abrigo onde o professor está vinculado
+
             const memberShelterFromApi = safe.find((shelter) => {
-              // Verifica em todos os teams do abrigo
+              
               return shelter.teams?.some((team: any) => {
-                // Verifica se o professor está na lista de members do team
+                
                 return team.members?.some((member: any) => {
-                  // Compara pelo ID do member profile ou pelo ID do user
+                  
                   return member.id === memberProfileId || 
                          member.user?.id === userId ||
                          (member.user && member.user.id === userId);
@@ -144,28 +132,28 @@ export default function ShelteredFormDialog({
             });
             
             if (memberShelterFromApi) {
-              // Encontrou o abrigo do professor na resposta da API
+              
               const memberOption = allOptions.find((opt) => opt.id === memberShelterFromApi.id);
               if (memberOption) {
                 setShelterOptions([memberOption]);
-                // Define automaticamente o abrigo no formulário se ainda não estiver definido
+                
                 if (value && !(value as any).shelterId) {
                   setField("shelterId", memberShelterFromApi.id);
                 }
               } else {
-                // Se não encontrou na lista mapeada, cria manualmente
+                
                 setShelterOptions([{
                   id: memberShelterFromApi.id,
                   detalhe: memberShelterFromApi.name || "",
                   leader: false,
                 }]);
-                // Define automaticamente o abrigo no formulário se ainda não estiver definido
+                
                 if (value && !(value as any).shelterId) {
                   setField("shelterId", memberShelterFromApi.id);
                 }
               }
             } else if (memberShelterId) {
-              // Tenta usar o do Redux como fallback
+              
               const memberOption = allOptions.find((opt) => opt.id === memberShelterId);
               if (memberOption) {
                 setShelterOptions([memberOption]);
@@ -182,22 +170,22 @@ export default function ShelteredFormDialog({
                   setField("shelterId", memberShelterId);
                 }
               } else {
-                // Não encontrou abrigo vinculado
+                
                 setShelterOptions([]);
               }
             } else {
-              // Não tem abrigo vinculado nem no Redux nem na API
+              
               setShelterOptions([]);
             }
           } else if (isLeader) {
-            // Para leader: mostra todos os abrigos
+            
             setShelterOptions(allOptions);
-            // Pré-seleciona o abrigo do líder se não houver um já selecionado
+            
             if (value && !(value as any).shelterId && leaderShelterId) {
               setField("shelterId", leaderShelterId);
             }
           } else {
-            // Para admin/outros: mostra todos
+            
             setShelterOptions(allOptions);
           }
         }
@@ -219,7 +207,6 @@ export default function ShelteredFormDialog({
     return found?.detalhe ?? null;
   }, [effectiveShelterId, shelterOptions]);
 
-  // Inicializar datas quando o valor mudar ou o dialog abrir
   React.useEffect(() => {
     if (value && open) {
       setBirthDate(isoToDayjs((value as any).birthDate));
@@ -330,7 +317,7 @@ export default function ShelteredFormDialog({
 
           <Grid item xs={12} md={6}>
             {isMember ? (
-              // Member: mostra apenas o abrigo vinculado (readonly)
+              
               <Stack spacing={0.75}>
                 <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
                   Abrigo (obrigatório)
@@ -365,7 +352,7 @@ export default function ShelteredFormDialog({
                 )}
               </Stack>
             ) : isLeader ? (
-              // Leader: pode selecionar entre os abrigos disponíveis
+              
               <FormControl fullWidth required error={showErrors && !req.shelterId}>
                 <InputLabel>Abrigo (obrigatório)</InputLabel>
                 <Select
@@ -396,7 +383,7 @@ export default function ShelteredFormDialog({
                 )}
               </FormControl>
             ) : (
-              // Admin/outros: usa autocomplete
+              
               <ShelterAutocomplete
                 value={effectiveShelterId}
                 onChange={(id) => setField("shelterId", id)}

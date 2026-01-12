@@ -1,4 +1,3 @@
-// Utilitários locais do ShelterPageView (avatars, fallback de imagem)
 export const safeImgUrl = (url?: string | null) => {
   const u = (url || '').trim();
   return u.length ? u : undefined;
@@ -14,11 +13,11 @@ export const getInitials2 = (fullName?: string | null) => {
 };
 
 export const makeImgErrorHandler = () => (e: React.SyntheticEvent<HTMLImageElement>) => {
-  // remove src attribute so Avatar renders children (iniciais)
+  
   try {
     e.currentTarget.removeAttribute('src');
   } catch (err) {
-    // fallback: clear src string
+    
     // eslint-disable-next-line no-param-reassign
     e.currentTarget.src = '';
   }

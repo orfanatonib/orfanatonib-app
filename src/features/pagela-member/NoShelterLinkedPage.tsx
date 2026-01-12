@@ -15,7 +15,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 
 export type SupportContact = {
   personName: string;
-  phoneE164: string; // ex: +5592999999999
+  phoneE164: string; 
   note?: string;
   whatsapp?: boolean;
 };
@@ -147,5 +147,4 @@ export default function NoShelterLinkedPage({
     </Box>
   );
 }
-
 

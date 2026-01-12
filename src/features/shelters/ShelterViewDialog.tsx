@@ -51,7 +51,6 @@ type Props = {
   onClose: () => void;
 };
 
-
 function LineCard({
   icon,
   title,
@@ -76,14 +75,11 @@ function LineCard({
   );
 }
 
-
 export default function ShelterViewDialog({ open, loading, shelter, onClose }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
-
-
 
   const address = shelter?.address;
   const members = shelter?.members ?? [];
@@ -432,7 +428,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
         shelter={shelter}
         onClose={() => setTeamManagementOpen(false)}
         onSuccess={async () => {
-          // No action needed on success
+          
         }}
       />
     </Dialog>

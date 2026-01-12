@@ -32,26 +32,22 @@ export default function ShelteredBrowserPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const canAccess = isAdmin || isLeader || isMember;
 
-  // Estado para armazenar o perfil completo se necessário
   const [fullProfile, setFullProfile] = React.useState<any>(null);
   const [checkingShelter, setCheckingShelter] = React.useState(false);
   const hasCheckedProfileRef = React.useRef(false);
 
-  // Verificar abrigo vinculado - tentar múltiplos caminhos possíveis
   const memberShelter = React.useMemo(() => {
-    // Primeiro tenta do perfil completo buscado
+    
     if (fullProfile?.memberProfile?.team?.shelter?.id) {
       return fullProfile.memberProfile.team.shelter;
     }
-    
-    // Depois tenta do Redux - Member
+
     if (user?.memberProfile) {
-      // Caminho padrão: memberProfile.team.shelter
+      
       if ((user.memberProfile as any)?.team?.shelter?.id) {
         return (user.memberProfile as any).team.shelter;
       }
-      
-      // Caminho alternativo: memberProfile.shelter (caso exista)
+
       if ((user.memberProfile as any)?.shelter?.id) {
         return (user.memberProfile as any).shelter;
       }
@@ -60,31 +56,26 @@ export default function ShelteredBrowserPage() {
     return null;
   }, [user?.memberProfile, fullProfile]);
 
-  // Verificar abrigo vinculado para líderes
   const leaderShelter = React.useMemo(() => {
-    // Primeiro tenta do perfil completo buscado
-    // A API retorna leaderProfile.teams (array), então pega o primeiro team com shelter
+
     if (fullProfile?.leaderProfile?.teams) {
       const teamWithShelter = fullProfile.leaderProfile.teams.find((t: any) => t?.shelter?.id);
       if (teamWithShelter?.shelter) {
         return teamWithShelter.shelter;
       }
     }
-    
-    // Tenta também o caminho singular (caso exista)
+
     if (fullProfile?.leaderProfile?.team?.shelter?.id) {
       return fullProfile.leaderProfile.team.shelter;
     }
-    
-    // Depois tenta do Redux - array de teams
+
     if (user?.leaderProfile?.teams) {
       const teamWithShelter = user.leaderProfile.teams.find((t: any) => t?.shelter?.id);
       if (teamWithShelter?.shelter) {
         return teamWithShelter.shelter;
       }
     }
-    
-    // Tenta também o caminho singular no Redux (caso exista)
+
     if (user?.leaderProfile?.team?.shelter?.id) {
       return user.leaderProfile.team.shelter;
     }
@@ -92,18 +83,15 @@ export default function ShelteredBrowserPage() {
     return null;
   }, [user?.leaderProfile, fullProfile]);
 
-  // Buscar perfil completo se necessário (apenas uma vez)
   React.useEffect(() => {
-    // Se já verificou antes, não verifica novamente
-    if (hasCheckedProfileRef.current) return;
     
-    // Se já temos perfil completo, marca como verificado e retorna
+    if (hasCheckedProfileRef.current) return;
+
     if (fullProfile) {
       hasCheckedProfileRef.current = true;
       return;
     }
-    
-    // Se já temos abrigo do Redux, marca como verificado e retorna
+
     const hasMemberShelter = isMember && (
       (user?.memberProfile as any)?.team?.shelter?.id || 
       (user?.memberProfile as any)?.shelter?.id
@@ -121,29 +109,25 @@ export default function ShelteredBrowserPage() {
       hasCheckedProfileRef.current = true;
       return;
     }
-    
-    // Se não é member ou leader, marca como verificado e retorna
+
     if (!isMember && !isLeader) {
       hasCheckedProfileRef.current = true;
       return;
     }
-    
-    // Se já está verificando, não faz nova verificação
+
     if (checkingShelter) return;
-    
-    // Marca que já está verificando para evitar múltiplas requisições
+
     hasCheckedProfileRef.current = true;
-    
-    // Atualiza o Redux via fetchCurrentUser para ter dados completos (apenas uma vez)
+
     const checkShelterLink = async () => {
       try {
         setCheckingShelter(true);
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
-        // Atualiza o estado local com os dados do Redux atualizado
+        
         setFullProfile(updatedUser);
       } catch (err) {
         console.error('Erro ao atualizar dados do usuário:', err);
-        // Em caso de erro, permite tentar novamente se o componente remontar
+        
         hasCheckedProfileRef.current = false;
       } finally {
         setCheckingShelter(false);
@@ -152,7 +136,7 @@ export default function ShelteredBrowserPage() {
     
     checkShelterLink();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Executa apenas uma vez na montagem do componente
+  }, []); 
 
   const hasLinkedShelter = React.useMemo(() => {
     if (isMember) {
@@ -160,7 +144,7 @@ export default function ShelteredBrowserPage() {
       return !!shelterId;
     }
     if (isLeader) {
-      // Verifica múltiplos caminhos para o abrigo do líder
+      
       const shelterId = 
         leaderShelter?.id || 
         user?.leaderProfile?.team?.shelter?.id ||
@@ -169,7 +153,7 @@ export default function ShelteredBrowserPage() {
           : null);
       return !!shelterId;
     }
-    return true; // admin não depende disso
+    return true; 
   }, [isMember, isLeader, memberShelter?.id, leaderShelter?.id, user?.leaderProfile]);
 
   const shelterName = React.useMemo(() => {

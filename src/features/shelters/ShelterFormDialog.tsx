@@ -41,13 +41,12 @@ export default function ShelterFormDialog({
   const isAdmin = useSelector(selectIsAdmin);
   const isCreate = mode === "create";
 
-
-  const [uploadType] = useState<"upload">("upload"); // Upload only
+  const [uploadType] = useState<"upload">("upload"); 
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (value?.mediaItem) {
-      // Upload only: não suportamos link
+      
     } else {
       setFile(null);
     }

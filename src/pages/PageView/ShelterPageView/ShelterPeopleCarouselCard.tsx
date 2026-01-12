@@ -1,10 +1,8 @@
-// src/pages/shelters/components/ShelterPeopleCarouselCard.tsx
 import React, { useCallback, useState } from 'react';
 import { Avatar, Card, CardContent, IconButton, Typography } from '@mui/material';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Groups as GroupsIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { getInitials2, makeImgErrorHandler, safeImgUrl } from './utils';
-
 
 type Person = {
   id: string;
@@ -15,7 +13,7 @@ type Props = {
   title: string;
   count: number;
   theme: 'blue' | 'purple';
-  icon: React.ReactNode; // PersonOutline ou SchoolOutlined
+  icon: React.ReactNode; 
   people: Person[];
   getTeams: (id: string) => number[];
 };
@@ -57,7 +55,7 @@ export default function ShelterPeopleCarouselCard({ title, count, theme, icon, p
           </div>
 
           <div className="shelterPage__scrollerWrap">
-            {/* ⬅️ aparece no mobile também */}
+            {}
             {people.length > 1 ? (
               <IconButton
                 aria-label="Anterior"
@@ -106,7 +104,7 @@ export default function ShelterPeopleCarouselCard({ title, count, theme, icon, p
               })}
             </div>
 
-            {/* ➡️ aparece no mobile também */}
+            {}
             {people.length > 1 ? (
               <IconButton
                 aria-label="Próximo"

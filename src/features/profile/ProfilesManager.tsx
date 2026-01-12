@@ -61,10 +61,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiGetAllProfiles } from './api';
 import { CompleteProfileListItem, QueryProfilesDto, PaginationMeta } from './types';
 
-// ============================================
-// Utilitários de Aniversário
-// ============================================
-
 type BirthdayStatus = 'today' | 'this-week' | 'this-month' | null;
 
 const getBirthdayStatus = (birthDateStr?: string): BirthdayStatus => {
@@ -165,10 +161,6 @@ const calculateAge = (dateStr?: string): number | null => {
   }
 };
 
-// ============================================
-// Configurações de estilo por role
-// ============================================
-
 const roleConfig: Record<string, { gradient: string; color: string; label: string; icon: React.ReactElement; bgLight: string }> = {
   admin: {
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -193,10 +185,6 @@ const roleConfig: Record<string, { gradient: string; color: string; label: strin
   },
 };
 
-// ============================================
-// Configurações de estilo por gênero (para cards)
-// ============================================
-
 const genderConfig: Record<string, { gradient: string; color: string; bgLight: string }> = {
   Masculino: {
     gradient: 'linear-gradient(135deg, #667eea 0%, #4facfe 100%)',
@@ -220,10 +208,6 @@ const getGenderStyle = (gender?: string) => {
   if (gender === 'Feminino') return genderConfig.Feminino;
   return genderConfig.neutral;
 };
-
-// ============================================
-// Modal de Detalhes do Perfil
-// ============================================
 
 interface ProfileDetailModalProps {
   profile: CompleteProfileListItem | null;
@@ -262,7 +246,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
     }
   };
 
-  // Verifica se tem preferências preenchidas
   const hasPreferences = profile.preferences && (
     profile.preferences.loveLanguages ||
     profile.preferences.temperaments ||
@@ -273,7 +256,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
     profile.preferences.skillsAndTalents
   );
 
-  // Verifica se tem info de GA
   const hasGaInfo = profile.personalData?.gaLeaderName || profile.personalData?.gaLeaderContact;
 
   return (
@@ -301,7 +283,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         },
       }}
     >
-      {/* Header compacto com gradiente */}
+      {}
       <Box
         sx={{
           background: genderStyle.gradient,
@@ -312,7 +294,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           textAlign: 'center',
         }}
       >
-        {/* Botão Fechar */}
+        {}
         <IconButton
           onClick={onClose}
           size="small"
@@ -328,7 +310,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           <CloseIcon fontSize="small" />
         </IconButton>
 
-        {/* Badge de Aniversário */}
+        {}
         {birthdayStatus === 'today' && (
           <motion.div
             initial={{ scale: 0 }}
@@ -351,7 +333,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </motion.div>
         )}
 
-        {/* Confetes para aniversário */}
+        {}
         {birthdayStatus === 'today' && (
           <Box sx={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
             {[...Array(12)].map((_, i) => (
@@ -373,7 +355,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         )}
       </Box>
 
-      {/* Avatar flutuando */}
+      {}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: -4, position: 'relative', zIndex: 1 }}>
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -396,9 +378,9 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         </motion.div>
       </Box>
 
-      {/* Conteúdo */}
+      {}
       <Box sx={{ px: 2.5, pt: 1.5, pb: 2.5 }}>
-        {/* Nome e Role */}
+        {}
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
             {profile.name}
@@ -437,7 +419,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Stack>
         </Box>
 
-        {/* Ações de Contato */}
+        {}
         {(profile.email || profile.phone) && (
           <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
             {profile.phone && (
@@ -517,7 +499,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Stack>
         )}
 
-        {/* Informações GA */}
+        {}
         {hasGaInfo && (
           <Box 
             sx={{ 
@@ -551,7 +533,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           </Box>
         )}
 
-        {/* Preferências em grid compacto */}
+        {}
         {hasPreferences && (
           <>
             <Divider sx={{ mb: 1.5 }} />
@@ -612,7 +594,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
               )}
             </Grid>
 
-            {/* O que faz sorrir / Talentos */}
+            {}
             {(profile.preferences?.whatMakesYouSmile || profile.preferences?.skillsAndTalents) && (
               <Box sx={{ mt: 1.5 }}>
                 {profile.preferences?.whatMakesYouSmile && (
@@ -649,10 +631,6 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
     </Dialog>
   );
 };
-
-// ============================================
-// Componente de Seção de Aniversariantes (Compacto)
-// ============================================
 
 interface BirthdaySectionProps {
   title: string;
@@ -699,7 +677,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
       }}
     >
       <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }}>
-        {/* Emoji */}
+        {}
         <Box
           sx={{
             width: { xs: 28, sm: 32 },
@@ -716,7 +694,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
           {emoji}
         </Box>
 
-        {/* Info */}
+        {}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography 
             variant="caption" 
@@ -735,7 +713,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
           </Typography>
         </Box>
 
-        {/* Avatares */}
+        {}
         <Stack direction="row" spacing={-0.8}>
           {profiles.slice(0, visibleAvatars).map((profile) => {
             const days = getDaysUntilBirthday(profile.personalData?.birthDate);
@@ -820,10 +798,6 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
   );
 };
 
-// ============================================
-// Card de Perfil (Simplificado)
-// ============================================
-
 interface ProfileCardProps {
   profile: CompleteProfileListItem;
   index: number;
@@ -861,7 +835,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
           },
         }}
       >
-        {/* Badge de aniversário */}
+        {}
         {birthdayStatus === 'today' && (
           <Box
             sx={{
@@ -880,7 +854,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
           </Box>
         )}
 
-        {/* Conteúdo */}
+        {}
         <Box sx={{ p: 2 }}>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Avatar
@@ -911,7 +885,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
             </Box>
           </Stack>
 
-          {/* Info rápida */}
+          {}
           <Stack spacing={0.3} sx={{ mt: 1.5 }}>
             <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <EmailIcon sx={{ fontSize: 12, opacity: 0.5 }} />
@@ -935,7 +909,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
             )}
           </Stack>
 
-          {/* Tags */}
+          {}
           {profile.preferences && (
             <Stack direction="row" spacing={0.5} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
               {profile.preferences.temperaments && (
@@ -961,10 +935,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
   );
 };
 
-// ============================================
-// Skeleton de Loading
-// ============================================
-
 const ProfileCardSkeleton: React.FC = () => (
   <Paper
     elevation={0}
@@ -983,10 +953,6 @@ const ProfileCardSkeleton: React.FC = () => (
     </Stack>
   </Paper>
 );
-
-// ============================================
-// Componente Principal
-// ============================================
 
 const ProfilesManager: React.FC = () => {
   const [profiles, setProfiles] = useState<CompleteProfileListItem[]>([]);
@@ -1130,7 +1096,7 @@ const ProfilesManager: React.FC = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
+      {}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <Box sx={{ mb: 2, textAlign: 'center' }}>
           <Typography 
@@ -1158,7 +1124,7 @@ const ProfilesManager: React.FC = () => {
         </Alert>
       )}
 
-      {/* Seções de Aniversário - Layout Horizontal Compacto */}
+      {}
       {!loadingBirthdays && (birthdayToday.length > 0 || birthdayWeek.length > 0 || birthdayMonth.length > 0) && (
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
@@ -1189,7 +1155,7 @@ const ProfilesManager: React.FC = () => {
         </Stack>
       )}
 
-      {/* Filtros */}
+      {}
       <Paper 
         elevation={0} 
         sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(255,255,255,0.8)' }}
@@ -1264,7 +1230,7 @@ const ProfilesManager: React.FC = () => {
         </Stack>
       </Paper>
 
-      {/* Filtros Avançados */}
+      {}
       <Collapse in={showFilters}>
         <Paper 
           elevation={0} 
@@ -1300,7 +1266,7 @@ const ProfilesManager: React.FC = () => {
         </Paper>
       </Collapse>
 
-      {/* Grid de Cards */}
+      {}
       {profiles.length === 0 && !loading ? (
         <Paper elevation={0} sx={{ p: 6, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)' }}>
           <PersonIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
@@ -1320,7 +1286,7 @@ const ProfilesManager: React.FC = () => {
             </AnimatePresence>
           </Grid>
 
-          {/* Paginação Inferior */}
+          {}
           {meta && (
             <Paper 
               elevation={0} 
@@ -1339,7 +1305,7 @@ const ProfilesManager: React.FC = () => {
                 spacing={{ xs: 1.5, sm: 2 }}
                 sx={{ position: 'relative' }}
               >
-                {/* Paginação no centro */}
+                {}
                 {meta.totalPages > 1 && (
                   <Pagination 
                     count={meta.totalPages} 
@@ -1354,7 +1320,7 @@ const ProfilesManager: React.FC = () => {
                   />
                 )}
                 
-                {/* Contador e seletor no final (direita) */}
+                {}
                 <Stack 
                   direction="row" 
                   spacing={1} 
@@ -1397,7 +1363,7 @@ const ProfilesManager: React.FC = () => {
         </>
       )}
 
-      {/* Loading overlay */}
+      {}
       {loading && profiles.length > 0 && (
         <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
           <Paper elevation={8} sx={{ p: 2, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'white' }}>
@@ -1407,7 +1373,7 @@ const ProfilesManager: React.FC = () => {
         </Box>
       )}
 
-      {/* Modal de Detalhes */}
+      {}
       <ProfileDetailModal
         profile={selectedProfile}
         open={!!selectedProfile}

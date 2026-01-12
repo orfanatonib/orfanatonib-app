@@ -25,7 +25,6 @@ interface PreferencesFormProps {
   onError: (error: string) => void;
 }
 
-// Opções predefinidas
 const LOVE_LANGUAGES_OPTIONS = [
   'Toque',
   'Palavras',
@@ -71,8 +70,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
         whatMakesYouSmile: preferences.whatMakesYouSmile || '',
         skillsAndTalents: preferences.skillsAndTalents || '',
       });
-      
-      // Parse existing values for multi-select
+
       if (preferences.loveLanguages) {
         setSelectedLoveLanguages(preferences.loveLanguages.split(', ').filter(Boolean));
       }
@@ -92,7 +90,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
   const handleTemperamentsChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
     const selected = typeof value === 'string' ? value.split(',') : value;
-    // Permitir de 1 a 4 temperamentos
+    
     if (selected.length <= 4) {
       setSelectedTemperaments(selected);
       setFormData({ ...formData, temperaments: selected.join(' ') });
@@ -157,7 +155,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
       <Box sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            {/* Linguagens do Amor */}
+            {}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="love-languages-label">Linguagens do Amor</InputLabel>
@@ -184,7 +182,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               </FormControl>
             </Grid>
 
-            {/* Temperamentos */}
+            {}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="temperaments-label">Temperamentos</InputLabel>
@@ -214,7 +212,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               </FormControl>
             </Grid>
 
-            {/* Cor Favorita */}
+            {}
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -225,7 +223,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {/* Comida Favorita */}
+            {}
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -236,7 +234,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {/* Música Favorita */}
+            {}
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
@@ -247,7 +245,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {/* O que te faz sorrir */}
+            {}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -261,7 +259,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
               />
             </Grid>
 
-            {/* Habilidades e Talentos */}
+            {}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth

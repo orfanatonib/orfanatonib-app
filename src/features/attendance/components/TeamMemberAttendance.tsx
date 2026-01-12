@@ -79,15 +79,15 @@ const MemberAttendanceCard = memo(({
     <Box sx={{ transition: 'all 0.2s ease-in-out' }}>
       <Stack spacing={0}>
         <Box sx={{ p: { xs: 1, sm: 1.5 } }}>
-          {/* Mobile: Stack vertically, Desktop: Row */}
+          {}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             alignItems={{ xs: 'stretch', sm: 'center' }}
             spacing={{ xs: 1.5, sm: 2 }}
           >
-            {/* Member Info Row - Always horizontal */}
+            {}
             <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
-              {/* Status Icon */}
+              {}
               <Box
                 sx={{
                   width: 40,
@@ -120,7 +120,7 @@ const MemberAttendanceCard = memo(({
                 )}
               </Box>
 
-              {/* Name and Role */}
+              {}
               <Box flex={1} minWidth={0} sx={{ overflow: 'hidden' }}>
                 <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
                   <Typography
@@ -145,7 +145,7 @@ const MemberAttendanceCard = memo(({
               </Box>
             </Stack>
 
-            {/* Action Buttons */}
+            {}
             <Stack
               direction="row"
               spacing={1}
@@ -189,7 +189,7 @@ const MemberAttendanceCard = memo(({
           </Stack>
         </Box>
 
-        {/* Collapse for absence comment */}
+        {}
         <Collapse in={showComment}>
           <Box
             sx={{
@@ -221,7 +221,6 @@ const MemberAttendanceCard = memo(({
   );
 });
 
-
 const TeamMemberAttendance = memo(({
   shelter,
   team,
@@ -236,44 +235,38 @@ const TeamMemberAttendance = memo(({
   const [scheduleId, setScheduleId] = useState<string>('');
   const [eventTypeFilter, setEventTypeFilter] = useState<'visit' | 'meeting'>('visit');
 
-  // 🐛 BUGFIX: Filtrar schedules pela categoria correta
-  // O backend sempre retorna schedules separados com category explícito (VISIT ou MEETING)
-  // Mesmo que um schedule tenha ambas as datas, retornam como 2 schedules separados
   const filteredSchedules = useMemo(() => {
     return safeSchedules.filter(s => {
-      // Sempre usar category se disponível, caso contrário usar lógica de fallback
+      
       const type = s.category || (s.visitDate ? 'visit' : 'meeting');
       return type === eventTypeFilter;
     });
   }, [safeSchedules, eventTypeFilter]);
 
-
-  // 🐛 BUGFIX: Quando o filtro muda (visit <-> meeting), garantir que o schedule correto está selecionado
-  // IMPORTANTE: visit e meeting compartilham o mesmo scheduleId, então precisamos verificar pela categoria
   useEffect(() => {
     if (filteredSchedules.length > 0) {
-      // Buscar o schedule que corresponde ao scheduleId atual E tem a categoria correta
+      
       const currentScheduleWithCategory = scheduleId
         ? filteredSchedules.find(s => s.id === scheduleId && s.category === eventTypeFilter)
         : null;
 
       if (!currentScheduleWithCategory) {
-        // Se não encontrou (porque categoria mudou ou schedule não existe), selecionar o primeiro dos filtrados
+        
         const firstSchedule = filteredSchedules[0];
         if (firstSchedule) {
-          // Forçar atualização se for diferente, ou manter o mesmo mas o useEffect de carregamento vai resetar o ref
+          
           if (firstSchedule.id !== scheduleId) {
             console.log('🔄 Changing scheduleId from', scheduleId, 'to', firstSchedule.id, 'due to filter change to', eventTypeFilter);
             setScheduleId(firstSchedule.id);
           }
-          // Se o ID for o mesmo mas categoria diferente, o useEffect de carregamento vai detectar pela chave única
+          
         }
       }
-      // Se encontrou o schedule correto, não fazer nada - o useEffect de carregamento vai lidar
+      
     } else if (scheduleId) {
       setScheduleId('');
     }
-  }, [filteredSchedules, eventTypeFilter]); // Remover scheduleId das dependências para evitar loop
+  }, [filteredSchedules, eventTypeFilter]); 
 
   const membersOnly = useMemo(() => {
     return team.members.filter(member => member.role === 'member' || !member.role);
@@ -293,7 +286,6 @@ const TeamMemberAttendance = memo(({
     return initial;
   });
 
-
   useEffect(() => {
     setMemberAttendances(prev => {
       const updated = { ...prev };
@@ -309,7 +301,6 @@ const TeamMemberAttendance = memo(({
           changed = true;
         }
       });
-
 
       Object.keys(updated).forEach(memberId => {
         if (!membersOnly.find(m => m.id === memberId)) {
@@ -332,8 +323,6 @@ const TeamMemberAttendance = memo(({
   const [loadingExistingRecords, setLoadingExistingRecords] = useState(false);
   const [hasExistingAttendance, setHasExistingAttendance] = useState(false);
 
-  // 🐛 BUGFIX: Usar ref para rastrear o último scheduleId+category carregado e evitar chamadas duplicadas
-  // IMPORTANTE: visit e meeting compartilham o mesmo scheduleId, então precisamos usar scheduleId+category como chave única
   const lastLoadedKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -354,13 +343,10 @@ const TeamMemberAttendance = memo(({
         return;
       }
 
-      // 🐛 BUGFIX: Criar chave única combinando scheduleId + category
-      // visit e meeting compartilham o mesmo scheduleId, então precisamos diferenciar pela categoria
       const selectedSchedule = safeSchedules.find(s => s.id === scheduleId);
       const category = selectedSchedule?.category || eventTypeFilter;
       const uniqueKey = `${scheduleId}-${category}`;
 
-      // Evitar chamadas duplicadas para o mesmo scheduleId+category
       if (lastLoadedKey.current === uniqueKey) {
         console.log('⏭️ Skipping duplicate load for key:', uniqueKey);
         return;
@@ -370,7 +356,7 @@ const TeamMemberAttendance = memo(({
 
       try {
         setLoadingExistingRecords(true);
-        lastLoadedKey.current = uniqueKey; // Marcar como carregado usando chave única
+        lastLoadedKey.current = uniqueKey; 
 
         console.log('📡 Fetching records for scheduleId:', scheduleId, 'category:', category);
         const response = await getAttendanceRecords({
@@ -405,7 +391,7 @@ const TeamMemberAttendance = memo(({
         setMemberAttendances(updated);
       } catch (err: any) {
         console.error('Erro ao carregar registros existentes:', err);
-        lastLoadedKey.current = null; // Reset em caso de erro para permitir retry
+        lastLoadedKey.current = null; 
         setExistingRecords([]);
         setHasExistingAttendance(false);
         const resetAttendances: Record<string, MemberAttendanceRow> = {};
@@ -424,7 +410,7 @@ const TeamMemberAttendance = memo(({
 
     loadExistingRecords();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scheduleId, eventTypeFilter]); // Incluir eventTypeFilter para recarregar quando trocar de visit para meeting
+  }, [scheduleId, eventTypeFilter]); 
 
   const handleMemberTypeChange = useCallback((memberId: string, type: AttendanceType) => {
     setMemberAttendances(prev => ({
@@ -524,8 +510,6 @@ const TeamMemberAttendance = memo(({
         comment: row.comment.trim() || undefined,
       }));
 
-      // 🐛 BUGFIX: Garantir que sempre use a categoria correta do schedule
-      // Se o schedule não tiver category, usar a categoria do filtro atual
       const scheduleCategory = selectedSchedule.category || eventTypeFilter;
 
       const dto: RegisterTeamAttendanceDto = {
@@ -538,7 +522,7 @@ const TeamMemberAttendance = memo(({
       console.log('💾 Salvando frequência com DTO:', { teamId: dto.teamId, scheduleId: dto.scheduleId, category: dto.category, count: dto.attendances.length });
 
       await registerTeamAttendance(dto);
-      // 🔄 Buscar registros atualizados usando a mesma categoria
+      
       const response = await getAttendanceRecords({
         scheduleId,
         category: scheduleCategory as 'visit' | 'meeting',
@@ -602,7 +586,6 @@ const TeamMemberAttendance = memo(({
               {shelter.shelterName} • {membersOnly.length} membro{membersOnly.length !== 1 ? 's' : ''}
             </Typography>
           </Box>
-
 
           <Box
             sx={{
@@ -691,9 +674,8 @@ const TeamMemberAttendance = memo(({
         </Stack>
       </Box>
 
-
       <Grid container spacing={3} sx={{ flex: 1, overflow: 'hidden' }}>
-        {/* Coluna esquerda: Seleção de evento (mobile) e ações */}
+        {}
         <Grid item xs={12} md={4} lg={3}>
           <Stack spacing={3}>
 
@@ -799,7 +781,6 @@ const TeamMemberAttendance = memo(({
               </Card>
             </Box>
 
-
             {hasExistingAttendance && (
               <Alert
                 severity="info"
@@ -811,7 +792,6 @@ const TeamMemberAttendance = memo(({
                 </Typography>
               </Alert>
             )}
-
 
             <Card variant="outlined">
               <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
@@ -848,7 +828,6 @@ const TeamMemberAttendance = memo(({
                 </Stack>
               </CardContent>
             </Card>
-
 
             <Card variant="outlined">
               <CardHeader
@@ -893,7 +872,7 @@ const TeamMemberAttendance = memo(({
               </CardContent>
             </Card>
 
-            {/* Save Button - Desktop only, sticky in left column */}
+            {}
             <Box
               sx={{
                 display: { xs: 'none', md: 'block' },
@@ -969,7 +948,6 @@ const TeamMemberAttendance = memo(({
             </Box>
           </Stack>
         </Grid>
-
 
         <Grid item xs={12} md={8} lg={9}>
           <Card
@@ -1085,7 +1063,7 @@ const TeamMemberAttendance = memo(({
         </Grid>
       </Grid>
 
-      {/* Save Button - Outside Grid for mobile positioning */}
+      {}
       <Box
         sx={{
           display: { xs: 'block', md: 'none' },

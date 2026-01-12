@@ -8,16 +8,10 @@ export interface MediaItem {
   [key: string]: any;
 }
 
-/**
- * Filtra mídias por tipo
- */
 export function filterMediaByType(medias: MediaItem[], type: "video" | "document" | "image"): MediaItem[] {
   return medias.filter((media) => media.mediaType === type);
 }
 
-/**
- * Retorna a cor do tema para cada tipo de mídia
- */
 export function getMediaColor(type: MediaType, theme: Theme): string {
   const colorMap: Record<MediaType, string> = {
     videos: theme.palette.error.main,
@@ -27,9 +21,6 @@ export function getMediaColor(type: MediaType, theme: Theme): string {
   return colorMap[type];
 }
 
-/**
- * Retorna o emoji para cada tipo de mídia
- */
 export function getMediaEmoji(type: MediaType): string {
   const emojiMap: Record<MediaType, string> = {
     videos: "🎬",
@@ -39,9 +30,6 @@ export function getMediaEmoji(type: MediaType): string {
   return emojiMap[type];
 }
 
-/**
- * Retorna o label em português para cada tipo de mídia
- */
 export function getMediaLabel(type: MediaType): string {
   const labelMap: Record<MediaType, string> = {
     videos: "Vídeos",
@@ -51,9 +39,6 @@ export function getMediaLabel(type: MediaType): string {
   return labelMap[type];
 }
 
-/**
- * Agrupa as mídias de uma seção por tipo
- */
 export function groupSectionMedias(medias: MediaItem[]) {
   return {
     videos: filterMediaByType(medias, "video"),

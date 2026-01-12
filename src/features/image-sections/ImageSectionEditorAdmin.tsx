@@ -136,7 +136,7 @@ export default function ImageSectionEditorAdmin() {
   }, [sectionData, navigate]);
 
   if (!sectionData) {
-    return null; // Evita flash de conteúdo antes do redirecionamento
+    return null; 
   }
 
   return (

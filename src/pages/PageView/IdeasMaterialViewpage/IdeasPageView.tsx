@@ -23,8 +23,7 @@ interface IdeasPageViewProps {
 
 export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
   const theme = useTheme();
-  
-  // Hooks
+
   const {
     ideasPage,
     loading,
@@ -38,30 +37,24 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
   } = useIdeasPage({ idToFetch });
 
   const { expandedMediaTypes, toggleMediaType } = useExpandedMediaTypes();
-  
-  // Estado para controlar qual seção está expandida (só uma por vez)
+
   const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
 
-  // Auth
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
 
-  // Toggle da seção - só uma por vez
   const handleToggleSection = (sectionId: string) => {
     setExpandedSectionId(prev => prev === sectionId ? null : sectionId);
   };
 
-  // Loading state
   if (loading) {
     return <LoadingState />;
   }
 
-  // Error state
   if (error) {
     return <ErrorState message={error} />;
   }
 
-  // Empty state
   if (!ideasPage) {
     return <EmptyState />;
   }
@@ -95,7 +88,7 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         },
       }}
     >
-      {/* Header */}
+      {}
       <IdeasPageHeader
         title={title}
         subtitle={subtitle}
@@ -106,7 +99,7 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         onDelete={() => setDeleteConfirmOpen(true)}
       />
 
-      {/* Content */}
+      {}
       <Box sx={{ flex: 1, py: { xs: 2, sm: 3, md: 5 }, position: "relative", zIndex: 1 }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
           <Grid container spacing={{ xs: 2, sm: 3 }}>
@@ -138,7 +131,7 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
         </Container>
       </Box>
 
-      {/* Delete Dialog */}
+      {}
       <DeleteConfirmDialog
         open={deleteConfirmOpen}
         title={ideasPage.title}

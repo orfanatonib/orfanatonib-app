@@ -46,7 +46,6 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
   const [error, setError] = useState<string | null>(null);
   const [sheets, setSheets] = useState<HierarchicalSheetsResponse>([]);
 
-  // Single expansion states for exclusive behavior
   const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
   const [expandedScheduleId, setExpandedScheduleId] = useState<string | null>(null);
@@ -59,7 +58,7 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
       setError(null);
       const data = await getHierarchicalSheets();
       setSheets(data);
-      // Auto-expand first shelter if no search and data exists
+      
       if (data.length > 0) {
         setExpandedShelterId(data[0].shelterId);
         if (data[0].teams.length > 0) {
@@ -81,14 +80,14 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
 
   const toggleShelter = useCallback((shelterId: string) => {
     setExpandedShelterId(prev => (prev === shelterId ? null : shelterId));
-    // Reset inner states when changing shelter
+    
     setExpandedTeamId(null);
     setExpandedScheduleId(null);
   }, []);
 
   const toggleTeam = useCallback((teamId: string) => {
     setExpandedTeamId(prev => (prev === teamId ? null : teamId));
-    // Reset inner state when changing team
+    
     setExpandedScheduleId(null);
   }, []);
 
@@ -97,14 +96,13 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
   }, []);
 
   const filteredSheets = useMemo(() => {
-    // Basic filter by shelter name (case insensitive partial match)
+    
     if (!searchTerm.trim()) return sheets;
 
     const term = searchTerm.toLowerCase();
     return sheets.filter(s => s.shelterName.toLowerCase().includes(term));
   }, [sheets, searchTerm]);
 
-  // Effect to auto-expand if search yields single result
   useEffect(() => {
     if (searchTerm && filteredSheets.length === 1) {
       setExpandedShelterId(filteredSheets[0].shelterId);
@@ -135,7 +133,7 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
 
   return (
     <Box sx={{ width: '100%', p: { xs: 1, sm: 3 } }}>
-      {/* Header */}
+      {}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
         <IconButton
           onClick={onBack}
@@ -292,7 +290,7 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
                                           minHeight: 40,
                                           '&.Mui-expanded': { minHeight: 40 },
                                           '& .MuiAccordionSummary-content': { my: 0.5, alignItems: 'center' },
-                                          // 🐛 BUGFIX: Destacar schedules com pendências
+                                          
                                           bgcolor: schedule.pendingCount > 0 ? 'warning.50' : 'transparent',
                                           borderLeft: schedule.pendingCount > 0 ? '3px solid' : 'none',
                                           borderColor: schedule.pendingCount > 0 ? 'warning.main' : 'transparent',

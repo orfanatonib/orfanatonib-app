@@ -254,7 +254,7 @@ export default function ShelterScheduleManager() {
         </Box>
       )}
 
-      {/* FAB Mobile */}
+      {}
       {isMobile && (
         <Fab
           color="primary"

@@ -19,7 +19,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 
-/** Props da tabela */
 type Props = {
   rows: MemberProfile[];
   total: number;

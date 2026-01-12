@@ -276,7 +276,6 @@ export async function apiDeleteShelter(id: string) {
   await api.delete(`/shelters/${id}`);
 }
 
-
 export async function apiListUsersByRole(role: "leader" | "member", limit = 500) {
   const { data } = await api.get<{ items: { id: string; name?: string; email?: string }[] }>("/users", {
     params: { role, page: 1, limit, sort: "name", order: "ASC" },
@@ -327,13 +326,11 @@ export async function apiLoadMemberOptions() {
   })) as MemberOption[];
 }
 
-
 export type LeaderSimpleApi = {
   leaderProfileId: string;
   name: string;
   vinculado: boolean;
 };
-
 
 export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
   let allLeaders: any[] = [];

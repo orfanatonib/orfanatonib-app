@@ -39,7 +39,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return () => {
       clearTimeout(handler);
     };
-  }, [JSON.stringify(value), delay]); // Usar JSON.stringify para detectar mudanças em objetos
+  }, [JSON.stringify(value), delay]); 
 
   return debouncedValue;
 }
@@ -84,7 +84,7 @@ export function useShelters(
     } finally {
       setLoading(false);
     }
-  }, [pageIndex, pageSize, sorting, JSON.stringify(debouncedFilters)]); // Usar JSON.stringify para detectar mudanças
+  }, [pageIndex, pageSize, sorting, JSON.stringify(debouncedFilters)]); 
 
   useEffect(() => {
     fetchPage();
@@ -198,7 +198,6 @@ export function useOptions() {
         vinculado: !!t.vinculado,
       }));
 
-      
       setLeaders(mappedCoords);
       setMembers(mappedMembers);
       setLoaded(true);

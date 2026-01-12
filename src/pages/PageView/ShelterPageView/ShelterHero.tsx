@@ -1,4 +1,3 @@
-// src/pages/shelters/components/ShelterHero.tsx
 import React from 'react';
 import { Box, Container, IconButton, Typography } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';

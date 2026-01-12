@@ -34,7 +34,6 @@ type Props = {
   onAskDelete: (shelter: ShelterResponseDto) => void;
 };
 
-
 export default function SheltersCards(props: Props) {
   const { isAdmin, rows, total, pageIndex, pageSize, setPageIndex, setPageSize, sorting, setSorting, onOpenView, onStartEdit, onAskDelete } = props;
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -126,7 +125,7 @@ export default function SheltersCards(props: Props) {
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, // Espaço para a barra colorida
+                    mt: 0.5, 
                   }}
                 >
                   <Avatar
@@ -167,7 +166,6 @@ export default function SheltersCards(props: Props) {
                       {c.name}
                     </Typography>
                   </Stack>
-
 
                   <ButtonBase
                     onClick={() => toggle(c.id)}

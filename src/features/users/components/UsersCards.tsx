@@ -61,8 +61,6 @@ function CopyButton({ value, title = "Copiar" }: { value?: string; title?: strin
   );
 }
 
-
-
 export default function UsersCards(props: Props) {
   const {
     rows, total, pageIndex, pageSize, setPageIndex, setPageSize,
@@ -157,7 +155,7 @@ export default function UsersCards(props: Props) {
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, // Espaço para a barra colorida
+                    mt: 0.5, 
                   }}
                 >
                   <Avatar
