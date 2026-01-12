@@ -32,7 +32,7 @@ type Props = {
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
   [UserRole.ADMIN]: "Administrador",
 };
 
@@ -43,7 +43,7 @@ export default function UsersToolbar({
   onRefresh,
   isXs,
 }: Props) {
-  const roleOptions = ["all", UserRole.LEADER, UserRole.TEACHER] as const;
+  const roleOptions = ["all", UserRole.LEADER, UserRole.MEMBER] as const;
 
   const hasFilters = Boolean(filters.q || filters.role !== "all" || filters.onlyActive || filters.onlyCompleted);
 

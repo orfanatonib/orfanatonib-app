@@ -26,11 +26,14 @@ export interface ShelterScheduleShelter {
 
 export interface ShelterScheduleResponseDto {
   id: string;
+  category: 'visit' | 'meeting';
+  date: string;
   visitNumber: number;
   visitDate?: string;
   meetingDate?: string;
   lessonContent: string;
   observation?: string;
+  location?: string;
   meetingRoom?: string;
   shelter: ShelterScheduleShelter;
   createdAt: string;
@@ -75,7 +78,7 @@ export interface MyTeamResponseDto {
     email: string;
     phone?: string;
   }>;
-  teachers: Array<{
+  members: Array<{
     id: string;
     name: string;
     email: string;

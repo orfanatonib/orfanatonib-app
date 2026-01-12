@@ -10,7 +10,7 @@ export type MinimalUser = {
   commonUser?: boolean;
 };
 
-export type MinimalTeacher = {
+export type MinimalMember = {
   id: string;
   active?: boolean;
   user?: MinimalUser;
@@ -35,8 +35,8 @@ export type ShelterSimple = {
   updatedAt: string;
 };
 
-export type ShelterWithTeachers = ShelterSimple & {
-  teachers?: MinimalTeacher[];
+export type ShelterWithMembers = ShelterSimple & {
+  members?: MinimalMember[];
 };
 
 export type TeamSimple = {
@@ -44,7 +44,7 @@ export type TeamSimple = {
   numberTeam: number; // ⭐ Número da equipe (1, 2, 3, 4...) - tipo NUMBER
   description?: string | null;
   shelterId: string;
-  shelter?: ShelterWithTeachers;
+  shelter?: ShelterWithMembers;
   createdAt: string;
   updatedAt: string;
 };
@@ -54,21 +54,21 @@ export type TeamSimple = {
   numberTeam: number;
   description?: string | null;
   shelterId: string;
-  shelter?: ShelterWithTeachers;
+  shelter?: ShelterWithMembers;
   createdAt: string;
   updatedAt: string;
 };
 
-export type ShelterWithTeamsAndTeachers = ShelterSimple & {
+export type ShelterWithTeamsAndMembers = ShelterSimple & {
   teams: {
     id: string;
     numberTeam: number;
     description: string | null;
     isLeader?: boolean; // Para /my-shelters - indica se o líder logado está nesta equipe
     leaders?: MinimalUser[];
-    teachers?: MinimalTeacher[];
+    members?: MinimalMember[];
   }[];
-  teachers?: MinimalTeacher[]; // Membros gerais do abrigo
+  members?: MinimalMember[]; // Membros gerais do abrigo
 };
 
 export type LeaderShelterAssociation = {
@@ -79,7 +79,7 @@ export type LeaderShelterAssociation = {
     numberTeam: number;
     description: string | null;
   }[];
-  teachers?: MinimalTeacher[]; // Membros do abrigo
+  members?: MinimalMember[]; // Membros do abrigo
 };
 
 export type LeaderProfile = {
@@ -148,7 +148,7 @@ export type LeaderAssociationUpdateDto = {
 /**
  * Resposta do endpoint /my-shelters para líderes logados
  */
-export type MySheltersResponse = ShelterWithTeamsAndTeachers[];
+export type MySheltersResponse = ShelterWithTeamsAndMembers[];
 
 /**
  * Resposta simplificada de abrigos para dropdowns
@@ -172,7 +172,7 @@ export type TeamsCompleteResponse = {
   description: string | null;
   shelterId: string;
   leaders: MinimalUser[];
-  teachers: MinimalTeacher[];
+  members: MinimalMember[];
   createdAt: string;
   updatedAt: string;
 }[];

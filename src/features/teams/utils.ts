@@ -31,28 +31,28 @@ export async function removeLeaderFromTeam(teamId: string, leaderId: string): Pr
   });
 }
 
-export async function addTeacherToTeam(teamId: string, teacherId: string): Promise<TeamResponseDto> {
+export async function addMemberToTeam(teamId: string, memberId: string): Promise<TeamResponseDto> {
   const team = await apiGetTeam(teamId);
-  const currentTeacherIds = team.teachers.map((t) => t.id);
+  const currentMemberIds = team.members.map((t) => t.id);
   
-  if (currentTeacherIds.includes(teacherId)) {
+  if (currentMemberIds.includes(memberId)) {
     return team;
   }
   
-  const updatedTeacherIds = [...currentTeacherIds, teacherId];
+  const updatedMemberIds = [...currentMemberIds, memberId];
   
   return await apiUpdateTeam(teamId, {
-    teacherProfileIds: updatedTeacherIds,
+    memberProfileIds: updatedMemberIds,
   });
 }
 
-export async function removeTeacherFromTeam(teamId: string, teacherId: string): Promise<TeamResponseDto> {
+export async function removeMemberFromTeam(teamId: string, memberId: string): Promise<TeamResponseDto> {
   const team = await apiGetTeam(teamId);
-  const currentTeacherIds = team.teachers.map((t) => t.id);
-  const updatedTeacherIds = currentTeacherIds.filter((id) => id !== teacherId);
+  const currentMemberIds = team.members.map((t) => t.id);
+  const updatedMemberIds = currentMemberIds.filter((id) => id !== memberId);
   
   return await apiUpdateTeam(teamId, {
-    teacherProfileIds: updatedTeacherIds,
+    memberProfileIds: updatedMemberIds,
   });
 }
 
@@ -67,14 +67,14 @@ export async function addLeadersToTeam(teamId: string, leaderIds: string[]): Pro
   });
 }
 
-export async function addTeachersToTeam(teamId: string, teacherIds: string[]): Promise<TeamResponseDto> {
+export async function addMembersToTeam(teamId: string, memberIds: string[]): Promise<TeamResponseDto> {
   const team = await apiGetTeam(teamId);
-  const currentTeacherIds = team.teachers.map((t) => t.id);
-  const newTeacherIds = teacherIds.filter((id) => !currentTeacherIds.includes(id));
-  const updatedTeacherIds = [...currentTeacherIds, ...newTeacherIds];
+  const currentMemberIds = team.members.map((t) => t.id);
+  const newMemberIds = memberIds.filter((id) => !currentMemberIds.includes(id));
+  const updatedMemberIds = [...currentMemberIds, ...newMemberIds];
   
   return await apiUpdateTeam(teamId, {
-    teacherProfileIds: updatedTeacherIds,
+    memberProfileIds: updatedMemberIds,
   });
 }
 
@@ -88,13 +88,13 @@ export async function removeLeadersFromTeam(teamId: string, leaderIds: string[])
   });
 }
 
-export async function removeTeachersFromTeam(teamId: string, teacherIds: string[]): Promise<TeamResponseDto> {
+export async function removeMembersFromTeam(teamId: string, memberIds: string[]): Promise<TeamResponseDto> {
   const team = await apiGetTeam(teamId);
-  const currentTeacherIds = team.teachers.map((t) => t.id);
-  const updatedTeacherIds = currentTeacherIds.filter((id) => !teacherIds.includes(id));
+  const currentMemberIds = team.members.map((t) => t.id);
+  const updatedMemberIds = currentMemberIds.filter((id) => !memberIds.includes(id));
   
   return await apiUpdateTeam(teamId, {
-    teacherProfileIds: updatedTeacherIds,
+    memberProfileIds: updatedMemberIds,
   });
 }
 
@@ -104,16 +104,16 @@ export async function replaceLeadersInTeam(teamId: string, leaderIds: string[]):
   });
 }
 
-export async function replaceTeachersInTeam(teamId: string, teacherIds: string[]): Promise<TeamResponseDto> {
+export async function replaceMembersInTeam(teamId: string, memberIds: string[]): Promise<TeamResponseDto> {
   return await apiUpdateTeam(teamId, {
-    teacherProfileIds: teacherIds,
+    memberProfileIds: memberIds,
   });
 }
 
 export async function clearTeam(teamId: string): Promise<TeamResponseDto> {
   return await apiUpdateTeam(teamId, {
     leaderProfileIds: [],
-    teacherProfileIds: [],
+    memberProfileIds: [],
   });
 }
 

@@ -10,7 +10,7 @@ import {
  * Lista agendamentos filtrados automaticamente por role do usuário
  * - Admin: todos os agendamentos
  * - Leader: agendamentos das suas equipes
- * - Teacher: agendamentos da sua equipe
+ * - Member: agendamentos da sua equipe
  */
 export async function apiListShelterSchedules(): Promise<ShelterScheduleResponseDto[]> {
   const { data } = await api.get<ShelterScheduleResponseDto[]>("/shelter-schedules");
@@ -52,7 +52,7 @@ export async function apiDeleteShelterSchedule(id: string): Promise<void> {
  * Lista equipes do usuário autenticado
  * - Admin: todas as equipes
  * - Leader: equipes onde é líder
- * - Teacher: equipe onde é professor
+ * - Member: equipe onde é professor
  */
 export async function apiListMyTeams(): Promise<MyTeamResponseDto[]> {
   const { data } = await api.get<MyTeamResponseDto[]>("/teams/my-teams");

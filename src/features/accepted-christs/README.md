@@ -188,7 +188,7 @@ await apiCreateAcceptedChrist({
 
 ### Abrir Modal
 ```typescript
-import DecisionModal from "@/features/pagela-teacher/components/DecisionModal";
+import DecisionModal from "@/features/pagela-member/components/DecisionModal";
 
 <DecisionModal
   open={modalOpen}

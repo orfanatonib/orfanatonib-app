@@ -103,13 +103,13 @@ const Login: React.FC = () => {
   const mapUserRole = (responseUser: any): any => {
     return {
       ...responseUser,
-      role: responseUser.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.TEACHER,
+      role: responseUser.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MEMBER,
     };
   };
 
   const handleUserInactive = (): void => {
     setErrorMessage(
-      'Usuário não validado, entre em contato com (92) 99127-4881 ou (92) 98155-3139'
+      'Usuário não validado, entre em contato com (61) 8254-9780 ou (92) 98155-3139'
     );
   };
 

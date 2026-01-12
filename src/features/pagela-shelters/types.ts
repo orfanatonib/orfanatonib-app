@@ -33,7 +33,7 @@ export interface ShelterDto {
         commonUser: boolean;
       };
     }>;
-    teachers: Array<{
+    members: Array<{
       id: string;
       active: boolean;
       user: {
@@ -60,7 +60,7 @@ export interface ShelterDto {
       commonUser: boolean;
     };
   }>;
-  teachers: Array<{
+  members: Array<{
     id: string;
     active: boolean;
     user: {
@@ -115,7 +115,7 @@ export interface PagelaDto {
     id: string;
     name: string;
   };
-  teacher: {
+  member: {
     id: string;
     active: boolean;
     user: {

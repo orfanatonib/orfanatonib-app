@@ -36,7 +36,7 @@ type Props = {
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
 };
 
 const initials = (name?: string) =>
@@ -96,7 +96,7 @@ export default function UsersCards(props: Props) {
   const roleChipColor = (role?: string) => {
     switch (role) {
       case UserRole.LEADER: return "primary";
-      case UserRole.TEACHER: return "success";
+      case UserRole.MEMBER: return "success";
       default: return "default";
     }
   };

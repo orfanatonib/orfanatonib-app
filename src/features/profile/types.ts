@@ -27,7 +27,7 @@ export type Profile = {
   createdAt: string;
   updatedAt: string;
   image: ProfileImage | null;
-  teacherProfile?: {
+  memberProfile?: {
     id: string;
     active: boolean;
     createdAt: string;
@@ -116,7 +116,7 @@ export type CompleteProfile = {
   email: string;
   phone: string;
   name: string;
-  role?: string;                 // Role do usuário (admin, teacher, leader)
+  role?: string;                 // Role do usuário (admin, member, leader)
   personalData?: PersonalData;
   preferences?: UserPreferences;
 };
@@ -188,7 +188,7 @@ export type QueryProfilesDto = {
   q?: string;                    // Busca geral em nome e email
   name?: string;                 // Filtro por nome (parcial, case-insensitive)
   email?: string;                // Filtro por email (parcial, case-insensitive)
-  role?: string;                 // Filtro por role (admin, teacher, leader)
+  role?: string;                 // Filtro por role (admin, member, leader)
   
   // Filtros de preferências
   loveLanguages?: string;        // Filtro por linguagens do amor (parcial)

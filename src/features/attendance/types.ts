@@ -22,6 +22,7 @@ export interface RegisterAttendanceDto {
 export interface RegisterTeamAttendanceDto {
   teamId: string;
   scheduleId: string;
+  category: 'visit' | 'meeting';
   attendances: Array<{
     memberId: string;
     type: AttendanceType;
@@ -50,14 +51,14 @@ export interface AttendanceResponseDto {
   updatedAt: string;
 }
 
-export interface AttendanceResponseArray extends Array<AttendanceResponseDto> {}
+export interface AttendanceResponseArray extends Array<AttendanceResponseDto> { }
 
 // DTOs para pendências
 export interface PendingMemberDto {
   memberId: string;
   memberName: string;
   memberEmail: string;
-  role: 'teacher'; // sempre 'teacher' (líderes não têm pendências)
+  role: 'member'; // sempre 'member' (líderes não têm pendências)
 }
 
 export interface PendingForLeaderDto {
@@ -101,7 +102,7 @@ export interface TeamMemberDto {
   id: string;
   name: string;
   email?: string;
-  role?: 'leader' | 'teacher';
+  role?: 'leader' | 'member';
 }
 
 export interface TeamMembersResponse {
@@ -134,7 +135,7 @@ export interface DrillDownState {
   viewMode: 'shelters' | 'team-members' | 'team-attendance';
 }
 
-// Modo de operação: listar ou lançar pagelas
+// Modo de operação: listar ou lançar frequências
 export type AttendanceMode = 'list' | 'register' | null;
 
 // Tipos para estatísticas de presença
@@ -161,9 +162,12 @@ export interface TeamAttendanceOverviewDto {
 
 export interface TeamScheduleDto extends ScheduleDates {
   id: string;
+  category: 'visit' | 'meeting';
+  date: string;
   visitNumber: number;
   lessonContent: string;
   observation?: string;
+  location?: string;
   meetingRoom?: string;
   teamId: string;
   teamNumber: number;
@@ -173,7 +177,7 @@ export interface TeamScheduleDto extends ScheduleDates {
   totalMembers?: number;
 }
 
-// DTOs para Listagem Hierárquica de Pagelas
+// DTOs para Listagem Hierárquica de Frequências
 export interface AttendanceRecordDto {
   id: string;
   type: AttendanceType;
@@ -187,13 +191,16 @@ export interface AttendanceRecordDto {
 
 export interface ScheduleWithAttendanceDto {
   scheduleId: string;
+  category: 'visit' | 'meeting';
+  date: string;
   visitNumber: number;
   visitDate?: string;
   meetingDate?: string;
   lessonContent: string;
   observation?: string;
+  location?: string;
   meetingRoom?: string;
-  totalTeachers: number;
+  totalMembers: number;
   presentCount: number;
   absentCount: number;
   pendingCount: number;

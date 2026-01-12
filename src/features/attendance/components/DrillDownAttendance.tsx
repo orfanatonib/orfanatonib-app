@@ -46,11 +46,9 @@ const DrillDownAttendance = memo(() => {
   });
 
   const [teamSchedules, setTeamSchedules] = useState<TeamScheduleDto[]>([]);
-  const [teamSchedulesPaginated, setTeamSchedulesPaginated] = useState<PaginatedResponseDto<TeamScheduleDto> | null>(null);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Carregar dados da hierarquia (apenas quando necessário para lançar pagelas)
   const loadHierarchyData = useCallback(async () => {
     if (mode !== 'register') return;
     try {
@@ -67,30 +65,25 @@ const DrillDownAttendance = memo(() => {
     }
   }, [mode]);
 
-  // Carregar eventos da equipe selecionada
   const loadTeamSchedules = useCallback(async (teamId: string) => {
     try {
       setLoadingSchedules(true);
-      // Buscar eventos com paginação (ordenação decrescente por data de visita)
+
       const response = await getTeamSchedules(teamId, {
-        page: 1,
-        limit: 100, // Buscar muitos eventos para exibir
-        sortBy: 'visitDate',
+        sortBy: 'createdAt',
         sortOrder: 'desc',
       });
-      setTeamSchedulesPaginated(response);
-      // Extrair apenas o array de schedules para compatibilidade
-      setTeamSchedules(response.data || []);
+      const schedules = response || [];
+
+      setTeamSchedules(schedules);
     } catch (err: any) {
       console.error('Erro ao carregar eventos da equipe:', err);
       setTeamSchedules([]);
-      setTeamSchedulesPaginated(null);
     } finally {
       setLoadingSchedules(false);
     }
   }, []);
 
-  // Handlers para navegação
   const handleTeamSelect = useCallback((shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => {
     setDrillDownState({
       selectedShelter: shelter,
@@ -125,12 +118,9 @@ const DrillDownAttendance = memo(() => {
   }, []);
 
   const handleAttendanceRegistered = useCallback(() => {
-    // Recarregar dados após registrar presença
     loadHierarchyData();
-    // Opcional: mostrar mensagem de sucesso ou atualizar estatísticas
   }, [loadHierarchyData]);
 
-  // Calcular estatísticas
   const stats = useMemo(() => {
     const totalShelters = hierarchyData.length;
     const totalTeams = hierarchyData.reduce((sum, s) => sum + s.teams.length, 0);
@@ -140,10 +130,9 @@ const DrillDownAttendance = memo(() => {
     return { totalShelters, totalTeams, totalMembers };
   }, [hierarchyData]);
 
-  // Filtrar dados baseado na busca
   const filteredData = useMemo(() => {
     if (!searchTerm.trim()) return hierarchyData;
-    
+
     const term = searchTerm.toLowerCase();
     return hierarchyData
       .map(shelter => ({
@@ -157,24 +146,20 @@ const DrillDownAttendance = memo(() => {
       .filter(shelter => shelter.teams.length > 0);
   }, [hierarchyData, searchTerm]);
 
-  // Carregar dados iniciais apenas quando modo for 'register'
   useEffect(() => {
     if (mode === 'register') {
       loadHierarchyData();
     }
   }, [mode, loadHierarchyData]);
 
-  // Se nenhum modo foi selecionado, mostrar o seletor
   if (mode === null) {
     return <AttendanceModeSelector onModeSelect={handleModeSelect} />;
   }
 
-  // Se modo for 'list', mostrar lista de pagelas
   if (mode === 'list') {
     return <ListSheets onBack={handleBackToMode} />;
   }
 
-  // Loading state (apenas para modo 'register')
   if (loading) {
     return (
       <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -188,7 +173,6 @@ const DrillDownAttendance = memo(() => {
     );
   }
 
-  // Error state (apenas para modo 'register')
   if (error) {
     return (
       <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}>
@@ -214,21 +198,18 @@ const DrillDownAttendance = memo(() => {
     );
   }
 
-  // Modo 'register': mostrar interface de lançamento
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ flex: 1, width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4 }, py: { xs: 2, md: 3 } }}>
-        {/* Header */}
         <Box sx={{ mb: { xs: 3, md: 4 } }}>
           <Typography variant="h4" gutterBottom fontWeight="bold">
-            Controle de Presença
+            Controle de Frequência
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Gerencie a presença das equipes em seus abrigos de forma organizada e eficiente.
           </Typography>
         </Box>
 
-        {/* Cards de Estatísticas */}
         {drillDownState.viewMode === 'shelters' && !loading && hierarchyData.length > 0 && (
           <Grid container spacing={2} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={4}>
@@ -347,7 +328,6 @@ const DrillDownAttendance = memo(() => {
           </Grid>
         )}
 
-        {/* Busca */}
         {drillDownState.viewMode === 'shelters' && !loading && hierarchyData.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <TextField
@@ -372,28 +352,28 @@ const DrillDownAttendance = memo(() => {
           </Box>
         )}
 
-        {/* Navegação por drill-down */}
         {drillDownState.viewMode === 'shelters' && (
           <TeamSelection
             data={filteredData}
             loading={loading}
             onTeamSelect={handleTeamSelect}
             searchTerm={searchTerm}
+            onBack={handleBackToMode}
           />
         )}
 
         {drillDownState.viewMode === 'team-members' &&
-         drillDownState.selectedShelter &&
-         drillDownState.selectedTeam && (
-          <TeamMemberAttendance
-            shelter={drillDownState.selectedShelter}
-            team={drillDownState.selectedTeam}
-            schedules={Array.isArray(teamSchedules) ? teamSchedules : []}
-            loadingSchedules={loadingSchedules}
-            onBack={handleBackToTeams}
-            onAttendanceRegistered={handleAttendanceRegistered}
-          />
-        )}
+          drillDownState.selectedShelter &&
+          drillDownState.selectedTeam && (
+            <TeamMemberAttendance
+              shelter={drillDownState.selectedShelter}
+              team={drillDownState.selectedTeam}
+              schedules={Array.isArray(teamSchedules) ? teamSchedules : []}
+              loadingSchedules={loadingSchedules}
+              onBack={handleBackToTeams}
+              onAttendanceRegistered={handleAttendanceRegistered}
+            />
+          )}
       </Box>
     </Box>
   );

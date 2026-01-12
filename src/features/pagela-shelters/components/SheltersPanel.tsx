@@ -203,7 +203,7 @@ export function SheltersPanel({
                                                         textAlign: 'right'
                                                     }}
                                                 >
-                                                    {shelter.teachers.length} membros
+                                                    {shelter.members.length} membros
                                                 </Typography>
                                             </Stack>
 

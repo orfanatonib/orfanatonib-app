@@ -40,6 +40,7 @@ import {
   ChevronRight,
   CalendarMonth,
   Favorite,
+  EventAvailable,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -69,6 +70,7 @@ const cardData: CardData[] = [
   { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
   { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
+  { title: "Presenças", description: "Gerencie a frequência das equipes e membros.", icon: <EventAvailable fontSize="large" color="primary" />, path: "/adm/presenca", section: "abrigos" },
 
   // 📝 CONTEÚDO - Criação de Conteúdo
   { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
@@ -137,6 +139,7 @@ export default function AdminDashboardPage() {
     "/adm/abrigos",
     "/adm/pagelas",
     "/adm/agendamentos",
+    "/adm/presenca",
   ]);
 
   const canSeeCard = (card: CardData): boolean => {

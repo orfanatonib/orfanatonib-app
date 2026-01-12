@@ -114,17 +114,17 @@ export default function ShelterDetailsPage() {
     return Array.from(leadersMap.values());
   }, [teams]);
 
-  const allTeachers = useMemo(() => {
+  const allMembers = useMemo(() => {
     if (teams.length === 0) return [];
-    const teachersMap = new Map<string, any>();
+    const membersMap = new Map<string, any>();
     teams.forEach((team) => {
-      team.teachers?.forEach((teacher) => {
-        if (!teachersMap.has(teacher.id)) {
-          teachersMap.set(teacher.id, teacher);
+      team.members?.forEach((member) => {
+        if (!membersMap.has(member.id)) {
+          membersMap.set(member.id, member);
         }
       });
     });
-    return Array.from(teachersMap.values());
+    return Array.from(membersMap.values());
   }, [teams]);
 
   const leaderTeams = useMemo(() => {
@@ -416,7 +416,7 @@ export default function ShelterDetailsPage() {
                       />
                       <Chip
                         icon={<SchoolOutlined />}
-                        label={`${allTeachers.length} Membro(es)`}
+                        label={`${allMembers.length} Membro(es)`}
                         color="secondary"
                         variant="outlined"
                       />
@@ -578,14 +578,14 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Membros ({team.teachers?.length || 0})
+                                  Membros ({team.members?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
-                                  items={team.teachers?.map((teacher) => ({
-                                    id: teacher.id,
+                                  items={team.members?.map((member) => ({
+                                    id: member.id,
                                     label:
-                                      teacher.user?.name ||
-                                      teacher.user?.email ||
+                                      member.user?.name ||
+                                      member.user?.email ||
                                       "Sem nome",
                                     color: "secondary" as const,
                                     variant: "outlined" as const,
@@ -680,14 +680,14 @@ export default function ShelterDetailsPage() {
                                   sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                                 >
                                   <SchoolOutlined fontSize="small" />
-                                  Membros ({team.teachers?.length || 0})
+                                  Membros ({team.members?.length || 0})
                                 </Typography>
                                 <ChipsListWithExpand
-                                  items={team.teachers?.map((teacher) => ({
-                                    id: teacher.id,
+                                  items={team.members?.map((member) => ({
+                                    id: member.id,
                                     label:
-                                      teacher.user?.name ||
-                                      teacher.user?.email ||
+                                      member.user?.name ||
+                                      member.user?.email ||
                                       "Sem nome",
                                     color: "secondary" as const,
                                     variant: "outlined" as const,

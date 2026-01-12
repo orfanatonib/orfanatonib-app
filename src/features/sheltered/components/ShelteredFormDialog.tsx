@@ -31,25 +31,25 @@ export default function ShelteredFormDialog({
   const isCreate = mode === "create";
   
   const user = useSelector((state: RootState) => state.auth.user);
-  const isTeacher = user?.role === UserRole.TEACHER;
+  const isMember = user?.role === UserRole.MEMBER;
   const isLeader = user?.role === UserRole.LEADER;
   
-  // Verificar abrigo do teacher
-  const teacherShelter = React.useMemo(() => {
-    if (!user?.teacherProfile) return null;
+  // Verificar abrigo do member
+  const memberShelter = React.useMemo(() => {
+    if (!user?.memberProfile) return null;
     
-    // Caminho padrão: teacherProfile.team.shelter
-    if ((user.teacherProfile as any)?.team?.shelter?.id) {
-      return (user.teacherProfile as any).team.shelter;
+    // Caminho padrão: memberProfile.team.shelter
+    if ((user.memberProfile as any)?.team?.shelter?.id) {
+      return (user.memberProfile as any).team.shelter;
     }
     
-    // Caminho alternativo: teacherProfile.shelter (caso exista)
-    if ((user.teacherProfile as any)?.shelter?.id) {
-      return (user.teacherProfile as any).shelter;
+    // Caminho alternativo: memberProfile.shelter (caso exista)
+    if ((user.memberProfile as any)?.shelter?.id) {
+      return (user.memberProfile as any).shelter;
     }
     
     return null;
-  }, [user?.teacherProfile]);
+  }, [user?.memberProfile]);
   
   // Verificar abrigo do líder
   const leaderShelter = React.useMemo(() => {
@@ -71,9 +71,9 @@ export default function ShelteredFormDialog({
     return null;
   }, [user?.leaderProfile]);
   
-  const teacherShelterId = teacherShelter?.id ?? null;
+  const memberShelterId = memberShelter?.id ?? null;
   const leaderShelterId = leaderShelter?.id ?? null;
-  const effectiveShelterForUser = isTeacher ? teacherShelterId : (isLeader ? leaderShelterId : null);
+  const effectiveShelterForUser = isMember ? memberShelterId : (isLeader ? leaderShelterId : null);
 
   const [shelterOptions, setShelterOptions] = React.useState<Array<{ id: string; detalhe: string; leader: boolean }>>([]);
   const [loadingShelterDetail, setLoadingShelterDetail] = React.useState(false);
@@ -89,14 +89,14 @@ export default function ShelteredFormDialog({
 
   const effectiveShelterId = (value as any)?.shelterId ?? null;
 
-  // Para teacher: sempre define o abrigo vinculado (não pode alterar)
+  // Para member: sempre define o abrigo vinculado (não pode alterar)
   // Para leader: define apenas se não tiver um abrigo já selecionado
   React.useEffect(() => {
     if (!value) return;
-    if (!isTeacher && !isLeader) return;
+    if (!isMember && !isLeader) return;
     
-    if (isTeacher && effectiveShelterForUser) {
-      // Teacher: sempre força o abrigo vinculado
+    if (isMember && effectiveShelterForUser) {
+      // Member: sempre força o abrigo vinculado
       if ((value as any).shelterId !== effectiveShelterForUser) {
         setField("shelterId", effectiveShelterForUser);
       }
@@ -104,7 +104,7 @@ export default function ShelteredFormDialog({
       // Leader: apenas pré-seleciona se não tiver um abrigo já escolhido
       setField("shelterId", effectiveShelterForUser);
     }
-  }, [value, isTeacher, isLeader, effectiveShelterForUser]);
+  }, [value, isMember, isLeader, effectiveShelterForUser]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -124,62 +124,62 @@ export default function ShelteredFormDialog({
             leader: false,
           }));
           
-          // Para teacher: verifica na resposta da API se o professor está vinculado a algum abrigo
-          if (isTeacher && user?.id) {
-            const teacherProfileId = (user.teacherProfile as any)?.id;
+          // Para member: verifica na resposta da API se o professor está vinculado a algum abrigo
+          if (isMember && user?.id) {
+            const memberProfileId = (user.memberProfile as any)?.id;
             const userId = user.id;
             
             // Busca o abrigo onde o professor está vinculado
-            const teacherShelterFromApi = safe.find((shelter) => {
+            const memberShelterFromApi = safe.find((shelter) => {
               // Verifica em todos os teams do abrigo
               return shelter.teams?.some((team: any) => {
-                // Verifica se o professor está na lista de teachers do team
-                return team.teachers?.some((teacher: any) => {
-                  // Compara pelo ID do teacher profile ou pelo ID do user
-                  return teacher.id === teacherProfileId || 
-                         teacher.user?.id === userId ||
-                         (teacher.user && teacher.user.id === userId);
+                // Verifica se o professor está na lista de members do team
+                return team.members?.some((member: any) => {
+                  // Compara pelo ID do member profile ou pelo ID do user
+                  return member.id === memberProfileId || 
+                         member.user?.id === userId ||
+                         (member.user && member.user.id === userId);
                 });
               });
             });
             
-            if (teacherShelterFromApi) {
+            if (memberShelterFromApi) {
               // Encontrou o abrigo do professor na resposta da API
-              const teacherOption = allOptions.find((opt) => opt.id === teacherShelterFromApi.id);
-              if (teacherOption) {
-                setShelterOptions([teacherOption]);
+              const memberOption = allOptions.find((opt) => opt.id === memberShelterFromApi.id);
+              if (memberOption) {
+                setShelterOptions([memberOption]);
                 // Define automaticamente o abrigo no formulário se ainda não estiver definido
                 if (value && !(value as any).shelterId) {
-                  setField("shelterId", teacherShelterFromApi.id);
+                  setField("shelterId", memberShelterFromApi.id);
                 }
               } else {
                 // Se não encontrou na lista mapeada, cria manualmente
                 setShelterOptions([{
-                  id: teacherShelterFromApi.id,
-                  detalhe: teacherShelterFromApi.name || "",
+                  id: memberShelterFromApi.id,
+                  detalhe: memberShelterFromApi.name || "",
                   leader: false,
                 }]);
                 // Define automaticamente o abrigo no formulário se ainda não estiver definido
                 if (value && !(value as any).shelterId) {
-                  setField("shelterId", teacherShelterFromApi.id);
+                  setField("shelterId", memberShelterFromApi.id);
                 }
               }
-            } else if (teacherShelterId) {
+            } else if (memberShelterId) {
               // Tenta usar o do Redux como fallback
-              const teacherOption = allOptions.find((opt) => opt.id === teacherShelterId);
-              if (teacherOption) {
-                setShelterOptions([teacherOption]);
+              const memberOption = allOptions.find((opt) => opt.id === memberShelterId);
+              if (memberOption) {
+                setShelterOptions([memberOption]);
                 if (value && !(value as any).shelterId) {
-                  setField("shelterId", teacherShelterId);
+                  setField("shelterId", memberShelterId);
                 }
-              } else if (teacherShelter) {
+              } else if (memberShelter) {
                 setShelterOptions([{
-                  id: teacherShelterId,
-                  detalhe: teacherShelter.name || "",
+                  id: memberShelterId,
+                  detalhe: memberShelter.name || "",
                   leader: false,
                 }]);
                 if (value && !(value as any).shelterId) {
-                  setField("shelterId", teacherShelterId);
+                  setField("shelterId", memberShelterId);
                 }
               } else {
                 // Não encontrou abrigo vinculado
@@ -211,7 +211,7 @@ export default function ShelteredFormDialog({
     })();
     
     return () => { cancelled = true; };
-  }, [open, isTeacher, isLeader, teacherShelterId, leaderShelterId, teacherShelter, user?.id, user?.teacherProfile]);
+  }, [open, isMember, isLeader, memberShelterId, leaderShelterId, memberShelter, user?.id, user?.memberProfile]);
 
   const selectedShelterDetail = React.useMemo(() => {
     if (!effectiveShelterId) return null;
@@ -329,8 +329,8 @@ export default function ShelteredFormDialog({
           </Grid>
 
           <Grid item xs={12} md={6}>
-            {isTeacher ? (
-              // Teacher: mostra apenas o abrigo vinculado (readonly)
+            {isMember ? (
+              // Member: mostra apenas o abrigo vinculado (readonly)
               <Stack spacing={0.75}>
                 <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
                   Abrigo (obrigatório)

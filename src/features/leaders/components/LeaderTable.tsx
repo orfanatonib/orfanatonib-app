@@ -175,20 +175,20 @@ export default function LeaderTable({
       meta: { width: 120 },
     },
     {
-      id: "teachers",
+      id: "members",
       header: "Membros",
       cell: ({ row }) => {
         const shelters = row.original.shelters;
-        const allTeachers = shelters?.flatMap(shelter => shelter.teachers || []) ?? [];
+        const allMembers = shelters?.flatMap(shelter => shelter.members || []) ?? [];
 
-        if (!allTeachers.length) return <Chip size="small" label="—" />;
+        if (!allMembers.length) return <Chip size="small" label="—" />;
 
-        if (allTeachers.length <= 2) {
+        if (allMembers.length <= 2) {
           return (
             <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-              {allTeachers.map((t) => {
-                const teacherName = t.user?.name || t.user?.email || "Sem nome";
-                return <Chip key={t.id} size="small" label={teacherName} />;
+              {allMembers.map((t) => {
+                const memberName = t.user?.name || t.user?.email || "Sem nome";
+                return <Chip key={t.id} size="small" label={memberName} />;
               })}
             </Box>
           );
@@ -197,13 +197,13 @@ export default function LeaderTable({
         const tooltipContent = (
           <Box sx={{ p: 0.5 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {allTeachers.map((t) => {
-                const teacherName = t.user?.name || t.user?.email || "Sem nome";
+              {allMembers.map((t) => {
+                const memberName = t.user?.name || t.user?.email || "Sem nome";
                 return (
                   <Chip
                     key={t.id}
                     size="small"
-                    label={teacherName}
+                    label={memberName}
                     sx={{ maxWidth: "100%" }}
                   />
                 );
@@ -243,7 +243,7 @@ export default function LeaderTable({
               color="primary"
               sx={{ cursor: "pointer", fontWeight: 500 }}
             >
-              {allTeachers.length} membros
+              {allMembers.length} membros
             </Typography>
           </Tooltip>
         );

@@ -67,11 +67,11 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   const [leaderPendings, setLeaderPendings] = useState<PendingForLeaderDto[]>([]);
   const [loadingLeaderPendings, setLoadingLeaderPendings] = useState(false);
 
-  const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
+  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeaderOrAdmin = isAuthenticated && (user?.role === UserRole.LEADER || user?.role === UserRole.ADMIN);
 
   // Contagem de pendências baseada no papel do usuário
-  const pendingCount = isTeacher ? pendings.length : leaderPendings.length;
+  const pendingCount = isMember ? pendings.length : leaderPendings.length;
   const badgeCount = alerts.length + pendingCount;
   const hasAnyAlert = badgeCount > 0;
 
@@ -82,7 +82,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
 
   // Carregar pendências para professores/membros
   const loadPendings = async () => {
-    if (!isAuthenticated || !isTeacher) return;
+    if (!isAuthenticated || !isMember) return;
     setLoadingPendings(true);
     setPendingError(null);
     try {
@@ -128,12 +128,12 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   };
 
   useEffect(() => {
-    if (isTeacher) {
+    if (isMember) {
       loadPendings();
     } else if (isLeaderOrAdmin) {
       loadLeaderPendings();
     }
-  }, [isAuthenticated, isTeacher, isLeaderOrAdmin]); // carregar na montagem da navbar
+  }, [isAuthenticated, isMember, isLeaderOrAdmin]); // carregar na montagem da navbar
 
   const handleOpenPendingDialog = () => {
     setPendingDialogOpen(true);
@@ -144,7 +144,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
     if (!hasAnyAlert) {
-      if (isTeacher) {
+      if (isMember) {
         loadPendings();
       } else if (isLeaderOrAdmin) {
         loadLeaderPendings();
@@ -361,7 +361,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
           )}
 
           {/* Item de menu para professores/membros - apenas se houver pendências */}
-          {isTeacher && pendingCount > 0 && (
+          {isMember && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
                 loadPendings();
@@ -535,7 +535,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
       </Menu>
 
       {/* Dialog apenas para professores/membros */}
-      {isTeacher && (
+      {isMember && (
         <Dialog
           open={pendingDialogOpen}
           onClose={() => {

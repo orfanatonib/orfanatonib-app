@@ -130,7 +130,7 @@ export default function UsersManager() {
                 password: "",
                 confirmPassword: "",
                 phone: "",
-                role: UserRole.TEACHER,
+                role: UserRole.MEMBER,
               })
             }
             onRefresh={doRefresh}

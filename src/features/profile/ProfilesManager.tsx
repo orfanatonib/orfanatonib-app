@@ -43,7 +43,7 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   AdminPanelSettings as AdminIcon,
-  School as TeacherIcon,
+  School as MemberIcon,
   SupervisorAccount as LeaderIcon,
   Celebration as CelebrationIcon,
   FilterList as FilterIcon,
@@ -184,11 +184,11 @@ const roleConfig: Record<string, { gradient: string; color: string; label: strin
     icon: <LeaderIcon sx={{ fontSize: 14 }} />,
     bgLight: 'rgba(245, 87, 108, 0.08)',
   },
-  teacher: {
+  member: {
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     color: '#4facfe',
     label: 'Professor',
-    icon: <TeacherIcon sx={{ fontSize: 14 }} />,
+    icon: <MemberIcon sx={{ fontSize: 14 }} />,
     bgLight: 'rgba(79, 172, 254, 0.08)',
   },
 };
@@ -238,7 +238,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
 
   if (!profile) return null;
 
-  const config = roleConfig[profile.role?.toLowerCase()] || roleConfig.teacher;
+  const config = roleConfig[profile.role?.toLowerCase()] || roleConfig.member;
   const genderStyle = getGenderStyle(profile.personalData?.gender);
   const birthdayStatus = getBirthdayStatus(profile.personalData?.birthDate);
   const age = calculateAge(profile.personalData?.birthDate);
@@ -831,7 +831,7 @@ interface ProfileCardProps {
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) => {
-  const roleStyle = roleConfig[profile.role?.toLowerCase()] || roleConfig.teacher;
+  const roleStyle = roleConfig[profile.role?.toLowerCase()] || roleConfig.member;
   const genderStyle = getGenderStyle(profile.personalData?.gender);
   const birthdayStatus = getBirthdayStatus(profile.personalData?.birthDate);
   const age = calculateAge(profile.personalData?.birthDate);
@@ -1212,7 +1212,7 @@ const ProfilesManager: React.FC = () => {
           />
 
           <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}>
-            {(['all', 'teacher', 'leader', 'admin'] as const).map((role) => {
+            {(['all', 'member', 'leader', 'admin'] as const).map((role) => {
               const isSelected = (filters.role || 'all') === (role === 'all' ? 'all' : role) && (role === 'all' ? !filters.role : true);
               const config = role === 'all' ? null : roleConfig[role];
               return (

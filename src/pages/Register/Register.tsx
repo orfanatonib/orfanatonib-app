@@ -28,7 +28,7 @@ interface RegisterProps {
   commonUser: boolean;
 }
 
-type RoleChoice = '' | 'teacher' | 'leader';
+type RoleChoice = '' | 'member' | 'leader';
 
 interface FormData {
   name: string;
@@ -92,7 +92,7 @@ const getSchema = (commonUser: boolean) =>
       })
       .required('Telefone é obrigatório'),
     role: (Yup.mixed<RoleChoice>()
-      .oneOf(['teacher', 'leader'])
+      .oneOf(['member', 'leader'])
       .required('Selecione seu perfil')) as any,
   });
 
@@ -415,7 +415,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             <MenuItem value="">
               <em>Selecione</em>
             </MenuItem>
-            <MenuItem value="teacher">Membro</MenuItem>
+            <MenuItem value="member">Membro</MenuItem>
             <MenuItem value="leader">Líder</MenuItem>
           </TextField>
         )}

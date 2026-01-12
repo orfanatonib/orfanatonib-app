@@ -38,14 +38,20 @@ export const validateAttendanceComment = (comment?: string): ValidationResult =>
   };
 };
 
-export const getScheduleType = (schedule: ScheduleDates): 'visit' | 'meeting' => {
+export const getScheduleType = (schedule: ScheduleDates | TeamScheduleDto): 'visit' | 'meeting' => {
+  if ('category' in schedule && schedule.category) {
+    return schedule.category;
+  }
   return schedule.visitDate ? 'visit' : 'meeting';
 };
 
 export const formatScheduleLabel = (schedule: TeamScheduleDto): string => {
-  const date = schedule.visitDate || schedule.meetingDate;
+  const date = schedule.date || schedule.visitDate || schedule.meetingDate;
   const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-  const kind = schedule.visitDate ? 'Visita' : 'Reunião';
+
+  const category = schedule.category || (schedule.visitDate ? 'visit' : 'meeting');
+  const kind = category === 'visit' ? 'Visita' : 'Reunião';
+
   const extra = [schedule.lessonContent, schedule.meetingRoom].filter(Boolean).join(' • ');
   return `${kind} #${schedule.visitNumber} • ${readableDate}${extra ? ` • ${extra}` : ''}`;
 };

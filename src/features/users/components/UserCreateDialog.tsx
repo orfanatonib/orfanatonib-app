@@ -20,7 +20,7 @@ type Props = {
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
   [UserRole.ADMIN]: "Administrador", 
 };
 
@@ -29,7 +29,7 @@ export default function UserCreateDialog({
 }: Props) {
   if (!value) return null;
 
-  const roleOptions = [UserRole.LEADER, UserRole.TEACHER];
+  const roleOptions = [UserRole.LEADER, UserRole.MEMBER];
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
@@ -81,7 +81,7 @@ export default function UserCreateDialog({
               <InputLabel>Papel</InputLabel>
               <Select
                 label="Papel"
-                value={value.role ?? UserRole.TEACHER}
+                value={value.role ?? UserRole.MEMBER}
                 onChange={(e) =>
                   onChange({ ...value, role: e.target.value as UserRole })
                 }

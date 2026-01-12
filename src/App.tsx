@@ -16,7 +16,7 @@ import Home from './pages/Home/Home';
 import About from './pages/About/About';
 import Contact from './pages/Contact/Contact';
 import Login from './pages/Login/Login';
-import TeacherArea from './pages/TeacherArea/TeacherArea';
+import MemberArea from './pages/MemberArea/MemberArea';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
 
@@ -38,20 +38,20 @@ import type { RouteData as DynamicRouteType } from './store/slices/route/routeSl
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
 
 import { IdeasMaterialPageCreator } from 'components/Adm/PageCreator/Templates/IdeasMaterialPageCreator/IdeasMaterialPageCreator';
-import { VisitMaterialsList } from './pages/TeacherArea/components';
-import ImageSectionPage from './pages/TeacherArea/ImageSection/ImageSectionPage';
+import { VisitMaterialsList } from './pages/MemberArea/components';
+import ImageSectionPage from './pages/MemberArea/ImageSection/ImageSectionPage';
 import ImageSectionEditorAdmin from './features/image-sections/ImageSectionEditorAdmin';
-import { SiteFeedbackForm } from './pages/TeacherArea/components';
+import { SiteFeedbackForm } from './pages/MemberArea/components';
 
 import LeaderProfilesManager from './features/leaders/LeaderProfilesManager';
-import TeacherProfilesManager from './features/teachers/TeacherProfilesManager';
+import MemberProfilesManager from './features/members/MemberProfilesManager';
 import SheltersManager from './features/shelters/SheltersManager';
 import ShelterFormPage from './features/shelters/ShelterFormPage';
 import ContactsManager from './features/contacts/ContactsManager';
 import MeditationManager from './features/meditations/MeditationManager';
 import ShelteredManager from './features/sheltered/ShelteredManager';
-import ShelteredBrowserPage from './features/pagela-teacher/ShelteredBrowserPage';
-import ShelteredPagelasPage from './features/pagela-teacher/ShelteredPagelasPage';
+import ShelteredBrowserPage from './features/pagela-member/ShelteredBrowserPage';
+import ShelteredPagelasPage from './features/pagela-member/ShelteredPagelasPage';
 import Register from './pages/Register/Register';
 import PagelaSheltersManager from './features/pagela-shelters/PagelaSheltersManager';
 import CommentsManager from './features/comments/CommentsManager';
@@ -61,7 +61,7 @@ import InformativeBannerLManager from './features/informatives/InformativeBanner
 import ImageSectionManager from './features/image-sections/ImageSectionManager';
 import ImagePageManager from './features/image-pages/ImagePageManager';
 import IdeasSectionManager from './features/ideas-sections/IdeasSectionManager';
-import IdeasSectionPage from './pages/TeacherArea/IdeasSection/IdeasSectionPage';
+import IdeasSectionPage from './pages/MemberArea/IdeasSection/IdeasSectionPage';
 import DocumentsManager from './features/documents/DocumentsManager';
 import IdeasManager from './features/ideas-pages/IdeasManager';
 import VideosManager from './features/video-pages/VideosManager';
@@ -166,7 +166,7 @@ function App() {
               <Route path="*" element={<Home />} />
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/area-do-membro" element={<TeacherArea />} />
+                <Route path="/area-do-membro" element={<MemberArea />} />
                 <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/presenca" element={<AttendanceDashboard />} />
                 <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
@@ -211,7 +211,7 @@ function App() {
                   <Route path="usuarios" element={<UsersManager />} />
                   <Route path="perfis" element={<ProfilesManager />} />
                   <Route path="lideres" element={<LeaderProfilesManager />} />
-                  <Route path="membros" element={<TeacherProfilesManager />} />
+                  <Route path="membros" element={<MemberProfilesManager />} />
                   <Route
                     path="abrigados"
                     element={

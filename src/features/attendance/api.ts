@@ -22,9 +22,15 @@ export async function registerAttendance(data: RegisterAttendanceDto): Promise<A
   return res.data;
 }
 
-// Registrar presença/falta em lote (pagela)
+// Registrar presença/falta em lote (frequência)
 export async function registerTeamAttendance(data: RegisterTeamAttendanceDto): Promise<AttendanceResponseDto[]> {
+  console.log('💾 Registrando frequência:', {
+    teamId: data.teamId,
+    scheduleId: data.scheduleId,
+    attendanceCount: data.attendances.length
+  });
   const res = await api.post<AttendanceResponseDto[]>('/attendance/register/team', data);
+  console.log('✅ Resposta do backend:', res.data.length, 'registros criados');
   return res.data;
 }
 
@@ -57,18 +63,16 @@ export async function getTeamSchedules(
     sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
     sortOrder?: 'asc' | 'desc';
   }
-): Promise<PaginatedResponseDto<TeamScheduleDto>> {
+): Promise<TeamScheduleDto[]> {
   const params = new URLSearchParams();
-  if (filters?.page) params.append('page', filters.page.toString());
-  if (filters?.limit) params.append('limit', filters.limit.toString());
   if (filters?.startDate) params.append('startDate', filters.startDate);
   if (filters?.endDate) params.append('endDate', filters.endDate);
   if (filters?.sortBy) params.append('sortBy', filters.sortBy);
   if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
-  
+
   const queryString = params.toString();
   const url = `/attendance/team/${teamId}/schedules${queryString ? `?${queryString}` : ''}`;
-  const res = await api.get<PaginatedResponseDto<TeamScheduleDto>>(url);
+  const res = await api.get<TeamScheduleDto[]>(url);
   return res.data;
 }
 
@@ -104,7 +108,7 @@ export async function listShelterSchedules(): Promise<TeamScheduleDto[]> {
   return res.data;
 }
 
-// Listar pagelas hierarquicamente
+// Listar frequências hierarquicamente
 export async function getHierarchicalSheets(
   filters?: {
     startDate?: string;
@@ -114,7 +118,7 @@ export async function getHierarchicalSheets(
   const params = new URLSearchParams();
   if (filters?.startDate) params.append('startDate', filters.startDate);
   if (filters?.endDate) params.append('endDate', filters.endDate);
-  
+
   const queryString = params.toString();
   const url = `/attendance/sheets/hierarchical${queryString ? `?${queryString}` : ''}`;
   const res = await api.get<HierarchicalSheetsResponse>(url);
@@ -126,30 +130,41 @@ export async function getAttendanceRecords(
   filters?: {
     page?: number;
     limit?: number;
-    startDate?: string;
-    endDate?: string;
-    type?: 'present' | 'absent';
+    scheduleId?: string;
     teamId?: string;
     memberId?: string;
-    scheduleId?: string;
+    memberName?: string;
+    type?: 'present' | 'absent';
+    category?: 'visit' | 'meeting';
+    startDate?: string;
+    endDate?: string;
     sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
     sortOrder?: 'asc' | 'desc';
   }
 ): Promise<PaginatedResponseDto<AttendanceResponseDto>> {
   const params = new URLSearchParams();
+
+  // Pagination
   if (filters?.page) params.append('page', filters.page.toString());
   if (filters?.limit) params.append('limit', filters.limit.toString());
-  if (filters?.startDate) params.append('startDate', filters.startDate);
-  if (filters?.endDate) params.append('endDate', filters.endDate);
-  if (filters?.type) params.append('type', filters.type);
+
+  // Filters
+  if (filters?.scheduleId) params.append('scheduleId', filters.scheduleId);
   if (filters?.teamId) params.append('teamId', filters.teamId);
   if (filters?.memberId) params.append('memberId', filters.memberId);
-  if (filters?.scheduleId) params.append('scheduleId', filters.scheduleId);
+  if (filters?.memberName) params.append('memberName', filters.memberName);
+  if (filters?.type) params.append('type', filters.type);
+  if (filters?.category) params.append('category', filters.category);
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+
+  // Sorting
   if (filters?.sortBy) params.append('sortBy', filters.sortBy);
   if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
-  
+
   const queryString = params.toString();
   const url = `/attendance/records${queryString ? `?${queryString}` : ''}`;
+  console.log('🌐 API URL:', url);
   const res = await api.get<PaginatedResponseDto<AttendanceResponseDto>>(url);
   return res.data;
 }

@@ -5,13 +5,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
-import { useShelterSchedules } from "./hooks";
+import { useShelterSchedules, useMyTeams } from "./hooks";
 import { ShelterScheduleResponseDto } from "./types";
 import ShelterScheduleFormModal from "./components/ShelterScheduleFormModal";
 import ShelterScheduleDeleteDialog from "./components/ShelterScheduleDeleteDialog";
 import LeaderInfoBanner from "./components/LeaderInfoBanner";
 import ScheduleHeader from "./components/ScheduleHeader";
 import EmptyState from "./components/EmptyState";
+import NoTeamsState from "./components/NoTeamsState";
 import ShelterCard from "./components/ShelterCard";
 import ScheduleDetailsModal from "./components/ScheduleDetailsModal";
 
@@ -38,7 +39,7 @@ interface ShelterGroup {
 export default function ShelterScheduleManager() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-    const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === UserRole.ADMIN;
   const isLeader = user?.role === UserRole.LEADER;
 
@@ -51,6 +52,8 @@ export default function ShelterScheduleManager() {
     updateSchedule,
     deleteSchedule,
   } = useShelterSchedules();
+
+  const { teams, loading: teamsLoading } = useMyTeams();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ShelterScheduleResponseDto | null>(null);
@@ -197,7 +200,7 @@ export default function ShelterScheduleManager() {
     return colors[(visitNumber - 1) % colors.length];
   };
 
-  if (loading) {
+  if (loading || (teamsLoading && schedules.length === 0)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
         <CircularProgress size={48} />
@@ -225,7 +228,13 @@ export default function ShelterScheduleManager() {
         onCreateClick={handleOpenCreate}
       />
 
-      {schedules.length === 0 && <EmptyState onCreateClick={handleOpenCreate} />}
+      {schedules.length === 0 && (
+        teams.length === 0 && !isAdmin ? (
+          <NoTeamsState />
+        ) : (
+          <EmptyState onCreateClick={handleOpenCreate} />
+        )
+      )}
 
       {schedules.length > 0 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>

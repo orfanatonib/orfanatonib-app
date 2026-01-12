@@ -39,9 +39,9 @@ import {
   apiUpdateTeam,
   apiDeleteTeam,
 } from "../../teams";
-import { apiLoadLeaderOptions, apiLoadTeacherOptions, apiFetchShelter, apiFetchSheltersSimple } from "../api";
-import { LeaderOption, TeacherOption } from "../types";
-import { apiManageTeacherTeam } from "../../teachers/api";
+import { apiLoadLeaderOptions, apiLoadMemberOptions, apiFetchShelter, apiFetchSheltersSimple } from "../api";
+import { LeaderOption, MemberOption } from "../types";
+import { apiManageMemberTeam } from "../../members/api";
 import { apiManageLeaderTeam } from "../../leaders/api";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
@@ -50,19 +50,19 @@ type Props = {
   open: boolean;
   shelter?: ShelterResponseDto | null;
   shelterId?: string;
-  teacherId?: string;
+  memberId?: string;
   leaderId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 };
 
-type TabValue = "teams" | "leaders" | "teachers";
+type TabValue = "teams" | "leaders" | "members";
 
 export default function TeamManagementDialog({
   open,
   shelter: shelterProp,
   shelterId,
-  teacherId,
+  memberId,
   leaderId,
   onClose,
   onSuccess,
@@ -73,7 +73,7 @@ export default function TeamManagementDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [leaderOptions, setLeaderOptions] = useState<LeaderOption[]>([]);
-  const [teacherOptions, setTeacherOptions] = useState<TeacherOption[]>([]);
+  const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
   const [editingTeam, setEditingTeam] = useState<TeamResponseDto | null>(null);
   const [shelterOptions, setShelterOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(shelterId || null);
@@ -83,9 +83,9 @@ export default function TeamManagementDialog({
   const [showAddLeaderDialog, setShowAddLeaderDialog] = useState(false);
   const [selectedTeamForLeader, setSelectedTeamForLeader] = useState<string | null>(null);
   const [selectedLeaderId, setSelectedLeaderId] = useState<string | null>(null);
-  const [showAddTeacherDialog, setShowAddTeacherDialog] = useState(false);
-  const [selectedTeamForTeacher, setSelectedTeamForTeacher] = useState<string | null>(null);
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [selectedTeamForMember, setSelectedTeamForMember] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
 
@@ -125,11 +125,11 @@ export default function TeamManagementDialog({
     setLoading(true);
     setError("");
     try {
-      if (teacherId) {
+      if (memberId) {
         const currentShelter = shelter || await apiFetchShelter(shelterIdToAdd);
         const teamsCount = currentShelter?.teams?.length || 0;
         const numberTeam = teamsCount > 0 ? currentShelter.teams[0].numberTeam : 1;
-        await apiManageTeacherTeam(teacherId, { shelterId: shelterIdToAdd, numberTeam });
+        await apiManageMemberTeam(memberId, { shelterId: shelterIdToAdd, numberTeam });
       } else if (leaderId) {
         const currentShelter = shelter || await apiFetchShelter(shelterIdToAdd);
         const teamsCount = currentShelter?.teams?.length || 0;
@@ -148,12 +148,12 @@ export default function TeamManagementDialog({
 
   const loadOptions = async () => {
     try {
-      const [leaders, teachers] = await Promise.all([
+      const [leaders, members] = await Promise.all([
         apiLoadLeaderOptions(),
-        apiLoadTeacherOptions(),
+        apiLoadMemberOptions(),
       ]);
       setLeaderOptions(leaders || []);
-      setTeacherOptions(teachers || []);
+      setMemberOptions(members || []);
     } catch (err) {
       console.error("Erro ao carregar opções:", err);
     }
@@ -248,7 +248,7 @@ export default function TeamManagementDialog({
         numberTeam: newTeamNumber,
         shelterId: currentShelterId,
         leaderProfileIds: [],
-        teacherProfileIds: [],
+        memberProfileIds: [],
       });
       setShowCreateTeamDialog(false);
       setNewTeamNumber(1);
@@ -337,23 +337,23 @@ export default function TeamManagementDialog({
     setError("Para remover um líder, vincule-o a outra equipe ou abrigo usando a opção de editar.");
   };
 
-  const handleAddTeacher = (teamId: string) => {
-    const availableTeachers = teacherOptions.filter(
-      (t) => !teams.some((team) => team.teachers.some((tt) => tt.id === t.teacherProfileId))
+  const handleAddMember = (teamId: string) => {
+    const availableMembers = memberOptions.filter(
+      (t) => !teams.some((team) => team.members.some((tt) => tt.id === t.memberProfileId))
     );
 
-    if (availableTeachers.length === 0) {
+    if (availableMembers.length === 0) {
       setError("Não há membros disponíveis para adicionar");
       return;
     }
 
-    setSelectedTeamForTeacher(teamId);
-    setSelectedTeacherId(null);
-    setShowAddTeacherDialog(true);
+    setSelectedTeamForMember(teamId);
+    setSelectedMemberId(null);
+    setShowAddMemberDialog(true);
   };
 
-  const handleConfirmAddTeacher = async () => {
-    if (!selectedTeamForTeacher || !selectedTeacherId) {
+  const handleConfirmAddMember = async () => {
+    if (!selectedTeamForMember || !selectedMemberId) {
       setError("Selecione um membro");
       return;
     }
@@ -364,7 +364,7 @@ export default function TeamManagementDialog({
       return;
     }
 
-    const selectedTeam = teams.find((t) => t.id === selectedTeamForTeacher);
+    const selectedTeam = teams.find((t) => t.id === selectedTeamForMember);
     if (!selectedTeam) {
       setError("Equipe não encontrada");
       return;
@@ -373,13 +373,13 @@ export default function TeamManagementDialog({
     setLoading(true);
     setError("");
     try {
-      await apiManageTeacherTeam(selectedTeacherId, { 
+      await apiManageMemberTeam(selectedMemberId, { 
         shelterId: currentShelterId, 
         numberTeam: selectedTeam.numberTeam 
       });
-      setShowAddTeacherDialog(false);
-      setSelectedTeamForTeacher(null);
-      setSelectedTeacherId(null);
+      setShowAddMemberDialog(false);
+      setSelectedTeamForMember(null);
+      setSelectedMemberId(null);
       await handleSuccess();
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Erro ao adicionar membro");
@@ -388,12 +388,12 @@ export default function TeamManagementDialog({
     }
   };
 
-  const handleRemoveTeacher = async (teamId: string, teacherId: string) => {
+  const handleRemoveMember = async (teamId: string, memberId: string) => {
     setError("Para remover um membro, vincule-o a outra equipe ou abrigo usando a opção de editar.");
   };
 
   const allLeaders = teams.flatMap((t) => t.leaders);
-  const allTeachers = teams.flatMap((t) => t.teachers);
+  const allMembers = teams.flatMap((t) => t.members);
 
   const currentShelterId = shelter?.id || selectedShelterId || shelterId;
 
@@ -438,7 +438,7 @@ export default function TeamManagementDialog({
                   {...params}
                   label="Selecionar Abrigo"
                   placeholder="Escolha um abrigo para gerenciar equipes"
-                  helperText={teacherId || leaderId ? "Selecione um abrigo para vincular o membro/líder" : "Selecione um abrigo para gerenciar suas equipes"}
+                  helperText={memberId || leaderId ? "Selecione um abrigo para vincular o membro/líder" : "Selecione um abrigo para gerenciar suas equipes"}
                 />
               )}
             />
@@ -448,7 +448,7 @@ export default function TeamManagementDialog({
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2 }}>
           <Tab label="Equipes" value="teams" icon={<GroupIcon />} iconPosition="start" />
           <Tab label="Líderes" value="leaders" icon={<PersonIcon />} iconPosition="start" />
-          <Tab label="Membros" value="teachers" icon={<SchoolIcon />} iconPosition="start" />
+          <Tab label="Membros" value="members" icon={<SchoolIcon />} iconPosition="start" />
         </Tabs>
 
         {loading && (
@@ -541,21 +541,21 @@ export default function TeamManagementDialog({
 
                     <Box>
                       <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                        Membros ({team.teachers.length})
+                        Membros ({team.members.length})
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                        {team.teachers.map((teacher) => {
-                          const teacherFromOptions = teacherOptions.find(t => t.teacherProfileId === teacher.id);
-                          const teacherName = teacher.user?.name 
-                            || teacher.user?.email 
-                            || teacherFromOptions?.name 
+                        {team.members.map((member) => {
+                          const memberFromOptions = memberOptions.find(t => t.memberProfileId === member.id);
+                          const memberName = member.user?.name 
+                            || member.user?.email 
+                            || memberFromOptions?.name 
                             || "Sem nome";
                           return (
                             <Chip
-                              key={teacher.id}
-                              label={teacherName}
+                              key={member.id}
+                              label={memberName}
                               size="small"
-                              onDelete={() => handleRemoveTeacher(team.id, teacher.id)}
+                              onDelete={() => handleRemoveMember(team.id, member.id)}
                               disabled={loading}
                             />
                           );
@@ -565,7 +565,7 @@ export default function TeamManagementDialog({
                           size="small"
                           color="primary"
                           variant="outlined"
-                          onClick={() => handleAddTeacher(team.id)}
+                          onClick={() => handleAddMember(team.id)}
                           disabled={loading}
                         />
                       </Stack>
@@ -605,12 +605,12 @@ export default function TeamManagementDialog({
           </Stack>
         )}
 
-        {activeTab === "teachers" && (
+        {activeTab === "members" && (
           <Stack spacing={2}>
             <Typography variant="subtitle1" fontWeight={600}>
-              Todos os Membros ({allTeachers.length})
+              Todos os Membros ({allMembers.length})
             </Typography>
-            {allTeachers.length === 0 ? (
+            {allMembers.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
                 <Typography color="text.secondary">
                   Nenhum membro vinculado às equipes.
@@ -618,13 +618,13 @@ export default function TeamManagementDialog({
               </Paper>
             ) : (
               <List>
-                {allTeachers.map((teacher) => {
-                  const team = teams.find((t) => t.teachers.some((tt) => tt.id === teacher.id));
-                  const teacherName = teacher.user?.name || teacher.user?.email || "Sem nome";
+                {allMembers.map((member) => {
+                  const team = teams.find((t) => t.members.some((tt) => tt.id === member.id));
+                  const memberName = member.user?.name || member.user?.email || "Sem nome";
                   return (
-                    <ListItem key={teacher.id}>
+                    <ListItem key={member.id}>
                       <ListItemText
-                        primary={teacherName}
+                        primary={memberName}
                         secondary={team ? `Equipe: ${team.numberTeam}` : "Sem equipe"}
                       />
                     </ListItem>
@@ -697,24 +697,24 @@ export default function TeamManagementDialog({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={showAddTeacherDialog} onClose={() => setShowAddTeacherDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={showAddMemberDialog} onClose={() => setShowAddMemberDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Adicionar Membro à Equipe</DialogTitle>
         <DialogContent>
           <Autocomplete
-            options={teacherOptions.filter(
-              (t) => !teams.some((team) => team.teachers.some((tt) => tt.id === t.teacherProfileId))
+            options={memberOptions.filter(
+              (t) => !teams.some((team) => team.members.some((tt) => tt.id === t.memberProfileId))
             )}
             getOptionLabel={(option) => option.name || ""}
-            value={teacherOptions.find((t) => t.teacherProfileId === selectedTeacherId) || null}
-            onChange={(_, newValue) => setSelectedTeacherId(newValue?.teacherProfileId || null)}
+            value={memberOptions.find((t) => t.memberProfileId === selectedMemberId) || null}
+            onChange={(_, newValue) => setSelectedMemberId(newValue?.memberProfileId || null)}
             renderInput={(params) => (
               <TextField {...params} label="Selecione um membro" placeholder="Digite para buscar..." />
             )}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAddTeacherDialog(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmAddTeacher} variant="contained" disabled={!selectedTeacherId || loading}>
+          <Button onClick={() => setShowAddMemberDialog(false)}>Cancelar</Button>
+          <Button onClick={handleConfirmAddMember} variant="contained" disabled={!selectedMemberId || loading}>
             Adicionar
           </Button>
         </DialogActions>

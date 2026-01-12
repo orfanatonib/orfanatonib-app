@@ -1,13 +1,13 @@
 import api from "@/config/axiosConfig";
 import {
   ShelterResponseDto, CreateShelterForm, EditShelterForm,
-  LeaderMiniDto, TeacherOption, UserPublicDto,
+  LeaderMiniDto, MemberOption, UserPublicDto,
   ShelterFilters, ShelterSort,
   LeaderOption, ShelterSimpleResponseDto, ShelterListResponseDto
 } from "./types";
 import { LeaderProfile } from "../leaders/types";
-import { TeacherProfile } from "../teachers/types";
-import { apiListTeachersSimple } from "../teachers/api";
+import { MemberProfile } from "../members/types";
+import { apiListMembersSimple } from "../members/api";
 
 export type PaginatedResponse<T> = {
   items: T[];
@@ -277,7 +277,7 @@ export async function apiDeleteShelter(id: string) {
 }
 
 
-export async function apiListUsersByRole(role: "leader" | "teacher", limit = 500) {
+export async function apiListUsersByRole(role: "leader" | "member", limit = 500) {
   const { data } = await api.get<{ items: { id: string; name?: string; email?: string }[] }>("/users", {
     params: { role, page: 1, limit, sort: "name", order: "ASC" },
   });
@@ -289,8 +289,8 @@ export async function apiGetLeaderProfile(userId: string) {
   return data;
 }
 
-export async function apiGetTeacherProfile(userId: string) {
-  const { data } = await api.get<{ id: string; user: UserPublicDto; team?: { id: string; name?: string } | null }>(`/teacher-profiles/${userId}`);
+export async function apiGetMemberProfile(userId: string) {
+  const { data } = await api.get<{ id: string; user: UserPublicDto; team?: { id: string; name?: string } | null }>(`/member-profiles/${userId}`);
   return data;
 }
 
@@ -317,14 +317,14 @@ export async function apiLoadLeaderOptions() {
   })) as LeaderOption[];
 }
 
-export async function apiLoadTeacherOptions() {
-  const teachers = await apiListTeachersSimple();
+export async function apiLoadMemberOptions() {
+  const members = await apiListMembersSimple();
   
-  return teachers.map((t) => ({
-    teacherProfileId: t.teacherProfileId,
+  return members.map((t) => ({
+    memberProfileId: t.memberProfileId,
     name: t.name,
     vinculado: t.vinculado,
-  })) as TeacherOption[];
+  })) as MemberOption[];
 }
 
 

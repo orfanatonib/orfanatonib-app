@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Alert,
   Box,
@@ -12,16 +12,27 @@ import {
   Stack,
   Typography,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Grid,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import BusinessIcon from '@mui/icons-material/Business';
-import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import PersonIcon from '@mui/icons-material/Person';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
+import WarningIcon from '@mui/icons-material/Warning';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import { getHierarchicalSheets } from '../api';
 import type { HierarchicalSheetsResponse, ShelterWithTeamsSheetsDto, TeamWithSchedulesDto, ScheduleWithAttendanceDto } from '../types';
 import { formatDateBR } from '../utils';
@@ -34,9 +45,13 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sheets, setSheets] = useState<HierarchicalSheetsResponse>([]);
-  const [expandedShelters, setExpandedShelters] = useState<Set<string>>(new Set());
-  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
-  const [expandedSchedules, setExpandedSchedules] = useState<Set<string>>(new Set());
+
+  // Single expansion states for exclusive behavior
+  const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+  const [expandedScheduleId, setExpandedScheduleId] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadSheets = useCallback(async () => {
     try {
@@ -44,15 +59,15 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
       setError(null);
       const data = await getHierarchicalSheets();
       setSheets(data);
-      // Expandir primeiro abrigo automaticamente
+      // Auto-expand first shelter if no search and data exists
       if (data.length > 0) {
-        setExpandedShelters(new Set([data[0].shelterId]));
+        setExpandedShelterId(data[0].shelterId);
         if (data[0].teams.length > 0) {
-          setExpandedTeams(new Set([data[0].teams[0].teamId]));
+          setExpandedTeamId(data[0].teams[0].teamId);
         }
       }
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao carregar pagelas.';
+      const message = err?.response?.data?.message || 'Erro ao carregar listas de frequência.';
       setError(message);
       setSheets([]);
     } finally {
@@ -65,40 +80,36 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
   }, [loadSheets]);
 
   const toggleShelter = useCallback((shelterId: string) => {
-    setExpandedShelters(prev => {
-      const next = new Set(prev);
-      if (next.has(shelterId)) {
-        next.delete(shelterId);
-      } else {
-        next.add(shelterId);
-      }
-      return next;
-    });
+    setExpandedShelterId(prev => (prev === shelterId ? null : shelterId));
+    // Reset inner states when changing shelter
+    setExpandedTeamId(null);
+    setExpandedScheduleId(null);
   }, []);
 
   const toggleTeam = useCallback((teamId: string) => {
-    setExpandedTeams(prev => {
-      const next = new Set(prev);
-      if (next.has(teamId)) {
-        next.delete(teamId);
-      } else {
-        next.add(teamId);
-      }
-      return next;
-    });
+    setExpandedTeamId(prev => (prev === teamId ? null : teamId));
+    // Reset inner state when changing team
+    setExpandedScheduleId(null);
   }, []);
 
-  const toggleSchedule = useCallback((scheduleId: string) => {
-    setExpandedSchedules(prev => {
-      const next = new Set(prev);
-      if (next.has(scheduleId)) {
-        next.delete(scheduleId);
-      } else {
-        next.add(scheduleId);
-      }
-      return next;
-    });
+  const toggleSchedule = useCallback((scheduleKey: string) => {
+    setExpandedScheduleId(prev => (prev === scheduleKey ? null : scheduleKey));
   }, []);
+
+  const filteredSheets = useMemo(() => {
+    // Basic filter by shelter name (case insensitive partial match)
+    if (!searchTerm.trim()) return sheets;
+
+    const term = searchTerm.toLowerCase();
+    return sheets.filter(s => s.shelterName.toLowerCase().includes(term));
+  }, [sheets, searchTerm]);
+
+  // Effect to auto-expand if search yields single result
+  useEffect(() => {
+    if (searchTerm && filteredSheets.length === 1) {
+      setExpandedShelterId(filteredSheets[0].shelterId);
+    }
+  }, [searchTerm, filteredSheets]);
 
   if (loading) {
     return (
@@ -123,7 +134,7 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
   }
 
   return (
-    <Box sx={{ width: '100%', p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ width: '100%', p: { xs: 1, sm: 3 } }}>
       {/* Header */}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
         <IconButton
@@ -139,229 +150,298 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Lista de Pagelas
+          Lista de Frequências
         </Typography>
       </Stack>
 
-      {sheets.length === 0 ? (
-        <Alert severity="info">Nenhuma pagela encontrada.</Alert>
+      <Box sx={{ mb: 4, maxWidth: 400 }}>
+        <TextField
+          fullWidth
+          placeholder="Filtrar abrigo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {filteredSheets.length === 0 ? (
+        <Alert severity="info">
+          {searchTerm ? 'Nenhum abrigo encontrado com esse nome.' : 'Nenhuma frequência encontrada.'}
+        </Alert>
       ) : (
-        <Stack spacing={2}>
-          {sheets.map((shelter: ShelterWithTeamsSheetsDto) => (
-            <Card key={shelter.shelterId} variant="outlined">
-              <CardHeader
-                avatar={
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 2,
-                      bgcolor: 'primary.main',
-                      color: 'primary.contrastText',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <BusinessIcon />
-                  </Box>
-                }
-                title={
-                  <Typography variant="h6" fontWeight="bold">
-                    {shelter.shelterName}
-                  </Typography>
-                }
-                subheader={
-                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                    <Chip label={`${shelter.totalTeams} equipe${shelter.totalTeams !== 1 ? 's' : ''}`} size="small" />
-                  </Stack>
-                }
-                action={
-                  <IconButton onClick={() => toggleShelter(shelter.shelterId)}>
-                    {expandedShelters.has(shelter.shelterId) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </IconButton>
-                }
-              />
-              <Collapse in={expandedShelters.has(shelter.shelterId)}>
-                <CardContent>
-                  <Stack spacing={2}>
-                    {shelter.teams.map((team: TeamWithSchedulesDto) => (
-                      <Card key={team.teamId} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                        <CardHeader
-                          avatar={
-                            <Box
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 2,
-                                bgcolor: 'secondary.main',
-                                color: 'secondary.contrastText',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <GroupsIcon />
-                            </Box>
-                          }
-                          title={
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              Time {team.teamNumber} {team.teamName && `- ${team.teamName}`}
-                            </Typography>
-                          }
-                          subheader={
-                            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                              <Chip label={`${team.totalSchedules} evento${team.totalSchedules !== 1 ? 's' : ''}`} size="small" />
+        <Grid container spacing={2}>
+          {filteredSheets.map((shelter: ShelterWithTeamsSheetsDto) => (
+            <Grid item xs={12} md={6} key={shelter.shelterId}>
+              <Card variant="outlined">
+                <CardHeader
+                  sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 1.5, sm: 2 } }}
+                  avatar={
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 2,
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <BusinessIcon />
+                    </Box>
+                  }
+                  title={
+                    <Typography variant="h6" fontWeight="bold">
+                      {shelter.shelterName}
+                    </Typography>
+                  }
+                  subheader={
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                      <Chip label={`${shelter.totalTeams} equipe${shelter.totalTeams !== 1 ? 's' : ''}`} size="small" />
+                    </Stack>
+                  }
+                  action={
+                    <IconButton onClick={() => toggleShelter(shelter.shelterId)}>
+                      {expandedShelterId === shelter.shelterId ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  }
+                />
+                <Collapse in={expandedShelterId === shelter.shelterId}>
+                  <CardContent sx={{ pt: 0 }}>
+                    <Stack spacing={1}>
+                      {shelter.teams.map((team: TeamWithSchedulesDto) => (
+                        <Accordion
+                          key={team.teamId}
+                          disableGutters
+                          elevation={0}
+                          sx={{
+                            '&:before': { display: 'none' },
+                            bgcolor: 'action.hover',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            mb: 1,
+                            overflow: 'hidden',
+                            '&:last-child': { mb: 0 }
+                          }}
+                          expanded={expandedTeamId === team.teamId}
+                          onChange={() => toggleTeam(team.teamId)}
+                        >
+                          <AccordionSummary
+                            expandIcon={<ExpandMoreIcon />}
+                            sx={{
+                              px: { xs: 1, sm: 0 },
+                              minHeight: 48,
+                              '& .MuiAccordionSummary-content': { my: 1 },
+                              flexDirection: 'row-reverse',
+                              '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+                                transform: 'rotate(90deg)',
+                              },
+                            }}
+                          >
+                            <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', ml: 2 }}>
+                              <Typography variant="subtitle1" fontWeight="bold">
+                                Equipe {team.teamNumber} {team.teamName && `- ${team.teamName}`}
+                              </Typography>
+                              <Chip
+                                label={`${team.totalSchedules} evento${team.totalSchedules !== 1 ? 's' : ''}`}
+                                size="small"
+                                variant="outlined"
+                                sx={{ height: 24 }}
+                              />
                             </Stack>
-                          }
-                          action={
-                            <IconButton onClick={() => toggleTeam(team.teamId)} size="small">
-                              {expandedTeams.has(team.teamId) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
-                          }
-                        />
-                        <Collapse in={expandedTeams.has(team.teamId)}>
-                          <CardContent>
-                            <Stack spacing={2}>
+                          </AccordionSummary>
+                          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                            <Stack spacing={1} sx={{ pl: { xs: 1, sm: 4 }, borderLeft: '2px solid', borderColor: 'divider' }}>
                               {team.schedules.length === 0 ? (
-                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', py: 1 }}>
                                   Nenhum evento registrado
                                 </Typography>
                               ) : (
-                                team.schedules.map((schedule: ScheduleWithAttendanceDto) => (
-                                  <Card key={schedule.scheduleId} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
-                                    <CardHeader
-                                      avatar={
-                                        <Box
-                                          sx={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: 1.5,
-                                            bgcolor: 'info.main',
-                                            color: 'info.contrastText',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                          }}
-                                        >
-                                          <EventIcon fontSize="small" />
-                                        </Box>
-                                      }
-                                      title={
-                                        <Typography variant="body1" fontWeight="medium">
-                                          {(() => {
-                                            const date = schedule.visitDate || schedule.meetingDate;
-                                            const readableDate = formatDateBR(date);
-                                            const kind = schedule.visitDate ? 'Visita' : 'Reunião';
-                                            const extra = [schedule.lessonContent, schedule.meetingRoom].filter(Boolean).join(' • ');
-                                            return `${kind} #${schedule.visitNumber} • ${readableDate}${extra ? ` • ${extra}` : ''}`;
-                                          })()}
-                                        </Typography>
-                                      }
-                                      subheader={
-                                        <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
-                                          <Chip
-                                            label={`${schedule.presentCount} presente${schedule.presentCount !== 1 ? 's' : ''}`}
-                                            size="small"
-                                            color="success"
-                                            icon={<CheckCircleIcon />}
-                                          />
-                                          <Chip
-                                            label={`${schedule.absentCount} falta${schedule.absentCount !== 1 ? 's' : ''}`}
-                                            size="small"
-                                            color="error"
-                                            icon={<CancelIcon />}
-                                          />
+                                team.schedules.map((schedule: ScheduleWithAttendanceDto) => {
+                                  const scheduleKey = `${schedule.scheduleId}-${schedule.category}`;
+                                  return (
+                                    <Accordion
+                                      key={scheduleKey}
+                                      disableGutters
+                                      elevation={0}
+                                      expanded={expandedScheduleId === scheduleKey}
+                                      onChange={() => toggleSchedule(scheduleKey)}
+                                      sx={{
+                                        bgcolor: 'background.paper',
+                                        '&:before': { display: 'none' },
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        borderRadius: 1,
+                                        mb: 1,
+                                        '&:last-child': { mb: 0 }
+                                      }}
+                                    >
+                                      <AccordionSummary
+                                        expandIcon={<ExpandMoreIcon />}
+                                        sx={{
+                                          px: { xs: 1, sm: 1 },
+                                          minHeight: 40,
+                                          '&.Mui-expanded': { minHeight: 40 },
+                                          '& .MuiAccordionSummary-content': { my: 0.5, alignItems: 'center' },
+                                          // 🐛 BUGFIX: Destacar schedules com pendências
+                                          bgcolor: schedule.pendingCount > 0 ? 'warning.50' : 'transparent',
+                                          borderLeft: schedule.pendingCount > 0 ? '3px solid' : 'none',
+                                          borderColor: schedule.pendingCount > 0 ? 'warning.main' : 'transparent',
+                                        }}
+                                      >
+                                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="nowrap" sx={{ width: '100%', overflow: 'hidden' }}>
                                           {schedule.pendingCount > 0 && (
-                                            <Chip
-                                              label={`${schedule.pendingCount} pendente${schedule.pendingCount !== 1 ? 's' : ''}`}
-                                              size="small"
+                                            <WarningIcon
+                                              fontSize="small"
                                               color="warning"
+                                              sx={{ flexShrink: 0, ml: -0.5 }}
                                             />
                                           )}
-                                          <Chip
-                                            label={`${schedule.totalTeachers} professor${schedule.totalTeachers !== 1 ? 'es' : ''}`}
-                                            size="small"
-                                            color="default"
-                                          />
-                                        </Stack>
-                                      }
-                                      action={
-                                        <IconButton onClick={() => toggleSchedule(schedule.scheduleId)} size="small">
-                                          {expandedSchedules.has(schedule.scheduleId) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                        </IconButton>
-                                      }
-                                    />
-                                    {schedule.lessonContent && (
-                                      <Box sx={{ px: 2, pb: 1 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          <strong>Conteúdo:</strong> {schedule.lessonContent}
-                                        </Typography>
-                                      </Box>
-                                    )}
-                                    <Collapse in={expandedSchedules.has(schedule.scheduleId)}>
-                                      <CardContent>
-                                        <Divider sx={{ mb: 2 }} />
-                                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                          Registros de Presença ({schedule.attendanceRecords.length})
-                                        </Typography>
-                                        {schedule.attendanceRecords.length === 0 ? (
-                                          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                            Nenhum registro de presença
+                                          <Typography
+                                            variant="body2"
+                                            fontWeight={schedule.pendingCount > 0 ? 'bold' : 'medium'}
+                                            noWrap
+                                            sx={{ flex: 1 }}
+                                            color={schedule.pendingCount > 0 ? 'warning.dark' : 'text.primary'}
+                                          >
+                                            {(() => {
+                                              const readableDate = formatDateBR(schedule.date);
+                                              const kind = schedule.category === 'visit' ? 'Visita' : 'Reunião';
+                                              return `${kind} #${schedule.visitNumber} • ${readableDate}`;
+                                            })()}
                                           </Typography>
-                                        ) : (
-                                          <Stack spacing={1}>
-                                            {schedule.attendanceRecords.map((record) => (
-                                              <Card key={record.id} variant="outlined" sx={{ bgcolor: record.type === 'present' ? 'success.50' : 'error.50' }}>
-                                                <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                                  <Stack direction="row" spacing={2} alignItems="center">
-                                                    {record.type === 'present' ? (
-                                                      <CheckCircleIcon color="success" />
-                                                    ) : (
-                                                      <CancelIcon color="error" />
-                                                    )}
-                                                    <Box flex={1}>
-                                                      <Typography variant="body2" fontWeight="medium">
-                                                        {record.memberName}
-                                                      </Typography>
-                                                      {record.memberEmail && (
-                                                        <Typography variant="caption" color="text.secondary">
-                                                          {record.memberEmail}
-                                                        </Typography>
-                                                      )}
-                                                      {record.comment && (
-                                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                                          {record.comment}
-                                                        </Typography>
-                                                      )}
-                                                    </Box>
-                                                    <Chip
-                                                      label={record.type === 'present' ? 'Presente' : 'Falta'}
-                                                      size="small"
-                                                      color={record.type === 'present' ? 'success' : 'error'}
-                                                    />
-                                                  </Stack>
-                                                </CardContent>
-                                              </Card>
-                                            ))}
+                                          <Stack direction="row" spacing={0.5}>
+                                            {schedule.pendingCount > 0 && (
+                                              <Chip
+                                                icon={<AssignmentIcon sx={{ fontSize: 14 }} />}
+                                                label={`${schedule.pendingCount} pendente${schedule.pendingCount > 1 ? 's' : ''}`}
+                                                size="small"
+                                                color="warning"
+                                                sx={{
+                                                  height: 22,
+                                                  fontSize: '0.7rem',
+                                                  fontWeight: 'bold',
+                                                  '& .MuiChip-label': { px: 1 },
+                                                  '& .MuiChip-icon': { fontSize: 14 }
+                                                }}
+                                              />
+                                            )}
+                                            <Chip
+                                              label={`✓ ${schedule.presentCount}`}
+                                              size="small"
+                                              color="success"
+                                              sx={{ height: 20, fontSize: '0.75rem', '& .MuiChip-label': { px: 1 } }}
+                                            />
+                                            {schedule.absentCount > 0 && (
+                                              <Chip
+                                                label={`✗ ${schedule.absentCount}`}
+                                                size="small"
+                                                color="error"
+                                                sx={{ height: 20, fontSize: '0.75rem', '& .MuiChip-label': { px: 1 } }}
+                                              />
+                                            )}
                                           </Stack>
+                                        </Stack>
+                                      </AccordionSummary>
+                                      <AccordionDetails sx={{ pt: 1, pb: 2, px: { xs: 1, sm: 2 } }}>
+                                        {schedule.pendingCount > 0 && (
+                                          <Alert
+                                            severity="warning"
+                                            sx={{ mb: 2 }}
+                                            icon={<AssignmentIcon />}
+                                          >
+                                            <Typography variant="body2" fontWeight="bold">
+                                              {schedule.pendingCount} pagela{schedule.pendingCount > 1 ? 's' : ''} pendente{schedule.pendingCount > 1 ? 's' : ''}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                              {schedule.totalMembers - (schedule.presentCount + schedule.absentCount)} membro{schedule.totalMembers - (schedule.presentCount + schedule.absentCount) > 1 ? 's' : ''} ainda não tem frequência registrada
+                                            </Typography>
+                                          </Alert>
                                         )}
-                                      </CardContent>
-                                    </Collapse>
-                                  </Card>
-                                ))
+                                        <List dense disablePadding>
+                                          {(schedule.lessonContent || schedule.location) && (
+                                            <ListItem disableGutters sx={{ display: 'block', mb: 1 }}>
+                                              <Typography variant="caption" color="text.secondary" display="block">
+                                                <strong>Local:</strong> {schedule.location || schedule.meetingRoom || '-'}
+                                              </Typography>
+                                              {schedule.lessonContent && (
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                  <strong>Conteúdo:</strong> {schedule.lessonContent}
+                                                </Typography>
+                                              )}
+                                            </ListItem>
+                                          )}
+                                          {schedule.attendanceRecords.length === 0 ? (
+                                            <ListItem disableGutters>
+                                              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                {schedule.pendingCount > 0
+                                                  ? `Nenhuma pagela registrada ainda. ${schedule.pendingCount} pendente${schedule.pendingCount > 1 ? 's' : ''}.`
+                                                  : 'Nenhum registro encontrado.'
+                                                }
+                                              </Typography>
+                                            </ListItem>
+                                          ) : (
+                                            schedule.attendanceRecords.map((record) => (
+                                              <ListItem
+                                                key={record.id}
+                                                disableGutters
+                                                sx={{
+                                                  py: 0.5,
+                                                  borderBottom: '1px solid',
+                                                  borderColor: 'divider',
+                                                  '&:last-child': { borderBottom: 'none' }
+                                                }}
+                                              >
+                                                <ListItemIcon sx={{ minWidth: 32 }}>
+                                                  {record.type === 'present' ? (
+                                                    <CheckCircleIcon fontSize="small" color="success" />
+                                                  ) : (
+                                                    <CancelIcon fontSize="small" color="error" />
+                                                  )}
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                  primary={
+                                                    <Typography variant="body2">
+                                                      {record.memberName}
+                                                    </Typography>
+                                                  }
+                                                  secondary={
+                                                    record.comment ? (
+                                                      <Typography variant="caption" color="error.main">
+                                                        {record.comment}
+                                                      </Typography>
+                                                    ) : null
+                                                  }
+                                                />
+                                              </ListItem>
+                                            ))
+                                          )}
+                                        </List>
+                                      </AccordionDetails>
+                                    </Accordion>
+                                  );
+                                })
                               )}
                             </Stack>
-                          </CardContent>
-                        </Collapse>
-                      </Card>
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Collapse>
-            </Card>
+                          </AccordionDetails>
+                        </Accordion>
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Collapse>
+              </Card>
+            </Grid>
           ))}
-        </Stack>
+        </Grid>
       )}
     </Box>
   );
@@ -370,4 +450,3 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
 ListSheets.displayName = 'ListSheets';
 
 export default ListSheets;
-

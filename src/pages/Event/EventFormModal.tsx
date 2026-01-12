@@ -50,7 +50,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
-  const [audience, setAudience] = useState<'all' | 'teachers' | 'leaders'>('all');
+  const [audience, setAudience] = useState<'all' | 'members' | 'leaders'>('all');
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -261,12 +261,12 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               label="Público"
               select
               value={audience}
-              onChange={(e) => setAudience(e.target.value as 'all' | 'teachers' | 'leaders')}
+              onChange={(e) => setAudience(e.target.value as 'all' | 'members' | 'leaders')}
               fullWidth
               required
             >
               <MenuItem value="all">Público em Geral</MenuItem>
-              <MenuItem value="teachers">Membros</MenuItem>
+              <MenuItem value="members">Membros</MenuItem>
               <MenuItem value="leaders">Líderes</MenuItem>
             </TextField>
             

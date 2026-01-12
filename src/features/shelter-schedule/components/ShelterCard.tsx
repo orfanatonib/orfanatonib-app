@@ -129,7 +129,7 @@ export default function ShelterCard({
             sx={{ fontWeight: "medium", display: { xs: "none", sm: "flex" } }}
           />
           <Chip
-            label={`${shelter.totalSchedules} visita${shelter.totalSchedules !== 1 ? "s" : ""}`}
+            label={`${shelter.totalSchedules} evento${shelter.totalSchedules !== 1 ? "s" : ""}`}
             size="small"
             color="primary"
             sx={{ fontWeight: "medium", fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}

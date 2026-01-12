@@ -5,7 +5,7 @@ import { MediaItem } from '@/store/slices/types';
 export enum UserRole {
   ADMIN = 'admin',
   LEADER = 'leader',
-  TEACHER = 'teacher',
+  MEMBER = 'member',
 }
 
 interface ShelterLite {
@@ -23,7 +23,7 @@ interface TeamLite {
   updatedAt?: string;
 }
 
-interface TeacherProfileLite {
+interface MemberProfileLite {
   id: string;
   active: boolean;
   shelter?: ShelterLite | null;
@@ -70,7 +70,7 @@ interface User {
   createdAt?: string;
   updatedAt?: string;
   completed?: boolean;
-  teacherProfile?: TeacherProfileLite | null;
+  memberProfile?: MemberProfileLite | null;
   leaderProfile?: LeaderProfileLite | null;
   image?: MediaItem | null;
   personalData?: PersonalData | null;

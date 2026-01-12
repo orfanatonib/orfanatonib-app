@@ -297,18 +297,18 @@ const ProfilePage: React.FC = () => {
             </Box>
 
             {/* Shelter Info */}
-            {profile?.role === 'teacher' && profile?.teacherProfile?.team?.shelter && (
+            {profile?.role === 'member' && profile?.memberProfile?.team?.shelter && (
               <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
                 <Stack spacing={0.5}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
                     <Typography variant="caption" fontWeight={700} noWrap>
-                      {profile.teacherProfile.team.shelter.name}
+                      {profile.memberProfile.team.shelter.name}
                     </Typography>
                   </Stack>
                   <Chip
                     icon={<GroupsOutlinedIcon />}
-                    label={`Equipe ${profile.teacherProfile.team.numberTeam}`}
+                    label={`Equipe ${profile.memberProfile.team.numberTeam}`}
                     size="small"
                     color="primary"
                     variant="outlined"

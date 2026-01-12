@@ -11,7 +11,7 @@ export function roleChipColor(role?: string) {
       return "secondary";
     case "LEADER":
       return "primary";
-    case "TEACHER":
+    case "MEMBER":
       return "success";
     default:
       return "default";

@@ -99,10 +99,10 @@ export type Shelter = {
     id: string;
     numberTeam: number; // ⭐ Número da equipe (1, 2, 3, 4...) - tipo NUMBER
     leaders?: LeaderProfile[];
-    teachers?: TeacherProfile[];
+    members?: MemberProfile[];
   }>;
   leaders?: LeaderProfile[]; // Calculado (agregação de todas as teams)
-  teachers?: TeacherProfile[]; // Calculado (agregação de todas as teams)
+  members?: MemberProfile[]; // Calculado (agregação de todas as teams)
   createdAt: string;
   updatedAt: string;
 };
@@ -119,7 +119,7 @@ export type LeaderProfile = {
   updatedAt: string;
 };
 
-export type TeacherProfile = {
+export type MemberProfile = {
   id: string;
   user: { id: string; name?: string; email?: string };
   team?: {

@@ -273,7 +273,7 @@ export function PagelasPanel({
                           {pagela.notes}
                         </Typography>
                       )}
-                      {pagela.teacher?.user?.name && (
+                      {pagela.member?.user?.name && (
                         <Typography
                           variant="caption"
                           color="text.secondary"
@@ -282,7 +282,7 @@ export function PagelasPanel({
                             fontStyle: 'italic'
                           }}
                         >
-                          Membro: {pagela.teacher.user.name}
+                          Membro: {pagela.member.user.name}
                         </Typography>
                       )}
                       </Box>

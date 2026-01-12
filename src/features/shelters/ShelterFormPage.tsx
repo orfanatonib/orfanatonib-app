@@ -163,7 +163,7 @@ export default function ShelterFormPage() {
       numberTeam: team.numberTeam,
       description: team.description || undefined,
       leaderProfileIds: (team.leaders || []).map((l: any) => l.id).filter((x: string) => !!x),
-      teacherProfileIds: (team.teachers || []).map((t: any) => t.id).filter((x: string) => !!x),
+      memberProfileIds: (team.members || []).map((t: any) => t.id).filter((x: string) => !!x),
     }));
   };
 

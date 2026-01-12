@@ -26,7 +26,7 @@ import { UserRole } from 'store/slices/auth/authSlice';
 import SectionImagePageView from './SectionImagePageView';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { FofinhoButton } from './../../TeacherArea/components';
+import { FofinhoButton } from './../../MemberArea/components';
 import {
   setSectionData,
   appendSections,

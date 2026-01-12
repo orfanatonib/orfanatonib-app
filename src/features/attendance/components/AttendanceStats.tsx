@@ -15,7 +15,7 @@ interface StatTileProps {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
-  helper?: string;
+  helper?: React.ReactNode;
   color?: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
   badge?: number;
 }
@@ -147,7 +147,7 @@ const AttendanceStats = memo(({
             helper={
               loadingTeamData
                 ? <Skeleton width={140} />
-                : isLeaderOrAdmin ? 'Inclui líder e professores.' : 'Visível apenas para líder/admin.'
+                : isLeaderOrAdmin ? 'Inclui líder e membros.' : 'Visível apenas para líder/admin.'
             }
             color="warning"
           />

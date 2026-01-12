@@ -92,7 +92,7 @@ export async function apiUpdateCompleteProfile(
 /**
  * Lista todos os perfis com paginação e filtros (Admin e Leader)
  * - Admin: retorna todos os perfis
- * - Leader: retorna apenas perfis de teachers das suas equipes
+ * - Leader: retorna apenas perfis de members das suas equipes
  * GET /profiles
  */
 export async function apiGetAllProfiles(params?: QueryProfilesDto): Promise<PaginatedProfilesResponse> {

@@ -26,9 +26,9 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     loading,
     error,
     uniqueLeaders,
-    uniqueTeachers,
+    uniqueMembers,
     getLeaderTeams,
-    getTeacherTeams,
+    getMemberTeams,
   } = useShelterPage(idToFetch);
 
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
@@ -108,11 +108,11 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
 
                 <ShelterPeopleCarouselCard
                   title="Membros"
-                  count={uniqueTeachers.length}
+                  count={uniqueMembers.length}
                   theme="purple"
                   icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
-                  people={uniqueTeachers}
-                  getTeams={getTeacherTeams}
+                  people={uniqueMembers}
+                  getTeams={getMemberTeams}
                 />
 
                 <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
@@ -138,11 +138,11 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
               <Grid item xs={12} md={6}>
                 <ShelterPeopleCarouselCard
                   title="Membros"
-                  count={uniqueTeachers.length}
+                  count={uniqueMembers.length}
                   theme="purple"
                   icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
-                  people={uniqueTeachers}
-                  getTeams={getTeacherTeams}
+                  people={uniqueMembers}
+                  getTeams={getMemberTeams}
                 />
               </Grid>
 

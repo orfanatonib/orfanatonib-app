@@ -51,10 +51,10 @@ export const useShelterPage = (idToFetch: string) => {
     return Array.from(map.values());
   }, [shelter?.teams]);
 
-  const uniqueTeachers = useMemo(() => {
+  const uniqueMembers = useMemo(() => {
     if (!shelter?.teams?.length) return [];
-    const map = new Map<string, TeamWithMembersDto['teachers'][number]>();
-    shelter.teams.forEach((team) => team.teachers?.forEach((p) => !map.has(p.id) && map.set(p.id, p)));
+    const map = new Map<string, TeamWithMembersDto['members'][number]>();
+    shelter.teams.forEach((team) => team.members?.forEach((p) => !map.has(p.id) && map.set(p.id, p)));
     return Array.from(map.values());
   }, [shelter?.teams]);
 
@@ -71,17 +71,17 @@ export const useShelterPage = (idToFetch: string) => {
     return (leaderId: string) => (teamsMap.get(leaderId) || []).slice().sort((a, b) => a - b);
   }, [shelter?.teams]);
 
-  const getTeacherTeams = useMemo(() => {
+  const getMemberTeams = useMemo(() => {
     const teamsMap = new Map<string, number[]>();
     shelter?.teams?.forEach((team) => {
-      team.teachers?.forEach((t) => {
+      team.members?.forEach((t) => {
         const id = t.id;
         if (!teamsMap.has(id)) teamsMap.set(id, []);
         const current = teamsMap.get(id)!;
         if (!current.includes(team.numberTeam)) current.push(team.numberTeam);
       });
     });
-    return (teacherId: string) => (teamsMap.get(teacherId) || []).slice().sort((a, b) => a - b);
+    return (memberId: string) => (teamsMap.get(memberId) || []).slice().sort((a, b) => a - b);
   }, [shelter?.teams]);
 
   return {
@@ -97,8 +97,8 @@ export const useShelterPage = (idToFetch: string) => {
 
     // derived
     uniqueLeaders,
-    uniqueTeachers,
+    uniqueMembers,
     getLeaderTeams,
-    getTeacherTeams,
+    getMemberTeams,
   };
 };
