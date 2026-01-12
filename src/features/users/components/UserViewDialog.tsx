@@ -43,9 +43,8 @@ type Props = { open: boolean; user: UserRow | null; onClose: () => void };
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
 };
-
 
 function LineCard({
   icon,
@@ -147,7 +146,6 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
 
               </Box>
             </Stack>
-
 
           </Stack>
         )}

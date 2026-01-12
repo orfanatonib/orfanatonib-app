@@ -14,7 +14,7 @@ export type TeamResponseDto = {
     active: boolean;
     user: UserPublicDto;
   }>;
-  teachers: Array<{
+  members: Array<{
     id: string;
     active: boolean;
     user: UserPublicDto;
@@ -31,14 +31,14 @@ export type CreateTeamDto = {
   description?: string;
   shelterId: string;
   leaderProfileIds?: string[];
-  teacherProfileIds?: string[];
+  memberProfileIds?: string[];
 };
 
 export type UpdateTeamDto = {
   numberTeam?: number;
   description?: string;
   leaderProfileIds?: string[];
-  teacherProfileIds?: string[];
+  memberProfileIds?: string[];
 };
 
 export type TeamSimpleDto = {

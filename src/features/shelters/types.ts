@@ -19,7 +19,7 @@ export type LeaderMiniDto = {
   user: UserPublicDto;
 };
 
-export type TeacherMiniDto = { 
+export type MemberMiniDto = { 
   id: string; 
   active: boolean;
   user: UserPublicDto;
@@ -73,7 +73,7 @@ export type ShelterResponseDto = {
   address: AddressResponseDto;
   teams: TeamWithMembersDto[];
   leaders: LeaderMiniDto[];
-  teachers: TeacherMiniDto[];
+  members: MemberMiniDto[];
   mediaItem?: MediaItemDto | null;
   createdAt: string;
   updatedAt: string;
@@ -97,7 +97,7 @@ export type TeamInputDto = {
   numberTeam: number;
   description?: string;
   leaderProfileIds?: string[];
-  teacherProfileIds?: string[];
+  memberProfileIds?: string[];
 };
 
 export type CreateShelterForm = {
@@ -134,11 +134,11 @@ export type ShelterFilters = {
   addressSearchString?: string;
   city?: string;
   state?: string;
-  teacherId?: string;
+  memberId?: string;
   hasLeaders?: boolean;
-  hasTeachers?: boolean;
+  hasMembers?: boolean;
   leaderIds?: string[];
-  teacherIds?: string[];
+  memberIds?: string[];
 };
 
 export type ShelterSort =
@@ -146,14 +146,14 @@ export type ShelterSort =
   | null;
 
 export type LeaderOption = { leaderProfileId: string; name: string; vinculado: boolean };
-export type TeacherOption = { teacherProfileId: string; name: string; vinculado: boolean };
+export type MemberOption = { memberProfileId: string; name: string; vinculado: boolean };
 
 export type ShelterListResponseDto = {
   id: string;
   name: string;
   address: AddressResponseDto;
   leaders: LeaderMiniDto[];
-  teachers: TeacherMiniDto[];
+  members: MemberMiniDto[];
   createdAt: string;
   updatedAt: string;
 };

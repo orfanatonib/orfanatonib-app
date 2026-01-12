@@ -40,6 +40,7 @@ import {
   ChevronRight,
   CalendarMonth,
   Favorite,
+  EventAvailable,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -58,35 +59,31 @@ interface CardData {
 }
 
 const cardData: CardData[] = [
-  // 👥 PESSOAS - Gestão de Pessoas
+  
   { title: "Usuários", description: "Gerencie contas de acesso ao sistema.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "pessoas" },
   { title: "Perfis", description: "Conheça melhor as pessoas do ministério.", icon: <Favorite fontSize="large" color="primary" />, path: "/adm/perfis", section: "pessoas" },
   { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
   { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
   { title: "Abrigados", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "pessoas" },
 
-  // 🏠 ABRIGOS - Gestão de Abrigos
   { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
   { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
+  { title: "Presenças", description: "Gerencie a frequência das equipes e membros.", icon: <EventAvailable fontSize="large" color="primary" />, path: "/adm/presenca", section: "abrigos" },
 
-  // 📝 CONTEÚDO - Criação de Conteúdo
   { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
   { title: "Meditações", description: "Crie e edite meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudo" },
   { title: "Documentos", description: "Disponibilize documentos para download.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudo" },
   { title: "Informativos", description: "Gerencie banners e avisos do site.", icon: <Campaign fontSize="large" color="primary" />, path: "/adm/informativos", section: "conteudo" },
 
-  // 📸 MÍDIAS - Fotos e Vídeos
   { title: "Galerias de Fotos", description: "Organize galerias de imagens do ministério.", icon: <PhotoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-fotos", section: "midias" },
   { title: "Fotos dos Abrigos", description: "Gerencie fotos específicas de cada abrigo.", icon: <Collections fontSize="large" color="primary" />, path: "/adm/fotos-abrigos", section: "midias" },
   { title: "Vídeos", description: "Adicione vídeos e links do YouTube.", icon: <VideoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-videos", section: "midias" },
 
-  // 💡 MATERIAIS - Materiais e Ideias
   { title: "Materiais de Visita", description: "Gerencie materiais para as visitas.", icon: <EventNote fontSize="large" color="primary" />, path: "/adm/paginas-materiais-visita", section: "materiais" },
   { title: "Páginas de Ideias", description: "Organize páginas com sugestões de atividades.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "materiais" },
   { title: "Ideias Compartilhadas", description: "Veja ideias enviadas pelos abrigos.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/ideias-compartilhadas", section: "materiais" },
 
-  // 💬 INTERAÇÕES - Comunicação com Usuários
   { title: "Comentários", description: "Modere comentários dos usuários.", icon: <Comment fontSize="large" color="primary" />, path: "/adm/comentarios", section: "interacoes" },
   { title: "Contatos", description: "Visualize mensagens de contato recebidas.", icon: <ContactPhone fontSize="large" color="primary" />, path: "/adm/contatos", section: "interacoes" },
   { title: "Feedbacks", description: "Analise feedbacks enviados pelos usuários.", icon: <RateReview fontSize="large" color="primary" />, path: "/adm/feedbacks", section: "interacoes" },
@@ -137,6 +134,7 @@ export default function AdminDashboardPage() {
     "/adm/abrigos",
     "/adm/pagelas",
     "/adm/agendamentos",
+    "/adm/presenca",
   ]);
 
   const canSeeCard = (card: CardData): boolean => {

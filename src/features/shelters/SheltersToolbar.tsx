@@ -70,11 +70,11 @@ export default function SheltersToolbar({
       city: undefined,
       state: undefined,
       leaderId: undefined,
-      teacherId: undefined,
+      memberId: undefined,
       hasLeaders: undefined,
-      hasTeachers: undefined,
+      hasMembers: undefined,
       leaderIds: undefined,
-      teacherIds: undefined,
+      memberIds: undefined,
     }));
   };
 

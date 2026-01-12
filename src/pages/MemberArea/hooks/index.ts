@@ -1,0 +1,1 @@
+export { useMemberArea } from './useMemberArea';

@@ -10,7 +10,7 @@ export type MinimalUser = {
   commonUser?: boolean;
 };
 
-export type MinimalTeacher = {
+export type MinimalMember = {
   id: string;
   active?: boolean;
   user?: MinimalUser;
@@ -35,16 +35,16 @@ export type ShelterSimple = {
   updatedAt: string;
 };
 
-export type ShelterWithTeachers = ShelterSimple & {
-  teachers?: MinimalTeacher[];
+export type ShelterWithMembers = ShelterSimple & {
+  members?: MinimalMember[];
 };
 
 export type TeamSimple = {
   id: string;
-  numberTeam: number; // ⭐ Número da equipe (1, 2, 3, 4...) - tipo NUMBER
+  numberTeam: number; 
   description?: string | null;
   shelterId: string;
-  shelter?: ShelterWithTeachers;
+  shelter?: ShelterWithMembers;
   createdAt: string;
   updatedAt: string;
 };
@@ -54,21 +54,21 @@ export type TeamSimple = {
   numberTeam: number;
   description?: string | null;
   shelterId: string;
-  shelter?: ShelterWithTeachers;
+  shelter?: ShelterWithMembers;
   createdAt: string;
   updatedAt: string;
 };
 
-export type ShelterWithTeamsAndTeachers = ShelterSimple & {
+export type ShelterWithTeamsAndMembers = ShelterSimple & {
   teams: {
     id: string;
     numberTeam: number;
     description: string | null;
-    isLeader?: boolean; // Para /my-shelters - indica se o líder logado está nesta equipe
+    isLeader?: boolean; 
     leaders?: MinimalUser[];
-    teachers?: MinimalTeacher[];
+    members?: MinimalMember[];
   }[];
-  teachers?: MinimalTeacher[]; // Membros gerais do abrigo
+  members?: MinimalMember[]; 
 };
 
 export type LeaderShelterAssociation = {
@@ -79,14 +79,14 @@ export type LeaderShelterAssociation = {
     numberTeam: number;
     description: string | null;
   }[];
-  teachers?: MinimalTeacher[]; // Membros do abrigo
+  members?: MinimalMember[]; 
 };
 
 export type LeaderProfile = {
   id: string;
   active: boolean;
   user: MinimalUser;
-  shelters: LeaderShelterAssociation[]; // Múltiplos abrigos com suas equipes
+  shelters: LeaderShelterAssociation[]; 
   createdAt: string;
   updatedAt: string;
 };
@@ -105,13 +105,13 @@ export type LeaderFilters = {
   sort?: "name" | "updatedAt" | "createdAt";
   order?: "asc" | "desc";
 
-  leaderSearchString?: string;  // Busca por nome, email ou telefone do líder
-  shelterSearchString?: string; // Busca por nome ou endereço do abrigo
+  leaderSearchString?: string;  
+  shelterSearchString?: string; 
 
-  hasShelter?: boolean;         // true: só líderes com abrigo, false: só sem abrigo
-  teamId?: string;             // Filtrar por ID específico da equipe
-  teamName?: string;           // Filtrar por número da equipe
-  hasTeam?: boolean;           // true: só líderes com equipe, false: só sem equipe
+  hasShelter?: boolean;         
+  teamId?: string;             
+  teamName?: string;           
+  hasTeam?: boolean;           
 
   searchString?: string;
   q?: string;
@@ -120,12 +120,6 @@ export type LeaderFilters = {
   shelterName?: string;
 };
 
-
-/**
- * Tipo simplificado para listagem de líderes
- * Usado no endpoint GET /leader-profiles/simple
- * Conforme documentação: LeaderSimpleListDto
- */
 export type LeaderSimpleListDto = {
   leaderProfileId: string;
   user: {
@@ -133,26 +127,16 @@ export type LeaderSimpleListDto = {
     name: string;
   };
   vinculado: boolean;
-  shelters: LeaderShelterAssociation[]; // Adicionado conforme documentação
+  shelters: LeaderShelterAssociation[]; 
 };
 
-/**
- * Payload para edição de associações de líder
- * PUT /leader-profiles/:leaderId
- */
 export type LeaderAssociationUpdateDto = {
   shelterId: string;
-  teams: number[]; // Array de números de equipes
+  teams: number[]; 
 }[];
 
-/**
- * Resposta do endpoint /my-shelters para líderes logados
- */
-export type MySheltersResponse = ShelterWithTeamsAndTeachers[];
+export type MySheltersResponse = ShelterWithTeamsAndMembers[];
 
-/**
- * Resposta simplificada de abrigos para dropdowns
- */
 export type ShelterSimpleResponse = {
   id: string;
   name: string;
@@ -163,16 +147,13 @@ export type ShelterSimpleResponse = {
   }[];
 };
 
-/**
- * Resposta completa do endpoint /teams
- */
 export type TeamsCompleteResponse = {
   id: string;
   numberTeam: number;
   description: string | null;
   shelterId: string;
   leaders: MinimalUser[];
-  teachers: MinimalTeacher[];
+  members: MinimalMember[];
   createdAt: string;
   updatedAt: string;
 }[];

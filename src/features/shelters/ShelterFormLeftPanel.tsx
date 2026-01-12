@@ -4,7 +4,6 @@ import AddressFields from "./form/AddressFields";
 import ShelterMediaForm from "./form/ShelterMediaForm";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
-
 type Props = {
   isEdit: boolean;
   name: string;

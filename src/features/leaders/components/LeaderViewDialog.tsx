@@ -38,8 +38,8 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
 
   const totalShelters = shelters.length;
   const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
-  const allTeachers = shelters.flatMap(shelter => shelter.teachers || []);
-  const totalTeachers = allTeachers.length;
+  const allMembers = shelters.flatMap(shelter => shelter.members || []);
+  const totalMembers = allMembers.length;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -105,16 +105,16 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
                           </Box>
                         )}
 
-                        {shelter.teachers && shelter.teachers.length > 0 && (
+                        {shelter.members && shelter.members.length > 0 && (
                           <Box>
                             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                               Membros:
                             </Typography>
                             <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                              {shelter.teachers.map((t) => {
-                                const teacherName = t.user?.name || t.user?.email || "Sem nome";
+                              {shelter.members.map((t) => {
+                                const memberName = t.user?.name || t.user?.email || "Sem nome";
                                 return (
-                                  <Chip key={t.id} size="small" color="success" label={teacherName} />
+                                  <Chip key={t.id} size="small" color="success" label={memberName} />
                                 );
                               })}
                             </Box>
@@ -133,14 +133,14 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
               </Grid>
             )}
 
-            {totalTeachers > 0 && (
+            {totalMembers > 0 && (
               <>
                 <Grid item xs={12}><strong>Todos os Membros</strong></Grid>
                 <Grid item xs={12}>
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                    {allTeachers.map((t) => {
-                      const teacherName = t.user?.name || t.user?.email || "Sem nome";
-                      return <Chip key={t.id} label={teacherName} />;
+                    {allMembers.map((t) => {
+                      const memberName = t.user?.name || t.user?.email || "Sem nome";
+                      return <Chip key={t.id} label={memberName} />;
                     })}
                   </Box>
                 </Grid>

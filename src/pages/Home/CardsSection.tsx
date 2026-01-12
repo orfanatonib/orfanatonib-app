@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Container, Grid, Card, CardContent, CardMedia } from '@mui/material';
 import { motion } from 'framer-motion';

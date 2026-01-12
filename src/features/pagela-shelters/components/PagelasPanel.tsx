@@ -95,7 +95,7 @@ export function PagelasPanel({
           sx={{ 
             mb: { xs: 1, sm: 1.5 },
             fontSize: { xs: '1.1rem', sm: '1.25rem' },
-            display: { xs: 'none', sm: 'block' } // Esconde no mobile
+            display: { xs: 'none', sm: 'block' } 
           }}
         >
           Pagelas
@@ -273,7 +273,7 @@ export function PagelasPanel({
                           {pagela.notes}
                         </Typography>
                       )}
-                      {pagela.teacher?.user?.name && (
+                      {pagela.member?.user?.name && (
                         <Typography
                           variant="caption"
                           color="text.secondary"
@@ -282,7 +282,7 @@ export function PagelasPanel({
                             fontStyle: 'italic'
                           }}
                         >
-                          Membro: {pagela.teacher.user.name}
+                          Membro: {pagela.member.user.name}
                         </Typography>
                       )}
                       </Box>

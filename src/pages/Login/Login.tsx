@@ -83,7 +83,6 @@ const Login: React.FC = () => {
     return isValidEmail(email) && isPasswordValid(password);
   };
 
-
   const bootstrapAfterLogin = async (accessToken: string): Promise<void> => {
     try {
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -103,16 +102,15 @@ const Login: React.FC = () => {
   const mapUserRole = (responseUser: any): any => {
     return {
       ...responseUser,
-      role: responseUser.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.TEACHER,
+      role: responseUser.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MEMBER,
     };
   };
 
   const handleUserInactive = (): void => {
     setErrorMessage(
-      'Usuário não validado, entre em contato com (92) 99127-4881 ou (92) 98155-3139'
+      'Usuário não validado, entre em contato com (61) 8254-9780 ou (92) 98155-3139'
     );
   };
-
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -136,7 +134,6 @@ const Login: React.FC = () => {
       if (response.data.user.active === false) {
         handleUserInactive();
 
-        // Mostrar alerta de verificação de email mesmo quando usuário está inativo
         if (response.data.emailVerification?.verificationEmailSent) {
           console.log('Email verification detected for inactive user:', response.data.emailVerification);
           setEmailVerification(response.data.emailVerification);
@@ -148,7 +145,6 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Checar emailVerification para usuário ativo
       if (response.data.emailVerification?.verificationEmailSent) {
         console.log('Email verification detected:', response.data.emailVerification);
         setEmailVerification(response.data.emailVerification);
@@ -173,7 +169,6 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
 
   const handleGoogleSuccess = async (credentialResponse: any): Promise<void> => {
     setLoading(true);
@@ -247,7 +242,6 @@ const Login: React.FC = () => {
             <Typography variant="h5" component="h1" gutterBottom align="center">
               Área do Membro
             </Typography>
-
 
             {errorMessage && (
               <Alert severity="error" sx={{ mb: 2 }}>

@@ -57,7 +57,7 @@ const ProfilePage: React.FC = () => {
   const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Detect hash for direct tab selection
+  
   const initialTab = React.useMemo(() => {
     if (typeof window !== 'undefined') {
       if (window.location.hash === '#foto') return 4;
@@ -68,7 +68,6 @@ const ProfilePage: React.FC = () => {
   }, []);
   const [selectedMenu, setSelectedMenu] = useState(initialTab);
 
-  // If hash changes after mount, update tab
   useEffect(() => {
     const onHashChange = () => {
       if (window.location.hash === '#foto') setSelectedMenu(4);
@@ -80,7 +79,6 @@ const ProfilePage: React.FC = () => {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  // Scroll to top when tab changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedMenu]);
@@ -93,13 +91,11 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && !user) {
-      // Se está autenticado mas não tem dados do usuário, busca via Redux
+      
       dispatch(fetchCurrentUser());
     }
   }, [isAuthenticated, user, dispatch]);
 
-  // Dados do perfil vêm diretamente do Redux (atualizado via /auth/me)
-  // Separando em variáveis para facilitar edição
   const profile = user ? {
     id: user.id,
     email: user.email,
@@ -119,7 +115,6 @@ const ProfilePage: React.FC = () => {
     preferences: user.preferences || null,
   } : null;
 
-  // Handler para atualizar dados após edição - atualiza Redux
   const handleProfileUpdate = async () => {
     try {
       setError(null);
@@ -177,7 +172,6 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Usar loadingUser do Redux
   const isLoading = loadingUser || loading;
   
   if (!initialized || isLoading) {
@@ -227,7 +221,6 @@ const ProfilePage: React.FC = () => {
           width: '100%',
         }}
       >
-        {/* Sidebar */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -245,7 +238,6 @@ const ProfilePage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            {/* User Header */}
             <Box
               sx={{
                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
@@ -296,19 +288,18 @@ const ProfilePage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Shelter Info */}
-            {profile?.role === 'teacher' && profile?.teacherProfile?.team?.shelter && (
+            {profile?.role === 'member' && profile?.memberProfile?.team?.shelter && (
               <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
                 <Stack spacing={0.5}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
                     <Typography variant="caption" fontWeight={700} noWrap>
-                      {profile.teacherProfile.team.shelter.name}
+                      {profile.memberProfile.team.shelter.name}
                     </Typography>
                   </Stack>
                   <Chip
                     icon={<GroupsOutlinedIcon />}
-                    label={`Equipe ${profile.teacherProfile.team.numberTeam}`}
+                    label={`Equipe ${profile.memberProfile.team.numberTeam}`}
                     size="small"
                     color="primary"
                     variant="outlined"
@@ -320,7 +311,6 @@ const ProfilePage: React.FC = () => {
 
             <Divider />
 
-            {/* Menu Items */}
             <List sx={{ p: 0.5 }} dense>
               {menuItems.map((item, index) => (
                 <ListItemButton
@@ -367,7 +357,6 @@ const ProfilePage: React.FC = () => {
           </Paper>
         </motion.div>
 
-        {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -383,7 +372,6 @@ const ProfilePage: React.FC = () => {
               border: '1px solid rgba(25, 118, 210, 0.1)',
             }}
           >
-            {/* Content Header */}
             <Box sx={{ mb: 2, pb: 1.5, borderBottom: '2px solid rgba(25, 118, 210, 0.1)' }}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box
@@ -405,14 +393,12 @@ const ProfilePage: React.FC = () => {
               </Stack>
             </Box>
 
-            {/* Error Alert */}
             {error && (
               <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}
 
-            {/* Content Area */}
             <Box>
               {renderContent()}
             </Box>
@@ -424,4 +410,3 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
-

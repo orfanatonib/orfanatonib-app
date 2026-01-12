@@ -1,4 +1,3 @@
-// src/pages/shelters/components/ShelterLocationCard.tsx
 import React from 'react';
 import { Card, CardContent, Grid, Typography } from '@mui/material';
 import {

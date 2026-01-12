@@ -77,7 +77,6 @@ export default function SheltersManager() {
     setConfirmDelete(null);
   };
 
-
   return (
     <Box
       sx={{

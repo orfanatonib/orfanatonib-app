@@ -264,7 +264,6 @@ export default function LeaderToolbar({
             </FormControl>
           </Grid>
 
-          {/* Botões de ação (desktop) */}
           <Grid
             item
             xs={12}

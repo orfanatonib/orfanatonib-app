@@ -140,7 +140,7 @@ const VideoCard = ({ video }: Props) => {
                   sx={{ 
                     fontSize: { xs: '2rem', md: '2.5rem' }, 
                     color: 'primary.main',
-                    ml: 0.5, // Slight offset for play icon
+                    ml: 0.5, 
                   }} 
                 />
               </Box>

@@ -21,6 +21,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import PeopleIcon from '@mui/icons-material/People';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 import type { SheltersTeamsMembersResponse, ShelterWithTeamsDto, TeamWithMembersDto } from '../types';
 
@@ -29,22 +30,23 @@ interface TeamSelectionProps {
   loading?: boolean;
   onTeamSelect: (shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => void;
   searchTerm?: string;
+  onBack?: () => void;
 }
 
 const TeamCard = memo(({
   shelter,
-  expandedShelters,
+  expandedShelterId,
   onToggle,
   onTeamSelect,
   loading
 }: {
   shelter: ShelterWithTeamsDto;
-  expandedShelters: Set<string>;
+  expandedShelterId: string | null;
   onToggle: (shelterId: string) => void;
   onTeamSelect: (shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => void;
   loading?: boolean;
 }) => {
-  const isExpanded = expandedShelters.has(shelter.shelterId);
+  const isExpanded = expandedShelterId === shelter.shelterId;
   const totalMembers = shelter.teams.reduce((sum, team) => sum + team.members.length, 0);
 
   return (
@@ -52,7 +54,8 @@ const TeamCard = memo(({
       variant="outlined"
       sx={{
         mb: 2,
-        borderWidth: 2,
+        height: 'fit-content',
+        borderWidth: 1, 
         borderColor: isExpanded ? 'primary.main' : 'divider',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
@@ -61,20 +64,21 @@ const TeamCard = memo(({
       }}
     >
       <CardHeader
+        sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 1.5, sm: 2 } }}
         avatar={
           <Box
             sx={{
-              width: 56,
-              height: 56,
+              width: 48, 
+              height: 48,
               borderRadius: 2,
-              bgcolor: isExpanded ? 'primary.main' : 'primary.100',
-              color: isExpanded ? 'primary.contrastText' : 'primary.main',
+              bgcolor: isExpanded ? 'primary.main' : 'primary.main', 
+              color: 'primary.contrastText',
               display: 'grid',
               placeItems: 'center',
               transition: 'all 0.2s ease-in-out',
             }}
           >
-            <BusinessIcon fontSize="large" />
+            <BusinessIcon />
           </Box>
         }
         title={
@@ -88,14 +92,7 @@ const TeamCard = memo(({
               size="small"
               icon={<GroupsIcon />}
               label={`${shelter.teams.length} equipe${shelter.teams.length !== 1 ? 's' : ''}`}
-              color="primary"
-              variant={isExpanded ? 'filled' : 'outlined'}
-            />
-            <Chip
-              size="small"
-              icon={<PeopleIcon />}
-              label={`${totalMembers} membro${totalMembers !== 1 ? 's' : ''}`}
-              color="secondary"
+              color="default"
               variant="outlined"
             />
           </Stack>
@@ -105,20 +102,14 @@ const TeamCard = memo(({
             onClick={() => onToggle(shelter.shelterId)}
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? 'Recolher' : 'Expandir'} equipes do abrigo ${shelter.shelterName}`}
-            sx={{
-              bgcolor: isExpanded ? 'primary.50' : 'transparent',
-              '&:hover': {
-                bgcolor: 'primary.100',
-              },
-            }}
           >
-            {isExpanded ? <ExpandLessIcon color="primary" /> : <ExpandMoreIcon />}
+            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
         }
       />
 
       <Collapse in={isExpanded}>
-        <CardContent sx={{ pt: 0 }}>
+        <CardContent sx={{ pt: 0, px: { xs: 1, sm: 2 }, pb: { xs: 2, sm: 2 } }}>
           {loading ? (
             <Stack spacing={2}>
               {[1, 2, 3].map(i => (
@@ -133,65 +124,53 @@ const TeamCard = memo(({
           ) : (
             <Grid container spacing={2}>
               {shelter.teams.map(team => (
-                <Grid item xs={12} sm={6} md={4} key={team.teamId}>
+                <Grid item xs={12} sm={6} md={6} key={team.teamId}> {}
                   <Card
                     variant="outlined"
                     sx={{
                       cursor: 'pointer',
-                      transition: 'all 0.3s ease-in-out',
+                      transition: 'all 0.2s ease-in-out',
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      borderWidth: 2,
+                      bgcolor: 'action.hover', 
+                      border: '1px solid',
+                      borderColor: 'divider',
                       '&:hover': {
-                        boxShadow: 4,
                         borderColor: 'primary.main',
-                        transform: 'translateY(-4px)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 1
                       },
                     }}
                     onClick={() => onTeamSelect(shelter, team)}
                   >
-                    <CardContent sx={{ flex: 1, pb: '16px !important' }}>
-                      <Stack spacing={2}>
+                    <CardContent sx={{ flex: 1, p: { xs: 1.5, sm: 2 }, pb: { xs: 1.5, sm: 2 } + ' !important' }}>
+                      <Stack spacing={1.5}>
                         <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
                           <Box>
-                            <Typography variant="h6" fontWeight="bold" color="primary.main" gutterBottom>
-                              Time {team.teamNumber}
+                            <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+                              Equipe {team.teamNumber}
                             </Typography>
                             {team.description && (
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
                                 {team.description}
                               </Typography>
                             )}
-                          </Box>
-                          <Box
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: 2,
-                              bgcolor: 'primary.100',
-                              color: 'primary.main',
-                              display: 'grid',
-                              placeItems: 'center',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <GroupsIcon />
                           </Box>
                         </Stack>
 
                         <Box
                           sx={{
-                            p: 1.5,
+                            p: 1,
                             borderRadius: 1,
-                            bgcolor: 'grey.50',
+                            bgcolor: 'background.paper', 
                             border: '1px solid',
                             borderColor: 'divider',
                           }}
                         >
                           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                            <PeopleIcon fontSize="small" color="primary" />
-                            <Typography variant="body2" fontWeight="medium">
+                            <PeopleIcon fontSize="small" color="primary" sx={{ fontSize: '1rem' }} />
+                            <Typography variant="caption" fontWeight="medium">
                               {team.members.length} Membro{team.members.length !== 1 ? 's' : ''}
                             </Typography>
                           </Stack>
@@ -200,15 +179,15 @@ const TeamCard = memo(({
                               <Chip
                                 key={member.id}
                                 size="small"
-                                icon={<PersonIcon fontSize="small" />}
+                                icon={<PersonIcon />}
                                 label={member.name.split(' ')[0]}
                                 variant="outlined"
-                                color={member.role === 'leader' ? 'primary' : 'default'}
                                 sx={{
-                                  fontSize: '0.7rem',
-                                  height: 24,
+                                  fontSize: '0.65rem',
+                                  height: 20,
+                                  mb: 0.5,
                                   '& .MuiChip-icon': {
-                                    fontSize: '0.875rem',
+                                    fontSize: '0.8rem',
                                   },
                                 }}
                               />
@@ -218,25 +197,23 @@ const TeamCard = memo(({
                                 size="small"
                                 label={`+${team.members.length - 4}`}
                                 variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: 24 }}
+                                sx={{ fontSize: '0.65rem', height: 20, mb: 0.5 }}
                               />
                             )}
                           </Stack>
                         </Box>
 
                         <Button
-                          size="medium"
+                          size="small"
                           variant="contained"
                           fullWidth
                           sx={{
                             mt: 'auto !important',
-                            fontWeight: 'bold',
                             textTransform: 'none',
-                            py: 1,
                           }}
-                          aria-label={`Selecionar Time ${team.teamNumber} - ${team.members.length} membros`}
+                          aria-label={`Selecionar Equipe ${team.teamNumber}`}
                         >
-                          Gerenciar Presenças
+                          Selecionar
                         </Button>
                       </Stack>
                     </CardContent>
@@ -251,79 +228,104 @@ const TeamCard = memo(({
   );
 });
 
-const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm }: TeamSelectionProps) => {
-  const [expandedShelters, setExpandedShelters] = useState<Set<string>>(new Set());
+const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }: TeamSelectionProps) => {
+  
+  const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
 
-  // Expandir automaticamente quando há busca
   useEffect(() => {
-    if (searchTerm && searchTerm.trim()) {
-      const allShelterIds = new Set(data.map(s => s.shelterId));
-      setExpandedShelters(allShelterIds);
+    if (data.length === 1) {
+      setExpandedShelterId(data[0].shelterId);
+    } else if (searchTerm && searchTerm.trim()) {
+      const filteredShelters = data; 
+      if (filteredShelters.length === 1) {
+        setExpandedShelterId(filteredShelters[0].shelterId);
+      }
     }
   }, [searchTerm, data]);
 
   const handleToggleShelter = (shelterId: string) => {
-    setExpandedShelters(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(shelterId)) {
-        newSet.delete(shelterId);
-      } else {
-        newSet.add(shelterId);
-      }
-      return newSet;
-    });
+    setExpandedShelterId(prev => (prev === shelterId ? null : shelterId));
   };
+
+  const header = (
+    <Stack spacing={1} sx={{ mb: { xs: 2, md: 3 } }}>
+      <Stack direction="row" alignItems="center" spacing={2}>
+        {onBack && (
+          <IconButton
+            onClick={onBack}
+            aria-label="Voltar"
+            sx={{
+              bgcolor: 'action.hover',
+              '&:hover': {
+                bgcolor: 'action.selected',
+              },
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        )}
+        <Typography variant="h5" fontWeight="bold">
+          Selecione uma Equipe
+        </Typography>
+      </Stack>
+      <Typography variant="body2" color="text.secondary" sx={{ ml: onBack ? 7 : 0 }}>
+        Escolha o abrigo e depois a equipe para visualizar os membros e gerenciar presenças.
+      </Typography>
+    </Stack>
+  );
 
   if (loading) {
     return (
-      <Stack spacing={3}>
-        {[1, 2, 3].map(i => (
-          <Card key={i} variant="outlined">
-            <CardHeader
-              avatar={<Skeleton variant="circular" width={40} height={40} />}
-              title={<Skeleton width="60%" height={28} />}
-              subheader={<Skeleton width="40%" height={20} />}
-              action={<Skeleton width={40} height={40} variant="circular" />}
-            />
-          </Card>
-        ))}
-      </Stack>
+      <Box sx={{ width: '100%' }}>
+        {header}
+        <Grid container spacing={2}>
+          {[1, 2, 3, 4].map(i => (
+            <Grid item xs={12} md={6} key={i}>
+              <Card variant="outlined">
+                <CardHeader
+                  avatar={<Skeleton variant="circular" width={40} height={40} />}
+                  title={<Skeleton width="60%" height={28} />}
+                  subheader={<Skeleton width="40%" height={20} />}
+                  action={<Skeleton width={40} height={40} variant="circular" />}
+                />
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     );
   }
 
   if (data.length === 0) {
     return (
-      <Alert severity="info" sx={{ mt: 2 }}>
-        {searchTerm
-          ? 'Nenhum resultado encontrado para sua busca.'
-          : 'Nenhum abrigo ou equipe encontrado para o seu perfil.'}
-      </Alert>
+      <Box sx={{ width: '100%' }}>
+        {header}
+        <Alert severity="info" sx={{ mt: 2 }}>
+          {searchTerm
+            ? 'Nenhum resultado encontrado para sua busca.'
+            : 'Nenhum abrigo ou equipe encontrado para o seu perfil.'}
+        </Alert>
+      </Box>
     );
   }
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Stack spacing={1} sx={{ mb: { xs: 2, md: 3 } }}>
-        <Typography variant="h5" gutterBottom fontWeight="bold">
-          Selecione uma Equipe
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Escolha o abrigo e depois a equipe para visualizar os membros e gerenciar presenças.
-        </Typography>
-      </Stack>
+      {header}
 
-      <Stack spacing={{ xs: 2, md: 2 }}>
+      <Grid container spacing={2}>
         {data.map(shelter => (
-          <TeamCard
-            key={shelter.shelterId}
-            shelter={shelter}
-            expandedShelters={expandedShelters}
-            onToggle={handleToggleShelter}
-            onTeamSelect={onTeamSelect}
-            loading={loading}
-          />
+          <Grid item xs={12} md={6} key={shelter.shelterId}>
+            <TeamCard
+              shelter={shelter}
+              expandedShelterId={expandedShelterId}
+              onToggle={handleToggleShelter}
+              onTeamSelect={onTeamSelect}
+              loading={loading}
+            />
+          </Grid>
         ))}
-      </Stack>
+      </Grid>
     </Box>
   );
 });

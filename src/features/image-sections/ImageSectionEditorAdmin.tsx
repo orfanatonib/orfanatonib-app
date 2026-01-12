@@ -9,9 +9,9 @@ import { setData, clearData, SectionData } from '@/store/slices/image-section/im
 import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
 import { RootState } from '@/store/slices';
 
-import { LoadingSpinner } from '@/pages/TeacherArea/components/Modals';
-import { NotificationModal } from '@/pages/TeacherArea/components/Modals';
-import ImageSectionEditor from '@/pages/TeacherArea/ImageSection/ImageSectionEditor';
+import { LoadingSpinner } from '@/pages/MemberArea/components/Modals';
+import { NotificationModal } from '@/pages/MemberArea/components/Modals';
+import ImageSectionEditor from '@/pages/MemberArea/ImageSection/ImageSectionEditor';
 
 interface NotificationState {
   open: boolean;
@@ -136,7 +136,7 @@ export default function ImageSectionEditorAdmin() {
   }, [sectionData, navigate]);
 
   if (!sectionData) {
-    return null; // Evita flash de conteúdo antes do redirecionamento
+    return null; 
   }
 
   return (

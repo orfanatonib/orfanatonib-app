@@ -76,10 +76,10 @@ function SheltersTableDesktop(props: Props) {
         meta: { width: 240 },
       },
       {
-        id: "teachers",
+        id: "members",
         header: "Membros",
         cell: ({ row }) => {
-          const list = row.original.teachers ?? [];
+          const list = row.original.members ?? [];
           return (
             <ChipsListWithExpand
               items={list.map((t) => ({

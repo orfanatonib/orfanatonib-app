@@ -1,5 +1,3 @@
-// Types para o módulo de Agendamento de Abrigos (Shelter Schedule)
-
 export interface ShelterScheduleAddress {
   street?: string;
   number?: string;
@@ -26,11 +24,14 @@ export interface ShelterScheduleShelter {
 
 export interface ShelterScheduleResponseDto {
   id: string;
+  category: 'visit' | 'meeting';
+  date: string;
   visitNumber: number;
   visitDate?: string;
   meetingDate?: string;
   lessonContent: string;
   observation?: string;
+  location?: string;
   meetingRoom?: string;
   shelter: ShelterScheduleShelter;
   createdAt: string;
@@ -57,7 +58,6 @@ export interface UpdateShelterScheduleDto {
   meetingRoom?: string;
 }
 
-// Tipo para a equipe retornada pelo endpoint /teams/my-teams
 export interface MyTeamResponseDto {
   id: string;
   numberTeam: number;
@@ -75,7 +75,7 @@ export interface MyTeamResponseDto {
     email: string;
     phone?: string;
   }>;
-  teachers: Array<{
+  members: Array<{
     id: string;
     name: string;
     email: string;

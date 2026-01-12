@@ -34,7 +34,6 @@ type Props = {
   onAskDelete: (shelter: ShelterResponseDto) => void;
 };
 
-
 export default function SheltersCards(props: Props) {
   const { isAdmin, rows, total, pageIndex, pageSize, setPageIndex, setPageSize, sorting, setSorting, onOpenView, onStartEdit, onAskDelete } = props;
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -93,7 +92,7 @@ export default function SheltersCards(props: Props) {
         {rows.map((c) => {
           const expanded = open.has(c.id);
           const leaders = c.leaders ?? [];
-          const teachers = c.teachers ?? [];
+          const members = c.members ?? [];
           const addrPreview = isAddressEnabled && c.address ? `${c.address.city} / ${c.address.state}` : null;
 
           return (
@@ -126,7 +125,7 @@ export default function SheltersCards(props: Props) {
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, // Espaço para a barra colorida
+                    mt: 0.5, 
                   }}
                 >
                   <Avatar
@@ -167,7 +166,6 @@ export default function SheltersCards(props: Props) {
                       {c.name}
                     </Typography>
                   </Stack>
-
 
                   <ButtonBase
                     onClick={() => toggle(c.id)}
@@ -263,7 +261,7 @@ export default function SheltersCards(props: Props) {
                         size="small"
                         variant="filled"
                         icon={<GroupIcon sx={{ fontSize: 12 }} />}
-                        label={`${teachers.length || 0}`}
+                        label={`${members.length || 0}`}
                         color="info"
                         sx={{
                           fontWeight: 600,
@@ -326,12 +324,12 @@ export default function SheltersCards(props: Props) {
                             <Stack direction="row" spacing={0.75} alignItems="center">
                               <GroupIcon fontSize="small" color="primary" />
                               <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
-                                Membros ({teachers.length})
+                                Membros ({members.length})
                               </Typography>
                             </Stack>
 
                             <ChipsListWithExpand
-                              items={teachers.map((t) => ({
+                              items={members.map((t) => ({
                                 id: t.id,
                                 label: t.user?.name || t.user?.email || t.id,
                                 color: "primary" as const,

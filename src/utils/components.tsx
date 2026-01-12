@@ -27,4 +27,3 @@ export const initials = (name?: string) =>
     .slice(0, 2)
     .map(s => s[0]?.toUpperCase())
     .join("") || "?";
-

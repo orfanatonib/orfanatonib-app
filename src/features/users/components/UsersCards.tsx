@@ -36,7 +36,7 @@ type Props = {
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: "Administrador",
   [UserRole.LEADER]: "Líder",
-  [UserRole.TEACHER]: "Membro",
+  [UserRole.MEMBER]: "Membro",
 };
 
 const initials = (name?: string) =>
@@ -60,8 +60,6 @@ function CopyButton({ value, title = "Copiar" }: { value?: string; title?: strin
     </Tooltip>
   );
 }
-
-
 
 export default function UsersCards(props: Props) {
   const {
@@ -96,7 +94,7 @@ export default function UsersCards(props: Props) {
   const roleChipColor = (role?: string) => {
     switch (role) {
       case UserRole.LEADER: return "primary";
-      case UserRole.TEACHER: return "success";
+      case UserRole.MEMBER: return "success";
       default: return "default";
     }
   };
@@ -157,7 +155,7 @@ export default function UsersCards(props: Props) {
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, // Espaço para a barra colorida
+                    mt: 0.5, 
                   }}
                 >
                   <Avatar

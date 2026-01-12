@@ -20,7 +20,7 @@ import type { FeatureFlag } from '@/store/slices/feature-flags/featureFlagsSlice
 
 interface UseFeatureFlagsOptions {
     autoFetch?: boolean;
-    refetchInterval?: number; // in milliseconds
+    refetchInterval?: number; 
 }
 
 interface UseFeatureFlagsReturn {

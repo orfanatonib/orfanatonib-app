@@ -22,7 +22,6 @@ export function useProfileAlerts() {
             });
         }
 
-        // Verificar foto usando dados do Redux (que vem de /auth/me)
         if (user && (!user.image || !user.image.url)) {
             alerts.push({
                 id: 'missing-photo',
@@ -31,7 +30,6 @@ export function useProfileAlerts() {
             });
         }
 
-        // Verificar dados pessoais e preferências usando dados do Redux
         if (user) {
             const pd = user.personalData;
             const pref = user.preferences;

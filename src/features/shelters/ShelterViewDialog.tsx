@@ -51,7 +51,6 @@ type Props = {
   onClose: () => void;
 };
 
-
 function LineCard({
   icon,
   title,
@@ -76,17 +75,14 @@ function LineCard({
   );
 }
 
-
 export default function ShelterViewDialog({ open, loading, shelter, onClose }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const [teamManagementOpen, setTeamManagementOpen] = React.useState(false);
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-
-
   const address = shelter?.address;
-  const teachers = shelter?.teachers ?? [];
+  const members = shelter?.members ?? [];
   const leaders = shelter?.leaders ?? [];
   const teams = shelter?.teams ?? [];
 
@@ -269,9 +265,9 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                   />
                   <Chip
                     size="small"
-                    label={`Membros: ${teachers.length}`}
-                    color={teachers.length > 0 ? "info" : "default"}
-                    variant={teachers.length > 0 ? "filled" : "outlined"}
+                    label={`Membros: ${members.length}`}
+                    color={members.length > 0 ? "info" : "default"}
+                    variant={members.length > 0 ? "filled" : "outlined"}
                   />
                   <Chip
                     size="small"
@@ -382,20 +378,20 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
                     </Stack>
                   }
                 >
-                  {teachers.length > 0 ? (
+                  {members.length > 0 ? (
                     <Stack spacing={1}>
-                      {teachers.map((teacher) => (
-                        <Box key={teacher.id}>
+                      {members.map((member) => (
+                        <Box key={member.id}>
                           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                             <Typography variant="body1" fontWeight={600}>
-                              {teacher.user?.name || teacher.user?.email || teacher.id}
+                              {member.user?.name || member.user?.email || member.id}
                             </Typography>
-                            {teacher.user?.phone && (
+                            {member.user?.phone && (
                               <>
-                                <Link href={`tel:${teacher.user.phone}`} underline="hover">
-                                  {teacher.user.phone}
+                                <Link href={`tel:${member.user.phone}`} underline="hover">
+                                  {member.user.phone}
                                 </Link>
-                                <CopyButton value={teacher.user.phone} title="Copiar telefone" />
+                                <CopyButton value={member.user.phone} title="Copiar telefone" />
                               </>
                             )}
                           </Stack>
@@ -432,7 +428,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
         shelter={shelter}
         onClose={() => setTeamManagementOpen(false)}
         onSuccess={async () => {
-          // No action needed on success
+          
         }}
       />
     </Dialog>

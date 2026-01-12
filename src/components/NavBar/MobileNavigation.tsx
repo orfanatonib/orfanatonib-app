@@ -34,7 +34,7 @@ const MobileNavigation: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isTeacher = isAuthenticated && user?.role === UserRole.TEACHER;
+  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
@@ -46,7 +46,7 @@ const MobileNavigation: React.FC = () => {
     closeDrawer();
   };
 
-  const handleTeacherArea = () => {
+  const handleMemberArea = () => {
     navigate('/area-do-membro');
     closeDrawer();
   };
@@ -164,13 +164,13 @@ const MobileNavigation: React.FC = () => {
                 >
                   {user.role === UserRole.ADMIN && 'Administrador'}
                   {user.role === UserRole.LEADER && 'Líder'}
-                  {user.role === UserRole.TEACHER && 'Membro'}
+                  {user.role === UserRole.MEMBER && 'Membro'}
                 </Typography>
               </Stack>
             </Box>
             <Box sx={{ mb: 2 }}>
               <MenuItem
-                onClick={handleTeacherArea}
+                onClick={handleMemberArea}
                 sx={{
                   color: '#FFFF00',
                   py: 1.5,
@@ -184,7 +184,7 @@ const MobileNavigation: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText>Área do Membro</ListItemText>
               </MenuItem>
-              {(isTeacher || isLeader) && isPagelasEnabled && (
+              {(isMember || isLeader) && isPagelasEnabled && (
                 <MenuItem
                   onClick={handleShelteredArea}
                   sx={{

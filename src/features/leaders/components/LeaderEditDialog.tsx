@@ -190,9 +190,9 @@ export default function LeaderEditDialog({
                       Equipe atual: <strong>Equipe {leader.shelter.team.numberTeam}</strong>
                     </Typography>
                   )}
-                  {leader.shelter.teachers && leader.shelter.teachers.length > 0 && (
+                  {leader.shelter.members && leader.shelter.members.length > 0 && (
                     <Typography variant="body2" color="text.secondary">
-                      Membros da equipe: <strong>{leader.shelter.teachers.length}</strong>
+                      Membros da equipe: <strong>{leader.shelter.members.length}</strong>
                     </Typography>
                   )}
                 </>
@@ -310,4 +310,3 @@ export default function LeaderEditDialog({
     </Dialog>
   );
 }
-

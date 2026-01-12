@@ -58,28 +58,28 @@ const TeamSchedules = ({ schedules, loading }: Props) => {
           {!loading && schedules.length > 0 && (
             <Stack spacing={1.5}>
               {schedules.map(schedule => (
-              <Card key={schedule.id} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-                      <Typography variant="subtitle1">{formatScheduleLabel(schedule)}</Typography>
-                      {schedule.teamNumber && <Chip label={`Time ${schedule.teamNumber}`} size="small" />}
-                      {schedule.shelterName && <Chip label={schedule.shelterName} size="small" />}
+                <Card key={schedule.id} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                        <Typography variant="subtitle1">{formatScheduleLabel(schedule)}</Typography>
+                        {schedule.teamNumber && <Chip label={`Equipe ${schedule.teamNumber}`} size="small" />}
+                        {schedule.shelterName && <Chip label={schedule.shelterName} size="small" />}
+                      </Stack>
+                      {schedule.lessonContent && (
+                        <Typography variant="body2" color="text.secondary">
+                          {schedule.lessonContent}
+                        </Typography>
+                      )}
+                      {(schedule.meetingRoom || schedule.observation) && (
+                        <Typography variant="body2">
+                          {schedule.meetingRoom ? `Sala: ${schedule.meetingRoom}` : ''}{' '}
+                          {schedule.observation ? `Obs.: ${schedule.observation}` : ''}
+                        </Typography>
+                      )}
                     </Stack>
-                    {schedule.lessonContent && (
-                      <Typography variant="body2" color="text.secondary">
-                        {schedule.lessonContent}
-                      </Typography>
-                    )}
-                    {(schedule.meetingRoom || schedule.observation) && (
-                      <Typography variant="body2">
-                        {schedule.meetingRoom ? `Sala: ${schedule.meetingRoom}` : ''}{' '}
-                        {schedule.observation ? `Obs.: ${schedule.observation}` : ''}
-                      </Typography>
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               ))}
             </Stack>
           )}

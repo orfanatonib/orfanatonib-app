@@ -2,19 +2,19 @@ import { createTheme } from '@mui/material/styles';
 import { gradients } from './gradients';
 
 const colors = {
-  primary: '#FFFF00',    // Amarelo
-  secondary: '#000000',  // Preto
-  success: '#009933',    // Verde
-  error: '#FF0000',      // Vermelho
-  warning: '#FFFF00',    // Amarelo
-  info: '#009933',       // Verde
+  primary: '#FFFF00',    
+  secondary: '#000000',  
+  success: '#009933',    
+  error: '#FF0000',      
+  warning: '#FFFF00',    
+  info: '#009933',       
   background: {
-    default: '#FFFFFF',  // Branco
-    paper: '#FFFFFF',    // Branco
+    default: '#FFFFFF',  
+    paper: '#FFFFFF',    
   },
   text: {
-    primary: '#000000',  // Preto
-    secondary: '#666666', // Cinza escuro
+    primary: '#000000',  
+    secondary: '#666666', 
   },
   grey: {
     50: '#FAFAFA',

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   Alert,
   Box,
@@ -32,12 +32,12 @@ import Collapse from '@mui/material/Collapse';
 import MenuItem from '@mui/material/MenuItem';
 
 import { registerTeamAttendance, getAttendanceRecords } from '../api';
+import { AttendanceType } from '../types';
 import type {
   ShelterWithTeamsDto,
   TeamWithMembersDto,
   TeamScheduleDto,
   RegisterTeamAttendanceDto,
-  AttendanceType,
   AttendanceFormState,
   TeamMemberDto,
   AttendanceResponseDto
@@ -72,123 +72,110 @@ const MemberAttendanceCard = memo(({
   onCommentChange: (comment: string) => void;
   disabled?: boolean;
 }) => {
-  const showComment = attendance.type === 'absent';
-  const isPresent = attendance.type === 'present';
+  const showComment = attendance.type === AttendanceType.ABSENT;
+  const isPresent = attendance.type === AttendanceType.PRESENT;
 
   return (
-    <Box
-      sx={{
-        transition: 'all 0.2s ease-in-out',
-      }}
-    >
+    <Box sx={{ transition: 'all 0.2s ease-in-out' }}>
       <Stack spacing={0}>
-        {/* Linha principal compacta */}
-        <Box sx={{ p: 1.5 }}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            {/* Checkbox/Indicador */}
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1,
-                bgcolor: isPresent
-                  ? 'success.main'
-                  : attendance.type === 'absent'
-                  ? 'error.main'
-                  : 'grey.300',
-                color: isPresent || attendance.type === 'absent' ? 'white' : 'grey.600',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-                cursor: disabled ? 'default' : 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  opacity: disabled ? 1 : 0.8,
-                  transform: disabled ? 'none' : 'scale(1.05)',
-                },
-              }}
-              onClick={() => !disabled && onTypeChange(isPresent ? ('absent' as AttendanceType) : ('present' as AttendanceType))}
-            >
-              {isPresent ? (
-                <CheckCircleIcon fontSize="small" />
-              ) : attendance.type === 'absent' ? (
-                <CancelIcon fontSize="small" />
-              ) : (
-                <PersonIcon fontSize="small" />
-              )}
-            </Box>
-
-            {/* Informações do membro */}
-            <Box flex={1} minWidth={0} sx={{ overflow: 'hidden' }}>
-              <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-                <Typography 
-                  variant="body1" 
-                  fontWeight="medium" 
-                  sx={{ 
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: { xs: '100%', sm: 200, md: 250, lg: 300 },
-                  }}
-                >
-                  {member.name}
-                </Typography>
-                <Chip
-                  size="small"
-                  label={member.role === 'leader' ? 'Líder' : 'Professor'}
-                  color={member.role === 'leader' ? 'primary' : 'secondary'}
-                  variant="outlined"
-                  sx={{ height: 20, fontSize: '0.65rem', flexShrink: 0 }}
-                />
-              </Stack>
-              <Typography 
-                variant="caption" 
-                color="text.secondary" 
-                sx={{ 
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
+        <Box sx={{ p: { xs: 1, sm: 1.5 } }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            spacing={{ xs: 1.5, sm: 2 }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1,
+                  bgcolor: isPresent
+                    ? 'success.main'
+                    : attendance.type === AttendanceType.ABSENT
+                      ? 'error.main'
+                      : 'grey.300',
+                  color: isPresent || attendance.type === AttendanceType.ABSENT ? 'white' : 'grey.600',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flexShrink: 0,
+                  cursor: disabled ? 'default' : 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    opacity: disabled ? 1 : 0.8,
+                    transform: disabled ? 'none' : 'scale(1.05)',
+                  },
                 }}
+                onClick={() => !disabled && onTypeChange(isPresent ? AttendanceType.ABSENT : AttendanceType.PRESENT)}
               >
-                {member.email}
-              </Typography>
-            </Box>
+                {isPresent ? (
+                  <CheckCircleIcon fontSize="small" />
+                ) : attendance.type === AttendanceType.ABSENT ? (
+                  <CancelIcon fontSize="small" />
+                ) : (
+                  <PersonIcon fontSize="small" />
+                )}
+              </Box>
 
-            {/* Botões de ação rápida */}
-            <Stack 
-              direction={{ xs: 'row', sm: 'row' }} 
+              <Box flex={1} minWidth={0} sx={{ overflow: 'hidden' }}>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {member.name}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={member.role === 'leader' ? 'Líder' : 'Membro'}
+                    color={member.role === 'leader' ? 'primary' : 'secondary'}
+                    variant="outlined"
+                    sx={{ height: 18, fontSize: '0.6rem', flexShrink: 0 }}
+                  />
+                </Stack>
+              </Box>
+            </Stack>
+
+            <Stack
+              direction="row"
               spacing={1}
-              sx={{ 
-                flexShrink: 0,
-                width: { xs: '100%', sm: 'auto' },
-                justifyContent: { xs: 'flex-start', sm: 'flex-end' },
-              }}
+              sx={{ flexShrink: 0 }}
             >
               <Button
                 size="small"
                 variant={isPresent ? 'contained' : 'outlined'}
                 color="success"
-                onClick={() => !disabled && onTypeChange('present')}
+                onClick={() => !disabled && onTypeChange(AttendanceType.PRESENT)}
                 disabled={disabled}
                 sx={{
-                  minWidth: { xs: '100%', sm: 90 },
+                  flex: { xs: 1, sm: 'none' },
+                  minWidth: { xs: 0, sm: 90 },
                   textTransform: 'none',
                   fontWeight: isPresent ? 'bold' : 'normal',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  px: { xs: 1, sm: 2 },
                 }}
               >
                 ✓ Presente
               </Button>
               <Button
                 size="small"
-                variant={attendance.type === 'absent' ? 'contained' : 'outlined'}
+                variant={attendance.type === AttendanceType.ABSENT ? 'contained' : 'outlined'}
                 color="error"
-                onClick={() => !disabled && onTypeChange('absent')}
+                onClick={() => !disabled && onTypeChange(AttendanceType.ABSENT)}
                 disabled={disabled}
                 sx={{
-                  minWidth: { xs: '100%', sm: 80 },
+                  flex: { xs: 1, sm: 'none' },
+                  minWidth: { xs: 0, sm: 80 },
                   textTransform: 'none',
-                  fontWeight: attendance.type === 'absent' ? 'bold' : 'normal',
+                  fontWeight: attendance.type === AttendanceType.ABSENT ? 'bold' : 'normal',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  px: { xs: 1, sm: 2 },
                 }}
               >
                 ✕ Falta
@@ -197,11 +184,10 @@ const MemberAttendanceCard = memo(({
           </Stack>
         </Box>
 
-        {/* Campo de comentário (expande quando falta) */}
         <Collapse in={showComment}>
           <Box
             sx={{
-              px: 1.5,
+              px: { xs: 1, sm: 1.5 },
               pb: 1.5,
               pt: 1,
               borderTop: '1px solid',
@@ -211,7 +197,7 @@ const MemberAttendanceCard = memo(({
           >
             <TextField
               label="Motivo da falta (opcional)"
-              placeholder="Ex: Doente, viagem, compromisso pessoal..."
+              placeholder="Ex: Doente, viagem..."
               value={attendance.comment}
               onChange={e => onCommentChange(e.target.value)}
               size="small"
@@ -220,7 +206,7 @@ const MemberAttendanceCard = memo(({
               maxRows={4}
               disabled={disabled}
               fullWidth
-              helperText="Explique brevemente o motivo da ausência (opcional)"
+              helperText="Explique brevemente o motivo da ausência"
             />
           </Box>
         </Collapse>
@@ -237,72 +223,89 @@ const TeamMemberAttendance = memo(({
   onBack,
   onAttendanceRegistered
 }: TeamMemberAttendanceProps) => {
-  // Garantir que schedules seja sempre um array
+
   const safeSchedules = Array.isArray(schedules) ? schedules : [];
-  
+
   const [scheduleId, setScheduleId] = useState<string>('');
-  
-  // Atualizar scheduleId quando schedules mudar
+  const [eventTypeFilter, setEventTypeFilter] = useState<'visit' | 'meeting'>('visit');
+
+  const filteredSchedules = useMemo(() => {
+    return safeSchedules.filter(s => {
+      
+      const type = s.category || (s.visitDate ? 'visit' : 'meeting');
+      return type === eventTypeFilter;
+    });
+  }, [safeSchedules, eventTypeFilter]);
+
   useEffect(() => {
-    if (safeSchedules.length > 0) {
-      // Se não tem scheduleId selecionado ou o selecionado não existe mais, usa o primeiro
-      const currentScheduleExists = scheduleId && safeSchedules.find(s => s.id === scheduleId);
-      if (!currentScheduleExists) {
-        // Sempre seleciona o primeiro evento quando os schedules são carregados
-        setScheduleId(safeSchedules[0].id);
+    if (filteredSchedules.length > 0) {
+      
+      const currentScheduleWithCategory = scheduleId
+        ? filteredSchedules.find(s => s.id === scheduleId && s.category === eventTypeFilter)
+        : null;
+
+      if (!currentScheduleWithCategory) {
+        
+        const firstSchedule = filteredSchedules[0];
+        if (firstSchedule) {
+          
+          if (firstSchedule.id !== scheduleId) {
+            console.log('🔄 Changing scheduleId from', scheduleId, 'to', firstSchedule.id, 'due to filter change to', eventTypeFilter);
+            setScheduleId(firstSchedule.id);
+          }
+          
+        }
       }
+      
     } else if (scheduleId) {
-      // Se não há schedules mas ainda tem um scheduleId, limpa
       setScheduleId('');
     }
-  }, [safeSchedules, scheduleId]);
-  // Filtrar apenas professores (líderes não registram presença)
-  const teachersOnly = useMemo(() => {
-    return team.members.filter(member => member.role === 'teacher' || !member.role);
+  }, [filteredSchedules, eventTypeFilter]); 
+
+  const membersOnly = useMemo(() => {
+    return team.members.filter(member => member.role === 'member' || !member.role);
   }, [team.members]);
 
   const [memberAttendances, setMemberAttendances] = useState<Record<string, MemberAttendanceRow>>(() => {
     const initial: Record<string, MemberAttendanceRow> = {};
-    // Inicializar apenas professores, todos como presente
-    const teachers = team.members.filter(member => member.role === 'teacher' || !member.role);
-    teachers.forEach(member => {
+
+    const members = team.members.filter(member => member.role === 'member' || !member.role);
+    members.forEach(member => {
       initial[member.id] = {
         member,
-        type: 'present' as AttendanceType,
+        type: AttendanceType.PRESENT,
         comment: '',
       };
     });
     return initial;
   });
 
-  // Atualizar memberAttendances quando teachersOnly mudar (adicionar novos professores)
   useEffect(() => {
     setMemberAttendances(prev => {
       const updated = { ...prev };
       let changed = false;
-      
-      teachersOnly.forEach(member => {
+
+      membersOnly.forEach(member => {
         if (!updated[member.id]) {
           updated[member.id] = {
             member,
-            type: 'present' as AttendanceType,
+            type: AttendanceType.PRESENT,
             comment: '',
           };
           changed = true;
         }
       });
-      
-      // Remover membros que não são mais professores
+
       Object.keys(updated).forEach(memberId => {
-        if (!teachersOnly.find(m => m.id === memberId)) {
+        if (!membersOnly.find(m => m.id === memberId)) {
           delete updated[memberId];
           changed = true;
         }
       });
-      
+
       return changed ? updated : prev;
     });
-  }, [teachersOnly]);
+  }, [membersOnly]);
 
   const [formState, setFormState] = useState<AttendanceFormState>({
     loading: false,
@@ -314,87 +317,94 @@ const TeamMemberAttendance = memo(({
   const [loadingExistingRecords, setLoadingExistingRecords] = useState(false);
   const [hasExistingAttendance, setHasExistingAttendance] = useState(false);
 
-  // Carregar registros existentes quando scheduleId mudar
+  const lastLoadedKey = useRef<string | null>(null);
+
   useEffect(() => {
     const loadExistingRecords = async () => {
       if (!scheduleId) {
+        lastLoadedKey.current = null;
         setExistingRecords([]);
         setHasExistingAttendance(false);
-        // Resetar para valores padrão quando não há evento selecionado
-        setMemberAttendances(prev => {
-          const updated: Record<string, MemberAttendanceRow> = {};
-          teachersOnly.forEach(member => {
-            updated[member.id] = {
-              member,
-              type: 'present' as AttendanceType,
-              comment: '',
-            };
-          });
-          return updated;
+        const resetAttendances: Record<string, MemberAttendanceRow> = {};
+        membersOnly.forEach(member => {
+          resetAttendances[member.id] = {
+            member,
+            type: AttendanceType.PRESENT,
+            comment: '',
+          };
         });
+        setMemberAttendances(resetAttendances);
         return;
       }
 
+      const selectedSchedule = safeSchedules.find(s => s.id === scheduleId);
+      const category = selectedSchedule?.category || eventTypeFilter;
+      const uniqueKey = `${scheduleId}-${category}`;
+
+      if (lastLoadedKey.current === uniqueKey) {
+        console.log('⏭️ Skipping duplicate load for key:', uniqueKey);
+        return;
+      }
+
+      console.log('🔄 loadExistingRecords - scheduleId:', scheduleId, 'category:', category, 'uniqueKey:', uniqueKey);
+
       try {
         setLoadingExistingRecords(true);
+        lastLoadedKey.current = uniqueKey; 
+
+        console.log('📡 Fetching records for scheduleId:', scheduleId, 'category:', category);
         const response = await getAttendanceRecords({
           scheduleId,
-          limit: 100, // Buscar todos os registros do evento
+          category: category as 'visit' | 'meeting',
+          limit: 100,
         });
-        
+
         const records = response.data || [];
+        console.log('📦 Received', records.length, 'records:', records);
         setExistingRecords(records);
         setHasExistingAttendance(records.length > 0);
 
-        // Preencher formulário com dados existentes
-        if (records.length > 0) {
-          setMemberAttendances(prev => {
-            const updated: Record<string, MemberAttendanceRow> = {};
-            teachersOnly.forEach(member => {
-              const existingRecord = records.find(r => r.memberId === member.id);
-              if (existingRecord) {
-                updated[member.id] = {
-                  member,
-                  type: existingRecord.type,
-                  comment: existingRecord.comment || '',
-                };
-              } else {
-                // Se não tem registro, inicializar como presente
-                updated[member.id] = {
-                  member,
-                  type: 'present' as AttendanceType,
-                  comment: '',
-                };
-              }
-            });
-            return updated;
-          });
-        } else {
-          // Se não há registros, inicializar todos como presente
-          setMemberAttendances(prev => {
-            const updated: Record<string, MemberAttendanceRow> = {};
-            teachersOnly.forEach(member => {
-              updated[member.id] = {
-                member,
-                type: 'present' as AttendanceType,
-                comment: '',
-              };
-            });
-            return updated;
-          });
-        }
+        const updated: Record<string, MemberAttendanceRow> = {};
+        membersOnly.forEach(member => {
+          const existingRecord = records.find(r => r.memberId === member.id);
+          if (existingRecord) {
+            updated[member.id] = {
+              member,
+              type: existingRecord.type,
+              comment: existingRecord.comment || '',
+            };
+          } else {
+            updated[member.id] = {
+              member,
+              type: AttendanceType.PRESENT,
+              comment: '',
+            };
+          }
+        });
+        console.log('💾 Setting memberAttendances with', Object.keys(updated).length, 'members');
+        setMemberAttendances(updated);
       } catch (err: any) {
         console.error('Erro ao carregar registros existentes:', err);
-        // Em caso de erro, manter valores padrão
+        lastLoadedKey.current = null; 
         setExistingRecords([]);
         setHasExistingAttendance(false);
+        const resetAttendances: Record<string, MemberAttendanceRow> = {};
+        membersOnly.forEach(member => {
+          resetAttendances[member.id] = {
+            member,
+            type: AttendanceType.PRESENT,
+            comment: '',
+          };
+        });
+        setMemberAttendances(resetAttendances);
       } finally {
         setLoadingExistingRecords(false);
       }
     };
 
     loadExistingRecords();
-  }, [scheduleId, teachersOnly]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduleId, eventTypeFilter]); 
 
   const handleMemberTypeChange = useCallback((memberId: string, type: AttendanceType) => {
     setMemberAttendances(prev => ({
@@ -423,8 +433,7 @@ const TeamMemberAttendance = memo(({
         updated[memberId] = {
           ...prev[memberId],
           type,
-          // Limpar comentário se mudar de falta para presente
-          comment: type === 'present' ? '' : prev[memberId].comment,
+          comment: type === AttendanceType.PRESENT ? '' : prev[memberId].comment,
         };
       });
       return updated;
@@ -467,17 +476,16 @@ const TeamMemberAttendance = memo(({
         ...prev,
         error: 'Evento selecionado não encontrado. Por favor, selecione outro evento.',
       }));
-      // Tentar definir o primeiro schedule disponível
       if (safeSchedules.length > 0) {
         setScheduleId(safeSchedules[0].id);
       }
       return;
     }
 
-    if (teachersOnly.length === 0) {
+    if (membersOnly.length === 0) {
       setFormState(prev => ({
         ...prev,
-        error: 'Nenhum professor na equipe para registrar presença.',
+        error: 'Nenhum membro na equipe para registrar presença.',
       }));
       return;
     }
@@ -496,17 +504,22 @@ const TeamMemberAttendance = memo(({
         comment: row.comment.trim() || undefined,
       }));
 
+      const scheduleCategory = selectedSchedule.category || eventTypeFilter;
+
       const dto: RegisterTeamAttendanceDto = {
         teamId: team.teamId,
         scheduleId,
+        category: scheduleCategory as 'visit' | 'meeting',
         attendances,
       };
 
-      await registerTeamAttendance(dto);
+      console.log('💾 Salvando frequência com DTO:', { teamId: dto.teamId, scheduleId: dto.scheduleId, category: dto.category, count: dto.attendances.length });
 
-      // Recarregar registros existentes após salvar
+      await registerTeamAttendance(dto);
+      
       const response = await getAttendanceRecords({
         scheduleId,
+        category: scheduleCategory as 'visit' | 'meeting',
         limit: 100,
       });
       setExistingRecords(response.data || []);
@@ -518,25 +531,25 @@ const TeamMemberAttendance = memo(({
         feedback: {
           status: 'success',
           message: hasExistingAttendance
-            ? `Pagela atualizada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`
-            : `Pagela registrada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`,
+            ? `Frequência atualizada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`
+            : `Frequência registrada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`,
         },
       }));
 
       onAttendanceRegistered();
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar pagela. Tente novamente.';
+      const message = err?.response?.data?.message || 'Erro ao registrar frequência. Tente novamente.';
       setFormState(prev => ({
         ...prev,
         loading: false,
         error: message,
       }));
     }
-  }, [scheduleId, safeSchedules, memberAttendances, team.teamId, teachersOnly.length, hasExistingAttendance, registerTeamAttendance, onAttendanceRegistered]);
+  }, [scheduleId, safeSchedules, memberAttendances, team.teamId, membersOnly.length, hasExistingAttendance, registerTeamAttendance, onAttendanceRegistered]);
 
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header fixo no topo */}
+
       <Box
         sx={{
           bgcolor: 'background.paper',
@@ -561,14 +574,13 @@ const TeamMemberAttendance = memo(({
 
           <Box flex={1} minWidth={0}>
             <Typography variant="h5" fontWeight="bold" noWrap>
-              Time {team.teamNumber}
+              Equipe {team.teamNumber}
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
-              {shelter.shelterName} • {teachersOnly.length} professor{teachersOnly.length !== 1 ? 'es' : ''}
+              {shelter.shelterName} • {membersOnly.length} membro{membersOnly.length !== 1 ? 's' : ''}
             </Typography>
           </Box>
 
-          {/* Seleção de evento compacta no header (desktop) */}
           <Box
             sx={{
               display: { xs: 'none', md: 'block' },
@@ -577,6 +589,19 @@ const TeamMemberAttendance = memo(({
             }}
           >
             <Box sx={{ position: 'relative' }}>
+              <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
+                <ToggleButtonGroup
+                  value={eventTypeFilter}
+                  exclusive
+                  onChange={(e, value) => value && setEventTypeFilter(value)}
+                  size="small"
+                  aria-label="Filtro de eventos"
+                  fullWidth
+                >
+                  <ToggleButton value="visit">Visitas</ToggleButton>
+                  <ToggleButton value="meeting">Reuniões</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
               {loadingExistingRecords && (
                 <CircularProgress
                   size={20}
@@ -596,27 +621,40 @@ const TeamMemberAttendance = memo(({
                 onChange={e => setScheduleId(e.target.value)}
                 required
                 size="small"
-                disabled={loadingSchedules || safeSchedules.length === 0 || loadingExistingRecords}
+                disabled={loadingSchedules || filteredSchedules.length === 0 || loadingExistingRecords}
                 fullWidth
                 helperText={
                   loadingSchedules
                     ? 'Carregando...'
                     : loadingExistingRecords
-                    ? 'Carregando registros...'
-                    : safeSchedules.length === 0
-                    ? 'Nenhum evento'
-                    : hasExistingAttendance
-                    ? 'Pagela já lançada - editando'
-                    : 'Selecione o evento'
+                      ? 'Carregando registros...'
+                      : safeSchedules.length === 0
+                        ? 'Nenhum evento'
+                        : hasExistingAttendance
+                          ? 'Frequência já lançada - editando'
+                          : 'Selecione o evento'
                 }
               >
-                {safeSchedules.map(schedule => {
-                  // Verificar se este evento tem registros (precisa buscar ou manter estado)
+                {filteredSchedules.length === 0 && (
+                  <MenuItem disabled value="">
+                    Nenhum evento encontrado
+                  </MenuItem>
+                )}
+                {filteredSchedules.map(schedule => {
                   const scheduleHasRecords = existingRecords.length > 0 && existingRecords[0]?.scheduleId === schedule.id;
                   return (
                     <MenuItem key={schedule.id} value={schedule.id}>
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
-                        <Box flex={1}>{formatScheduleLabel(schedule)}</Box>
+                        <Box
+                          flex={1}
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {formatScheduleLabel(schedule)}
+                        </Box>
                         {scheduleHasRecords && (
                           <CheckCircleOutlineIcon fontSize="small" color="success" />
                         )}
@@ -630,12 +668,10 @@ const TeamMemberAttendance = memo(({
         </Stack>
       </Box>
 
-      {/* Layout de duas colunas no desktop */}
       <Grid container spacing={3} sx={{ flex: 1, overflow: 'hidden' }}>
-        {/* Coluna esquerda: Seleção de evento (mobile) e ações */}
         <Grid item xs={12} md={4} lg={3}>
           <Stack spacing={3}>
-            {/* Seleção de evento (visível apenas no mobile) */}
+
             <Box sx={{ display: { xs: 'block', md: 'none' } }}>
               <Card variant="outlined">
                 <CardHeader
@@ -658,6 +694,19 @@ const TeamMemberAttendance = memo(({
                   subheader="Escolha o evento para registrar a presença"
                 />
                 <CardContent>
+                  <Box sx={{ mb: 2 }}>
+                    <ToggleButtonGroup
+                      value={eventTypeFilter}
+                      exclusive
+                      onChange={(e, value) => value && setEventTypeFilter(value)}
+                      size="small"
+                      aria-label="Filtro de eventos"
+                      fullWidth
+                    >
+                      <ToggleButton value="visit">Visitas</ToggleButton>
+                      <ToggleButton value="meeting">Reuniões</ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
                   <Box sx={{ position: 'relative' }}>
                     {loadingExistingRecords && (
                       <CircularProgress
@@ -678,26 +727,40 @@ const TeamMemberAttendance = memo(({
                       onChange={e => setScheduleId(e.target.value)}
                       required
                       size="small"
-                      disabled={loadingSchedules || safeSchedules.length === 0 || loadingExistingRecords}
+                      disabled={loadingSchedules || filteredSchedules.length === 0 || loadingExistingRecords}
                       fullWidth
                       helperText={
                         loadingSchedules
                           ? 'Carregando eventos...'
                           : loadingExistingRecords
-                          ? 'Carregando registros...'
-                          : safeSchedules.length === 0
-                          ? 'Nenhum evento encontrado'
-                          : hasExistingAttendance
-                          ? 'Pagela já lançada - editando'
-                          : 'Selecione o evento'
+                            ? 'Carregando registros...'
+                            : safeSchedules.length === 0
+                              ? 'Nenhum evento encontrado'
+                              : hasExistingAttendance
+                                ? 'Frequência já lançada - editando'
+                                : 'Selecione o evento'
                       }
                     >
-                      {safeSchedules.map(schedule => {
+                      {filteredSchedules.length === 0 && (
+                        <MenuItem disabled value="">
+                          Nenhum evento encontrado
+                        </MenuItem>
+                      )}
+                      {filteredSchedules.map(schedule => {
                         const scheduleHasRecords = existingRecords.length > 0 && existingRecords[0]?.scheduleId === schedule.id;
                         return (
                           <MenuItem key={schedule.id} value={schedule.id}>
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
-                              <Box flex={1}>{formatScheduleLabel(schedule)}</Box>
+                              <Box
+                                flex={1}
+                                sx={{
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {formatScheduleLabel(schedule)}
+                              </Box>
                               {scheduleHasRecords && (
                                 <CheckCircleOutlineIcon fontSize="small" color="success" />
                               )}
@@ -711,7 +774,6 @@ const TeamMemberAttendance = memo(({
               </Card>
             </Box>
 
-            {/* Indicador de status da pagela */}
             {hasExistingAttendance && (
               <Alert
                 severity="info"
@@ -719,12 +781,11 @@ const TeamMemberAttendance = memo(({
                 sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
               >
                 <Typography variant="body2" sx={{ fontSize: 'inherit' }}>
-                  <strong>Pagela já lançada.</strong> Você está editando os registros existentes.
+                  <strong>Frequência já lançada.</strong> Você está editando os registros existentes.
                 </Typography>
               </Alert>
             )}
 
-            {/* Estatísticas rápidas */}
             <Card variant="outlined">
               <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Stack spacing={2}>
@@ -734,13 +795,13 @@ const TeamMemberAttendance = memo(({
                   <Stack spacing={1.5}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="body2">Total:</Typography>
-                      <Chip label={teachersOnly.length} size="small" color="default" />
+                      <Chip label={membersOnly.length} size="small" color="default" />
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="body2" color="success.main">Presentes:</Typography>
                       <Chip
                         label={
-                          Object.values(memberAttendances).filter(m => m.type === 'present').length
+                          Object.values(memberAttendances).filter(m => m.type === AttendanceType.PRESENT).length
                         }
                         size="small"
                         color="success"
@@ -750,7 +811,7 @@ const TeamMemberAttendance = memo(({
                       <Typography variant="body2" color="error.main">Faltas:</Typography>
                       <Chip
                         label={
-                          Object.values(memberAttendances).filter(m => m.type === 'absent').length
+                          Object.values(memberAttendances).filter(m => m.type === AttendanceType.ABSENT).length
                         }
                         size="small"
                         color="error"
@@ -761,7 +822,6 @@ const TeamMemberAttendance = memo(({
               </CardContent>
             </Card>
 
-            {/* Ações rápidas */}
             <Card variant="outlined">
               <CardHeader
                 title="Ações Rápidas"
@@ -775,7 +835,7 @@ const TeamMemberAttendance = memo(({
                     size="small"
                     fullWidth
                     startIcon={<CheckCircleIcon />}
-                    onClick={() => bulkSetType('present' as AttendanceType)}
+                    onClick={() => bulkSetType(AttendanceType.PRESENT)}
                     disabled={formState.loading}
                   >
                     Todos Presentes
@@ -786,7 +846,7 @@ const TeamMemberAttendance = memo(({
                     size="small"
                     fullWidth
                     startIcon={<CancelIcon />}
-                    onClick={() => bulkSetType('absent' as AttendanceType)}
+                    onClick={() => bulkSetType(AttendanceType.ABSENT)}
                     disabled={formState.loading}
                   >
                     Todos Faltas
@@ -805,12 +865,12 @@ const TeamMemberAttendance = memo(({
               </CardContent>
             </Card>
 
-            {/* Botão salvar (sticky no desktop) */}
             <Box
               sx={{
-                position: { xs: 'relative', md: 'sticky' },
-                bottom: { md: 0 },
-                pt: { md: 2 },
+                display: { xs: 'none', md: 'block' },
+                position: 'sticky',
+                bottom: 0,
+                pt: 2,
               }}
             >
               <Card variant="outlined" sx={{ bgcolor: 'primary.50', borderColor: 'primary.main' }}>
@@ -845,7 +905,7 @@ const TeamMemberAttendance = memo(({
                         loadingSchedules ||
                         safeSchedules.length === 0 ||
                         !scheduleId ||
-                        teachersOnly.length === 0
+                        membersOnly.length === 0
                       }
                       startIcon={formState.loading ? <CircularProgress size={20} color="inherit" /> : null}
                       fullWidth
@@ -858,12 +918,12 @@ const TeamMemberAttendance = memo(({
                         loadingSchedules
                           ? 'Carregando eventos...'
                           : safeSchedules.length === 0
-                          ? 'Nenhum evento disponível para esta equipe'
-                          : !scheduleId
-                          ? 'Selecione um evento'
-                          : teachersOnly.length === 0
-                          ? 'Nenhum professor na equipe'
-                          : ''
+                            ? 'Nenhum evento disponível para esta equipe'
+                            : !scheduleId
+                              ? 'Selecione um evento'
+                              : membersOnly.length === 0
+                                ? 'Nenhum membro na equipe'
+                                : ''
                       }
                     >
                       {formState.loading
@@ -871,8 +931,8 @@ const TeamMemberAttendance = memo(({
                           ? 'Atualizando...'
                           : 'Registrando...'
                         : hasExistingAttendance
-                        ? 'Atualizar Pagela'
-                        : 'Salvar Pagela'}
+                          ? 'Atualizar Pagela'
+                          : 'Salvar Pagela'}
                     </Button>
                   </Stack>
                 </CardContent>
@@ -881,7 +941,6 @@ const TeamMemberAttendance = memo(({
           </Stack>
         </Grid>
 
-        {/* Coluna direita: Lista de membros (scrollável) */}
         <Grid item xs={12} md={8} lg={9}>
           <Card
             variant="outlined"
@@ -907,8 +966,8 @@ const TeamMemberAttendance = memo(({
                   <GroupsIcon />
                 </Box>
               }
-              title={`Professores do Time (${teachersOnly.length})`}
-              subheader="Marque presença ou falta para cada professor"
+              title={`Membros do Time (${membersOnly.length})`}
+              subheader="Marque presença ou falta para cada membro"
               action={
                 <Stack
                   direction="row"
@@ -957,8 +1016,8 @@ const TeamMemberAttendance = memo(({
                 },
               }}
             >
-              {teachersOnly.length === 0 ? (
-                <Alert severity="info">Nenhum professor encontrado nesta equipe.</Alert>
+              {membersOnly.length === 0 ? (
+                <Alert severity="info">Nenhum membro encontrado nesta equipe.</Alert>
               ) : (
                 <Box
                   sx={{
@@ -969,7 +1028,7 @@ const TeamMemberAttendance = memo(({
                     overflow: 'hidden',
                   }}
                 >
-                  {teachersOnly.map((member, index) => (
+                  {membersOnly.map((member, index) => (
                     <Box
                       key={member.id}
                       sx={{
@@ -995,6 +1054,75 @@ const TeamMemberAttendance = memo(({
           </Card>
         </Grid>
       </Grid>
+
+      <Box
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'sticky',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          p: 2,
+          bgcolor: 'background.default',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          zIndex: 10,
+        }}
+      >
+        <Card variant="outlined" sx={{ bgcolor: 'primary.50', borderColor: 'primary.main' }}>
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <Stack spacing={2}>
+              {formState.error && (
+                <Alert
+                  severity="error"
+                  onClose={() => setFormState(prev => ({ ...prev, error: null }))}
+                  sx={{ mb: 0 }}
+                >
+                  {formState.error}
+                </Alert>
+              )}
+
+              {formState.feedback && (
+                <Alert
+                  severity={formState.feedback.status}
+                  onClose={() => setFormState(prev => ({ ...prev, feedback: null }))}
+                  sx={{ mb: 0 }}
+                >
+                  {formState.feedback.message}
+                </Alert>
+              )}
+
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleSubmit}
+                disabled={
+                  formState.loading ||
+                  loadingSchedules ||
+                  safeSchedules.length === 0 ||
+                  !scheduleId ||
+                  membersOnly.length === 0
+                }
+                startIcon={formState.loading ? <CircularProgress size={20} color="inherit" /> : null}
+                fullWidth
+                sx={{
+                  py: 1.5,
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                }}
+              >
+                {formState.loading
+                  ? hasExistingAttendance
+                    ? 'Atualizando...'
+                    : 'Registrando...'
+                  : hasExistingAttendance
+                    ? 'Atualizar Pagela'
+                    : 'Salvar Pagela'}
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 });

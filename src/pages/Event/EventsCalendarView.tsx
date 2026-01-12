@@ -41,7 +41,7 @@ type Props = {
   onDelete: (e: AppEvent) => void;
 };
 
-type DayKey = string; // YYYY-MM-DD
+type DayKey = string; 
 const toDayKey = (d: Dayjs) => d.format("YYYY-MM-DD");
 const toEventDayKey = (iso: string) => dayjs(iso).format("YYYY-MM-DD");
 
@@ -89,15 +89,12 @@ export default function EventsCalendarView({
     return map;
   }, [eventos]);
 
-  // Gera os dias do calendário (incluindo dias de outros meses para preencher)
   const calendarDays = useMemo(() => {
     const firstDay = currentMonth.startOf("month");
     const lastDay = currentMonth.endOf("month");
 
-    // Começa no domingo da semana que contém o primeiro dia do mês
     const startDay = firstDay.startOf("week");
 
-    // Termina no sábado da semana que contém o último dia do mês
     const endDay = lastDay.endOf("week");
 
     const days: Dayjs[] = [];
@@ -111,7 +108,6 @@ export default function EventsCalendarView({
     return days;
   }, [currentMonth]);
 
-  // Organiza os dias em semanas
   const weeks = useMemo(() => {
     const result: Dayjs[][] = [];
     for (let i = 0; i < calendarDays.length; i += 7) {
@@ -179,7 +175,6 @@ export default function EventsCalendarView({
           <Divider />
 
           <Box className="events-calendar-box">
-            {/* Header do mês com navegação */}
             <Box className="custom-calendar-header">
               <IconButton onClick={handlePrevMonth} className="month-nav-button">
                 <ChevronLeftIcon />
@@ -190,7 +185,6 @@ export default function EventsCalendarView({
               </IconButton>
             </Box>
 
-            {/* Labels dos dias da semana */}
             <Box className="weekday-labels">
               {weekDayLabels.map((label, idx) => (
                 <Box key={idx} className={`weekday-label ${idx === 0 ? "sunday" : ""}`}>
@@ -199,7 +193,6 @@ export default function EventsCalendarView({
               ))}
             </Box>
 
-            {/* Grid de semanas e dias */}
             <Box className="calendar-grid">
               {weeks.map((week, weekIdx) => (
                 <motion.div

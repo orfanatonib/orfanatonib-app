@@ -52,7 +52,6 @@ export type ShelteredSimpleResponseDto = {
   acceptedChrists: AcceptedChristShortDto[];
 };
 
-
 export type Paginated<T> = {
   data: T[];
   meta?: {
