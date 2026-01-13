@@ -47,31 +47,35 @@ const TeamCard = memo(({
   loading?: boolean;
 }) => {
   const isExpanded = expandedShelterId === shelter.shelterId;
-  const totalMembers = shelter.teams.reduce((sum, team) => sum + team.members.length, 0);
+  const totalMembers = shelter.teams.reduce((sum, team) => sum + (team.memberCount || team.members.length || 0), 0);
 
   return (
     <Card
-      variant="outlined"
       sx={{
-        mb: 2,
+        borderRadius: 4,
         height: 'fit-content',
-        borderWidth: 1, 
-        borderColor: isExpanded ? 'primary.main' : 'divider',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
-          boxShadow: 2,
+          boxShadow: 6,
         },
       }}
+      elevation={2}
     >
       <CardHeader
-        sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 1.5, sm: 2 } }}
+        sx={{
+          px: { xs: 1.5, sm: 2.5 },
+          py: { xs: 1.5, sm: 2.5 },
+          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}14 0%, ${theme.palette.primary.main}05 100%)`,
+          borderBottom: isExpanded ? 1 : 0,
+          borderColor: 'divider'
+        }}
         avatar={
           <Box
             sx={{
-              width: 48, 
+              width: 48,
               height: 48,
               borderRadius: 2,
-              bgcolor: isExpanded ? 'primary.main' : 'primary.main', 
+              bgcolor: isExpanded ? 'primary.main' : 'primary.main',
               color: 'primary.contrastText',
               display: 'grid',
               placeItems: 'center',
@@ -124,7 +128,7 @@ const TeamCard = memo(({
           ) : (
             <Grid container spacing={2}>
               {shelter.teams.map(team => (
-                <Grid item xs={12} sm={6} md={6} key={team.teamId}> {}
+                <Grid item xs={12} sm={6} md={6} key={team.teamId}> { }
                   <Card
                     variant="outlined"
                     sx={{
@@ -133,7 +137,7 @@ const TeamCard = memo(({
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      bgcolor: 'action.hover', 
+                      bgcolor: 'action.hover',
                       border: '1px solid',
                       borderColor: 'divider',
                       '&:hover': {
@@ -163,7 +167,7 @@ const TeamCard = memo(({
                           sx={{
                             p: 1,
                             borderRadius: 1,
-                            bgcolor: 'background.paper', 
+                            bgcolor: 'background.paper',
                             border: '1px solid',
                             borderColor: 'divider',
                           }}
@@ -171,7 +175,7 @@ const TeamCard = memo(({
                           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                             <PeopleIcon fontSize="small" color="primary" sx={{ fontSize: '1rem' }} />
                             <Typography variant="caption" fontWeight="medium">
-                              {team.members.length} Membro{team.members.length !== 1 ? 's' : ''}
+                              {team.memberCount || team.members.length || 0} Membro{(team.memberCount || team.members.length) !== 1 ? 's' : ''}
                             </Typography>
                           </Stack>
                           <Stack direction="row" spacing={0.5} flexWrap="wrap">
@@ -229,14 +233,14 @@ const TeamCard = memo(({
 });
 
 const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }: TeamSelectionProps) => {
-  
+
   const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
 
   useEffect(() => {
     if (data.length === 1) {
       setExpandedShelterId(data[0].shelterId);
     } else if (searchTerm && searchTerm.trim()) {
-      const filteredShelters = data; 
+      const filteredShelters = data;
       if (filteredShelters.length === 1) {
         setExpandedShelterId(filteredShelters[0].shelterId);
       }
@@ -313,19 +317,34 @@ const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }:
     <Box sx={{ width: '100%' }}>
       {header}
 
-      <Grid container spacing={2}>
-        {data.map(shelter => (
-          <Grid item xs={12} md={6} key={shelter.shelterId}>
-            <TeamCard
-              shelter={shelter}
-              expandedShelterId={expandedShelterId}
-              onToggle={handleToggleShelter}
-              onTeamSelect={onTeamSelect}
-              loading={loading}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+          gap: { xs: 2, md: 3 },
+        }}
+      >
+        {data.map(shelter => {
+          const isExpanded = expandedShelterId === shelter.shelterId;
+          return (
+            <Box
+              key={shelter.shelterId}
+              sx={{
+                gridColumn: isExpanded ? { xs: '1 / -1', md: '1 / -1' } : 'span 1',
+                minWidth: 0, // prevents grid blowout
+              }}
+            >
+              <TeamCard
+                shelter={shelter}
+                expandedShelterId={expandedShelterId}
+                onToggle={handleToggleShelter}
+                onTeamSelect={onTeamSelect}
+                loading={loading}
+              />
+            </Box>
+          );
+        })}
+      </Box>
     </Box>
   );
 });

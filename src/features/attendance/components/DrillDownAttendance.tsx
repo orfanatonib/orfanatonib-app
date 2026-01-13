@@ -17,7 +17,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 
-import { getSheltersTeamsMembers, getTeamSchedules } from '../api';
+import { getSheltersTeamsMembers, getTeamSchedules, getTeamMembers } from '../api';
 import TeamSelection from './TeamSelection';
 import TeamMemberAttendance from './TeamMemberAttendance';
 import AttendanceModeSelector from './AttendanceModeSelector';
@@ -84,13 +84,33 @@ const DrillDownAttendance = memo(() => {
     }
   }, []);
 
-  const handleTeamSelect = useCallback((shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => {
+  const handleTeamSelect = useCallback(async (shelter: ShelterWithTeamsDto, team: TeamWithMembersDto) => {
     setDrillDownState({
       selectedShelter: shelter,
       selectedTeam: team,
       viewMode: 'team-members',
     });
     loadTeamSchedules(team.teamId);
+
+    // Fetch members for the selected team
+    try {
+      const membersResponse = await getTeamMembers(team.teamId);
+      setDrillDownState(prev => {
+        if (prev.selectedTeam?.teamId === team.teamId) {
+          return {
+            ...prev,
+            selectedTeam: {
+              ...prev.selectedTeam,
+              members: membersResponse.members,
+              memberCount: membersResponse.members.length,
+            },
+          };
+        }
+        return prev;
+      });
+    } catch (err) {
+      console.error('Error loading team members:', err);
+    }
   }, [loadTeamSchedules]);
 
   const handleBackToTeams = useCallback(() => {
@@ -125,7 +145,7 @@ const DrillDownAttendance = memo(() => {
     const totalShelters = hierarchyData.length;
     const totalTeams = hierarchyData.reduce((sum, s) => sum + s.teams.length, 0);
     const totalMembers = hierarchyData.reduce((sum, s) =>
-      sum + s.teams.reduce((teamSum, t) => teamSum + t.members.length, 0), 0
+      sum + s.teams.reduce((teamSum, t) => teamSum + (t.memberCount || t.members.length || 0), 0), 0
     );
     return { totalShelters, totalTeams, totalMembers };
   }, [hierarchyData]);
@@ -366,6 +386,7 @@ const DrillDownAttendance = memo(() => {
           drillDownState.selectedShelter &&
           drillDownState.selectedTeam && (
             <TeamMemberAttendance
+              key={drillDownState.selectedTeam.teamId}
               shelter={drillDownState.selectedShelter}
               team={drillDownState.selectedTeam}
               schedules={Array.isArray(teamSchedules) ? teamSchedules : []}

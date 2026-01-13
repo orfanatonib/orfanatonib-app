@@ -66,9 +66,6 @@ export default function ShelterCard({
   const theme = useTheme();
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  console.log('[ShelterCard] shelter-address flag:', isAddressEnabled);
-  console.log('[ShelterCard] shelter.address:', shelter.address);
-
   return (
     <Paper
       elevation={2}
@@ -77,6 +74,8 @@ export default function ShelterCard({
         overflow: "hidden",
         transition: "all 0.2s ease",
         "&:hover": { boxShadow: 6 },
+        height: "fit-content",
+        gridColumn: isExpanded ? { xs: "1 / -1", md: "1 / -1" } : "span 1",
       }}
     >
       <Box

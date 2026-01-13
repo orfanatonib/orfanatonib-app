@@ -48,9 +48,6 @@ export default function ScheduleDetailsModal({
   const theme = useTheme();
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  console.log('[ScheduleDetailsModal] shelter-address flag:', isAddressEnabled);
-  console.log('[ScheduleDetailsModal] schedule.shelter.address:', schedule?.shelter?.address);
-
   const formatDateTime = (dateStr?: string | null) => {
     if (!dateStr) return null;
     return dayjs(dateStr).format("DD/MM/YYYY [às] HH:mm");

@@ -22,13 +22,7 @@ export async function registerAttendance(data: RegisterAttendanceDto): Promise<A
 }
 
 export async function registerTeamAttendance(data: RegisterTeamAttendanceDto): Promise<AttendanceResponseDto[]> {
-  console.log('💾 Registrando frequência:', {
-    teamId: data.teamId,
-    scheduleId: data.scheduleId,
-    attendanceCount: data.attendances.length
-  });
   const res = await api.post<AttendanceResponseDto[]>('/attendance/register/team', data);
-  console.log('✅ Resposta do backend:', res.data.length, 'registros criados');
   return res.data;
 }
 
@@ -76,8 +70,32 @@ export async function listTeams(): Promise<LeaderTeamDto[]> {
 }
 
 export async function getSheltersTeamsMembers(): Promise<SheltersTeamsMembersResponse> {
-  const res = await api.get<SheltersTeamsMembersResponse>('/attendance/leader/shelters-teams-members');
-  return res.data;
+  const res = await api.get<LeaderTeamDto[]>('/attendance/leader/teams');
+  const teams = res.data;
+
+  // Transform flat array to hierarchical structure grouped by shelter
+  const shelterMap = new Map<string, SheltersTeamsMembersResponse[0]>();
+
+  teams.forEach(team => {
+    if (!shelterMap.has(team.shelterId)) {
+      shelterMap.set(team.shelterId, {
+        shelterId: team.shelterId,
+        shelterName: team.shelterName,
+        teams: [],
+      });
+    }
+
+    const shelter = shelterMap.get(team.shelterId)!;
+    shelter.teams.push({
+      teamId: team.teamId,
+      teamNumber: team.teamNumber,
+      description: team.description,
+      memberCount: team.memberCount,
+      members: [], // Members will be loaded separately when team is selected
+    });
+  });
+
+  return Array.from(shelterMap.values());
 }
 
 export async function getLeaderTeamsMembers(): Promise<SheltersTeamsMembersResponse> {
@@ -146,7 +164,6 @@ export async function getAttendanceRecords(
 
   const queryString = params.toString();
   const url = `/attendance/records${queryString ? `?${queryString}` : ''}`;
-  console.log('🌐 API URL:', url);
   const res = await api.get<PaginatedResponseDto<AttendanceResponseDto>>(url);
   return res.data;
 }
