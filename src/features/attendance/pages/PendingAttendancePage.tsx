@@ -289,7 +289,7 @@ const PendingAttendancePage = () => {
                 const shelterPendingsCount = teams.reduce((acc, t) => acc + t.pendings.length, 0);
 
                 return (
-                  <Grid item xs={12} md={6} key={shelterName}>
+                  <Grid item xs={12} md={isShelterExpanded ? 12 : 6} key={shelterName}>
                     <Card variant="outlined" sx={{ overflow: 'visible', borderColor: 'primary.light', borderWidth: 1, height: 'fit-content' }}>
                       <CardContent
                         sx={{
