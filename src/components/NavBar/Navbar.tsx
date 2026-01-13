@@ -29,6 +29,7 @@ import DesktopNavigation from './DesktopNavigation';
 import MobileNavigation from './MobileNavigation';
 import CompleteProfileAlert from './CompleteProfileAlert';
 import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
+import { useAttendancePendings } from '@/features/attendance/hooks';
 import { RootState } from '@/store/slices';
 import { logout, UserRole } from '@/store/slices/auth/authSlice';
 import api from '@/config/axiosConfig';
@@ -42,6 +43,7 @@ const NavBar: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const profileAlerts = useProfileAlerts();
+  const attendancePendings = useAttendancePendings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
@@ -122,7 +124,7 @@ const NavBar: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {isMobile ? (
             <>
-              <CompleteProfileAlert alerts={profileAlerts} onAlertClick={handleMobileAlertClick} />
+              <CompleteProfileAlert alerts={profileAlerts} attendancePendings={attendancePendings} onAlertClick={handleMobileAlertClick} />
               <MobileNavigation key={mobileDrawerKey} />
             </>
           ) : (
@@ -132,7 +134,7 @@ const NavBar: React.FC = () => {
             <>
               {isAuthenticated ? (
                 <>
-                  <CompleteProfileAlert alerts={profileAlerts} />
+                  <CompleteProfileAlert alerts={profileAlerts} attendancePendings={attendancePendings} />
                   <Tooltip title="Menu do Usuário">
                     <IconButton
                       onClick={handleProfileClick}

@@ -3,8 +3,7 @@ import {
   RegisterAttendanceDto,
   RegisterTeamAttendanceDto,
   AttendanceResponseDto,
-  PendingForLeaderDto,
-  PendingForMemberDto,
+  AllPendingsResponseDto,
   LeaderTeamDto,
   TeamMembersResponse,
   TeamScheduleDto,
@@ -26,13 +25,8 @@ export async function registerTeamAttendance(data: RegisterTeamAttendanceDto): P
   return res.data;
 }
 
-export async function getPendingForLeader(teamId: string): Promise<PendingForLeaderDto[]> {
-  const res = await api.get<PendingForLeaderDto[]>(`/attendance/pending/leader?teamId=${teamId}`);
-  return res.data;
-}
-
-export async function getPendingForMember(): Promise<PendingForMemberDto[]> {
-  const res = await api.get<PendingForMemberDto[]>('/attendance/pending/member');
+export async function getAllPendings(): Promise<AllPendingsResponseDto> {
+  const res = await api.get<AllPendingsResponseDto>('/attendance/pending/all');
   return res.data;
 }
 

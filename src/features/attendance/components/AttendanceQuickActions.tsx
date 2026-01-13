@@ -65,8 +65,11 @@ const AttendanceQuickActions = memo(({
   return (
     <Card variant="outlined">
       <CardHeader
-        title="Ações Rápidas"
-        titleTypographyProps={{ variant: 'subtitle2', fontWeight: 'bold' }}
+        title={
+          <Typography variant="subtitle2" fontWeight="bold">
+            Ações Rápidas
+          </Typography>
+        }
       />
       <CardContent>
         <Stack spacing={1.5}>

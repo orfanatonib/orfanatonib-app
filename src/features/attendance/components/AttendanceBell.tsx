@@ -20,14 +20,14 @@ import {
 } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
-import { getPendingForMember, registerAttendance } from '../api';
-import type { AttendanceType, PendingForMemberDto, RegisterAttendanceDto } from '../types';
+import { getAllPendings, registerAttendance } from '../api';
+import { AttendanceType, EventCategory } from '../types';
+import type { PendingForMemberDto, RegisterAttendanceDto } from '../types';
 import type { RootState as RootStateType } from '@/store/slices';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
-  const date = pending.visitDate || pending.meetingDate;
-  const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-  const kind = pending.visitDate ? 'Visita' : 'Reunião';
+  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
 
@@ -38,7 +38,7 @@ const AttendanceBell = () => {
   const [saving, setSaving] = useState(false);
   const [pendings, setPendings] = useState<PendingForMemberDto[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
-  const [type, setType] = useState<AttendanceType>('present');
+  const [type, setType] = useState<AttendanceType>(AttendanceType.PRESENT);
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -53,9 +53,10 @@ const AttendanceBell = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getPendingForMember();
-      setPendings(res);
-      setSelectedId(prev => (prev ? prev : res[0]?.scheduleId || ''));
+      const res = await getAllPendings();
+      const memberPendings = res.memberPendings;
+      setPendings(memberPendings);
+      setSelectedId(prev => (prev ? prev : memberPendings[0]?.scheduleId || ''));
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
       setError(message);
@@ -130,8 +131,7 @@ const AttendanceBell = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              O sininho consulta `/attendance/pending/member`. Ao clicar, escolha o evento e envie presença/falta
-              (idempotente).
+              Escolha o evento e registre sua presença ou falta.
             </Typography>
 
             {loading && <Typography variant="body2">Carregando pendências...</Typography>}

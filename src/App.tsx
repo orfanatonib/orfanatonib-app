@@ -1,4 +1,4 @@
-import { AttendanceDashboard } from './features/attendance/pages';
+import { AttendanceDashboard, PendingAttendancePage } from './features/attendance/pages';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -195,6 +195,7 @@ function App() {
                 <Route path="/adm" element={<AdminLayout />}>
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="presenca" element={<AttendanceDashboard />} />
+                  <Route path="presenca/pendencias" element={<PendingAttendancePage />} />
                   <Route path="meditacoes" element={<MeditationManager />} />
                   <Route path="comentarios" element={<CommentsManager />} />
                   <Route path="documentos" element={<DocumentsManager />} />

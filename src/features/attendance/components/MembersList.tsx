@@ -94,16 +94,20 @@ const MembersList = memo(({
             <GroupsIcon sx={{ fontSize: { xs: 16, md: 24 } }} />
           </Box>
         }
-        title={`Membros (${members.length})`}
-        titleTypographyProps={{
-          variant: 'subtitle1',
-          fontWeight: 'bold',
-          sx: { fontSize: { xs: '0.85rem', md: '1rem' } }
-        }}
-        subheader="Marque presença ou falta"
-        subheaderTypographyProps={{
-          sx: { fontSize: { xs: '0.65rem', md: '0.875rem' }, display: { xs: 'none', sm: 'block' } }
-        }}
+        title={
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}>
+            {`Membros (${members.length})`}
+          </Typography>
+        }
+        subheader={
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.65rem', md: '0.875rem' }, display: { xs: 'none', sm: 'block' } }}
+          >
+            Marque presença ou falta
+          </Typography>
+        }
         action={
           <Stack
             direction="row"
