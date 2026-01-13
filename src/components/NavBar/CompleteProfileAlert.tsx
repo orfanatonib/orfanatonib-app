@@ -126,9 +126,14 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
     setFeedback(null);
     setPendingError(null);
     try {
-      const dto: RegisterAttendanceDto = { scheduleId: selectedId, type, comment: comment.trim() || undefined };
+      const dto: RegisterAttendanceDto = {
+        scheduleId: selectedId,
+        type,
+        category: selectedCategory ?? undefined,
+        comment: comment.trim() || undefined
+      };
       await registerAttendance(dto);
-      setFeedback('Presença registrada com sucesso!');
+      setFeedback(type === AttendanceType.ABSENT ? 'Falta registrada com sucesso!' : 'Presença registrada com sucesso!');
       setComment('');
 
       if (attendancePendings?.refetch) {
@@ -681,8 +686,9 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
                 size="large"
                 disabled={!selectedId || saving || loading || memberPendings.length === 0}
                 sx={{ mt: 1, py: 1.5, fontSize: '1rem', fontWeight: 'bold' }}
+                color={type === AttendanceType.ABSENT ? 'error' : 'primary'}
               >
-                {saving ? 'Confirmando...' : 'Confirmar Presença'}
+                {saving ? 'Confirmando...' : (type === AttendanceType.ABSENT ? 'Confirmar Falta' : 'Confirmar Presença')}
               </Button>
             </Box>
           </Drawer>
@@ -731,8 +737,9 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
                 onClick={handleSubmitPending}
                 variant="contained"
                 disabled={!selectedId || saving || loading || memberPendings.length === 0}
+                color={type === AttendanceType.ABSENT ? 'error' : 'primary'}
               >
-                {saving ? 'Registrando...' : 'Registrar Presença'}
+                {saving ? 'Registrando...' : (type === AttendanceType.ABSENT ? 'Registrar Falta' : 'Registrar Presença')}
               </Button>
             </DialogActions>
           </Dialog>

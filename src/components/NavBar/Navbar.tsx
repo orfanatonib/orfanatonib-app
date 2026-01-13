@@ -46,16 +46,11 @@ const NavBar: React.FC = () => {
   const attendancePendings = useAttendancePendings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const [mobileDrawerKey, setMobileDrawerKey] = useState(0);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
-
-  const handleMobileAlertClick = () => {
-    setMobileDrawerKey(prev => prev + 1);
-  };
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isAuthenticated) {
@@ -124,8 +119,8 @@ const NavBar: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {isMobile ? (
             <>
-              <CompleteProfileAlert alerts={profileAlerts} attendancePendings={attendancePendings} onAlertClick={handleMobileAlertClick} />
-              <MobileNavigation key={mobileDrawerKey} />
+              <CompleteProfileAlert alerts={profileAlerts} attendancePendings={attendancePendings} />
+              <MobileNavigation />
             </>
           ) : (
             <DesktopNavigation />

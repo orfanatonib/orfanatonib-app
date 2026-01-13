@@ -16,6 +16,7 @@ export interface ScheduleDates {
 export interface RegisterAttendanceDto {
   scheduleId: string;
   type: AttendanceType;
+  category?: EventCategory;
   comment?: string;
 }
 
