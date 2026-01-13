@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   IconButton,
@@ -20,129 +20,94 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  Drawer,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import { useNavigate } from 'react-router-dom';
-import { getPendingForMember, registerAttendance, getPendingForLeader, listTeams } from '@/features/attendance/api';
-import type { AttendanceType, PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto } from '@/features/attendance/types';
+import { registerAttendance } from '@/features/attendance/api';
+import { AttendanceType, EventCategory } from '@/features/attendance/types';
+import type { PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto, TeamPendingsDto } from '@/features/attendance/types';
 import type { RootState as RootStateType } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 
 export interface ProfileAlert {
   id: string;
   message: string;
-  to?: string; 
+  to?: string;
+}
+
+export interface AttendancePendingsProps {
+  memberPendings: PendingForMemberDto[];
+  leaderPendings: TeamPendingsDto[];
+  leaderPendingsCount: number;
+  memberPendingsCount: number;
+  loading: boolean;
+  refetch: () => Promise<void>;
 }
 
 export interface CompleteProfileAlertProps {
   alerts: ProfileAlert[];
+  attendancePendings?: AttendancePendingsProps;
   onAlertClick?: () => void;
 }
 
-const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onAlertClick }) => {
+const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
+  alerts,
+  attendancePendings,
+  onAlertClick
+}) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { isAuthenticated, user } = useSelector((state: RootStateType) => state.auth);
 
-  const [pendings, setPendings] = useState<PendingForMemberDto[]>([]);
-  const [loadingPendings, setLoadingPendings] = useState(false);
-  const [pendingError, setPendingError] = useState<string | null>(null);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string>('');
-  const [type, setType] = useState<AttendanceType>('present');
+  const [selectedCategory, setSelectedCategory] = useState<EventCategory | null>(null);
+  const [type, setType] = useState<AttendanceType>(AttendanceType.PRESENT);
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-
-  const [leaderPendings, setLeaderPendings] = useState<PendingForLeaderDto[]>([]);
-  const [loadingLeaderPendings, setLoadingLeaderPendings] = useState(false);
+  const [pendingError, setPendingError] = useState<string | null>(null);
 
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeaderOrAdmin = isAuthenticated && (user?.role === UserRole.LEADER || user?.role === UserRole.ADMIN);
 
-  const pendingCount = isMember ? pendings.length : leaderPendings.length;
+  const memberPendings = attendancePendings?.memberPendings || [];
+  const leaderPendingsCount = attendancePendings?.leaderPendingsCount || 0;
+  const memberPendingsCount = attendancePendings?.memberPendingsCount || 0;
+  const loading = attendancePendings?.loading || false;
+
+  const pendingCount = isMember ? memberPendingsCount : leaderPendingsCount;
   const badgeCount = alerts.length + pendingCount;
   const hasAnyAlert = badgeCount > 0;
 
   const selectedPending = useMemo(
-    () => pendings.find(p => p.scheduleId === selectedId),
-    [pendings, selectedId]
+    () => memberPendings.find(p => p.scheduleId === selectedId && p.category === selectedCategory),
+    [memberPendings, selectedId, selectedCategory]
   );
-
-  const loadPendings = async () => {
-    if (!isAuthenticated || !isMember) return;
-    setLoadingPendings(true);
-    setPendingError(null);
-    try {
-      const res = await getPendingForMember();
-      setPendings(res);
-      setSelectedId(prev => prev || res[0]?.scheduleId || '');
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
-      setPendingError(message);
-      setPendings([]);
-    } finally {
-      setLoadingPendings(false);
-    }
-  };
-
-  const loadLeaderPendings = async () => {
-    if (!isAuthenticated || !isLeaderOrAdmin) return;
-    setLoadingLeaderPendings(true);
-    try {
-      
-      const teams = await listTeams();
-
-      const allPendings: PendingForLeaderDto[] = [];
-      for (const team of teams) {
-        try {
-          const teamPendings = await getPendingForLeader(team.teamId);
-          allPendings.push(...teamPendings);
-        } catch (err) {
-          
-          console.warn(`Erro ao buscar pendências para o time ${team.teamId}:`, err);
-        }
-      }
-      
-      setLeaderPendings(allPendings);
-    } catch (err: any) {
-      console.error('Erro ao buscar pendências de pagela:', err);
-      setLeaderPendings([]);
-    } finally {
-      setLoadingLeaderPendings(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isMember) {
-      loadPendings();
-    } else if (isLeaderOrAdmin) {
-      loadLeaderPendings();
-    }
-  }, [isAuthenticated, isMember, isLeaderOrAdmin]); 
 
   const handleOpenPendingDialog = () => {
     setPendingDialogOpen(true);
     setFeedback(null);
     setPendingError(null);
+    if (memberPendings.length > 0 && !selectedId) {
+      setSelectedId(memberPendings[0].scheduleId);
+      setSelectedCategory(memberPendings[0].category);
+    }
   };
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
-    if (!hasAnyAlert) {
-      if (isMember) {
-        loadPendings();
-      } else if (isLeaderOrAdmin) {
-        loadLeaderPendings();
-      }
-    }
   };
 
   const handleClose = () => {
@@ -161,19 +126,28 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
     setFeedback(null);
     setPendingError(null);
     try {
-      const dto: RegisterAttendanceDto = { scheduleId: selectedId, type, comment: comment.trim() || undefined };
+      const dto: RegisterAttendanceDto = {
+        scheduleId: selectedId,
+        type,
+        category: selectedCategory ?? undefined,
+        comment: comment.trim() || undefined
+      };
       await registerAttendance(dto);
-      setFeedback('Presença registrada. Se já existia registro, foi atualizada.');
+      setFeedback(type === AttendanceType.ABSENT ? 'Falta registrada com sucesso!' : 'Presença registrada com sucesso!');
       setComment('');
-      await loadPendings();
+
+      if (attendancePendings?.refetch) {
+        await attendancePendings.refetch();
+      }
 
       setTimeout(() => {
         setPendingDialogOpen(false);
         setSelectedId('');
-        setType('present');
+        setSelectedCategory(null);
+        setType(AttendanceType.PRESENT);
         setComment('');
         setFeedback(null);
-      }, 5000);
+      }, 2000);
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao registrar presença.';
       setPendingError(message);
@@ -183,20 +157,180 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
   };
 
   const formatScheduleLabel = (pending: PendingForMemberDto | PendingForLeaderDto) => {
-    const date = pending.visitDate || pending.meetingDate;
-    const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-    const kind = pending.visitDate ? 'Visita' : 'Reunião';
+    const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+    const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
     return `${kind} #${pending.visitNumber} • ${readableDate}`;
   };
 
-  const formatLeaderPendingLabel = (pending: PendingForLeaderDto) => {
-    const date = pending.visitDate || pending.meetingDate;
-    const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-    const kind = pending.visitDate ? 'Visita' : 'Reunião';
-    return `${kind} #${pending.visitNumber} • ${readableDate} • ${pending.teamName} • ${pending.pendingMembers.length} pendente${pending.pendingMembers.length !== 1 ? 's' : ''}`;
-  };
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   if (!alerts && pendingCount === 0) return null;
+
+  const renderAttendanceContent = () => (
+    <Stack spacing={2} sx={{ mt: 2, pb: isMobile ? 2 : 0 }}>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {!loading && memberPendings.length === 0 && (
+        <Alert severity="success" sx={{ borderRadius: 2 }}>
+          Nenhuma pendência de presença para você.
+        </Alert>
+      )}
+
+      {!loading && memberPendings.length > 0 && (
+        <Typography variant="body2" color="text.secondary">
+          Selecione um evento para registrar sua presença:
+        </Typography>
+      )}
+
+      {/* Cards Layout: Horizontal Scroll on Mobile, Vertical Stack on Desktop */}
+      {!loading && memberPendings.length > 0 && (
+        <Box
+          sx={
+            isMobile
+              ? {
+                display: 'flex',
+                overflowX: 'auto',
+                gap: 1.5,
+                pb: 1,
+                mx: -2, // Negative margin for edge-to-edge
+                px: 2,
+                '&::-webkit-scrollbar': { display: 'none' },
+                scrollbarWidth: 'none',
+              }
+              : {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1
+              }
+          }
+        >
+          {memberPendings.map(pending => {
+            const isSelected = pending.scheduleId === selectedId && pending.category === selectedCategory;
+            return (
+              <Box
+                key={`${pending.scheduleId}-${pending.category}`}
+                onClick={() => {
+                  setSelectedId(pending.scheduleId);
+                  setSelectedCategory(pending.category);
+                }}
+                sx={{
+                  minWidth: isMobile ? '85%' : 'auto',
+                  p: 2,
+                  borderRadius: 2,
+                  border: '2px solid',
+                  borderColor: isSelected ? 'primary.main' : 'divider',
+                  bgcolor: isSelected ? 'primary.50' : 'background.paper',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: isSelected ? 2 : 0,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={isSelected ? 'bold' : 'medium'} color={isSelected ? 'primary.main' : 'text.primary'}>
+                  {formatScheduleLabel(pending)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.5 }}>
+                  {pending.lessonContent}
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                  <Chip size="small" label={pending.teamName} sx={{ height: 20, fontSize: '0.7rem' }} />
+                  <Chip
+                    size="small"
+                    label={pending.shelterName}
+                    sx={{
+                      height: 20,
+                      fontSize: '0.7rem',
+                      maxWidth: '100px',
+                      '& .MuiChip-label': {
+                        display: 'block',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        px: 1, // Minimize padding if needed
+                      },
+                    }}
+                  />
+                </Stack>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
+      {selectedPending && (
+        <Box
+          sx={{
+            mt: 2,
+            pt: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Stack spacing={2}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Registrar presença
+            </Typography>
+
+            <ToggleButtonGroup
+              value={type}
+              exclusive
+              onChange={(_, value) => {
+                if (value) {
+                  setType(value);
+                  if (value === AttendanceType.PRESENT) {
+                    setComment('');
+                  }
+                }
+              }}
+              fullWidth
+              size="large"
+              color="primary"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  py: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }
+              }}
+            >
+              <ToggleButton value={AttendanceType.PRESENT}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircleIcon />
+                  Presente
+                </Box>
+              </ToggleButton>
+              <ToggleButton value={AttendanceType.ABSENT}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CancelIcon />
+                  Falta
+                </Box>
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {type === AttendanceType.ABSENT && (
+              <TextField
+                label="Motivo da falta"
+                placeholder="Descreva o motivo (opcional)"
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                size="medium"
+                multiline
+                minRows={2}
+                fullWidth
+              />
+            )}
+          </Stack>
+        </Box>
+      )}
+
+      {pendingError && <Alert severity="error">{pendingError}</Alert>}
+      {feedback && <Alert severity="success">{feedback}</Alert>}
+    </Stack>
+  );
 
   return (
     <>
@@ -226,9 +360,9 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             border: '1px solid rgba(255, 255, 0, 0.3)',
             borderRadius: 2,
             overflow: 'hidden',
-            overflowX: 'hidden', 
+            overflowX: 'hidden',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-            
+
             '&::-webkit-scrollbar': {
               width: '10px',
             },
@@ -249,7 +383,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
         MenuListProps={{
           sx: {
             py: 1,
-            overflowX: 'hidden', 
+            overflowX: 'hidden',
             width: '100%',
           },
         }}
@@ -280,7 +414,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
           sx={{
             maxHeight: 'calc(75vh - 60px)',
             overflowY: 'auto',
-            overflowX: 'hidden', 
+            overflowX: 'hidden',
             '&::-webkit-scrollbar': {
               width: '10px',
             },
@@ -352,7 +486,6 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
           {isMember && pendingCount > 0 && (
             <MenuItem
               onClick={() => {
-                loadPendings();
                 handleOpenPendingDialog();
                 handleClose();
               }}
@@ -387,7 +520,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
                         overflowWrap: 'break-word',
                         whiteSpace: 'normal',
                         flex: '1 1 auto',
-                        minWidth: 0, 
+                        minWidth: 0,
                       }}
                     >
                       Pendências de presença
@@ -431,7 +564,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
             <MenuItem
               onClick={() => {
                 handleClose();
-                navigate('/adm/presenca');
+                navigate('/adm/presenca/pendencias');
               }}
               sx={{
                 px: 2,
@@ -520,243 +653,101 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, onA
         </Box>
       </Menu>
 
+      {/* Render Drawer for Mobile or Dialog for Desktop */}
       {isMember && (
-        <Dialog
-          open={pendingDialogOpen}
-          onClose={() => {
-            setPendingDialogOpen(false);
-            setSelectedId('');
-            setType('present');
-            setComment('');
-          }}
-          fullWidth
-          maxWidth="sm"
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-            },
-          }}
-        >
-          <DialogTitle
-            sx={{
-              pb: 2,
-              borderBottom: '2px solid',
-              borderColor: 'divider',
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
+        isMobile ? (
+          <Drawer
+            anchor="bottom"
+            open={pendingDialogOpen}
+            onClose={() => setPendingDialogOpen(false)}
+            PaperProps={{
+              sx: {
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+                maxHeight: '85vh',
+                p: 0,
+              }
             }}
           >
-            Pendências de presença
-          </DialogTitle>
-          <DialogContent
-            sx={{
-              maxHeight: '70vh',
-              overflow: 'auto',
-              
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(0, 0, 0, 0.1)',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderRadius: '4px',
-                '&:hover': {
-                  background: 'rgba(0, 0, 0, 0.5)',
-                },
-              },
-            }}
-          >
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              {loadingPendings && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress />
-                </Box>
-              )}
-              {!loadingPendings && pendingCount === 0 && (
-                <Alert severity="success" sx={{ borderRadius: 2 }}>
-                  Nenhuma pendência de presença para você.
-                </Alert>
-              )}
-
-              {!loadingPendings && pendingCount > 0 && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  Selecione um evento para registrar sua presença:
-                </Typography>
-              )}
-
-              {pendings.map(pending => (
-                <Button
-                  key={pending.scheduleId}
-                  variant={pending.scheduleId === selectedId ? 'contained' : 'outlined'}
-                  color="primary"
-                  onClick={() => setSelectedId(pending.scheduleId)}
-                  fullWidth
-                  sx={{
-                    justifyContent: 'flex-start',
-                    textAlign: 'left',
-                    py: 1.5,
-                    px: 2,
-                    mb: 1,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    borderWidth: pending.scheduleId === selectedId ? 2 : 1,
-                    '&:hover': {
-                      borderWidth: 2,
-                    },
-                  }}
-                >
-                  <Stack alignItems="flex-start" spacing={0.5} sx={{ width: '100%' }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        fontWeight: pending.scheduleId === selectedId ? 600 : 500,
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {formatScheduleLabel(pending)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        fontSize: '0.8125rem',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {pending.lessonContent} — Time #{pending.teamNumber} • {pending.shelterName}
-                    </Typography>
-                  </Stack>
-                </Button>
-              ))}
-
-            {selectedPending && (
-              <Box
-                sx={{
-                  mt: 3,
-                  pt: 3,
-                  borderTop: '2px solid',
-                  borderColor: 'divider',
-                }}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="h6" fontWeight="bold">
+                Pendências
+              </Typography>
+              <IconButton onClick={() => setPendingDialogOpen(false)} size="small" sx={{ bgcolor: 'grey.100' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ p: 2, overflowY: 'auto' }}>
+              {renderAttendanceContent()}
+              <Button
+                onClick={handleSubmitPending}
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={!selectedId || saving || loading || memberPendings.length === 0}
+                sx={{ mt: 1, py: 1.5, fontSize: '1rem', fontWeight: 'bold' }}
+                color={type === AttendanceType.ABSENT ? 'error' : 'primary'}
               >
-                <Stack spacing={2.5}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ fontSize: '1.125rem' }}>
-                    Registrar presença
-                  </Typography>
-                  
-                  <ToggleButtonGroup
-                    value={type}
-                    exclusive
-                    onChange={(_, value) => {
-                      if (value) {
-                        setType(value);
-                        
-                        if (value === 'present') {
-                          setComment('');
-                        }
-                      }
-                    }}
-                    fullWidth
-                    size="large"
-                    color="primary"
-                    sx={{
-                      '& .MuiToggleButton-root': {
-                        py: 1.5,
-                        fontSize: '0.9375rem',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        borderWidth: 2,
-                        '&.Mui-selected': {
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="present">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon />
-                        Presente
-                      </Box>
-                    </ToggleButton>
-                    <ToggleButton value="absent">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CancelIcon />
-                        Falta
-                      </Box>
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-
-                  {type === 'absent' && (
-                    <TextField
-                      label="Motivo da falta"
-                      placeholder="Descreva o motivo da falta (opcional)"
-                      value={comment}
-                      onChange={e => setComment(e.target.value)}
-                      size="medium"
-                      multiline
-                      minRows={3}
-                      fullWidth
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                        },
-                      }}
-                    />
-                  )}
-                </Stack>
-              </Box>
-            )}
-
-            {pendingError && <Alert severity="error">{pendingError}</Alert>}
-            {feedback && <Alert severity="success">{feedback}</Alert>}
-          </Stack>
-        </DialogContent>
-          <DialogActions
-            sx={{
-              px: 3,
-              py: 2,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              gap: 1,
+                {saving ? 'Confirmando...' : (type === AttendanceType.ABSENT ? 'Confirmar Falta' : 'Confirmar Presença')}
+              </Button>
+            </Box>
+          </Drawer>
+        ) : (
+          <Dialog
+            open={pendingDialogOpen}
+            onClose={() => {
+              setPendingDialogOpen(false);
+              setSelectedId('');
+              setSelectedCategory(null);
+              setType(AttendanceType.PRESENT);
+              setComment('');
+            }}
+            fullWidth
+            maxWidth="sm"
+            PaperProps={{
+              sx: { borderRadius: 3 }
             }}
           >
-            <Button
-              onClick={() => {
-                setPendingDialogOpen(false);
-                setSelectedId('');
-                setType('present');
-                setComment('');
-              }}
-              color="inherit"
+            <DialogTitle
               sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                pb: 2,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
               }}
             >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmitPending}
-              variant="contained"
-              disabled={!selectedId || saving || loadingPendings || pendingCount === 0}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3,
-                fontWeight: 600,
-              }}
-              startIcon={saving ? <CircularProgress size={16} color="inherit" /> : null}
-            >
-              {saving ? 'Registrando...' : 'Registrar Presença'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+              Pendências de presença
+              <IconButton onClick={() => setPendingDialogOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers>
+              {renderAttendanceContent()}
+            </DialogContent>
+            <DialogActions sx={{ px: 3, py: 2 }}>
+              <Button
+                onClick={() => setPendingDialogOpen(false)}
+                color="inherit"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmitPending}
+                variant="contained"
+                disabled={!selectedId || saving || loading || memberPendings.length === 0}
+                color={type === AttendanceType.ABSENT ? 'error' : 'primary'}
+              >
+                {saving ? 'Registrando...' : (type === AttendanceType.ABSENT ? 'Registrar Falta' : 'Registrar Presença')}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )
       )}
     </>
   );
 };
+
 
 export default CompleteProfileAlert;

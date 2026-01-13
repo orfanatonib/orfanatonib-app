@@ -155,8 +155,7 @@ src/features/attendance/
 
 - `POST /attendance/register` - Registro individual
 - `POST /attendance/register/team` - Registro em lote
-- `GET /attendance/pending/leader?teamId={id}` - Pendências do líder
-- `GET /attendance/pending/member` - Pendências do membro
+- `GET /attendance/pending/all` - Pendências unificadas (leaderPendings + memberPendings)
 - `GET /attendance/team/{teamId}/members` - Membros do time
 - `GET /attendance/team/{teamId}/schedules` - Eventos do time
 - `GET /attendance/leader/teams` - Times do líder

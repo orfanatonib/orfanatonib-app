@@ -19,9 +19,9 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import MenuItem from '@mui/material/MenuItem';
 
 import { registerAttendance } from '../api';
+import { AttendanceType } from '../types';
 import type {
   RegisterAttendanceDto,
-  AttendanceType,
   TeamScheduleDto,
   AttendanceFormState,
   ValidationResult
@@ -33,23 +33,17 @@ import {
   formatDateBR
 } from '../utils';
 
-const formatDateBR = (iso?: string) => {
-  if (!iso) return 'Data a definir';
-  try {
-    return new Date(iso).toLocaleDateString('pt-BR');
-  } catch {
-    return 'Data inválida';
-  }
-};
+
 
 interface Props {
   schedules: TeamScheduleDto[];
   disabled?: boolean;
+  onSuccess?: () => void;
 }
 
-const RegisterAttendance = ({ schedules, disabled }: Props) => {
+const RegisterAttendance = ({ schedules, disabled, onSuccess }: Props) => {
   const [scheduleId, setScheduleId] = useState<string>(schedules[0]?.id || '');
-  const [type, setType] = useState<AttendanceType>('present');
+  const [type, setType] = useState<AttendanceType>(AttendanceType.PRESENT);
   const [comment, setComment] = useState('');
   const [formState, setFormState] = useState<AttendanceFormState>({
     loading: false,
@@ -61,6 +55,11 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
     () => schedules.find(s => s.id === scheduleId),
     [schedules, scheduleId]
   );
+
+  const scheduleKind = (s: TeamScheduleDto) => {
+    const cat = s.category || (s.visitDate ? 'visit' : 'meeting');
+    return cat === 'visit' ? 'Visita' : 'Reunião';
+  };
 
   const scheduleValidation = useMemo((): ValidationResult => {
     if (!selectedSchedule) return { isValid: false, errors: ['Selecione um evento'] };
@@ -136,6 +135,9 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
       }));
 
       setComment('');
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao registrar presença. Tente novamente.';
       setFormState(prev => ({
@@ -144,7 +146,7 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
         error: message,
       }));
     }
-  }, [scheduleId, scheduleValidation.isValid, commentValidation.isValid, type, comment, registerAttendance]);
+  }, [scheduleId, scheduleValidation.isValid, commentValidation.isValid, type, comment, onSuccess]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -186,8 +188,8 @@ const RegisterAttendance = ({ schedules, disabled }: Props) => {
                   schedules.length === 0
                     ? 'Nenhum evento retornado para este time.'
                     : !scheduleValidation.isValid
-                    ? scheduleValidation.errors.join(', ')
-                    : 'Escolha o evento onde você participou ou faltou.'
+                      ? scheduleValidation.errors.join(', ')
+                      : 'Escolha o evento onde você participou ou faltou.'
                 }
                 aria-describedby="schedule-helper-text"
                 inputProps={{
