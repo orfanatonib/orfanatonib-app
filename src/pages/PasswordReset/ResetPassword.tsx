@@ -180,6 +180,12 @@ const ResetPassword: React.FC = () => {
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
+                                error={newPassword !== confirmPassword && confirmPassword.length > 0}
+                                helperText={
+                                    newPassword !== confirmPassword && confirmPassword.length > 0
+                                        ? 'As senhas devem ser iguais'
+                                        : ''
+                                }
                             />
 
                             <Button
