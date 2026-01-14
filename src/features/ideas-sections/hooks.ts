@@ -18,7 +18,6 @@ export function useIdeasSections() {
       setSections(data);
       setFilteredSections(data);
     } catch (e) {
-      console.error('Erro ao buscar Ideias compartilhadas:', e);
       setError('Erro ao buscar Ideias compartilhadas');
     } finally {
       setLoading(false);
@@ -69,7 +68,6 @@ export function useIdeasPages() {
       const data = await listIdeasPages();
       setPages(data);
     } catch (e) {
-      console.error('Erro ao buscar páginas de ideias:', e);
       setError('Erro ao buscar páginas de ideias');
     } finally {
       setLoading(false);

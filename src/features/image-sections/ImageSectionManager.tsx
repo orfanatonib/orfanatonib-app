@@ -54,8 +54,7 @@ export default function ImageSectionManager() {
     try {
       await deleteImageSection(id || '');
       await fetchSections();
-    } catch (e) {
-      console.error('Erro ao deletar seção de imagens:', e);
+    } catch {
       setError('Erro ao deletar seção de imagens');
     }
   };

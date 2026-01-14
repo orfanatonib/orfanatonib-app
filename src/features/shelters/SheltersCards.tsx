@@ -39,8 +39,6 @@ export default function SheltersCards(props: Props) {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  console.log('[SheltersCards] shelter-address flag:', isAddressEnabled);
-  console.log('[SheltersCards] rows with addresses:', rows.filter(r => r.address).length);
   const toggle = (id: string) =>
     setOpen((prev) => {
       const n = new Set(prev);

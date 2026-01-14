@@ -103,8 +103,7 @@ const cacheGoogleUser = (name: string, email: string): void => {
       timestamp: Date.now(),
     };
     sessionStorage.setItem(GOOGLE_USER_CACHE_KEY, JSON.stringify(cache));
-  } catch (error) {
-    console.error('Error saving Google cache:', error);
+  } catch {
   }
 };
 
@@ -122,8 +121,7 @@ const getGoogleUserCache = (): GoogleUserCache | null => {
     }
 
     return cache;
-  } catch (error) {
-    console.error('Error reading Google cache:', error);
+  } catch {
     return null;
   }
 };
@@ -131,8 +129,7 @@ const getGoogleUserCache = (): GoogleUserCache | null => {
 const clearGoogleUserCache = (): void => {
   try {
     sessionStorage.removeItem(GOOGLE_USER_CACHE_KEY);
-  } catch (error) {
-    console.error('Error clearing Google cache:', error);
+  } catch {
   }
 };
 

@@ -154,8 +154,7 @@ export default function LeaderMultiEditDialog({
         numberTeam: team.numberTeam,
         description: team.description,
       }));
-    } catch (error) {
-      console.error("Erro ao carregar equipes do abrigo:", error);
+    } catch {
       return [];
     }
   };
@@ -404,8 +403,7 @@ function TeamsSelector({
         numberTeam: team.numberTeam,
         description: team.description,
       })));
-    } catch (error) {
-      console.error("Erro ao carregar equipes:", error);
+    } catch {
       setTeams([]);
     } finally {
       setLoading(false);

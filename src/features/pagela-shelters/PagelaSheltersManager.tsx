@@ -69,8 +69,7 @@ function PagelaSheltersManagerForLeader() {
         if (sheltersData.length > 0) {
           setSelectedShelterId(sheltersData[0].id);
         }
-      } catch (error) {
-        console.error('Error fetching leader shelters:', error);
+      } catch {
       } finally {
         setLoadingShelters(false);
       }

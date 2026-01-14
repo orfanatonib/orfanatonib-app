@@ -64,8 +64,7 @@ const CommentsSection: React.FC = () => {
     try {
       const response = await api.get('/comments/published');
       dispatch(setComments(response.data));
-    } catch (error) {
-      console.error('Error fetching comments:', error);
+    } catch {
     }
   }, [dispatch]);
 
@@ -92,8 +91,7 @@ const CommentsSection: React.FC = () => {
       setFormOpen(false);
       setSuccessSnackbarOpen(true);
       await fetchComments();
-    } catch (error) {
-      console.error('Error sending comment:', error);
+    } catch {
     } finally {
       setIsSubmitting(false);
     }

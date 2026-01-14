@@ -68,8 +68,7 @@ export default function PagelaQuickForm({
         try {
           await dispatch(fetchCurrentUser()).unwrap();
         } catch (err) {
-          console.error('Erro ao atualizar dados do usuário:', err);
-        }
+                  }
       }
     };
     
@@ -164,15 +163,13 @@ export default function PagelaQuickForm({
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalMemberProfileId = updatedUser?.memberProfile?.id ?? null;
       } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
-      }
+              }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
       } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
-      }
+              }
     }
 
     const payloadCommon: any = {
@@ -188,8 +185,6 @@ export default function PagelaQuickForm({
     } else if (isLeader && finalLeaderProfileId) {
       payloadCommon.leaderProfileId = finalLeaderProfileId;
     } else {
-      
-      console.error('Não foi possível obter memberProfileId ou leaderProfileId');
       return;
     }
 

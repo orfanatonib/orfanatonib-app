@@ -93,8 +93,7 @@ export default function EventosPage() {
       const mapped = mapEventsWithFallbackDate(res.data || []);
       dispatch(setEvents(mapped));
       setEventosState(mapped);
-    } catch (err) {
-      console.error("Error loading events:", err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -138,8 +137,7 @@ export default function EventosPage() {
       await api.delete(`/events/${deleteTargetEvent.id}`);
       closeDeleteModal();
       await fetchEventos();
-    } catch (err) {
-      console.error("Error deleting event:", err);
+    } catch {
     }
   };
 

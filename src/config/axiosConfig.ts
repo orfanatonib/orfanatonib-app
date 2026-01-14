@@ -6,6 +6,7 @@ import type {
 } from 'axios';
 import { store } from '@/store/slices';
 import { logout, login } from '@/store/slices/auth/authSlice';
+import { handleError } from '@/utils/errorHandler';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -90,6 +91,13 @@ apiAxios.interceptors.response.use(
         return Promise.reject(refreshErr);
       }
     }
+
+    const skipGlobalErrorHandling = (originalRequest as any)?._skipGlobalErrorHandling;
+
+    if (!skipGlobalErrorHandling && status !== 401) {
+      handleError(error, url);
+    }
+
     return Promise.reject(error);
   }
 );

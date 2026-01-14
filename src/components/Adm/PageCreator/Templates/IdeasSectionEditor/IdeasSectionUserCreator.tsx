@@ -149,8 +149,7 @@ export function IdeasSectionUserCreator() {
       setTimeout(() => {
         navigate('/area-do-membro');
       }, 2000);
-    } catch (error) {
-      console.error('Error sharing idea:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Ops! Algo deu errado ao compartilhar sua ideia. Tente novamente.',

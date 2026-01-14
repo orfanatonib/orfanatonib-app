@@ -977,7 +977,6 @@ const ProfilesManager: React.FC = () => {
       setProfiles(response.items);
       setMeta(response.meta);
     } catch (err: any) {
-      console.error('Error loading profiles:', err);
       setError(err?.response?.data?.message || 'Erro ao carregar perfis');
     } finally {
       setLoading(false);
@@ -989,8 +988,7 @@ const ProfilesManager: React.FC = () => {
       setLoadingBirthdays(true);
       const response = await apiGetAllProfiles({ limit: 1000 });
       setAllProfiles(response.items);
-    } catch (err: any) {
-      console.error('Error loading all profiles:', err);
+    } catch {
     } finally {
       setLoadingBirthdays(false);
     }

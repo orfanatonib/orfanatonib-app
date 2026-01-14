@@ -197,8 +197,6 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
         setHasMore(data.page * data.limit < data.total);
       } catch (err: any) {
         if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
-          console.error('Error loading section:', err);
-
           let type: ErrorType = 'generic';
 
           if (err.response?.status === 404) {

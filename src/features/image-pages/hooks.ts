@@ -18,7 +18,6 @@ export function useImagePages() {
       setPages(data);
       setFiltered(data);
     } catch (e) {
-      console.error('Erro ao buscar páginas de imagens:', e);
       setError('Erro ao buscar páginas de imagens');
     } finally {
       setLoading(false);

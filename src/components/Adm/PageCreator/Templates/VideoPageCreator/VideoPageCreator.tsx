@@ -177,8 +177,7 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       );
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (error) {
-      console.error('Erro ao salvar página', error);
+    } catch {
       showError('Erro ao salvar a página. Tente novamente.');
     } finally {
       setLoading(false);

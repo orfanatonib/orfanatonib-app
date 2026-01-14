@@ -51,10 +51,6 @@ export default function ShelterFormLeftPanel({
 }: Props) {
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  console.log('[ShelterFormLeftPanel - ADMIN FORM] shelter-address flag:', isAddressEnabled);
-  console.log('[ShelterFormLeftPanel - ADMIN FORM] Address fields will be', isAddressEnabled ? 'SHOWN' : 'HIDDEN');
-  console.log('[ShelterFormLeftPanel - ADMIN FORM] address data:', address);
-
   return (
     <Paper elevation={2} className="shelterFormCard">
       {!!error && (

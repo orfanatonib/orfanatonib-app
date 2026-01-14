@@ -17,6 +17,7 @@ import informativeBannerReducer from './informative/informativeBannerSlice';
 import imageSectionPaginationReducer from './image-section-pagination/imageSectionPaginationSlice';
 import feedbackReducer from './feedback/feedbackSlice';
 import featureFlagsReducer from './feature-flags/featureFlagsSlice';
+import notificationReducer from './notification/notificationSlice';
 
 const authPersistConfig = {
   key: 'auth',
@@ -40,6 +41,7 @@ const rootReducer = combineReducers({
   imageSectionPagination: imageSectionPaginationReducer,
   feedback: feedbackReducer,
   featureFlags: featureFlagsReducer,
+  notification: notificationReducer,
 });
 
 export const store = configureStore({

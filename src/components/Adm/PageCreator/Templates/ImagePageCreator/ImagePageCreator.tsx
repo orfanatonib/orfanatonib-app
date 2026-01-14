@@ -161,9 +161,8 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
       setSuccessSnackbarOpen(true);
-    } catch (error) {
-      console.error(error);
-      setError('Erro ao enviar dados. Verifique o console.');
+    } catch {
+      setError('Erro ao enviar dados.');
     } finally {
       setIsSaving(false);
     }

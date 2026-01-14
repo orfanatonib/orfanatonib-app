@@ -201,8 +201,7 @@ export function useOptions() {
       setLeaders(mappedCoords);
       setMembers(mappedMembers);
       setLoaded(true);
-    } catch (error) {
-        console.error('Error loading options:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

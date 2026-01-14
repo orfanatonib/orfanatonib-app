@@ -50,8 +50,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
       setCopied(field);
       setSnackbarOpen(true);
       setTimeout(() => setCopied(null), 2000);
-    } catch (err) {
-      console.error("Erro ao copiar:", err);
+    } catch {
     }
   };
 

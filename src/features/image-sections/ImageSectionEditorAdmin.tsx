@@ -117,8 +117,7 @@ export default function ImageSectionEditorAdmin() {
     try {
       await saveSection(formData);
       navigate('/adm/fotos-abrigos');
-    } catch (error) {
-      console.error('Erro ao salvar a seção:', error);
+    } catch {
       showError('Falha ao publicar as imagens compartilhadas. Tente novamente.');
     } finally {
       setIsSaving(false);

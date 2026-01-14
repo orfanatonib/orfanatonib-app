@@ -125,9 +125,7 @@ export default function ShelteredBrowserPage() {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         
         setFullProfile(updatedUser);
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
-        
+      } catch {
         hasCheckedProfileRef.current = false;
       } finally {
         setCheckingShelter(false);
