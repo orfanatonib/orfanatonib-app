@@ -165,7 +165,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  if (!alerts && pendingCount === 0) return null;
+  if ((!alerts || alerts.length === 0) && pendingCount === 0) return null;
 
   const renderAttendanceContent = () => (
     <Stack spacing={2} sx={{ mt: 2, pb: isMobile ? 2 : 0 }}>
