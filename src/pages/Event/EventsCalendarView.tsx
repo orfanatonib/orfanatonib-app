@@ -12,6 +12,8 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 
 import EventIcon from "@mui/icons-material/Event";
@@ -41,7 +43,7 @@ type Props = {
   onDelete: (e: AppEvent) => void;
 };
 
-type DayKey = string; 
+type DayKey = string;
 const toDayKey = (d: Dayjs) => d.format("YYYY-MM-DD");
 const toEventDayKey = (iso: string) => dayjs(iso).format("YYYY-MM-DD");
 
@@ -144,32 +146,68 @@ export default function EventsCalendarView({
 
   const weekDayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
         <Paper elevation={0} className="events-paper-root">
           <Box className="events-header-box">
-            <Box className="events-header-left">
-              <CalendarTodayIcon className="events-header-icon" />
-              <Box>
-                <Typography className="events-header-title">Calendário mensal</Typography>
-                <Typography className="events-header-subtitle">
-                  Clique em um dia marcado para ver os eventos
-                </Typography>
+            {isMobile ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                  <CalendarTodayIcon className="events-header-icon" sx={{ fontSize: '1.2rem !important' }} />
+                  <Typography className="events-date-label-text" sx={{ fontSize: '0.85rem !important', margin: 0, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {selectedLabel}
+                  </Typography>
+                </Box>
+                {isAdmin && (
+                  <Button
+                    onClick={onAdd}
+                    startIcon={<AddIcon sx={{ width: 16, height: 16 }} />}
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      minWidth: 'auto',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      fontSize: '0.75rem',
+                      textTransform: 'none',
+                      flexShrink: 0,
+                      background: 'linear-gradient(135deg, var(--events-green) 0%, #00bb44 100%)',
+                    }}
+                  >
+                    Novo
+                  </Button>
+                )}
               </Box>
-            </Box>
+            ) : (
+              <>
+                <Box className="events-header-left">
+                  <CalendarTodayIcon className="events-header-icon" />
+                  <Box>
+                    <Typography className="events-header-title">Calendário mensal</Typography>
+                    <Typography className="events-header-subtitle">
+                      Clique em um dia marcado para ver os eventos
+                    </Typography>
+                  </Box>
+                </Box>
 
-            <Box className="events-header-right">
-              <Box className="events-date-label-box">
-                <Typography className="events-date-label-text">{selectedLabel}</Typography>
-              </Box>
+                <Box className="events-header-right">
+                  <Box className="events-date-label-box">
+                    <Typography className="events-date-label-text">{selectedLabel}</Typography>
+                  </Box>
 
-              {isAdmin && (
-                <Button onClick={onAdd} startIcon={<AddIcon />} variant="contained" className="events-add-button">
-                  Novo
-                </Button>
-              )}
-            </Box>
+                  {isAdmin && (
+                    <Button onClick={onAdd} startIcon={<AddIcon />} variant="contained" className="events-add-button">
+                      Novo
+                    </Button>
+                  )}
+                </Box>
+              </>
+            )}
           </Box>
 
           <Divider />
@@ -214,9 +252,8 @@ export default function EventsCalendarView({
                     return (
                       <motion.div
                         key={dayKey}
-                        className={`calendar-day ${!isCurrentMonth ? "outside-month" : ""} ${
-                          isSelected ? "selected" : ""
-                        } ${isToday ? "today" : ""} ${hasEvents ? "has-events" : ""}`}
+                        className={`calendar-day ${!isCurrentMonth ? "outside-month" : ""} ${isSelected ? "selected" : ""
+                          } ${isToday ? "today" : ""} ${hasEvents ? "has-events" : ""}`}
                         onClick={() => handleDayClick(day)}
                         style={
                           {

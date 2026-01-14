@@ -19,6 +19,8 @@ import Login from './pages/Login/Login';
 import MemberArea from './pages/MemberArea/MemberArea';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
+import ForgotPassword from './pages/PasswordReset/ForgotPassword';
+import ResetPassword from './pages/PasswordReset/ResetPassword';
 
 import MeditationPageCreator from './components/Adm/PageCreator/Templates/MeditationPageCreator/MeditationPageCreator';
 import ImagePageCreator from './components/Adm/PageCreator/Templates/ImagePageCreator/ImagePageCreator';
@@ -163,6 +165,9 @@ function App() {
               <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
               <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
               <Route path="/cadastrar" element={<Register commonUser />} />
+              <Route path="/cadastrar" element={<Register commonUser />} />
+              <Route path="/esqueci-minha-senha" element={<ForgotPassword />} />
+              <Route path="/recuperar-senha/:token" element={<ResetPassword />} />
               <Route path="*" element={<Home />} />
 
               <Route element={<ProtectedRoute />}>

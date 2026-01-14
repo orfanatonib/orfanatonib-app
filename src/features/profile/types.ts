@@ -27,6 +27,7 @@ export type Profile = {
   createdAt: string;
   updatedAt: string;
   image: ProfileImage | null;
+  mediaItems?: ProfileImage[];
   memberProfile?: {
     id: string;
     active: boolean;
@@ -82,39 +83,39 @@ export type UpdateProfileImageDto = {
 };
 
 export type PersonalData = {
-  birthDate?: string;        
-  gender?: string;           
-  gaLeaderName?: string;     
-  gaLeaderContact?: string;  
+  birthDate?: string;
+  gender?: string;
+  gaLeaderName?: string;
+  gaLeaderContact?: string;
 };
 
 export type UserPreferences = {
-  loveLanguages?: string;      
-  temperaments?: string;       
-  favoriteColor?: string;      
-  favoriteFood?: string;       
-  favoriteMusic?: string;      
-  whatMakesYouSmile?: string;  
-  skillsAndTalents?: string;   
+  loveLanguages?: string;
+  temperaments?: string;
+  favoriteColor?: string;
+  favoriteFood?: string;
+  favoriteMusic?: string;
+  whatMakesYouSmile?: string;
+  skillsAndTalents?: string;
 };
 
 export type CompleteProfile = {
-  id: string;                    
+  id: string;
   email: string;
   phone: string;
   name: string;
-  role?: string;                 
+  role?: string;
   personalData?: PersonalData;
   preferences?: UserPreferences;
 };
 
 export type CompleteProfileListItem = CompleteProfile & {
-  role: string;                  
+  role: string;
 };
 
 export type CreatePersonalDataDto = {
-  birthDate?: string;        
-  gender?: string;           
+  birthDate?: string;
+  gender?: string;
   gaLeaderName?: string;
   gaLeaderContact?: string;
 };
@@ -144,33 +145,33 @@ export type UpdateCompleteProfileDto = {
 };
 
 export type QueryProfilesDto = {
-  
-  page?: number;                 
-  limit?: number;                
 
-  q?: string;                    
-  name?: string;                 
-  email?: string;                
-  role?: string;                 
+  page?: number;
+  limit?: number;
 
-  loveLanguages?: string;        
-  temperaments?: string;         
-  favoriteColor?: string;        
+  q?: string;
+  name?: string;
+  email?: string;
+  role?: string;
 
-  sortBy?: 'name' | 'email' | 'createdAt' | 'birthDate';  
-  order?: 'ASC' | 'DESC';        
+  loveLanguages?: string;
+  temperaments?: string;
+  favoriteColor?: string;
+
+  sortBy?: 'name' | 'email' | 'createdAt' | 'birthDate';
+  order?: 'ASC' | 'DESC';
 };
 
 export type PaginationMeta = {
-  currentPage: number;           
-  itemsPerPage: number;          
-  totalItems: number;            
-  totalPages: number;            
-  hasNextPage: boolean;          
-  hasPreviousPage: boolean;      
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 };
 
 export type PaginatedProfilesResponse = {
-  items: CompleteProfileListItem[];  
-  meta: PaginationMeta;              
+  items: CompleteProfileListItem[];
+  meta: PaginationMeta;
 };

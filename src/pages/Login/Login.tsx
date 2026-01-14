@@ -287,6 +287,17 @@ const Login: React.FC = () => {
                 helperText={!!errorMessage && !password ? 'Senha é obrigatória' : ''}
               />
 
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => navigate('/esqueci-minha-senha')}
+                  sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                >
+                  Esqueci minha senha
+                </Button>
+              </Box>
+
               <Button
                 type="submit"
                 variant="contained"
