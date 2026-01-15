@@ -22,12 +22,6 @@ import IntegrationImageUpload from "./IntegrationImageUpload";
 
 type FormData = {
   name?: string;
-  phone?: string;
-  gaLeader?: string;
-  baptized?: boolean;
-  churchYears?: number;
-  previousMinistry?: string;
-  integrationYear?: number;
 };
 
 interface IntegrationFormDialogProps {
@@ -49,47 +43,39 @@ export default function IntegrationFormDialog({
 }: IntegrationFormDialogProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
 
   const [formData, setFormData] = React.useState<FormData>({
     name: editing?.name || "",
-    phone: editing?.phone || "",
-    gaLeader: editing?.gaLeader || "",
-    baptized: editing?.baptized || false,
-    churchYears: editing?.churchYears || undefined,
-    previousMinistry: editing?.previousMinistry || "",
-    integrationYear: editing?.integrationYear || new Date().getFullYear(),
   });
 
   React.useEffect(() => {
     if (open) {
       setFormData({
         name: editing?.name || "",
-        phone: editing?.phone || "",
-        gaLeader: editing?.gaLeader || "",
-        baptized: editing?.baptized || false,
-        churchYears: editing?.churchYears || undefined,
-        previousMinistry: editing?.previousMinistry || "",
-        integrationYear: editing?.integrationYear || new Date().getFullYear(),
       });
-      setSelectedFile(null);
+      setSelectedFiles([]);
     }
   }, [open, editing]);
 
   const handleFormSubmit = async () => {
     try {
-      // Gerar título e descrição automaticamente baseado no nome da pessoa
-      const mediaData = formData.name ? {
-        title: `Foto da Integração - ${formData.name}`,
-        description: `Foto da integração de ${formData.name} na Feira de Ministério`,
-      } : undefined;
+      // Preparar dados das imagens
+      const imagesData = selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
+        title: formData.name ? `Foto ${index + 1} - ${formData.name}` : `Foto ${index + 1}`,
+        description: formData.name
+          ? `Foto da integração de ${formData.name} na Feira de Ministério`
+          : "Foto da integração na Feira de Ministério",
+        fieldKey: index === 0 ? 'profile' : `additional-${index}`,
+      })) : undefined;
 
       const submitData = {
-        ...formData,
-        ...(mediaData && { media: mediaData }),
+        name: formData.name,
+        integrationYear: editing ? editing.integrationYear : new Date().getFullYear(),
+        ...(imagesData && { images: imagesData }),
       };
 
-      await onSubmit(submitData, selectedFile || undefined);
+      await onSubmit(submitData, selectedFiles.length > 0 ? selectedFiles[0] : undefined);
       onClose();
     } catch (error) {
       // Error is handled by parent component
@@ -158,24 +144,7 @@ export default function IntegrationFormDialog({
           )}
 
           <Grid container spacing={isMobile ? 2 : 3}>
-            {/* Informações Pessoais */}
             <Grid item xs={12}>
-              <Typography
-                variant={isMobile ? "h6" : "subtitle1"}
-                fontWeight="bold"
-                gutterBottom
-                sx={{
-                  fontSize: isMobile ? '1.1rem' : '1rem',
-                  mt: isMobile ? 1 : 0,
-                  mb: isMobile ? 2 : 1,
-                  color: 'primary.main',
-                }}
-              >
-                👤 Informações Pessoais
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Nome"
@@ -193,125 +162,29 @@ export default function IntegrationFormDialog({
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Telefone"
-                placeholder="(11) 98765-4321"
-                value={maskPhoneBR(formData.phone || "")}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: maskPhoneBR(e.target.value) }))}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    fontSize: isMobile ? '1rem' : '0.875rem',
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontSize: isMobile ? '1rem' : '0.875rem',
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Líder de GA"
-                placeholder="Nome do líder responsável"
-                value={formData.gaLeader || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, gaLeader: e.target.value }))}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Ano da Integração"
-                placeholder="2024"
-                value={formData.integrationYear || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  integrationYear: e.target.value ? parseInt(e.target.value) : undefined
-                }))}
-              />
-            </Grid>
-
-            {/* Informações Religiosas */}
+            {/* Imagens */}
             <Grid item xs={12}>
               <Typography
                 variant={isMobile ? "h6" : "subtitle1"}
                 fontWeight="bold"
                 gutterBottom
                 sx={{
-                  mt: isMobile ? 3 : 2,
+                  mt: isMobile ? 2 : 1,
                   mb: isMobile ? 2 : 1,
                   fontSize: isMobile ? '1.1rem' : '1rem',
                   color: 'primary.main',
                 }}
               >
-                🙏 Informações Religiosas
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.baptized || false}
-                    onChange={(e) => setFormData(prev => ({ ...prev, baptized: e.target.checked }))}
-                    color="primary"
-                  />
-                }
-                label="Batizado"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Anos de Igreja"
-                placeholder="5"
-                value={formData.churchYears || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  churchYears: e.target.value ? parseInt(e.target.value) : undefined
-                }))}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Ministério Anterior"
-                placeholder="Ex: Louvor, Intercessão, etc."
-                value={formData.previousMinistry || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, previousMinistry: e.target.value }))}
-              />
-            </Grid>
-
-            {/* Imagem */}
-            <Grid item xs={12}>
-              <Typography
-                variant={isMobile ? "h6" : "subtitle1"}
-                fontWeight="bold"
-                gutterBottom
-                sx={{
-                  mt: isMobile ? 3 : 2,
-                  mb: isMobile ? 2 : 1,
-                  fontSize: isMobile ? '1.1rem' : '1rem',
-                  color: 'primary.main',
-                }}
-              >
-                📸 Foto da Integração (Opcional)
+                📸 Fotos para integração
               </Typography>
               <Box sx={{ mt: isMobile ? 1 : 2 }}>
                 <IntegrationImageUpload
-                  onImageSelect={(file) => setSelectedFile(file)}
+                  onImagesSelect={(files) => setSelectedFiles(prev => [...prev, ...files])}
                   onError={(error) => {
                     // O erro será tratado pelo componente pai através do dialogError
                     console.error('Erro no upload:', error);
                   }}
-                  currentImageUrl={editing?.image?.url}
+                  currentImages={editing?.images || []}
                   personName={formData.name}
                 />
               </Box>

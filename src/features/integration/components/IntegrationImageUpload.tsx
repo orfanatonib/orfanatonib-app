@@ -7,28 +7,32 @@ import {
   Alert,
   Stack,
   Paper,
+  Chip,
+  IconButton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
 interface IntegrationImageUploadProps {
-  onImageSelect: (file: File) => void;
+  onImagesSelect: (files: File[]) => void;
   onError: (error: string) => void;
-  currentImageUrl?: string;
+  currentImages?: Array<{ id?: string; url?: string; title?: string; }>;
   personName?: string;
 }
 
 const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
-  onImageSelect,
+  onImagesSelect,
   onError,
-  currentImageUrl,
+  currentImages = [],
   personName,
 }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -43,27 +47,40 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
     : "Foto da pessoa sendo integrada na Feira de Ministério";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
-      onError('Por favor, selecione apenas arquivos de imagem');
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    files.forEach((file, index) => {
+      if (!file.type.startsWith('image/')) {
+        errors.push(`Arquivo ${index + 1}: Por favor, selecione apenas arquivos de imagem`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`Arquivo ${index + 1}: O arquivo deve ter no máximo 5MB`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      onError(errors.join('\n'));
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      onError('O arquivo deve ter no máximo 5MB');
+    // Limitar a 5 imagens por integração
+    const totalImages = currentImages.length + selectedFiles.length + validFiles.length;
+    if (totalImages > 5) {
+      onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length} e está tentando adicionar ${validFiles.length} mais.`);
       return;
     }
 
-    setSelectedFile(file);
-    onImageSelect(file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    onImagesSelect(validFiles);
   };
 
   const detectDevice = () => {
@@ -312,9 +329,17 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           canvas.toBlob((blob) => {
             if (blob) {
               const file = new File([blob], `integracao-${Date.now()}.jpg`, { type: 'image/jpeg' });
-              setSelectedFile(file);
-              onImageSelect(file);
-              setPreview(URL.createObjectURL(blob));
+
+              // Verificar limite de 5 imagens
+              const totalImages = currentImages.length + selectedFiles.length + 1;
+              if (totalImages > 5) {
+                onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length + selectedFiles.length} imagens.`);
+                cleanup();
+                return;
+              }
+
+              setSelectedFiles(prev => [...prev, file]);
+              onImagesSelect([file]);
             } else {
               onError('Erro ao processar a imagem');
             }
@@ -442,8 +467,7 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
   };
 
   const clearSelection = () => {
-    setSelectedFile(null);
-    setPreview(currentImageUrl || null);
+    setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -459,33 +483,113 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       transition={{ duration: 0.4 }}
     >
       <Box sx={{ width: '100%' }}>
-        {/* Preview da imagem atual ou selecionada */}
-        {preview && (
-          <Box sx={{ mb: 3, textAlign: 'center' }}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: 1,
-                display: 'inline-block',
-                borderRadius: 2,
-                backgroundColor: '#f8f9fa',
-              }}
-            >
-              <img
-                src={preview}
-                alt="Preview"
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  objectFit: 'cover',
-                  borderRadius: '8px',
-                  display: 'block',
-                }}
-              />
-            </Paper>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {title}
+        {/* Preview das imagens atuais e selecionadas */}
+        {(currentImages.length > 0 || selectedFiles.length > 0) && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+              Imagens Selecionadas ({currentImages.length + selectedFiles.length}/5)
             </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {/* Imagens atuais */}
+              {currentImages.map((image, index) => (
+                <Box key={`current-${image.id || index}`} sx={{ position: 'relative' }}>
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      backgroundColor: '#f8f9fa',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={image.url}
+                      alt={image.title || `Imagem ${index + 1}`}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        display: 'block',
+                      }}
+                      onError={() => {
+                        // Remover imagem com erro do estado
+                        setImageErrors(prev => new Set(prev).add(image.id || `current-${index}`));
+                      }}
+                    />
+                    <Chip
+                      label="Atual"
+                      size="small"
+                      color="primary"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        fontSize: '0.6rem',
+                        height: '16px',
+                      }}
+                    />
+                  </Paper>
+                </Box>
+              ))}
+
+              {/* Imagens recém-selecionadas */}
+              {selectedFiles.map((file, index) => (
+                <Box key={`selected-${index}`} sx={{ position: 'relative' }}>
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      backgroundColor: '#e8f5e9',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Nova imagem ${index + 1}`}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        display: 'block',
+                      }}
+                    />
+                    <Chip
+                      label="Nova"
+                      size="small"
+                      color="success"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        fontSize: '0.6rem',
+                        height: '16px',
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 4,
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                        width: '20px',
+                        height: '20px',
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: '14px' }} />
+                    </IconButton>
+                  </Paper>
+                </Box>
+              ))}
+            </Box>
           </Box>
         )}
 
@@ -494,6 +598,7 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handleFileChange}
           style={{ display: 'none' }}
         />
@@ -528,6 +633,21 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           >
             Selecionar da Galeria
           </Button>
+
+          {selectedFiles.length > 0 && (
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setSelectedFiles([])}
+              sx={{
+                textTransform: 'none',
+                color: 'text.secondary',
+                fontSize: '0.8rem',
+              }}
+            >
+              Limpar seleções ({selectedFiles.length})
+            </Button>
+          )}
           <Button
             variant="contained"
             fullWidth
@@ -550,30 +670,10 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           </Button>
         </Stack>
 
-        {/* Informações sobre arquivo selecionado */}
-        {selectedFile && (
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              Foto selecionada: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-            </Typography>
-            <Button
-              variant="text"
-              size="small"
-              onClick={clearSelection}
-              sx={{
-                textTransform: 'none',
-                color: 'primary.main',
-                fontSize: '0.75rem',
-              }}
-            >
-              Escolher outra foto
-            </Button>
-          </Box>
-        )}
 
         {/* Descrição */}
         <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-          {descriptionText}
+          {descriptionText} (máximo 5 imagens)
         </Typography>
       </Box>
     </motion.div>

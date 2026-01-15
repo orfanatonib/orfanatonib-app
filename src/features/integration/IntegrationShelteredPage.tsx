@@ -25,11 +25,6 @@ import IntegrationImageUpload from "./components/IntegrationImageUpload";
 
 type FormData = {
   name?: string;
-  phone?: string;
-  baptized?: boolean;
-  churchYears?: number;
-  previousMinistry?: string;
-  integrationYear?: number;
 };
 
 export default function IntegrationShelteredPage() {
@@ -41,7 +36,7 @@ export default function IntegrationShelteredPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string>("");
   const [success, setSuccess] = React.useState(false);
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
 
   const {
     control,
@@ -50,8 +45,6 @@ export default function IntegrationShelteredPage() {
   } = useForm<FormData>({
     defaultValues: {
       name: shelteredName,
-      baptized: false,
-      integrationYear: new Date().getFullYear(),
     },
   });
 
@@ -60,27 +53,26 @@ export default function IntegrationShelteredPage() {
     setError("");
 
     try {
+      const imagesData = selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
+        title: shelteredName ? `Foto ${index + 1} - ${shelteredName}` : `Foto ${index + 1}`,
+        description: shelteredName
+          ? `Foto da integração de ${shelteredName} na Feira de Ministério`
+          : "Foto tirada durante o registro da integração GA",
+        fieldKey: index === 0 ? 'profile' : `additional-${index}`,
+      })) : undefined;
+
       const integrationData: CreateIntegrationDto = {
         name: data.name,
-        phone: data.phone,
-        baptized: data.baptized,
-        churchYears: data.churchYears,
-        previousMinistry: data.previousMinistry,
-        integrationYear: data.integrationYear,
-        media: selectedFile ? {
-          title: shelteredName ? `Foto da Integração - ${shelteredName}` : "Foto da Integração",
-          description: shelteredName
-            ? `Foto da integração de ${shelteredName} na Feira de Ministério`
-            : "Foto tirada durante o registro da integração GA",
-        } : undefined,
+        integrationYear: new Date().getFullYear(),
+        ...(imagesData && { images: imagesData }),
       };
 
-      await apiCreateIntegration(integrationData, selectedFile || undefined);
+      await apiCreateIntegration(integrationData, selectedFiles.length > 0 ? selectedFiles[0] : undefined);
       setSuccess(true);
 
       // Limpar formulário após sucesso
       reset();
-      setSelectedFile(null);
+      setSelectedFiles([]);
 
       // Redirecionar após alguns segundos
       setTimeout(() => {
@@ -151,12 +143,6 @@ export default function IntegrationShelteredPage() {
             <Grid container spacing={3}>
               {/* Informações Pessoais */}
               <Grid item xs={12}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Informações Pessoais
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
                 <Controller
                   name="name"
                   control={control}
@@ -172,100 +158,6 @@ export default function IntegrationShelteredPage() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="phone"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="Telefone"
-                      placeholder="(11) 98765-4321"
-                      value={maskPhoneBR(field.value || "")}
-                      onChange={(e) => field.onChange(maskPhoneBR(e.target.value))}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="integrationYear"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      type="number"
-                      label="Ano da Integração"
-                      placeholder="2024"
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                    />
-                  )}
-                />
-              </Grid>
-
-              {/* Informações Religiosas */}
-              <Grid item xs={12}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
-                  Informações Religiosas
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="baptized"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={field.value || false}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                          color="primary"
-                        />
-                      }
-                      label="É batizado(a)?"
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="churchYears"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      type="number"
-                      label="Anos de igreja"
-                      placeholder="5"
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                    />
-                  )}
-                />
-              </Grid>
-
-            <Grid item xs={12}>
-              <Controller
-                name="previousMinistry"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="Ministério Anterior"
-                    placeholder="Ex: Louvor, Intercessão, etc."
-                    multiline
-                    rows={2}
-                  />
-                )}
-              />
-            </Grid>
-
             {/* Foto da Integração */}
             <Grid item xs={12}>
               <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
@@ -276,7 +168,7 @@ export default function IntegrationShelteredPage() {
               </Typography>
               <Box sx={{ mt: 2 }}>
                 <IntegrationImageUpload
-                  onImageSelect={(file) => setSelectedFile(file)}
+                  onImagesSelect={(files) => setSelectedFiles(prev => [...prev, ...files])}
                   onError={(error) => setError(error)}
                   personName={shelteredName}
                 />

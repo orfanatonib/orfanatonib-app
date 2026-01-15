@@ -399,7 +399,7 @@ export default function IntegrationManager() {
                             </Box>
                           </Box>
 
-                          {/* Foto à direita */}
+                          {/* Fotos à direita */}
                           <Box
                             sx={{
                               width: 80,
@@ -407,25 +407,44 @@ export default function IntegrationManager() {
                               borderRadius: 2,
                               overflow: "hidden",
                               flexShrink: 0,
-                              bgcolor: "grey.100",
-                              border: 1,
-                              borderColor: "divider",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              position: "relative",
                             }}
                           >
-                            {integration.image?.url && !imageErrors.has(integration.id) ? (
-                              <img
-                                src={integration.image.url}
-                                alt={`Foto de ${integration.name || "integração"}`}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
-                                onError={() => handleImageError(integration.id)}
-                              />
+                            {integration.images && integration.images.length > 0 ? (
+                              <>
+                                {/* Imagem principal */}
+                                <img
+                                  src={integration.images[0].url}
+                                  alt={`Foto de ${integration.name || "integração"}`}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    borderRadius: 8,
+                                  }}
+                                  onError={() => handleImageError(integration.id)}
+                                />
+
+                                {/* Overlay com contador se houver múltiplas imagens */}
+                                {integration.images.length > 1 && (
+                                  <Box
+                                    sx={{
+                                      position: "absolute",
+                                      bottom: 4,
+                                      right: 4,
+                                      bgcolor: "rgba(0, 0, 0, 0.7)",
+                                      color: "white",
+                                      borderRadius: 1,
+                                      px: 1,
+                                      py: 0.5,
+                                      fontSize: "0.7rem",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    +{integration.images.length - 1}
+                                  </Box>
+                                )}
+                              </>
                             ) : (
                               <img
                                 src={import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL || ""}
@@ -434,6 +453,7 @@ export default function IntegrationManager() {
                                   width: "100%",
                                   height: "100%",
                                   objectFit: "cover",
+                                  borderRadius: 8,
                                 }}
                                 onError={() => handleImageError(integration.id)}
                               />

@@ -49,10 +49,10 @@ export default function IntegrationViewDialog({
     >
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {integration.image ? (
+          {integration.images && integration.images.length > 0 ? (
             <Avatar
-              src={integration.image.url}
-              alt={integration.image.title}
+              src={integration.images[0].url}
+              alt={integration.images[0].title}
               sx={{ width: 60, height: 60 }}
             />
           ) : (
@@ -73,129 +73,49 @@ export default function IntegrationViewDialog({
 
       <DialogContent sx={{ pt: 1 }}>
         <Grid container spacing={3}>
-          {/* Informações Pessoais */}
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Informações Pessoais
-            </Typography>
-            <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Nome
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.name || "Não informado"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Telefone
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.phone || "Não informado"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Líder de GA
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.gaLeader || "Não informado"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Ano da Integração
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.integrationYear || "Não informado"}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-
-          {/* Informações Religiosas */}
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Informações Religiosas
-            </Typography>
-            <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Batizado
-                  </Typography>
-                  <Box sx={{ mt: 0.5 }}>
-                    <Chip
-                      label={integration.baptized ? "Sim" : "Não"}
-                      color={integration.baptized ? "success" : "default"}
-                      size="small"
-                    />
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Anos de Igreja
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.churchYears !== undefined ? `${integration.churchYears} anos` : "Não informado"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    Ministério Anterior
-                  </Typography>
-                  <Typography variant="body1">
-                    {integration.previousMinistry || "Não informado"}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-
-          {/* Imagem */}
-          {integration.image && (
+          {/* Imagens */}
+          {integration.images && integration.images.length > 0 && (
             <Grid item xs={12}>
               <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Imagem
+                📸 Fotos da Integração
               </Typography>
-              <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <img
-                    src={integration.image.url}
-                    alt={integration.image.title}
-                    style={{
-                      width: 100,
-                      height: 100,
-                      objectFit: "cover",
-                      borderRadius: 8,
-                      border: "1px solid #e0e0e0",
-                    }}
-                  />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body1" fontWeight="bold">
-                      {integration.image.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {integration.image.description}
-                    </Typography>
-                    <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Tipo: {integration.image.mediaType}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Tamanho: {integration.image.size ? `${(integration.image.size / 1024).toFixed(1)} KB` : "N/A"}
-                      </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
+                {integration.images.map((image, index) => (
+                  <Box key={image.id} sx={{ position: "relative" }}>
+                    <img
+                      src={image.url}
+                      alt={image.title || `Foto ${index + 1}`}
+                      style={{
+                        width: 120,
+                        height: 120,
+                        objectFit: "cover",
+                        borderRadius: 12,
+                        border: "2px solid #e0e0e0",
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 8,
+                        right: 8,
+                        bgcolor: "rgba(0, 0, 0, 0.7)",
+                        color: "white",
+                        borderRadius: 1,
+                        px: 1,
+                        py: 0.5,
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {index + 1}
                     </Box>
                   </Box>
-                </Box>
-              </Paper>
+                ))}
+              </Box>
             </Grid>
           )}
 
-          {/* Metadados */}
+          {/* Informações do Sistema */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
               Informações do Sistema
@@ -204,18 +124,34 @@ export default function IntegrationViewDialog({
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="body2" color="text.secondary">
-                    Criado em
+                    Ano da Integração
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" fontWeight="medium">
+                    {integration.integrationYear || "Não informado"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Data de Cadastro
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
                     {formatDate(integration.createdAt)}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="body2" color="text.secondary">
-                    Atualizado em
+                    Última Atualização
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" fontWeight="medium">
                     {formatDate(integration.updatedAt)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    ID do Registro
+                  </Typography>
+                  <Typography variant="body1" fontFamily="monospace" fontSize="0.875rem">
+                    {integration.id}
                   </Typography>
                 </Grid>
               </Grid>
