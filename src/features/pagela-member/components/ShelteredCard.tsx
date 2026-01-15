@@ -17,6 +17,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import DecisionModal from "./DecisionModal";
 import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
+import IntegrationButton from "@/features/integration/components/IntegrationButton";
 
 function genderPastel(seed: string, gender: string | undefined) {
   const g = (gender || "").toUpperCase();
@@ -286,6 +287,29 @@ export default function ShelteredCard({
               </Typography>
               <FavoriteIcon fontSize="inherit" sx={{ opacity: 0.5, ml: 0.25 }} />
             </Stack>
+
+            {/* Botão de Integração GA */}
+            <Box
+              sx={{
+                mt: 1.25,
+                display: "flex",
+                justifyContent: "center",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IntegrationButton
+                shelteredId={sheltered.id}
+                shelteredName={sheltered.name}
+                size="small"
+                variant="outlined"
+                sx={{
+                  fontSize: "0.75rem",
+                  py: 0.5,
+                  px: 1.5,
+                  minWidth: "auto",
+                }}
+              />
+            </Box>
 
             {!!onToggleStatus && (
               <Box
