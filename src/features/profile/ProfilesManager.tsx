@@ -65,60 +65,62 @@ type BirthdayStatus = 'today' | 'this-week' | 'this-month' | null;
 
 const getBirthdayStatus = (birthDateStr?: string): BirthdayStatus => {
   if (!birthDateStr) return null;
-  
+
   try {
     const today = new Date();
     const [, month, day] = birthDateStr.split('-').map(Number);
-    
+
     const birthdayThisYear = new Date(today.getFullYear(), month - 1, day);
-    
-    if (birthdayThisYear < today && 
-        !(birthdayThisYear.getDate() === today.getDate() && 
-          birthdayThisYear.getMonth() === today.getMonth())) {
+
+    if (birthdayThisYear < today &&
+      !(birthdayThisYear.getDate() === today.getDate() &&
+        birthdayThisYear.getMonth() === today.getMonth())) {
       birthdayThisYear.setFullYear(today.getFullYear() + 1);
     }
-    
+
     const diffTime = birthdayThisYear.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (birthdayThisYear.getDate() === today.getDate() && 
-        birthdayThisYear.getMonth() === today.getMonth()) {
+
+    if (birthdayThisYear.getDate() === today.getDate() &&
+      birthdayThisYear.getMonth() === today.getMonth()) {
       return 'today';
     }
-    
+
     if (diffDays > 0 && diffDays <= 7) {
       return 'this-week';
     }
-    
-    if (birthdayThisYear.getMonth() === today.getMonth() && 
-        birthdayThisYear.getFullYear() === today.getFullYear()) {
+
+    if (birthdayThisYear.getMonth() === today.getMonth() &&
+      birthdayThisYear.getFullYear() === today.getFullYear()) {
       return 'this-month';
     }
-    
+
     return null;
-  } catch {
+  } catch (e) {
+    console.debug('getBirthdayStatus: Date parsing error', e);
     return null;
   }
 };
 
 const getDaysUntilBirthday = (birthDateStr?: string): number | null => {
   if (!birthDateStr) return null;
-  
+
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const [, month, day] = birthDateStr.split('-').map(Number);
-    
+
     const birthdayThisYear = new Date(today.getFullYear(), month - 1, day);
     birthdayThisYear.setHours(0, 0, 0, 0);
-    
+
     if (birthdayThisYear < today) {
       birthdayThisYear.setFullYear(today.getFullYear() + 1);
     }
-    
+
     const diffTime = birthdayThisYear.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  } catch {
+  } catch (e) {
+    console.debug('getDaysUntilBirthday: Date parsing error', e);
     return null;
   }
 };
@@ -129,7 +131,8 @@ const formatBirthDate = (dateStr?: string): string => {
     const [, month, day] = dateStr.split('-').map(Number);
     const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     return `${day} de ${months[month - 1]}`;
-  } catch {
+  } catch (e) {
+    console.debug('formatBirthDate: Date parsing error', e);
     return dateStr;
   }
 };
@@ -140,7 +143,8 @@ const formatBirthDateShort = (dateStr?: string): string => {
     const [, month, day] = dateStr.split('-').map(Number);
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     return `${day} ${months[month - 1]}`;
-  } catch {
+  } catch (e) {
+    console.debug('formatBirthDateShort: Date parsing error', e);
     return dateStr;
   }
 };
@@ -156,7 +160,8 @@ const calculateAge = (dateStr?: string): number | null => {
       age--;
     }
     return age;
-  } catch {
+  } catch (e) {
+    console.debug('calculateAge: Date parsing error', e);
     return null;
   }
 };
@@ -268,7 +273,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
       slots={{ backdrop: Backdrop }}
       slotProps={{
         backdrop: {
-          sx: { 
+          sx: {
             backdropFilter: 'blur(8px)',
             backgroundColor: 'rgba(0, 0, 0, 0.4)',
           },
@@ -378,7 +383,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
           <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
             {profile.name}
           </Typography>
-          
+
           <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" flexWrap="wrap">
             <Chip
               icon={config.icon}
@@ -393,7 +398,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
                 '& .MuiChip-label': { px: 1, fontSize: '0.75rem' },
               }}
             />
-            
+
             {profile.personalData?.birthDate && (
               <Chip
                 icon={<CakeIcon sx={{ fontSize: 14 }} />}
@@ -492,10 +497,10 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
         )}
 
         {hasGaInfo && (
-          <Box 
-            sx={{ 
-              p: 1.5, 
-              bgcolor: 'rgba(33, 150, 243, 0.06)', 
+          <Box
+            sx={{
+              p: 1.5,
+              bgcolor: 'rgba(33, 150, 243, 0.06)',
               borderRadius: 2,
               mb: 2,
             }}
@@ -507,8 +512,8 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
               </Typography>
               {profile.personalData?.gaLeaderContact && (
                 <Tooltip title="Copiar contato do líder" arrow>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={() => handleCopy(profile.personalData?.gaLeaderContact || '', 'ga')}
                     sx={{ ml: 'auto', p: 0.5 }}
                   >
@@ -530,7 +535,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
             <Typography variant="caption" color="text.disabled" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Conheça melhor
             </Typography>
-            
+
             <Grid container spacing={1} sx={{ mt: 0.5 }}>
               {profile.preferences?.loveLanguages && (
                 <Grid item xs={6}>
@@ -629,12 +634,12 @@ interface BirthdaySectionProps {
   onProfileClick: (profile: CompleteProfileListItem) => void;
 }
 
-const BirthdaySection: React.FC<BirthdaySectionProps> = ({ 
-  title, emoji, profiles, variant, onProfileClick 
+const BirthdaySection: React.FC<BirthdaySectionProps> = ({
+  title, emoji, profiles, variant, onProfileClick
 }) => {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   if (profiles.length === 0) return null;
 
   const configs = {
@@ -683,12 +688,12 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography 
-            variant="caption" 
-            fontWeight={700} 
-            sx={{ 
-              opacity: 0.95, 
-              lineHeight: 1.2, 
+          <Typography
+            variant="caption"
+            fontWeight={700}
+            sx={{
+              opacity: 0.95,
+              lineHeight: 1.2,
               display: 'block',
               fontSize: { xs: '0.65rem', sm: '0.75rem' },
             }}
@@ -704,8 +709,8 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
           {profiles.slice(0, visibleAvatars).map((profile) => {
             const days = getDaysUntilBirthday(profile.personalData?.birthDate);
             return (
-              <Tooltip 
-                key={profile.id} 
+              <Tooltip
+                key={profile.id}
                 title={`${profile.name?.split(' ')[0]}${days === 0 ? ' - HOJE!' : days ? ` - em ${days} dias` : ''}`}
                 arrow
               >
@@ -732,7 +737,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
             );
           })}
           {profiles.length > visibleAvatars && (
-            <Tooltip 
+            <Tooltip
               arrow
               title={
                 <Box sx={{ p: 0.5 }}>
@@ -742,11 +747,11 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
                   {profiles.slice(visibleAvatars).map((p) => {
                     const days = getDaysUntilBirthday(p.personalData?.birthDate);
                     return (
-                      <Typography 
-                        key={p.id} 
-                        variant="caption" 
-                        sx={{ 
-                          display: 'block', 
+                      <Typography
+                        key={p.id}
+                        variant="caption"
+                        sx={{
+                          display: 'block',
                           cursor: 'pointer',
                           '&:hover': { textDecoration: 'underline' },
                           py: 0.2,
@@ -853,7 +858,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
             >
               {profile.name?.charAt(0).toUpperCase()}
             </Avatar>
-            
+
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" fontWeight={700} noWrap>
                 {profile.name}
@@ -875,11 +880,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClick }) =>
               {profile.email}
             </Typography>
             {profile.personalData?.birthDate && (
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 0.5,
                   color: birthdayStatus ? '#f6416c' : 'text.secondary',
                   fontWeight: birthdayStatus ? 600 : 400,
@@ -941,22 +946,22 @@ const ProfilesManager: React.FC = () => {
   const [allProfiles, setAllProfiles] = useState<CompleteProfileListItem[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<CompleteProfileListItem | null>(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [loadingBirthdays, setLoadingBirthdays] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   const [filters, setFilters] = useState<QueryProfilesDto>({
     page: 1,
     limit: 12,
     sortBy: 'name',
     order: 'ASC',
   });
-  
+
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -1078,10 +1083,10 @@ const ProfilesManager: React.FC = () => {
     <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <Box sx={{ mb: 2, textAlign: 'center' }}>
-          <Typography 
-            variant="h4" 
-            fontWeight={800} 
-            sx={{ 
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            sx={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
@@ -1104,9 +1109,9 @@ const ProfilesManager: React.FC = () => {
       )}
 
       {!loadingBirthdays && (birthdayToday.length > 0 || birthdayWeek.length > 0 || birthdayMonth.length > 0) && (
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          spacing={1} 
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
           sx={{ mb: 2 }}
         >
           <BirthdaySection
@@ -1133,8 +1138,8 @@ const ProfilesManager: React.FC = () => {
         </Stack>
       )}
 
-      <Paper 
-        elevation={0} 
+      <Paper
+        elevation={0}
         sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(255,255,255,0.8)' }}
       >
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2 }} alignItems={{ xs: 'stretch', md: 'center' }}>
@@ -1179,10 +1184,10 @@ const ProfilesManager: React.FC = () => {
 
           <Stack direction="row" spacing={1} sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}>
             <Tooltip title="Filtros avançados">
-              <IconButton 
+              <IconButton
                 size="small"
                 onClick={() => setShowFilters(!showFilters)}
-                sx={{ 
+                sx={{
                   bgcolor: showFilters ? 'primary.main' : 'rgba(0,0,0,0.04)',
                   color: showFilters ? 'white' : 'text.secondary',
                   '&:hover': { bgcolor: showFilters ? 'primary.dark' : 'rgba(0,0,0,0.08)' },
@@ -1208,8 +1213,8 @@ const ProfilesManager: React.FC = () => {
       </Paper>
 
       <Collapse in={showFilters}>
-        <Paper 
-          elevation={0} 
+        <Paper
+          elevation={0}
           sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(248,248,255,0.5)' }}
         >
           <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2, color: 'text.secondary' }}>
@@ -1262,42 +1267,42 @@ const ProfilesManager: React.FC = () => {
           </Grid>
 
           {meta && (
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                mt: 3, 
-                p: { xs: 1.5, sm: 2 }, 
-                borderRadius: 3, 
-                border: '1px solid rgba(0,0,0,0.06)', 
-                bgcolor: 'rgba(255,255,255,0.8)' 
+            <Paper
+              elevation={0}
+              sx={{
+                mt: 3,
+                p: { xs: 1.5, sm: 2 },
+                borderRadius: 3,
+                border: '1px solid rgba(0,0,0,0.06)',
+                bgcolor: 'rgba(255,255,255,0.8)'
               }}
             >
-              <Stack 
-                direction={{ xs: 'column', sm: 'row' }} 
-                justifyContent="center" 
-                alignItems="center" 
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="center"
+                alignItems="center"
                 spacing={{ xs: 1.5, sm: 2 }}
                 sx={{ position: 'relative' }}
               >
                 {meta.totalPages > 1 && (
-                  <Pagination 
-                    count={meta.totalPages} 
-                    page={meta.currentPage} 
-                    onChange={handlePageChange} 
-                    color="primary" 
+                  <Pagination
+                    count={meta.totalPages}
+                    page={meta.currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
                     size={isMobile ? 'small' : 'medium'}
-                    showFirstButton 
-                    showLastButton 
+                    showFirstButton
+                    showLastButton
                     siblingCount={isMobile ? 0 : 1}
                     boundaryCount={1}
                   />
                 )}
-                
-                <Stack 
-                  direction="row" 
-                  spacing={1} 
+
+                <Stack
+                  direction="row"
+                  spacing={1}
                   alignItems="center"
-                  sx={{ 
+                  sx={{
                     position: { xs: 'static', sm: 'absolute' },
                     right: { sm: 16 },
                   }}
@@ -1306,10 +1311,10 @@ const ProfilesManager: React.FC = () => {
                     <Select
                       value={filters.limit || 12}
                       onChange={handleLimitChange}
-                      sx={{ 
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.1)' }, 
-                        bgcolor: 'white', 
-                        borderRadius: 2, 
+                      sx={{
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.1)' },
+                        bgcolor: 'white',
+                        borderRadius: 2,
                         fontSize: { xs: '0.7rem', sm: '0.8rem' },
                         '& .MuiSelect-select': { py: 0.75 },
                       }}
@@ -1320,9 +1325,9 @@ const ProfilesManager: React.FC = () => {
                       <MenuItem value={48}>48</MenuItem>
                     </Select>
                   </FormControl>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
                     sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, whiteSpace: 'nowrap' }}
                   >
                     de <strong>{meta.totalItems}</strong>

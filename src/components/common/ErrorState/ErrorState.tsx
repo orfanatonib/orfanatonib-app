@@ -1,5 +1,4 @@
 import { Box, Typography, Button, Paper } from '@mui/material';
-import { motion } from 'framer-motion';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
@@ -53,109 +52,58 @@ export default function ErrorState({
   const Icon = config.icon;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+    <Paper
+      elevation={2}
+      sx={{
+        p: 4,
+        textAlign: 'center',
+        borderRadius: 3,
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+        border: `2px solid ${config.color}20`,
+      }}
     >
-      <Paper
-        elevation={2}
+      <Box
         sx={{
-          p: { xs: 4, md: 6 },
-          textAlign: 'center',
-          borderRadius: { xs: 3, md: 4 },
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-          border: `2px solid ${config.color}20`,
+          display: 'inline-flex',
+          p: 3,
+          borderRadius: '50%',
+          bgcolor: `${config.color}15`,
+          mb: 3,
         }}
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{
-            delay: 0.2,
-            type: 'spring',
-            stiffness: 200,
-            damping: 10
-          }}
-        >
-          <Box
-            sx={{
-              display: 'inline-flex',
-              p: 3,
-              borderRadius: '50%',
-              bgcolor: `${config.color}15`,
-              mb: 3,
-            }}
-          >
-            <Icon
-              sx={{
-                fontSize: { xs: '3rem', md: '4rem' },
-                color: config.color,
-              }}
-            />
-          </Box>
-        </motion.div>
-
-        <Typography
-          variant="h4"
-          fontWeight="bold"
+        <Icon
           sx={{
-            fontSize: { xs: '1.5rem', md: '2rem' },
-            mb: 2,
-            color: 'text.primary',
+            fontSize: '3rem',
+            color: config.color,
           }}
-        >
-          {title || config.defaultTitle}
-        </Typography>
+        />
+      </Box>
 
-        <Typography
-          variant="body1"
-          color="text.secondary"
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
+        {title || config.defaultTitle}
+      </Typography>
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+        {message || config.defaultMessage}
+      </Typography>
+
+      {showRetryButton && onRetry && (
+        <Button
+          variant="contained"
+          onClick={onRetry}
           sx={{
-            fontSize: { xs: '1rem', md: '1.1rem' },
-            mb: 4,
-            maxWidth: '600px',
-            mx: 'auto',
-            lineHeight: 1.6,
+            bgcolor: config.color,
+            color: 'white',
+            px: 4,
+            py: 1.5,
+            borderRadius: 2,
+            fontWeight: 'bold',
+            textTransform: 'none',
           }}
         >
-          {message || config.defaultMessage}
-        </Typography>
-
-        {showRetryButton && onRetry && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={onRetry}
-              sx={{
-                bgcolor: config.color,
-                color: 'white',
-                px: 4,
-                py: 1.5,
-                borderRadius: 2,
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                fontWeight: 'bold',
-                textTransform: 'none',
-                boxShadow: `0 4px 12px ${config.color}40`,
-                '&:hover': {
-                  bgcolor: config.color,
-                  filter: 'brightness(0.9)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: `0 6px 16px ${config.color}50`,
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Tentar novamente
-            </Button>
-          </motion.div>
-        )}
-      </Paper>
-    </motion.div>
+          Tentar novamente
+        </Button>
+      )}
+    </Paper>
   );
 }

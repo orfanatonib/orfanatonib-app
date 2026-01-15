@@ -50,7 +50,7 @@ const initials = (name?: string) =>
 function CopyButton({ value, title = "Copiar" }: { value?: string; title?: string }) {
   const copyToClipboard = (text?: string) => {
     if (!text) return;
-    navigator.clipboard?.writeText(String(text)).catch(() => {});
+    navigator.clipboard?.writeText(String(text)).catch((e) => console.warn('Clipboard write failed', e));
   };
   return (
     <Tooltip title={title}>
@@ -69,7 +69,7 @@ export default function UsersCards(props: Props) {
 
   const [open, setOpen] = useState<Set<string>>(new Set());
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   const toggle = (id: string) =>
     setOpen(prev => {
       const n = new Set(prev);
@@ -155,7 +155,7 @@ export default function UsersCards(props: Props) {
                     pt: 1,
                     pb: 0.5,
                     gap: { xs: 0.75, sm: 1 },
-                    mt: 0.5, 
+                    mt: 0.5,
                   }}
                 >
                   <Avatar
@@ -164,7 +164,7 @@ export default function UsersCards(props: Props) {
                       width: { xs: 40, sm: 48 },
                       height: { xs: 40, sm: 48 },
                       bgcolor: roleChipColor(u.role) === "primary" ? "primary.main" :
-                               roleChipColor(u.role) === "success" ? "success.main" : "grey.500",
+                        roleChipColor(u.role) === "success" ? "success.main" : "grey.500",
                       color: "white",
                       fontWeight: 700,
                       fontSize: { xs: 14, sm: 16 },
@@ -178,20 +178,20 @@ export default function UsersCards(props: Props) {
                   </Avatar>
 
                   <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography 
-                      variant="subtitle1" 
-                      fontWeight={700} 
-                      noWrap 
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      noWrap
                       title={u.name}
                       sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
                     >
                       {u.name || "—"}
                     </Typography>
-                  <Chip
-                    size="small"
-                    color={roleChipColor(u.role)}
-                    label={roleLabels[u.role as UserRole] || "Usuário"}
-                      sx={{ 
+                    <Chip
+                      size="small"
+                      color={roleChipColor(u.role)}
+                      label={roleLabels[u.role as UserRole] || "Usuário"}
+                      sx={{
                         fontSize: "0.7rem",
                         height: 20,
                         mt: 0.25
@@ -200,26 +200,26 @@ export default function UsersCards(props: Props) {
                   </Box>
 
                   <ButtonBase
-                      onClick={() => toggle(u.id)}
+                    onClick={() => toggle(u.id)}
                     aria-label={expanded ? "Recolher" : "Expandir"}
-                      sx={{
+                    sx={{
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
                       py: 0.5,
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        bgcolor: "background.paper",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
                       flexShrink: 0,
-                        "&:hover": { bgcolor: "action.hover" },
+                      "&:hover": { bgcolor: "action.hover" },
                     }}
                   >
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{ 
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
                         fontWeight: 600,
                         display: { xs: "none", sm: "block" }
                       }}
@@ -247,19 +247,19 @@ export default function UsersCards(props: Props) {
                   <Stack direction="row" spacing={0.75} alignItems="center">
                     <AlternateEmail sx={{ fontSize: 18, color: "primary.main", flexShrink: 0 }} />
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography 
+                      <Typography
                         variant="body2"
-                        sx={{ 
+                        sx={{
                           fontWeight: 600,
                           color: "text.primary",
-                          whiteSpace: "nowrap", 
-                          overflow: "hidden", 
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
                           textOverflow: "ellipsis"
                         }}
                         title={u.email}
                       >
-                      {u.email}
-                    </Typography>
+                        {u.email}
+                      </Typography>
                     </Box>
                     <CopyButton value={u.email} title="Copiar e-mail" />
                   </Stack>
@@ -279,8 +279,8 @@ export default function UsersCards(props: Props) {
                         variant="filled"
                         label={`Ativo: ${u.active ? "Sim" : "Não"}`}
                         color={u.active ? "success" : "default"}
-                        sx={{ 
-                          fontWeight: 600, 
+                        sx={{
+                          fontWeight: 600,
                           fontSize: "0.7rem",
                           height: 20,
                           "& .MuiChip-label": { px: 0.5 }
@@ -291,8 +291,8 @@ export default function UsersCards(props: Props) {
                         variant="filled"
                         label={`Completo: ${u.completed ? "Sim" : "Não"}`}
                         color={u.completed ? "success" : "default"}
-                        sx={{ 
-                          fontWeight: 600, 
+                        sx={{
+                          fontWeight: 600,
                           fontSize: "0.7rem",
                           height: 20,
                           "& .MuiChip-label": { px: 0.5 }
@@ -300,13 +300,13 @@ export default function UsersCards(props: Props) {
                       />
                     </Stack>
                     <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
-                        {u.phone && (
+                      {u.phone && (
                         <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
                           <PhoneIphone sx={{ fontSize: 14, color: "text.secondary" }} />
-                          <Link 
-                            href={`tel:${u.phone}`} 
+                          <Link
+                            href={`tel:${u.phone}`}
                             underline="hover"
-                            sx={{ 
+                            sx={{
                               fontSize: "0.75rem",
                               color: "text.secondary",
                               whiteSpace: "nowrap",
@@ -314,11 +314,11 @@ export default function UsersCards(props: Props) {
                               textOverflow: "ellipsis"
                             }}
                           >
-                              {u.phone}
+                            {u.phone}
                           </Link>
                           <CopyButton value={u.phone} title="Copiar telefone" />
-                      </Stack>
-                    )}
+                        </Stack>
+                      )}
                       <Tooltip title={wa ? "WhatsApp" : "Sem telefone"}>
                         <span>
                           <IconButton
@@ -336,7 +336,7 @@ export default function UsersCards(props: Props) {
                           </IconButton>
                         </span>
                       </Tooltip>
-                  </Stack>
+                    </Stack>
                   </Box>
                 )}
 
@@ -356,16 +356,16 @@ export default function UsersCards(props: Props) {
                           }}
                         >
                           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap rowGap={1}>
-                            <Chip 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              size="small"
+                              variant="outlined"
                               label={`Criado: ${fmtDate(u.createdAt)}`}
                               color="default"
                               sx={{ fontWeight: 500 }}
                             />
-                            <Chip 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              size="small"
+                              variant="outlined"
                               label={`Atualizado: ${fmtDate(u.updatedAt)}`}
                               color="default"
                               sx={{ fontWeight: 500 }}
@@ -383,38 +383,38 @@ export default function UsersCards(props: Props) {
                             borderColor: "divider",
                           }}
                         >
-                        <Stack direction="row" flexWrap="wrap" spacing={1} rowGap={1}>
-                          <Chip
-                            size="small"
-                            label={`Papel: ${roleLabels[u.role as UserRole] || "Usuário"}`}
-                            color={roleChipColor(u.role)}
-                            variant="outlined"
+                          <Stack direction="row" flexWrap="wrap" spacing={1} rowGap={1}>
+                            <Chip
+                              size="small"
+                              label={`Papel: ${roleLabels[u.role as UserRole] || "Usuário"}`}
+                              color={roleChipColor(u.role)}
+                              variant="outlined"
                               sx={{ fontWeight: 500 }}
                             />
-                            <Chip 
-                              size="small" 
-                              label={`Ativo: ${u.active ? "Sim" : "Não"}`} 
+                            <Chip
+                              size="small"
+                              label={`Ativo: ${u.active ? "Sim" : "Não"}`}
                               color={u.active ? "success" : "default"}
                               sx={{ fontWeight: 500 }}
                             />
-                            <Chip 
-                              size="small" 
-                              label={`Completo: ${u.completed ? "Sim" : "Não"}`} 
+                            <Chip
+                              size="small"
+                              label={`Completo: ${u.completed ? "Sim" : "Não"}`}
                               color={u.completed ? "success" : "default"}
                               sx={{ fontWeight: 500 }}
                             />
                             {u.phone && (
-                              <Chip 
-                                size="small" 
-                                label={u.phone} 
+                              <Chip
+                                size="small"
+                                label={u.phone}
                                 variant="outlined"
                                 sx={{ fontWeight: 500 }}
                               />
                             )}
                           </Stack>
                         </Paper>
-                        </Stack>
-                  </CardContent>
+                      </Stack>
+                    </CardContent>
                   </Box>
                 </Slide>
 

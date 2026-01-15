@@ -4,6 +4,7 @@ import { getAllPendings } from '../api';
 import type { AllPendingsResponseDto, PendingForMemberDto, TeamPendingsDto } from '../types';
 import type { RootState } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
+import { useDataFetcher } from '@/hooks/error-handling';
 
 export interface UseAttendancePendingsResult {
   memberPendings: PendingForMemberDto[];
@@ -11,56 +12,53 @@ export interface UseAttendancePendingsResult {
   leaderPendingsCount: number;
   memberPendingsCount: number;
   loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
+  error: any;
+  refetch: (options?: any) => Promise<any>;
 }
 
 export function useAttendancePendings(): UseAttendancePendingsResult {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  const [memberPendings, setMemberPendings] = useState<PendingForMemberDto[]>([]);
-  const [leaderPendings, setLeaderPendings] = useState<TeamPendingsDto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeaderOrAdmin = isAuthenticated && (user?.role === UserRole.LEADER || user?.role === UserRole.ADMIN);
 
-  const fetchPendings = useCallback(async () => {
-    if (!isAuthenticated) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res: AllPendingsResponseDto = await getAllPendings();
-
-      if (isMember) {
-        setMemberPendings(res.memberPendings);
-        setLeaderPendings([]);
-      } else if (isLeaderOrAdmin) {
-        setLeaderPendings(res.leaderPendings);
-        setMemberPendings(res.memberPendings);
-      }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
-      setError(message);
-      setMemberPendings([]);
-      setLeaderPendings([]);
-    } finally {
-      setLoading(false);
+  const fetchFunction = useCallback(async (): Promise<{
+    memberPendings: PendingForMemberDto[];
+    leaderPendings: TeamPendingsDto[];
+  }> => {
+    if (!isAuthenticated) {
+      return { memberPendings: [], leaderPendings: [] };
     }
+
+    const res: AllPendingsResponseDto = await getAllPendings();
+
+    if (isMember) {
+      return {
+        memberPendings: res.memberPendings,
+        leaderPendings: [],
+      };
+    } else if (isLeaderOrAdmin) {
+      return {
+        leaderPendings: res.leaderPendings,
+        memberPendings: res.memberPendings,
+      };
+    }
+
+    return { memberPendings: [], leaderPendings: [] };
   }, [isAuthenticated, isMember, isLeaderOrAdmin]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchPendings();
-    } else {
-      setMemberPendings([]);
-      setLeaderPendings([]);
+  const { data, isLoading, error, refetch } = useDataFetcher(
+    fetchFunction,
+    {
+      enabled: isAuthenticated,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+      retry: true,
+      context: 'attendance-pendings',
     }
-  }, [isAuthenticated, fetchPendings]);
+  );
 
+  const memberPendings = data?.memberPendings || [];
+  const leaderPendings = data?.leaderPendings || [];
   const leaderPendingsCount = leaderPendings.reduce((acc, tp) => acc + tp.pendings.length, 0);
   const memberPendingsCount = memberPendings.length;
 
@@ -69,8 +67,8 @@ export function useAttendancePendings(): UseAttendancePendingsResult {
     leaderPendings,
     leaderPendingsCount,
     memberPendingsCount,
-    loading,
+    loading: isLoading,
     error,
-    refetch: fetchPendings,
+    refetch,
   };
 }
