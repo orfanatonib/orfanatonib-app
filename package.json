@@ -12,8 +12,12 @@
     "start:staging": "dotenv -e env/env.staging -- vite",
     "start:prod": "dotenv -e env/env.prod -- vite",
     "build": "vite build",
+    "prebuild": "npm run type-check",
     "preview": "vite preview --open",
     "test": "vitest",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "validate": "npm run type-check && npm run lint",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
   },

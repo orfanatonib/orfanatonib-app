@@ -338,7 +338,7 @@ export default function ShelterFormPage() {
 
       <Snackbar
         open={successSnackbar.open}
-        autoHideDuration={2000}
+        autoHideDuration={5000}
         onClose={() => setSuccessSnackbar({ open: false, message: "" })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

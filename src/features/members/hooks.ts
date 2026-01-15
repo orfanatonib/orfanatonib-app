@@ -33,17 +33,15 @@ export function useMemberProfiles(
 
   const sortParam = useMemo<Pick<MemberQuery, "sort" | "order">>(() => {
     const first = sorting?.[0];
-    const map = {
+    const map: Record<string, MemberQuery["sort"]> = {
       member: "name",
       updatedAt: "updatedAt",
       createdAt: "createdAt",
-      shelter: "shelterNumber",
+      shelter: "name",
       coord: "name",
-    } as const;
+    };
     if (!first) return { sort: "updatedAt", order: "desc" };
-    type SortKey = (typeof map)[keyof typeof map];
-    const id = first.id as keyof typeof map | "name" | "updatedAt" | "createdAt" | "shelterNumber";
-    const sort: SortKey = map[id as keyof typeof map] ?? "updatedAt";
+    const sort = map[first.id] ?? "updatedAt";
     const order: "asc" | "desc" = first.desc ? "desc" : "asc";
     return { sort, order };
   }, [sorting]);

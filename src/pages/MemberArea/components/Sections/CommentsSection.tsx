@@ -109,7 +109,7 @@ const CommentsSection: React.FC = () => {
       const scrollAmount = cardWidth + gap;
       const currentScroll = container.scrollLeft;
       const containerWidth = container.clientWidth;
-      
+
       let targetScroll: number;
       if (direction === 'left') {
         const targetPosition = currentScroll - scrollAmount;
@@ -119,7 +119,7 @@ const CommentsSection: React.FC = () => {
         const maxScroll = container.scrollWidth - containerWidth;
         targetScroll = Math.min(maxScroll, targetPosition);
       }
-      
+
       container.scrollTo({
         left: targetScroll,
         behavior: 'smooth',
@@ -190,10 +190,10 @@ const CommentsSection: React.FC = () => {
         />
 
         <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
               mb: { xs: 2.5, md: 4 },
             }}
           >
@@ -248,7 +248,7 @@ const CommentsSection: React.FC = () => {
                   py: { xs: 1.1, sm: 1.25, md: 1.5 },
                   minWidth: { xs: 'auto', md: 'auto' },
                   width: { xs: '100%', md: 'auto' },
-                  background: formOpen 
+                  background: formOpen
                     ? 'linear-gradient(135deg, #d32f2f 0%, #c62828 100%)'
                     : 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                   boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
@@ -289,8 +289,8 @@ const CommentsSection: React.FC = () => {
                 >
                   <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
                     <Box sx={{ textAlign: 'center', mb: { xs: 3, md: 4 } }}>
-                    <Typography
-                      variant="h6"
+                      <Typography
+                        variant="h6"
                         fontWeight={800}
                         sx={{
                           fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.4rem' },
@@ -300,9 +300,9 @@ const CommentsSection: React.FC = () => {
                           WebkitTextFillColor: 'transparent',
                           mb: 1,
                         }}
-                    >
-                      Compartilhe sua experiência
-                    </Typography>
+                      >
+                        Compartilhe sua experiência
+                      </Typography>
                       <Typography
                         variant="body2"
                         color="text.secondary"
@@ -332,15 +332,15 @@ const CommentsSection: React.FC = () => {
                                 setFormData({ ...formData, [field]: value });
                                 if (errors[field as keyof typeof errors] && value.trim()) {
                                   setErrors({ ...errors, [field]: false });
-                              }
+                                }
                               }}
                               error={errors[field as keyof typeof errors]}
                               helperText={
-                                field === 'comment' 
+                                field === 'comment'
                                   ? `${formData.comment.length}/${MAX_COMMENT_LENGTH} caracteres${errors.comment ? ' - Comentário é obrigatório' : ''}`
                                   : errors[field as keyof typeof errors]
-                                  ? `${labels[field].split(' ')[0]} é obrigatório`
-                                  : ''
+                                    ? `${labels[field].split(' ')[0]} é obrigatório`
+                                    : ''
                               }
                               InputProps={{
                                 startAdornment: (
@@ -357,7 +357,7 @@ const CommentsSection: React.FC = () => {
                                   '&:hover': {
                                     backgroundColor: 'rgba(255, 255, 255, 1)',
                                     '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: 'primary.main',
+                                      borderColor: 'primary.main',
                                       borderWidth: 2,
                                     },
                                   },
@@ -444,7 +444,7 @@ const CommentsSection: React.FC = () => {
               >
                 <Box
                   sx={{
-                  position: 'relative',
+                    position: 'relative',
                     width: '100%',
                   }}
                 >
@@ -458,7 +458,7 @@ const CommentsSection: React.FC = () => {
                           top: '50%',
                           transform: 'translateY(-50%)',
                           bgcolor: 'white',
-                    color: theme.palette.primary.main,
+                          color: theme.palette.primary.main,
                           boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
                           zIndex: 3,
                           width: { xs: 36, sm: 42, md: 48 },
@@ -470,7 +470,7 @@ const CommentsSection: React.FC = () => {
                             transform: 'translateY(-50%) scale(1.1)',
                             boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
                             borderColor: theme.palette.primary.main,
-                  },
+                          },
                           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
                       >
@@ -526,10 +526,10 @@ const CommentsSection: React.FC = () => {
                       '&::-webkit-scrollbar-thumb': {
                         background: 'rgba(25, 118, 210, 0.3)',
                         borderRadius: 4,
-                    '&:hover': {
+                        '&:hover': {
                           background: 'rgba(25, 118, 210, 0.5)',
-                    },
-                  },
+                        },
+                      },
                     }}
                   >
                     {comments.map((comment, index) => (
@@ -541,11 +541,11 @@ const CommentsSection: React.FC = () => {
                           maxWidth: { xs: 280, sm: 340, md: 380 },
                           minHeight: { xs: 'auto', md: 340 },
                           borderRadius: { xs: 2.5, md: 3 },
-                              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+                          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
                           border: `2px solid ${theme.palette.primary.main}20`,
                           scrollSnapAlign: 'center',
                           scrollSnapStop: 'always',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           position: 'relative',
                           overflow: 'hidden',
                           '&::before': {
@@ -559,20 +559,20 @@ const CommentsSection: React.FC = () => {
                             opacity: 0,
                             transition: 'opacity 0.3s ease',
                           },
-                              '&:hover': {
+                          '&:hover': {
                             transform: { xs: 'none', md: 'translateY(-6px)' },
-                                borderColor: theme.palette.primary.main,
+                            borderColor: theme.palette.primary.main,
                             boxShadow: { xs: '0 4px 12px rgba(25, 118, 210, 0.2)', md: `0 20px 40px ${theme.palette.primary.main}25` },
                             '&::before': {
                               opacity: 1,
                             },
-                              },
-                            }}
-                          >
+                          },
+                        }}
+                      >
                         <CardContent sx={{ p: { xs: 2, sm: 2.5, md: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1.5, md: 2 } }}>
-                                <Avatar
-                                  sx={{
+                            <Avatar
+                              sx={{
                                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                                 mr: { xs: 1.5, md: 2 },
                                 width: { xs: 44, sm: 48, md: 56 },
@@ -580,48 +580,48 @@ const CommentsSection: React.FC = () => {
                                 fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.4rem' },
                                 fontWeight: 'bold',
                                 boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                                  }}
-                                >
-                                  {comment.name.charAt(0).toUpperCase()}
-                                </Avatar>
+                              }}
+                            >
+                              {comment.name.charAt(0).toUpperCase()}
+                            </Avatar>
                             <Box sx={{ flex: 1 }}>
-                                  <Typography
-                                    variant="h6"
+                              <Typography
+                                variant="h6"
                                 fontWeight={700}
-                                    sx={{
+                                sx={{
                                   fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
-                                      mb: { xs: 0.25, md: 0.5 },
+                                  mb: { xs: 0.25, md: 0.5 },
                                   background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                                   backgroundClip: 'text',
                                   WebkitBackgroundClip: 'text',
                                   WebkitTextFillColor: 'transparent',
-                                    }}
-                                  >
-                                    {comment.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                sx={{ 
+                                }}
+                              >
+                                {comment.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
                                   fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' },
                                   fontWeight: 500,
                                 }}
-                                  >
+                              >
                                 {new Date(comment.createdAt).toLocaleDateString('pt-BR', {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric',
                                 })}
-                                  </Typography>
-                                </Box>
-                              </Box>
+                              </Typography>
+                            </Box>
+                          </Box>
 
                           <Box sx={{ flexGrow: 1, mb: { xs: 2, md: 2.5 } }}>
-                                <Paper
+                            <Paper
                               elevation={0}
-                                  sx={{
+                              sx={{
                                 p: { xs: 1.75, sm: 2, md: 2.5 },
-                                    borderRadius: 2,
+                                borderRadius: 2,
                                 background: 'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)',
                                 borderLeft: `4px solid ${theme.palette.primary.main}`,
                                 position: 'relative',
@@ -637,68 +637,68 @@ const CommentsSection: React.FC = () => {
                                   lineHeight: 1,
                                   zIndex: 0,
                                 },
-                                  }}
-                                >
-                                  <Typography
-                                    variant="body1"
-                                    sx={{
+                              }}
+                            >
+                              <Typography
+                                variant="body1"
+                                sx={{
                                   fontSize: { xs: '0.875rem', sm: '0.95rem', md: '1.05rem' },
                                   lineHeight: { xs: 1.6, md: 1.8 },
-                                      color: 'text.primary',
-                                      fontStyle: 'italic',
+                                  color: 'text.primary',
+                                  fontStyle: 'italic',
                                   position: 'relative',
                                   zIndex: 1,
-                                    }}
-                                  >
+                                }}
+                              >
                                 {comment.comment}
-                                  </Typography>
-                                </Paper>
-                              </Box>
+                              </Typography>
+                            </Paper>
+                          </Box>
 
-                              <Box sx={{ mt: 'auto' }}>
+                          <Box sx={{ mt: 'auto' }}>
                             <Stack direction="row" spacing={{ xs: 0.75, md: 1 }} flexWrap="wrap" useFlexGap>
-                                  <Chip
+                              <Chip
                                 icon={<HomeIcon sx={{ fontSize: { xs: '0.8rem', md: '0.9rem' } }} />}
-                                    label={comment.shelter}
-                                    size="small"
-                                    sx={{
+                                label={comment.shelter}
+                                size="small"
+                                sx={{
                                   background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                                      color: 'white',
+                                  color: 'white',
                                   fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' },
                                   height: { xs: 26, sm: 28, md: 30 },
                                   fontWeight: 600,
                                   boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
-                                      '& .MuiChip-label': {
+                                  '& .MuiChip-label': {
                                     px: { xs: 1.25, md: 1.5 },
                                   },
                                   '& .MuiChip-icon': {
                                     color: 'white',
-                                      },
-                                    }}
-                                  />
-                                  <Chip
+                                  },
+                                }}
+                              />
+                              <Chip
                                 icon={<LocationOnIcon sx={{ fontSize: { xs: '0.8rem', md: '0.9rem' } }} />}
-                                    label={comment.neighborhood}
-                                    size="small"
-                                    sx={{
+                                label={comment.neighborhood}
+                                size="small"
+                                sx={{
                                   background: 'linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%)',
-                                      color: 'white',
+                                  color: 'white',
                                   fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' },
                                   height: { xs: 26, sm: 28, md: 30 },
                                   fontWeight: 600,
                                   boxShadow: '0 2px 8px rgba(123, 31, 162, 0.3)',
-                                      '& .MuiChip-label': {
+                                  '& .MuiChip-label': {
                                     px: { xs: 1.25, md: 1.5 },
                                   },
                                   '& .MuiChip-icon': {
                                     color: 'white',
-                                      },
-                                    }}
-                                  />
-                                </Stack>
-                              </Box>
-                            </CardContent>
-                          </Card>
+                                  },
+                                }}
+                              />
+                            </Stack>
+                          </Box>
+                        </CardContent>
+                      </Card>
                     ))}
                   </Box>
                 </Box>
@@ -734,7 +734,7 @@ const CommentsSection: React.FC = () => {
 
       <Snackbar
         open={successSnackbarOpen}
-        autoHideDuration={8000}
+        autoHideDuration={5000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

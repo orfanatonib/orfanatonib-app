@@ -84,7 +84,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
   const handleSaveSection = async () => {
     setTouched({ page: true });
-    
+
     if (!selectedPage) {
       setSnackbar({
         open: true,
@@ -255,7 +255,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
             <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
               ⚙️ Configurações
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth required error={touched.page && !selectedPage}>
@@ -444,7 +444,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >

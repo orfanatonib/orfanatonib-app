@@ -152,7 +152,7 @@ export default function LeaderMultiEditDialog({
       return teams.map(team => ({
         id: team.id,
         numberTeam: team.numberTeam,
-        description: team.description,
+        description: team.description ?? null,
       }));
     } catch {
       return [];
@@ -401,7 +401,7 @@ function TeamsSelector({
       setTeams(data.map(team => ({
         id: team.id,
         numberTeam: team.numberTeam,
-        description: team.description,
+        description: team.description ?? null,
       })));
     } catch {
       setTeams([]);

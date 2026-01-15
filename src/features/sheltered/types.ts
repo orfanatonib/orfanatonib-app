@@ -14,6 +14,8 @@ export type ShelteredResponseDto = {
   guardianPhone: string;
   birthDate?: string | null;
   joinedAt: string | null;
+  active: boolean;
+  acceptedChrists: AcceptedChristShortDto[];
   shelter: { id: string; name: string } | null;
   address: {
     id: string;

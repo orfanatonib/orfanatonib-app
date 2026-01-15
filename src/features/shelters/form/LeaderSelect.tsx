@@ -14,7 +14,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { LeaderOption } from "../../types";
+import { LeaderOption } from "../types";
 
 type Props = {
   value?: string | string[] | null;

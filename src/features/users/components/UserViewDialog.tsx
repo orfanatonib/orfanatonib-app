@@ -49,11 +49,11 @@ const roleLabels: Record<UserRole, string> = {
 function LineCard({
   icon,
   title,
-  shelteredren,
+  children,
 }: {
   icon: React.ReactNode;
   title: string;
-  shelteredren: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
@@ -64,7 +64,7 @@ function LineCard({
             {title}
           </Typography>
         </Stack>
-        {shelteredren}
+        {children}
       </Stack>
     </Paper>
   );

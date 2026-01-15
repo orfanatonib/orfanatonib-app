@@ -31,7 +31,7 @@ import {
   Badge as BadgeIcon,
   Favorite as FavoriteIcon,
 } from '@mui/icons-material';
-import { RootState } from '@/store/slices';
+import { RootState, AppDispatch } from '@/store/slices';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import ProfileEditForm from '@/features/profile/components/ProfileEditForm';
@@ -53,7 +53,7 @@ const ProfilePage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,23 +102,49 @@ const ProfilePage: React.FC = () => {
     name: user.name,
     phone: user.phone || '',
     role: user.role,
-    active: user.active,
-    completed: user.completed,
-    commonUser: user.commonUser,
+    active: user.active ?? false,
+    completed: user.completed ?? false,
+    commonUser: user.commonUser ?? false,
     createdAt: user.createdAt || '',
     updatedAt: user.updatedAt || '',
-    image: user.image,
+    image: user.image ? {
+      id: user.image.id ?? '',
+      url: user.image.url,
+      title: user.image.title ?? '',
+      description: user.image.description ?? '',
+      mediaType: user.image.mediaType as string,
+      uploadType: user.image.uploadType as string,
+      isLocalFile: user.image.isLocalFile ?? false,
+      platformType: user.image.platformType ?? null,
+      originalName: user.image.originalName ?? '',
+      size: user.image.size ?? 0,
+      createdAt: user.image.createdAt ?? '',
+      updatedAt: user.image.updatedAt ?? '',
+    } : null,
   } : null;
 
   const completeProfile = user ? {
-    personalData: user.personalData || null,
-    preferences: user.preferences || null,
+    personalData: user.personalData ? {
+      birthDate: user.personalData.birthDate ?? undefined,
+      gender: user.personalData.gender ?? undefined,
+      gaLeaderName: user.personalData.gaLeaderName ?? undefined,
+      gaLeaderContact: user.personalData.gaLeaderContact ?? undefined,
+    } : undefined,
+    preferences: user.preferences ? {
+      loveLanguages: user.preferences.loveLanguages ?? undefined,
+      temperaments: user.preferences.temperaments ?? undefined,
+      favoriteColor: user.preferences.favoriteColor ?? undefined,
+      favoriteFood: user.preferences.favoriteFood ?? undefined,
+      favoriteMusic: user.preferences.favoriteMusic ?? undefined,
+      whatMakesYouSmile: user.preferences.whatMakesYouSmile ?? undefined,
+      skillsAndTalents: user.preferences.skillsAndTalents ?? undefined,
+    } : undefined,
   } : null;
 
   const handleProfileUpdate = async () => {
     try {
       setError(null);
-      await dispatch(fetchCurrentUser() as any);
+      await dispatch(fetchCurrentUser());
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erro ao atualizar perfil.');
     }
@@ -287,18 +313,18 @@ const ProfilePage: React.FC = () => {
               </Box>
             </Box>
 
-            {profile?.role === 'member' && profile?.memberProfile?.team?.shelter && (
+            {profile?.role === 'member' && user?.memberProfile?.team?.shelter && (
               <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
                 <Stack spacing={0.5}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
                     <Typography variant="caption" fontWeight={700} noWrap>
-                      {profile.memberProfile.team.shelter.name}
+                      {user.memberProfile.team.shelter.name}
                     </Typography>
                   </Stack>
                   <Chip
                     icon={<GroupsOutlinedIcon />}
-                    label={`Equipe ${profile.memberProfile.team.numberTeam}`}
+                    label={`Equipe ${user.memberProfile.team.numberTeam}`}
                     size="small"
                     color="primary"
                     variant="outlined"

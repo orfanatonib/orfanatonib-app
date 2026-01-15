@@ -15,7 +15,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import type { TeamScheduleDto } from '../types';
 import { formatScheduleLabel } from '../utils';
 
-type EventTypeFilter = 'visit' | 'meeting';
+import { EventCategory } from '../types';
+
+type EventTypeFilter = EventCategory;
 
 interface EventFilterSelectorProps {
   eventTypeFilter: EventTypeFilter;

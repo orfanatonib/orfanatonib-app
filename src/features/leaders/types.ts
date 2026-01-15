@@ -41,16 +41,6 @@ export type ShelterWithMembers = ShelterSimple & {
 
 export type TeamSimple = {
   id: string;
-  numberTeam: number; 
-  description?: string | null;
-  shelterId: string;
-  shelter?: ShelterWithMembers;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type TeamSimple = {
-  id: string;
   numberTeam: number;
   description?: string | null;
   shelterId: string;

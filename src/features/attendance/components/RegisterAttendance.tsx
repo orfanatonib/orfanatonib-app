@@ -80,8 +80,8 @@ const RegisterAttendance = ({ schedules, disabled, onSuccess }: Props) => {
   }, [comment]);
 
   const isFormValid = useMemo(() => {
-    return scheduleValidation.isValid && commentValidation.isValid && !formState.loading && !disabled;
-  }, [scheduleValidation.isValid, commentValidation.isValid, formState.loading, disabled]);
+    return scheduleValidation.isValid && commentValidation.isValid && !isSubmitting && !disabled;
+  }, [scheduleValidation.isValid, commentValidation.isValid, isSubmitting, disabled]);
 
   useEffect(() => {
     if (schedules.length > 0) setScheduleId(schedules[0].id);

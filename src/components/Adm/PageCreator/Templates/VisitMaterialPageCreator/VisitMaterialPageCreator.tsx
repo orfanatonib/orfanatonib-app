@@ -134,7 +134,7 @@ export default function VisitMaterialPageCreator({
 
   const handleSavePage = async () => {
     setTouched({ title: true, subtitle: true, description: true });
-    
+
     const hasError = !pageTitle || !pageSubtitle || !pageDescription;
 
     setErrors({
@@ -514,7 +514,7 @@ export default function VisitMaterialPageCreator({
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

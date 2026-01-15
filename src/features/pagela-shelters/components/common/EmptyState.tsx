@@ -20,8 +20,8 @@ export function EmptyState({ icon, title, description }: EmptyStateProps) {
     >
       {icon && (
         <Box sx={{ mb: 2, display: "flex", justifyContent: "center", color: "text.secondary" }}>
-          {React.isValidElement(icon) 
-            ? React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 48, color: "text.secondary" } })
+          {React.isValidElement(icon)
+            ? React.cloneElement(icon as React.ReactElement<{ sx?: object }>, { sx: { fontSize: 48, color: "text.secondary" } })
             : icon
           }
         </Box>

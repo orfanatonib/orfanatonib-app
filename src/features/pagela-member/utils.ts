@@ -10,6 +10,9 @@ export function clampWeek(w: number) {
 export function toLabelVisit(year: number, visit: number) {
   return `Ano: ${year} Visita: ${String(visit).padStart(2,"0")}`;
 }
+export function toLabelWeek(year: number, week: number) {
+  return `Ano: ${year} • Semana: ${String(week).padStart(2,"0")}`;
+}
 export function getISOWeekYear(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));

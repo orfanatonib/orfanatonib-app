@@ -15,10 +15,9 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { LeaderProfile } from "../types";
+import { LeaderProfile, ShelterSimple } from "../types";
 import { apiManageLeaderTeam } from "../api";
 import { apiFetchSheltersSimple, apiGetShelterTeamsQuantity } from "../../shelters/api";
-import { ShelterSimple } from "../../shelters/types";
 
 type Props = {
   open: boolean;
@@ -52,8 +51,9 @@ export default function LeaderEditDialog({
   }, [open]);
 
   useEffect(() => {
-    if (open && leader?.shelter) {
-      const currentShelter = shelters.find((s) => s.id === leader.shelter?.id);
+    const firstShelter = leader?.shelters?.[0];
+    if (open && firstShelter) {
+      const currentShelter = shelters.find((s) => s.id === firstShelter?.id);
       if (currentShelter) {
         setSelectedShelter(currentShelter);
         loadTeamsQuantity(currentShelter.id);
@@ -70,7 +70,12 @@ export default function LeaderEditDialog({
     setError("");
     try {
       const data = await apiFetchSheltersSimple();
-      setShelters(data || []);
+      setShelters((data || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      })));
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Erro ao carregar abrigos");
     } finally {
@@ -87,8 +92,10 @@ export default function LeaderEditDialog({
         setTeamsQuantity(null);
       } else {
         setTeamsQuantity(data.teamsQuantity);
-        if (leader?.shelter?.id === shelterId && leader?.shelter?.team?.numberTeam) {
-          setNumberTeam(leader.shelter.team.numberTeam);
+        const firstShelter = leader?.shelters?.[0];
+        const firstTeam = firstShelter?.teams?.[0];
+        if (firstShelter?.id === shelterId && firstTeam?.numberTeam) {
+          setNumberTeam(firstTeam.numberTeam);
         } else {
           setNumberTeam(1);
         }
@@ -180,19 +187,14 @@ export default function LeaderEditDialog({
               <Typography variant="body2" color="text.secondary">
                 {leader.user.email || "—"}
               </Typography>
-              {leader.shelter && (
+              {leader.shelters && leader.shelters.length > 0 && (
                 <>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Abrigo atual: <strong>{leader.shelter.name}</strong>
+                    Abrigo atual: <strong>{leader.shelters[0].name}</strong>
                   </Typography>
-                  {leader.shelter.team?.numberTeam && (
+                  {leader.shelters[0].teams?.[0]?.numberTeam && (
                     <Typography variant="body2" color="text.secondary">
-                      Equipe atual: <strong>Equipe {leader.shelter.team.numberTeam}</strong>
-                    </Typography>
-                  )}
-                  {leader.shelter.members && leader.shelter.members.length > 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      Membros da equipe: <strong>{leader.shelter.members.length}</strong>
+                      Equipe atual: <strong>Equipe {leader.shelters[0].teams[0].numberTeam}</strong>
                     </Typography>
                   )}
                 </>
@@ -269,7 +271,7 @@ export default function LeaderEditDialog({
               <Grid item xs={12}>
                 <Alert severity="info">
                   O abrigo <strong>{selectedShelter.name}</strong> possui <strong>{teamsQuantity}</strong> equipe(s).
-                  {leader.shelter?.id === selectedShelter.id
+                  {leader.shelters?.[0]?.id === selectedShelter.id
                     ? " O líder será movido para a equipe selecionada."
                     : " O líder será vinculado à equipe selecionada."}
                 </Alert>
