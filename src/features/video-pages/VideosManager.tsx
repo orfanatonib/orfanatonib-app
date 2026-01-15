@@ -46,7 +46,7 @@ export default function VideosManager() {
 
   const [selectedPage, setSelectedPage] = useState<VideoPageData | null>(null);
   const [pageToDelete, setPageToDelete] = useState<VideoPageData | null>(null);
-  const [snackbar, setSnackbar] = useState<{open:boolean; message:string; severity:'success'|'error'}>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
     severity: 'success',
@@ -218,7 +218,7 @@ export default function VideosManager() {
 
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={3500}
+          autoHideDuration={5000}
           onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >

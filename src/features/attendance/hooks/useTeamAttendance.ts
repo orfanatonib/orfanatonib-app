@@ -17,7 +17,9 @@ interface MemberAttendanceRow {
   comment: string;
 }
 
-type EventTypeFilter = 'visit' | 'meeting';
+import { EventCategory } from '../types';
+
+type EventTypeFilter = EventCategory;
 
 interface UseTeamAttendanceProps {
   team: TeamWithMembersDto;
@@ -33,11 +35,11 @@ export function useTeamAttendance({
   const safeSchedules = Array.isArray(schedules) ? schedules : [];
 
   const [scheduleId, setScheduleId] = useState<string>('');
-  const [eventTypeFilter, setEventTypeFilter] = useState<EventTypeFilter>('visit');
+  const [eventTypeFilter, setEventTypeFilter] = useState<EventTypeFilter>(EventCategory.VISIT);
 
   const filteredSchedules = useMemo(() => {
     return safeSchedules.filter(s => {
-      const type = s.category || (s.visitDate ? 'visit' : 'meeting');
+      const type = s.category || (s.visitDate ? EventCategory.VISIT : EventCategory.MEETING);
       return type === eventTypeFilter;
     });
   }, [safeSchedules, eventTypeFilter]);

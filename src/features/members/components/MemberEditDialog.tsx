@@ -15,10 +15,9 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { MemberProfile } from "../types";
+import { MemberProfile, ShelterSimple } from "../types";
 import { apiManageMemberTeam } from "../api";
 import { apiFetchSheltersSimple, apiGetShelterTeamsQuantity } from "../../shelters/api";
-import { ShelterSimple } from "../../shelters/types";
 
 type Props = {
   open: boolean;
@@ -70,7 +69,12 @@ export default function MemberEditDialog({
     setError("");
     try {
       const data = await apiFetchSheltersSimple();
-      setShelters(data || []);
+      setShelters((data || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      })));
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Erro ao carregar abrigos");
     } finally {

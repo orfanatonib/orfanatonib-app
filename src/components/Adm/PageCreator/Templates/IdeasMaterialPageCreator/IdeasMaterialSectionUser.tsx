@@ -248,9 +248,9 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
         />
       )}
 
-<Snackbar
+      <Snackbar
         open={showAlert}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setShowAlert(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ mb: 4, zIndex: 1400 }}

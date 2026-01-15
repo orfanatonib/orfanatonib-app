@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { MediaTargetType } from 'store/slices/types';
+import { MediaTargetType } from '@/store/slices/types';
 import { motion } from 'framer-motion';
 
 const MemberWeekBanner: React.FC = () => {
@@ -175,7 +175,7 @@ const MemberWeekBanner: React.FC = () => {
             {month}
           </Typography>
 
-          {currentVisitRoute.subtitle && (
+          {currentVisitRoute?.subtitle && (
             <Fragment>
               <Typography
                 variant="body1"
@@ -198,7 +198,7 @@ const MemberWeekBanner: React.FC = () => {
                   opacity: 0.95,
                 }}
               >
-                {currentVisitRoute.subtitle}
+                {currentVisitRoute?.subtitle}
               </Typography>
             </Fragment>
           )}

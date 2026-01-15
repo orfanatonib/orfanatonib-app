@@ -233,13 +233,15 @@ function ApiErrorHandlingExample() {
 // =============================================================================
 
 function ApiHooksIntegrationExample() {
+  const [currentEndpoint, setCurrentEndpoint] = useState<string>('/api/shelters');
+
   const { execute, isLoading, error } = useApiCall(
-    async (endpoint: string) => {
+    async () => {
       // Simula chamada para diferentes endpoints
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Simula erro baseado no endpoint
-      if (endpoint.includes('invalid')) {
+      if (currentEndpoint.includes('invalid')) {
         const mockError = {
           response: {
             data: {
@@ -248,7 +250,7 @@ function ApiHooksIntegrationExample() {
               error: 'Bad Request',
               category: 'RULE',
               timestamp: new Date().toISOString(),
-              path: endpoint,
+              path: currentEndpoint,
               requestId: 'req-simulated',
               correlationId: 'corr-simulated',
               details: {
@@ -263,7 +265,7 @@ function ApiHooksIntegrationExample() {
         throw mockError;
       }
 
-      return { success: true, data: `Dados de ${endpoint}` };
+      return { success: true, data: `Dados de ${currentEndpoint}` };
     },
     'api-hooks-example'
   );
@@ -271,7 +273,8 @@ function ApiHooksIntegrationExample() {
   const [result, setResult] = useState<string>('');
 
   const callEndpoint = async (endpoint: string) => {
-    const response = await execute(endpoint);
+    setCurrentEndpoint(endpoint);
+    const response = await execute();
     if (response) {
       setResult(response.data);
     }
@@ -329,7 +332,7 @@ function FormWithApiValidationExample() {
   });
 
   const { submit, isSubmitting, error } = useFormSubmit(
-    async (data: typeof formData) => {
+    async (data: typeof formData): Promise<void> => {
       // Simula validação da API
       const errors: string[] = [];
 
@@ -372,7 +375,6 @@ function FormWithApiValidationExample() {
 
       // Simula sucesso
       await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
     },
     'user-registration-form',
     {

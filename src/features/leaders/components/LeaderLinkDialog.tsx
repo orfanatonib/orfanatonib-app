@@ -31,9 +31,10 @@ export default function LeaderLinkDialog({
     setLocalErr("");
   }, [leader]);
 
-  const hasShelter = !!leader?.shelter;
-  const currentTeamNumber = leader?.shelter?.number ?? null;
-  const currentShelterName = leader?.shelter?.name ?? "—";
+  const firstShelter = leader?.shelters?.[0];
+  const hasShelter = !!firstShelter;
+  const currentTeamNumber = firstShelter?.teams?.[0]?.numberTeam ?? null;
+  const currentShelterName = firstShelter?.name ?? "—";
 
   const handleVincular = React.useCallback(() => {
     setLocalErr("");

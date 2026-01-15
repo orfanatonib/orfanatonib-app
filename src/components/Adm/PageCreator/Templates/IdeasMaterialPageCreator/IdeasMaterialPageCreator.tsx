@@ -104,7 +104,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
   const handleSavePage = async () => {
     setTouched({ title: true, description: true });
-    
+
     if (Object.values(errors).some(Boolean)) {
       setSnackbar({
         open: true,
@@ -428,7 +428,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       >
         <Alert severity={snackbar.severity} variant="filled">

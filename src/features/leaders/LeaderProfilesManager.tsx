@@ -51,7 +51,7 @@ export default function LeaderProfilesManager() {
 
   const {
     shelters,
-    byNumber,
+    byId: shelterById,
     loading: sheltersLoading,
     error: sheltersError,
     refresh: refreshShelters,
@@ -181,69 +181,69 @@ export default function LeaderProfilesManager() {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             {isXs ? (
-        <LeaderCards
-          rows={rows}
-          total={total}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          setPageIndex={setPageIndex}
-          setPageSize={setPageSize}
-          sorting={sorting}
-          setSorting={setSorting}
-          onView={(c) => setViewing(c)}
-          onEdit={handleEditTeam}
-        />
-      ) : (
-        <LeaderTable
-          rows={rows}
-          total={total}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          setPageIndex={setPageIndex}
-          setPageSize={setPageSize}
-          sorting={sorting}
-          setSorting={setSorting}
-          onView={(c) => setViewing(c)}
-          onEdit={handleEditTeam}
-            />
+              <LeaderCards
+                rows={rows}
+                total={total}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                setPageIndex={setPageIndex}
+                setPageSize={setPageSize}
+                sorting={sorting}
+                setSorting={setSorting}
+                onView={(c) => setViewing(c)}
+                onEdit={handleEditTeam}
+              />
+            ) : (
+              <LeaderTable
+                rows={rows}
+                total={total}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                setPageIndex={setPageIndex}
+                setPageSize={setPageSize}
+                sorting={sorting}
+                setSorting={setSorting}
+                onView={(c) => setViewing(c)}
+                onEdit={handleEditTeam}
+              />
             )}
           </motion.div>
         )}
 
         <LeaderViewDialog
-        open={!!viewing}
-        leader={viewing}
-        onClose={() => setViewing(null)}
-      />
+          open={!!viewing}
+          leader={viewing}
+          onClose={() => setViewing(null)}
+        />
 
-      <LeaderMultiEditDialog
-        open={!!editingTeam}
-        leader={editingTeam}
-        onClose={() => setEditingTeam(null)}
-        onSuccess={async () => {
-          await fetchPage();
-          if (editingTeam) {
-            await refreshOne(editingTeam.id);
-          }
-          setEditingTeam(null);
-        }}
-      />
+        <LeaderMultiEditDialog
+          open={!!editingTeam}
+          leader={editingTeam}
+          onClose={() => setEditingTeam(null)}
+          onSuccess={async () => {
+            await fetchPage();
+            if (editingTeam) {
+              await refreshOne(editingTeam.id);
+            }
+            setEditingTeam(null);
+          }}
+        />
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={3500}
-        onClose={closeSnack}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <MuiAlert
-          elevation={6}
-          variant="filled"
-          severity={snack.severity}
+        <Snackbar
+          open={snack.open}
+          autoHideDuration={5000}
           onClose={closeSnack}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          {snack.message}
-        </MuiAlert>
-      </Snackbar>
+          <MuiAlert
+            elevation={6}
+            variant="filled"
+            severity={snack.severity}
+            onClose={closeSnack}
+          >
+            {snack.message}
+          </MuiAlert>
+        </Snackbar>
       </Container>
     </Box>
   );

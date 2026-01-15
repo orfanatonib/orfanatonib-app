@@ -223,7 +223,7 @@ const SiteFeedbackForm: React.FC = () => {
 
             <Snackbar
                 open={submitted}
-                autoHideDuration={4000}
+                autoHideDuration={5000}
                 onClose={() => setSubmitted(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
