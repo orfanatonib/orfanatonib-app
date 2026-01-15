@@ -22,7 +22,7 @@ export const gradients = {
 
   special: {
     full: 'linear-gradient(135deg, #000000 0%, #009933 25%, #FFFF00 50%, #FF0000 75%, #FFFFFF 100%)',
-    banner: 'linear-gradient(135deg, #1a5f2e 0%, #2d8650 25%, #4caf50 50%, #8bc34a 75%, #cddc39 100%)',
+    banner: 'linear-gradient(135deg, #1a5f2e 0%, #009933 30%, #2ecc71 60%, #f1c40f 85%, #f9e79f 100%)',
     cta: 'linear-gradient(45deg, #009933 30%, #FFFF00 70%, #FF0000 100%)',
   },
 
