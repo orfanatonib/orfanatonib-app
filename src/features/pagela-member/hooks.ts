@@ -66,7 +66,7 @@ export function useShelteredBrowser() {
       setTotalPages(response.meta?.totalPages || 0);
     } catch (e: any) {
       setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao listar abrigados"
+        e?.response?.data?.message || e?.message || "Erro ao listar acolhidos"
       );
     } finally {
       setLoading(false);
@@ -123,7 +123,7 @@ export function useShelteredBrowser() {
       await search(debouncedQ, page, acceptedJesus, active);
     } catch (e: any) {
       setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao atualizar status do abrigado"
+        e?.response?.data?.message || e?.message || "Erro ao atualizar status do acolhido"
       );
     } finally {
       setLoading(false);

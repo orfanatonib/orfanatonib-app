@@ -137,7 +137,7 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
         }}
       >
         {!sheltered ? (
-          <Typography variant="h6">Detalhes do Abrigado</Typography>
+          <Typography variant="h6">Detalhes do Acolhido</Typography>
         ) : (
           <Stack spacing={1.25}>
             <Stack direction="row" spacing={1.25} alignItems="center">
@@ -175,7 +175,7 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
         {loading ? (
           <Skeleton height={200} />
         ) : !sheltered ? (
-          <Alert severity="info">Nenhum abrigado selecionado.</Alert>
+          <Alert severity="info">Nenhum acolhido selecionado.</Alert>
         ) : (
           <Stack spacing={2}>
             <Grid container spacing={1.25}>

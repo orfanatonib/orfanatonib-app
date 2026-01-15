@@ -41,7 +41,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
     const newErrors: Partial<Record<keyof ChangePasswordDto | 'confirmPassword', string>> = {};
 
     const should = (key: 'currentPassword' | 'newPassword' | 'confirmPassword') =>
-      touched?.[key] ?? true; 
+      touched?.[key] ?? true;
 
     if (should('currentPassword') && isCommonUser) {
       if (!next.currentPassword.trim()) newErrors.currentPassword = 'Senha atual é obrigatória';
@@ -160,44 +160,46 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
             {isCommonUser && (
               <Grid item xs={12} md={6}>
                 <TextField
-                fullWidth
-                type={showCurrentPassword ? 'text' : 'password'}
-                label="Senha Atual"
-                value={formData.currentPassword}
-                onChange={(e) => {
-                  const next = { ...formData, currentPassword: e.target.value };
-                  setFormData(next);
-                  validateLive({ ...next, confirmPassword }, { currentPassword: true });
-                }}
-                onBlur={() =>
-                  validateLive(
-                    { ...formData, confirmPassword },
-                    { currentPassword: true, newPassword: false, confirmPassword: false }
-                  )
-                }
-                error={!!errors.currentPassword}
-                helperText={errors.currentPassword}
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        edge="end"
-                      >
-                        {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
+                  fullWidth
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  label="Senha Atual"
+                  value={formData.currentPassword}
+                  onChange={(e) => {
+                    const next = { ...formData, currentPassword: e.target.value };
+                    setFormData(next);
+                    validateLive({ ...next, confirmPassword, currentPassword: next.currentPassword || '' }, { currentPassword: true });
+                  }}
+                  onBlur={() =>
+                    validateLive(
+                      { ...formData, confirmPassword, currentPassword: formData.currentPassword || '' },
+                      { currentPassword: true, newPassword: false, confirmPassword: false }
+                    )
+                  }
+                  error={!!errors.currentPassword}
+                  helperText={errors.currentPassword}
+                  required
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            edge="end"
+                          >
+                            {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
               </Grid>
             )}
 
@@ -210,28 +212,30 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
                 onChange={(e) => {
                   const next = { ...formData, newPassword: e.target.value };
                   setFormData(next);
-                  validateLive({ ...next, confirmPassword }, { newPassword: true, confirmPassword: true });
+                  validateLive({ ...next, confirmPassword, currentPassword: next.currentPassword || '' }, { newPassword: true, confirmPassword: true });
                 }}
                 onBlur={() =>
                   validateLive(
-                    { ...formData, confirmPassword },
+                    { ...formData, confirmPassword, currentPassword: formData.currentPassword || '' },
                     { currentPassword: false, newPassword: true, confirmPassword: true }
                   )
                 }
                 error={!!errors.newPassword}
                 helperText={errors.newPassword || 'Mínimo de 6 caracteres'}
                 required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        edge="end"
-                      >
-                        {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          edge="end"
+                        >
+                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -252,28 +256,30 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
                 onChange={(e) => {
                   const nextConfirm = e.target.value;
                   setConfirmPassword(nextConfirm);
-                  validateLive({ ...formData, confirmPassword: nextConfirm }, { confirmPassword: true });
+                  validateLive({ ...formData, confirmPassword: nextConfirm, currentPassword: formData.currentPassword || '' }, { confirmPassword: true });
                 }}
                 onBlur={() =>
                   validateLive(
-                    { ...formData, confirmPassword },
+                    { ...formData, confirmPassword, currentPassword: formData.currentPassword || '' },
                     { currentPassword: false, newPassword: true, confirmPassword: true }
                   )
                 }
                 error={!!errors.confirmPassword}
                 helperText={errors.confirmPassword || 'Repita a nova senha'}
                 required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -307,7 +313,6 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
                     borderRadius: 1.5,
                     textTransform: 'none',
                     fontWeight: 600,
-                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                   }}
                 >
                   {isSubmitting ? 'Alterando...' : 'Alterar Senha'}

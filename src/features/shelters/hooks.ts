@@ -190,6 +190,7 @@ export function useOptions() {
       const mappedCoords: LeaderOption[] = (coordsApi ?? []).map((c) => ({
         leaderProfileId: c.leaderProfileId,
         name: c.name,
+        vinculado: c.vinculado,
       }));
 
       const mappedMembers: MemberOption[] = (membersApi ?? []).map((t: any) => ({
@@ -201,8 +202,7 @@ export function useOptions() {
       setLeaders(mappedCoords);
       setMembers(mappedMembers);
       setLoaded(true);
-    } catch (error) {
-        console.error('Error loading options:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

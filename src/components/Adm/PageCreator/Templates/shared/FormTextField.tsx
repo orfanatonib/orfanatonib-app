@@ -1,7 +1,7 @@
 import { TextField, TextFieldProps } from '@mui/material';
 import { useState } from 'react';
 
-interface FormTextFieldProps extends Omit<TextFieldProps, 'error' | 'helperText'> {
+interface FormTextFieldProps extends Omit<TextFieldProps, 'error'> {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;

@@ -129,13 +129,10 @@ const Login: React.FC = () => {
     try {
       const response = await api.post<LoginResponse>('/auth/login', { email, password });
 
-      console.log('Login response:', response.data);
-
       if (response.data.user.active === false) {
         handleUserInactive();
 
         if (response.data.emailVerification?.verificationEmailSent) {
-          console.log('Email verification detected for inactive user:', response.data.emailVerification);
           setEmailVerification(response.data.emailVerification);
         } else {
           setEmailVerification(null);
@@ -146,7 +143,6 @@ const Login: React.FC = () => {
       }
 
       if (response.data.emailVerification?.verificationEmailSent) {
-        console.log('Email verification detected:', response.data.emailVerification);
         setEmailVerification(response.data.emailVerification);
         dispatch(setEmailVerificationAlert(response.data.emailVerification));
       } else {
@@ -286,6 +282,17 @@ const Login: React.FC = () => {
                 error={!!errorMessage && !password}
                 helperText={!!errorMessage && !password ? 'Senha é obrigatória' : ''}
               />
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => navigate('/esqueci-minha-senha')}
+                  sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                >
+                  Esqueci minha senha
+                </Button>
+              </Box>
 
               <Button
                 type="submit"

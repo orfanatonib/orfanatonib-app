@@ -11,8 +11,8 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
-import MediaDocumentPreviewModal from 'utils/MediaDocumentPreviewModal';
-import { AppDispatch, RootState } from 'store/slices';
+import MediaDocumentPreviewModal from '@/utils/MediaDocumentPreviewModal';
+import { AppDispatch, RootState } from '@/store/slices';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   setMeditationData,
@@ -22,7 +22,6 @@ import {
 import { MediaType, MediaUploadType } from '@/store/slices/types';
 import api from '@/config/axiosConfig';
 import { motion } from 'framer-motion';
-import { BANNER_HEIGHTS } from './constants';
 
 export default function MemberMeditationBanner() {
   const dispatch = useDispatch<AppDispatch>();
@@ -59,8 +58,7 @@ export default function MemberMeditationBanner() {
         dispatch(setMeditationData(response.data.meditation as MeditationData));
         setOpenModal(true);
       }
-    } catch (error) {
-      console.error('Error loading meditation:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

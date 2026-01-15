@@ -55,8 +55,6 @@ export default function ShelterScheduleFormModal({
   const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  console.log('[ShelterScheduleFormModal] shelter-address flag:', isAddressEnabled);
-
   const [teamId, setTeamId] = useState("");
   const [visitNumber, setVisitNumber] = useState<number | "">(1);
   const [visitDate, setVisitDate] = useState<Dayjs | null>(null);
@@ -73,7 +71,7 @@ export default function ShelterScheduleFormModal({
   useEffect(() => {
     if (open) {
       if (initialData) {
-        
+
         setTeamId(initialData.shelter.team.id);
         setVisitNumber(initialData.visitNumber);
         setVisitDate(initialData.visitDate ? dayjs(initialData.visitDate) : null);
@@ -84,7 +82,7 @@ export default function ShelterScheduleFormModal({
         setObservation(initialData.observation || "");
         setMeetingRoom(initialData.meetingRoom || "");
       } else {
-        
+
         setTeamId(teams.length === 1 ? teams[0].id : "");
         setVisitNumber(1);
         setVisitDate(null);
@@ -196,9 +194,9 @@ export default function ShelterScheduleFormModal({
                 onChange={(e) => setTeamId(e.target.value)}
                 label="Equipe"
               >
-                {teams.filter(team => team.shelter).map((team) => (
+                {teams.map((team) => (
                   <MenuItem key={team.id} value={team.id}>
-                    Equipe {team.numberTeam} - {team.shelter?.name || 'Sem abrigo'}
+                    Equipe {team.numberTeam}{team.shelter ? ` - ${team.shelter.name}` : ' (Sem abrigo)'}
                   </MenuItem>
                 ))}
               </Select>
@@ -228,7 +226,7 @@ export default function ShelterScheduleFormModal({
             helperText="Descreva o conteúdo que será ministrado na visita"
           />
 
-          {selectedTeam && (
+          {selectedTeam && selectedTeam.shelter && (
             <Box
               sx={{
                 p: 1.5,

@@ -9,9 +9,11 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => {
     <Box
       sx={{
         py: { xs: 6, md: 10 },
-        background: 'linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 50%, #f0f8ff 100%)',
+        background: 'linear-gradient(135deg, #f0f8f4 0%, #e8f5e9 50%, #f1f8e9 100%)',
         position: 'relative',
         overflow: 'hidden',
+        borderTop: '4px solid transparent',
+        borderImage: 'linear-gradient(90deg, #009933 0%, #2ecc71 50%, #f1c40f 100%) 1',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -19,7 +21,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%)',
+          background: 'radial-gradient(circle at 20% 50%, rgba(0, 153, 51, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(46, 204, 113, 0.08) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(241, 196, 15, 0.08) 0%, transparent 50%)',
           zIndex: 0,
         },
       }}
@@ -66,17 +68,17 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => {
                 <Card
                   sx={{
                     height: '100%',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 255, 0.8) 100%)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 252, 250, 0.9) 100%)',
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(102, 126, 234, 0.2)',
+                    border: '1px solid rgba(0, 153, 51, 0.2)',
                     borderRadius: 4,
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     position: 'relative',
                     overflow: 'hidden',
                     '&:hover': {
                       transform: 'translateY(-8px) scale(1.02)',
-                      boxShadow: '0 20px 40px rgba(102, 126, 234, 0.15)',
-                      border: '1px solid rgba(102, 126, 234, 0.4)',
+                      boxShadow: '0 20px 40px rgba(0, 153, 51, 0.2)',
+                      border: '1px solid rgba(0, 153, 51, 0.4)',
                     },
                     '&::before': {
                       content: '""',

@@ -30,8 +30,6 @@ export const useShelterPage = (idToFetch: string) => {
         const data = await apiFetchShelter(idToFetch);
         setShelter(data);
       } catch (err: any) {
-        // eslint-disable-next-line no-console
-        console.error('Error loading shelter:', err);
         setError(err?.response?.data?.message || 'Erro ao carregar o abrigo. Tente novamente mais tarde.');
       } finally {
         setLoading(false);

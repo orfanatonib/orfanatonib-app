@@ -183,7 +183,7 @@ const RegisterTeamAttendance = ({ teamId, schedules, members, disabled }: Props)
       const dto: RegisterTeamAttendanceDto = {
         teamId,
         scheduleId,
-        category: selectedSchedule!.category as 'visit' | 'meeting',
+        category: selectedSchedule!.category,
         attendances: sanitized.map(r => ({
           memberId: r.memberId,
           type: r.type,

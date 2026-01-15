@@ -118,8 +118,7 @@ export default function ImageSectionPage() {
       await saveSection(formData);
 
       navigate('/area-do-membro');
-    } catch (error) {
-      console.error('Error saving section:', error);
+    } catch {
       showError('Falha ao compartilhar as imagens do seu Abrigo. Tente novamente.');
     } finally {
       setIsSaving(false);
@@ -295,7 +294,7 @@ export default function ImageSectionPage() {
                 initialIsPublic={sectionData?.public ?? true}
                 initialMediaItems={sectionData?.mediaItems || []}
                 onChange={handleChange}
-                captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa - Abrigados aprendendo sobre ressurreição"
+                captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
                 descriptionPlaceholder="EX: Descreva as atividades realizadas no seu Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos, momentos especiais com as crianças e como elas reagiram às atividades."
               />
             </motion.div>

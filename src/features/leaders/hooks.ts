@@ -109,7 +109,12 @@ export function useSheltersIndex() {
     setLoading(true); setError("");
     try {
       const list = await apiListSheltersSimple();
-      setShelters(list || []);
+      setShelters((list || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        createdAt: '',
+        updatedAt: '',
+      })));
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Erro ao listar shelters");
     } finally {
@@ -117,11 +122,11 @@ export function useSheltersIndex() {
     }
   }, []);
 
-  const byNumber = useMemo(() => {
-    const map = new Map<number, ShelterSimple>();
-    for (const c of shelters) if (typeof c.number === "number") map.set(c.number, c);
+  const byId = useMemo(() => {
+    const map = new Map<string, ShelterSimple>();
+    for (const c of shelters) map.set(c.id, c);
     return map;
   }, [shelters]);
 
-  return { shelters, byNumber, loading, error, refresh };
+  return { shelters, byId, loading, error, refresh };
 }

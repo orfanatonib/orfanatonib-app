@@ -134,7 +134,7 @@ export default function VisitMaterialPageCreator({
 
   const handleSavePage = async () => {
     setTouched({ title: true, subtitle: true, description: true });
-    
+
     const hasError = !pageTitle || !pageSubtitle || !pageDescription;
 
     setErrors({
@@ -217,8 +217,7 @@ export default function VisitMaterialPageCreator({
       });
 
       navigate(`/${res.data.route.path}`);
-    } catch (err) {
-      console.error('Erro ao salvar:', err);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a página.',
@@ -515,7 +514,7 @@ export default function VisitMaterialPageCreator({
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

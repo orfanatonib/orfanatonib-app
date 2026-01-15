@@ -51,7 +51,13 @@ export default function ShelterAutocomplete({
     setLoadError("");
     try {
       const items = await apiFetchSheltersList();
-      const safe = Array.isArray(items) ? items : [];
+      const safe: SimpleShelterResponseDto[] = Array.isArray(items)
+        ? items.map(item => ({
+            id: item.id,
+            detalhe: item.name,
+            leader: item.leaders?.length > 0,
+          }))
+        : [];
       setOptions(safe);
 
       if (safe.length === 1 && !value) {

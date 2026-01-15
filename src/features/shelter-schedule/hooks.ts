@@ -26,7 +26,6 @@ export function useShelterSchedules() {
       setSchedules(data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Erro ao carregar agendamentos");
-      console.error("Error fetching shelter schedules:", err);
     } finally {
       setLoading(false);
     }
@@ -77,7 +76,6 @@ export function useMyTeams() {
       setTeams(data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Erro ao carregar equipes");
-      console.error("Error fetching my teams:", err);
     } finally {
       setLoading(false);
     }

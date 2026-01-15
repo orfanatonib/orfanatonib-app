@@ -3,6 +3,11 @@ export enum AttendanceType {
   ABSENT = 'absent',
 }
 
+export enum EventCategory {
+  VISIT = 'visit',
+  MEETING = 'meeting',
+}
+
 export interface ScheduleDates {
   visitDate?: string;
   meetingDate?: string;
@@ -11,13 +16,14 @@ export interface ScheduleDates {
 export interface RegisterAttendanceDto {
   scheduleId: string;
   type: AttendanceType;
+  category?: EventCategory;
   comment?: string;
 }
 
 export interface RegisterTeamAttendanceDto {
   teamId: string;
   scheduleId: string;
-  category: 'visit' | 'meeting';
+  category: EventCategory;
   attendances: Array<{
     memberId: string;
     type: AttendanceType;
@@ -25,9 +31,31 @@ export interface RegisterTeamAttendanceDto {
   }>;
 }
 
+export interface AttendanceRecordDto {
+  id: string;
+  type: AttendanceType;
+  category?: EventCategory;
+  comment?: string;
+  memberId: string;
+  memberName: string;
+  memberEmail?: string;
+  scheduleId?: string;
+  visitNumber?: number;
+  visitDate?: string;
+  meetingDate?: string;
+  lessonContent?: string;
+  observation?: string;
+  meetingRoom?: string;
+  teamName?: string;
+  shelterName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AttendanceResponseDto {
   id: string;
   type: AttendanceType;
+  category?: EventCategory;
   comment?: string;
   memberId: string;
   memberName: string;
@@ -51,43 +79,54 @@ export interface PendingMemberDto {
   memberId: string;
   memberName: string;
   memberEmail: string;
-  role: 'member'; 
+  role: 'member';
 }
 
 export interface PendingForLeaderDto {
   scheduleId: string;
+  category: EventCategory;
+  date: string;
+  location: string;
   visitNumber: number;
-  visitDate?: string;
-  meetingDate?: string;
   lessonContent: string;
-  observation?: string;
-  meetingRoom?: string;
   teamName: string;
   shelterName: string;
   totalMembers: number;
   pendingMembers: PendingMemberDto[];
 }
 
+export interface TeamPendingsDto {
+  teamId: string;
+  teamName: string;
+  shelterName: string;
+  pendings: PendingForLeaderDto[];
+}
+
 export interface PendingForMemberDto {
   scheduleId: string;
+  category: EventCategory;
+  date: string;
+  location: string;
   visitNumber: number;
-  visitDate?: string;
-  meetingDate?: string;
   lessonContent: string;
-  observation?: string;
-  meetingRoom?: string;
   teamId: string;
   teamNumber: number;
   teamName: string;
   shelterName: string;
 }
 
+export interface AllPendingsResponseDto {
+  leaderPendings: TeamPendingsDto[];
+  memberPendings: PendingForMemberDto[];
+}
+
 export interface LeaderTeamDto {
   teamId: string;
   teamNumber: number;
-  shelterId?: string;
-  shelterName?: string;
+  shelterId: string;
+  shelterName: string;
   description?: string;
+  memberCount?: number;
 }
 
 export interface TeamMemberDto {
@@ -109,6 +148,7 @@ export interface TeamWithMembersDto {
   teamNumber: number;
   description?: string;
   members: TeamMemberDto[];
+  memberCount?: number;
 }
 
 export interface ShelterWithTeamsDto {
@@ -132,7 +172,7 @@ export interface AttendanceStatsDto {
   totalAttendanceRecords: number;
   presentCount: number;
   absentCount: number;
-  attendanceRate: number; 
+  attendanceRate: number;
   pendingCount: number;
 }
 
@@ -150,7 +190,7 @@ export interface TeamAttendanceOverviewDto {
 
 export interface TeamScheduleDto extends ScheduleDates {
   id: string;
-  category: 'visit' | 'meeting';
+  category: EventCategory;
   date: string;
   visitNumber: number;
   lessonContent: string;
@@ -165,20 +205,11 @@ export interface TeamScheduleDto extends ScheduleDates {
   totalMembers?: number;
 }
 
-export interface AttendanceRecordDto {
-  id: string;
-  type: AttendanceType;
-  comment?: string;
-  memberId: string;
-  memberName: string;
-  memberEmail?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export interface ScheduleWithAttendanceDto {
   scheduleId: string;
-  category: 'visit' | 'meeting';
+  category: EventCategory;
   date: string;
   visitNumber: number;
   visitDate?: string;
@@ -229,8 +260,8 @@ export interface PaginatedResponseDto<T> {
 export interface AttendanceFiltersDto {
   page?: number;
   limit?: number;
-  startDate?: string; 
-  endDate?: string; 
+  startDate?: string;
+  endDate?: string;
   type?: AttendanceType;
   teamId?: string;
   memberId?: string;

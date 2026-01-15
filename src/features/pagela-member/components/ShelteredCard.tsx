@@ -17,6 +17,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import DecisionModal from "./DecisionModal";
 import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
+import IntegrationButton from "@/features/integration/components/IntegrationButton";
 
 function genderPastel(seed: string, gender: string | undefined) {
   const g = (gender || "").toUpperCase();
@@ -150,7 +151,7 @@ export default function ShelteredCard({
         </Tooltip>
 
         {!!onEdit && (
-          <Tooltip title="Editar abrigado">
+          <Tooltip title="Editar acolhido">
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); onEdit(sheltered); }}
@@ -287,6 +288,29 @@ export default function ShelteredCard({
               <FavoriteIcon fontSize="inherit" sx={{ opacity: 0.5, ml: 0.25 }} />
             </Stack>
 
+            {/* Botão de Integração GA */}
+            <Box
+              sx={{
+                mt: 1.25,
+                display: "flex",
+                justifyContent: "center",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IntegrationButton
+                shelteredId={sheltered.id}
+                shelteredName={sheltered.name}
+                size="small"
+                variant="outlined"
+                sx={{
+                  fontSize: "0.75rem",
+                  py: 0.5,
+                  px: 1.5,
+                  minWidth: "auto",
+                }}
+              />
+            </Box>
+
             {!!onToggleStatus && (
               <Box
                 sx={{
@@ -310,10 +334,10 @@ export default function ShelteredCard({
                   }}
                 >
                   {sheltered.active 
-                    ? "O abrigado não está mais frequentando?" 
-                    : "O abrigado voltou a frequentar?"}
+                    ? "O acolhido não está mais frequentando?" 
+                    : "O acolhido voltou a frequentar?"}
                 </Typography>
-                <Tooltip title={sheltered.active ? "Desativar abrigado" : "Ativar abrigado"}>
+                <Tooltip title={sheltered.active ? "Desativar acolhido" : "Ativar acolhido"}>
                   <Switch
                     checked={sheltered.active}
                     onChange={async (e) => {
@@ -350,12 +374,12 @@ export default function ShelteredCard({
 
       <ConfirmDialog
         open={confirmToggleOpen}
-        title={pendingActive ? "Ativar abrigado" : "Desativar abrigado"}
+        title={pendingActive ? "Ativar acolhido" : "Desativar acolhido"}
         content={
           <Typography sx={{ wordBreak: "break-word" }}>
             {pendingActive
-              ? `Deseja ativar o abrigado "${sheltered.name}"?`
-              : `Deseja desativar o abrigado "${sheltered.name}"?`}
+              ? `Deseja ativar o acolhido "${sheltered.name}"?`
+              : `Deseja desativar o acolhido "${sheltered.name}"?`}
           </Typography>
         }
         confirmText={pendingActive ? "Ativar" : "Desativar"}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Grid, TextField } from "@mui/material";
-import { AddressResponseDto } from "../../types";
+import { AddressResponseDto } from "../types";
 
 type Props = {
   value: Partial<AddressResponseDto>;

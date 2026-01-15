@@ -5,7 +5,7 @@ import { RootState } from '@/store/slices';
 import { Box, Typography, Button, Container } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MediaTargetType } from 'store/slices/types';
+import { MediaTargetType } from '@/store/slices/types';
 
 const VisitMaterialsBanner: React.FC = () => {
   return null;
@@ -150,7 +150,7 @@ const VisitMaterialsBanner: React.FC = () => {
           </Typography>
         </motion.div>
 
-        {currentVisitRoute.subtitle && (
+        {currentVisitRoute?.subtitle && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -179,7 +179,7 @@ const VisitMaterialsBanner: React.FC = () => {
                 textShadow: '0 2px 4px rgba(0,0,0,0.8)',
               }}
             >
-              {currentVisitRoute.subtitle}
+              {currentVisitRoute?.subtitle}
             </Typography>
           </motion.div>
         )}

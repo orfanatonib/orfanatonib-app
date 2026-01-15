@@ -50,8 +50,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
       setCopied(field);
       setSnackbarOpen(true);
       setTimeout(() => setCopied(null), 2000);
-    } catch (err) {
-      console.error("Erro ao copiar:", err);
+    } catch {
     }
   };
 
@@ -101,7 +100,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           >
             <CloseIcon fontSize="small" />
           </IconButton>
-          
+
           <Typography
             variant="overline"
             sx={{ color: "rgba(255,255,255,0.8)", letterSpacing: 1.5 }}
@@ -232,7 +231,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
             >
               Enviar E-mail
             </Button>
-            
+
             {user.phone && (
               <Button
                 variant="contained"
@@ -256,7 +255,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={2000}
+        autoHideDuration={5000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >

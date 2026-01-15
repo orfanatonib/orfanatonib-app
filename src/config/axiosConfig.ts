@@ -6,6 +6,8 @@ import type {
 } from 'axios';
 import { store } from '@/store/slices';
 import { logout, login } from '@/store/slices/auth/authSlice';
+import { handleError, retryOperation, isNetworkError } from '@/utils/errorHandler';
+import { createApiCircuitBreaker } from '@/utils/CircuitBreakerManager';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -16,6 +18,9 @@ const apiAxios = axios.create({
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+  _manualRetry?: boolean;
+  _skipGlobalErrorHandling?: boolean;
+  _skipCircuitBreaker?: boolean;
 }
 
 const isAuthEndpoint = (url?: string) => {
@@ -71,6 +76,9 @@ apiAxios.interceptors.response.use(
     const originalRequest = error.config as CustomAxiosRequestConfig;
     const status = error.response?.status;
     const url = originalRequest?.url || '';
+    const method = originalRequest?.method?.toUpperCase() || 'GET';
+
+    const endpoint = url.split('?')[0]; // Remove query params
 
     if (status === 401 && isAuthEndpoint(url)) {
       return Promise.reject(error);
@@ -90,6 +98,49 @@ apiAxios.interceptors.response.use(
         return Promise.reject(refreshErr);
       }
     }
+
+    const skipGlobalErrorHandling = originalRequest?._skipGlobalErrorHandling;
+    const skipCircuitBreaker = originalRequest?._skipCircuitBreaker;
+
+    if (!skipCircuitBreaker && !isAuthEndpoint(url) && status && status >= 500) {
+      const circuitBreaker = createApiCircuitBreaker(endpoint);
+
+      try {
+        return await circuitBreaker.execute(async () => {
+          return apiAxios(originalRequest);
+        });
+      } catch (circuitError) {
+        if (!skipGlobalErrorHandling) {
+          handleError(circuitError, `${url} - Circuit breaker protection`);
+        }
+        return Promise.reject(circuitError);
+      }
+    }
+
+    const shouldRetry = !originalRequest?._retry &&
+      (isNetworkError(error) || (status && status >= 500 && status !== 501 && status !== 505));
+
+    if (shouldRetry && !originalRequest?._manualRetry) {
+      try {
+        return await retryOperation(
+          () => apiAxios(originalRequest),
+          {
+            maxRetries: 2,
+            context: `${method} ${url} - Auto retry`,
+          }
+        );
+      } catch (retryError) {
+        if (!skipGlobalErrorHandling) {
+          handleError(retryError, `${url} - After retries`);
+        }
+        return Promise.reject(retryError);
+      }
+    }
+
+    if (!skipGlobalErrorHandling && status !== 401) {
+      handleError(error, url);
+    }
+
     return Promise.reject(error);
   }
 );

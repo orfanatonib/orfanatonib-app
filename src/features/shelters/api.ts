@@ -140,7 +140,7 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
     const { file, ...rest } = payload;
     
     if (rest.mediaItem && rest.mediaItem.url) {
-      rest.mediaItem = {
+      (rest as any).mediaItem = {
         uploadType: "link",
         isLocalFile: false,
         url: rest.mediaItem.url,

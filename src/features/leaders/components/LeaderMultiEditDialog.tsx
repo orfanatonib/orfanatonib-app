@@ -152,10 +152,9 @@ export default function LeaderMultiEditDialog({
       return teams.map(team => ({
         id: team.id,
         numberTeam: team.numberTeam,
-        description: team.description,
+        description: team.description ?? null,
       }));
-    } catch (error) {
-      console.error("Erro ao carregar equipes do abrigo:", error);
+    } catch {
       return [];
     }
   };
@@ -402,10 +401,9 @@ function TeamsSelector({
       setTeams(data.map(team => ({
         id: team.id,
         numberTeam: team.numberTeam,
-        description: team.description,
+        description: team.description ?? null,
       })));
-    } catch (error) {
-      console.error("Erro ao carregar equipes:", error);
+    } catch {
       setTeams([]);
     } finally {
       setLoading(false);

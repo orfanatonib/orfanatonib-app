@@ -10,10 +10,10 @@ import {
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
-import { 
+import {
   InformativeBanner,
   FofinhoButton,
-  SpecialFamilyCallout, 
+  SpecialFamilyCallout,
   IdeasSharingBanner,
   BannerSection,
   MotivationSection,
@@ -21,10 +21,12 @@ import {
 } from './components';
 import { useMemberArea } from './hooks';
 import { MOTIVATION_TEXT, CONTAINER_STYLES } from './constants';
+import { useAuthRole } from '@/utils/useAuthRole';
 
 const MemberArea: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { loading, showWeek, showMeditation } = useMemberArea();
+  const { isAdminOrLeader } = useAuthRole();
 
   return (
     <Box 
@@ -61,8 +63,16 @@ const MemberArea: React.FC = () => {
       />
 
       <Box sx={{ mb: { xs: 4, md: 5 } }}>
-        <FofinhoButton 
-          references={['materials', 'shelteredrenArea', 'photos', 'rate', 'events', 'help']} 
+        <FofinhoButton
+          references={[
+            'materials',
+            'shelteredrenArea',
+            'photos',
+            'rate',
+            'events',
+            'help',
+            ...(isAdminOrLeader ? ['integrations'] : [])
+          ]}
         />
       </Box>
 

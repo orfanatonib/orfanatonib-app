@@ -94,7 +94,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
 
   const handleSave = async () => {
     setTouched({ topic: true, startDate: true, endDate: true });
-    
+
     if (!topic || !startDate || !endDate) {
       setSnackbar({
         open: true,
@@ -190,11 +190,11 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
       setSnackbar({ open: true, message: 'Meditação salva com sucesso!', severity: 'success' });
       navigate('/adm/meditacoes');
     } catch (error) {
-      const errMessage =
-        error instanceof AxiosError && error.response?.data?.message
-          ? error.response.data.message
-          : 'Erro ao salvar meditação.';
-      setSnackbar({ open: true, message: errMessage, severity: 'error' });
+      if (error instanceof AxiosError) {
+        return;
+      }
+      console.error(error);
+      setSnackbar({ open: true, message: 'Erro ao salvar meditação.', severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -423,7 +423,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

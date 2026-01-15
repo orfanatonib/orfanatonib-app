@@ -1,4 +1,4 @@
-import { AttendanceDashboard } from './features/attendance/pages';
+import { AttendanceDashboard, PendingAttendancePage } from './features/attendance/pages';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +11,8 @@ import Navbar from './components/NavBar/Navbar';
 import Footer from './components/Footer/Footer';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import PageRenderer from './components/PageRenderer/PageRenderer';
+import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
+import GlobalNotification from './components/GlobalNotification/GlobalNotification';
 
 import Home from './pages/Home/Home';
 import About from './pages/About/About';
@@ -19,6 +21,8 @@ import Login from './pages/Login/Login';
 import MemberArea from './pages/MemberArea/MemberArea';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
+import ForgotPassword from './pages/PasswordReset/ForgotPassword';
+import ResetPassword from './pages/PasswordReset/ResetPassword';
 
 import MeditationPageCreator from './components/Adm/PageCreator/Templates/MeditationPageCreator/MeditationPageCreator';
 import ImagePageCreator from './components/Adm/PageCreator/Templates/ImagePageCreator/ImagePageCreator';
@@ -70,6 +74,8 @@ import { ProfilePage } from './features/profile';
 import EventosPage from './pages/Event/EventosPage';
 import ShelterScheduleManager from './features/shelter-schedule/ShelterScheduleManager';
 import ProfilesManager from './features/profile/ProfilesManager';
+import IntegrationManager from './features/integration/IntegrationManager';
+import IntegrationShelteredPage from './features/integration/IntegrationShelteredPage';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -153,107 +159,116 @@ function App() {
         <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Toolbar />
           <Box className="mainContainer" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/sobre" element={<About />} />
-              <Route path="/contato" element={<Contact />} />
-              <Route path="/eventos" element={<EventosPage />} />
-              <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
-              <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
-              <Route path="/cadastrar" element={<Register commonUser />} />
-              <Route path="*" element={<Home />} />
+            <GlobalErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/sobre" element={<About />} />
+                <Route path="/contato" element={<Contact />} />
+                <Route path="/eventos" element={<EventosPage />} />
+                <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
+                <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
+                <Route path="/cadastrar" element={<Register commonUser />} />
+                <Route path="/cadastrar" element={<Register commonUser />} />
+                <Route path="/esqueci-minha-senha" element={<ForgotPassword />} />
+                <Route path="/recuperar-senha/:token" element={<ResetPassword />} />
+                <Route path="*" element={<Home />} />
 
-              <Route element={<ProtectedRoute />}>
-                <Route path="/area-do-membro" element={<MemberArea />} />
-                <Route path="/perfil" element={<ProfilePage />} />
-                <Route path="/presenca" element={<AttendanceDashboard />} />
-                <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
-                <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
-                <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
-                <Route
-                  path="/area-dos-abrigados"
-                  element={
-                    <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
-                      <ShelteredBrowserPage />
-                    </FeatureFlagRoute>
-                  }
-                />
-                <Route
-                  path="/area-dos-abrigados/:shelteredId"
-                  element={
-                    <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
-                      <ShelteredPagelasPage />
-                    </FeatureFlagRoute>
-                  }
-                />
-                <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
-              </Route>
-
-              <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
-                <Route path="/adm" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboardPage />} />
-                  <Route path="presenca" element={<AttendanceDashboard />} />
-                  <Route path="meditacoes" element={<MeditationManager />} />
-                  <Route path="comentarios" element={<CommentsManager />} />
-                  <Route path="documentos" element={<DocumentsManager />} />
-                  <Route path="informativos" element={<InformativeBannerLManager />} />
-                  <Route path="feedbacks" element={<FeedbackManager />} />
-                  <Route path="contatos" element={<ContactsManager />} />
-                  <Route path="paginas-materiais-visita" element={<VisitMaterialManager />} />
-                  <Route path="paginas-fotos" element={<ImagePageManager />} />
-                  <Route path="fotos-abrigos" element={<ImageSectionManager />} />
-                  <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
-                  <Route path="paginas-videos" element={<VideosManager />} />
-                  <Route path="paginas-ideias" element={<IdeasManager />} />
-                  <Route path="criar-pagina" element={<SelecPageTemplate />} />
-                  <Route path="usuarios" element={<UsersManager />} />
-                  <Route path="perfis" element={<ProfilesManager />} />
-                  <Route path="lideres" element={<LeaderProfilesManager />} />
-                  <Route path="membros" element={<MemberProfilesManager />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/area-do-membro" element={<MemberArea />} />
+                  <Route path="/perfil" element={<ProfilePage />} />
+                  <Route path="/presenca" element={<AttendanceDashboard />} />
+                  <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
+                  <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
+                  <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
+                  <Route path="/integracao" element={<IntegrationShelteredPage />} />
                   <Route
-                    path="abrigados"
-                    element={
-                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}>
-                        <ShelteredManager />
-                      </FeatureFlagRoute>
-                    }
-                  />
-                  <Route path="abrigos" element={<SheltersManager />} />
-                  <Route path="abrigos/novo" element={<ShelterFormPage />} />
-                  <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
-                  <Route
-                    path="pagelas"
+                    path="/area-dos-acolhidos"
                     element={
                       <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
-                        <PagelaSheltersManager />
+                        <ShelteredBrowserPage />
                       </FeatureFlagRoute>
                     }
                   />
-                  <Route path="agendamentos" element={<ShelterScheduleManager />} />
-
-                  <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
-                  <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
-                  <Route path="editar-pagina-videos" element={<VideoPageCreator fromTemplatePage={false} />} />
-                  <Route path="editar-pagina-visita" element={<VisitMaterialPageCreator fromTemplatePage={false} />} />
-                  <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
-                  <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
-                  <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
+                  <Route
+                    path="/area-dos-acolhidos/:shelteredId"
+                    element={
+                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
+                        <ShelteredPagelasPage />
+                      </FeatureFlagRoute>
+                    }
+                  />
+                  <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
                 </Route>
-              </Route>
 
-              {dynamicRoutes.map((route: DynamicRouteType) => (
-                <Route
-                  key={route.id}
-                  path={`/${route.path}`}
-                  element={<PageRenderer entityType={route.entityType} idToFetch={route.idToFetch} />}
-                />
-              ))}
-            </Routes>
+                <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
+                  <Route path="/adm" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="presenca" element={<AttendanceDashboard />} />
+                    <Route path="presenca/pendencias" element={<PendingAttendancePage />} />
+                    <Route path="meditacoes" element={<MeditationManager />} />
+                    <Route path="comentarios" element={<CommentsManager />} />
+                    <Route path="documentos" element={<DocumentsManager />} />
+                    <Route path="informativos" element={<InformativeBannerLManager />} />
+                    <Route path="feedbacks" element={<FeedbackManager />} />
+                    <Route path="contatos" element={<ContactsManager />} />
+                    <Route path="paginas-materiais-visita" element={<VisitMaterialManager />} />
+                    <Route path="paginas-fotos" element={<ImagePageManager />} />
+                    <Route path="fotos-abrigos" element={<ImageSectionManager />} />
+                    <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
+                    <Route path="paginas-videos" element={<VideosManager />} />
+                    <Route path="paginas-ideias" element={<IdeasManager />} />
+                    <Route path="criar-pagina" element={<SelecPageTemplate />} />
+                    <Route path="usuarios" element={<UsersManager />} />
+                    <Route path="perfis" element={<ProfilesManager />} />
+                    <Route path="lideres" element={<LeaderProfilesManager />} />
+                    <Route path="membros" element={<MemberProfilesManager />} />
+                    <Route
+                      path="acolhidos"
+                      element={
+                        <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}>
+                          <ShelteredManager />
+                        </FeatureFlagRoute>
+                      }
+                    />
+                    <Route path="abrigos" element={<SheltersManager />} />
+                    <Route path="abrigos/novo" element={<ShelterFormPage />} />
+                    <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
+                    <Route
+                      path="pagelas"
+                      element={
+                        <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
+                          <PagelaSheltersManager />
+                        </FeatureFlagRoute>
+                      }
+                    />
+                    <Route path="agendamentos" element={<ShelterScheduleManager />} />
+                    <Route path="integracoes" element={<IntegrationManager />} />
+
+                    <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
+                    <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
+                    <Route path="editar-pagina-videos" element={<VideoPageCreator fromTemplatePage={false} />} />
+                    <Route path="editar-pagina-visita" element={<VisitMaterialPageCreator fromTemplatePage={false} />} />
+                    <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
+                    <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
+                    <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
+                  </Route>
+                </Route>
+
+                {dynamicRoutes.map((route: DynamicRouteType) => (
+                  <Route
+                    key={route.id}
+                    path={`/${route.path}`}
+                    element={<PageRenderer entityType={route.entityType} idToFetch={route.idToFetch} />}
+                  />
+                ))}
+              </Routes>
+            </GlobalErrorBoundary>
           </Box>
         </Box>
         <Footer />
+        <GlobalNotification />
       </Box>
     </BrowserRouter>
   );

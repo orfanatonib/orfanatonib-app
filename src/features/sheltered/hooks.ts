@@ -70,7 +70,7 @@ export function useSheltered(pageIndex: number, pageSize: number, sorting: Shelt
       setRows(Array.isArray((data as any)?.data) ? (data as any).data : []);
       setTotal(Number(meta?.totalItems ?? (data as any)?.total ?? 0));
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao listar abrigados");
+      setError(err?.response?.data?.message || err.message || "Erro ao listar acolhidos");
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
       return true;
     } catch (err: any) {
       const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
-      setDialogError(backendMsg || err?.message || "Erro ao criar abrigado");
+      setDialogError(backendMsg || err?.message || "Erro ao criar acolhido");
       setDialogLoading(false);
       return false;
     }
@@ -172,7 +172,7 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
       return true;
     } catch (err: any) {
       const backendMsg = normalizeBackendMessage(err?.response?.data?.message);
-      setDialogError(backendMsg || err?.message || "Erro ao atualizar abrigado");
+      setDialogError(backendMsg || err?.message || "Erro ao atualizar acolhido");
       setDialogLoading(false);
       return false;
     }
@@ -185,7 +185,7 @@ export function useShelteredMutations(refetch: (page: number, limit: number, fil
       await apiDeleteSheltered(id);
       await refetch(page, limit, filters, sort);
     } catch (err: any) {
-      setDialogError(err?.response?.data?.message || err.message || "Erro ao remover abrigado");
+      setDialogError(err?.response?.data?.message || err.message || "Erro ao remover acolhido");
     } finally {
       setDialogLoading(false);
     }

@@ -141,7 +141,7 @@ export default function ShelteredrenCards(props: Props) {
                       transition: "transform 0.2s ease",
                       flexShrink: 0,
                     }}
-                    aria-label={`Avatar do abrigado ${c.name}`}
+                    aria-label={`Avatar do acolhido ${c.name}`}
                   >
                     {initials(c.name)}
                   </Avatar>
@@ -353,7 +353,7 @@ export default function ShelteredrenCards(props: Props) {
                             <Stack direction="row" spacing={0.75} alignItems="center">
                               <ChildCare fontSize="small" color="primary" />
                               <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
-                                Informações do Abrigado
+                                Informações do Acolhido
                               </Typography>
                             </Stack>
                             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap rowGap={1}>
@@ -516,7 +516,7 @@ export default function ShelteredrenCards(props: Props) {
                         </IconButton>
                       </Tooltip>
                     )}
-                    <Tooltip title="Editar abrigado">
+                    <Tooltip title="Editar acolhido">
                       <IconButton
                         size="small"
                         onClick={() => onStartEdit(c)}
@@ -528,7 +528,7 @@ export default function ShelteredrenCards(props: Props) {
                         <Edit fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Excluir abrigado">
+                    <Tooltip title="Excluir acolhido">
                       <IconButton
                         size="small"
                         color="error"

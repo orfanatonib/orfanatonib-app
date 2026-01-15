@@ -10,13 +10,13 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { getPendingForMember } from '../api';
+import { getAllPendings } from '../api';
+import { EventCategory } from '../types';
 import type { PendingForMemberDto } from '../types';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
-  const date = pending.visitDate || pending.meetingDate;
-  const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-  const kind = pending.visitDate ? 'Visita' : 'Reunião';
+  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
 
@@ -29,8 +29,8 @@ const PendingMember = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getPendingForMember();
-      setPendings(res);
+      const res = await getAllPendings();
+      setPendings(res.memberPendings);
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao buscar pendências do membro.';
       setError(message);
@@ -91,17 +91,20 @@ const PendingMember = () => {
           {!loading && pendings.length > 0 && (
           <Stack spacing={2}>
             {pendings.map(pending => (
-              <Card key={pending.scheduleId} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+              <Card key={`${pending.scheduleId}-${pending.category}`} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
                 <CardContent>
                   <Stack spacing={1}>
                     <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                       <Typography variant="subtitle1">{formatScheduleLabel(pending)}</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
+                      {pending.location}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
                       {pending.lessonContent}
                     </Typography>
                     <Typography variant="body2">
-                      Time #{pending.teamNumber} • {pending.shelterName}
+                      {pending.teamName} • {pending.shelterName}
                     </Typography>
                   </Stack>
                 </CardContent>

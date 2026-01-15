@@ -28,24 +28,24 @@ import type { Pagela } from "./types";
 
 function genderPastel(seed: string, gender?: string) {
   const g = (gender || "").toUpperCase();
-  
+
   if (g === "F") {
     return {
-      solid: "#e91e63", 
-      soft: "#f8bbd0", 
-      light: "#fce4ec", 
+      solid: "#e91e63",
+      soft: "#f8bbd0",
+      light: "#fce4ec",
     };
   } else if (g === "M") {
     return {
-      solid: "#2196f3", 
-      soft: "#90caf9", 
-      light: "#e3f2fd", 
+      solid: "#2196f3",
+      soft: "#90caf9",
+      light: "#e3f2fd",
     };
   } else {
     return {
-      solid: "#9e9e9e", 
-      soft: "#e0e0e0", 
-      light: "#f5f5f5", 
+      solid: "#9e9e9e",
+      soft: "#e0e0e0",
+      light: "#f5f5f5",
     };
   }
 }
@@ -83,7 +83,7 @@ export default function ShelteredPagelasPage() {
           });
         })
         .catch((err: any) => {
-          setCErr(err?.response?.data?.message || err.message || "Erro ao carregar abrigado");
+          setCErr(err?.response?.data?.message || err.message || "Erro ao carregar acolhido");
         })
         .finally(() => {
           setLoadingShelteredren(false);
@@ -96,7 +96,7 @@ export default function ShelteredPagelasPage() {
   );
 
   const limit = React.useMemo(() => (isXs ? 5 : 9), [isXs]);
-  
+
   const { filters, list, actions } = useShelteredPagelas(shelteredId, { limit });
 
   const [snack, setSnack] = React.useState({
@@ -212,7 +212,7 @@ export default function ShelteredPagelasPage() {
                 }}
                 title={sheltered?.name}
               >
-                {sheltered?.name || "Abrigado"}
+                {sheltered?.name || "Acolhido"}
               </Typography>
 
               <Stack direction="row" spacing={0.75} alignItems="center" sx={{ color: "rgba(0,0,0,.75)" }}>
@@ -296,7 +296,7 @@ export default function ShelteredPagelasPage() {
                   >
                     Pagela {((sheltered as any)?.gender === "F" ? "da" : "do")}{" "}
                     <Box component="span" sx={{ fontWeight: 900 }}>
-                      {sheltered?.name || "Abrigado"}
+                      {sheltered?.name || "Acolhido"}
                     </Box>
                   </Typography>
 
@@ -464,7 +464,7 @@ export default function ShelteredPagelasPage() {
 
       <Snackbar
         open={snack.open}
-        autoHideDuration={2800}
+        autoHideDuration={5000}
         onClose={closeSnack}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >

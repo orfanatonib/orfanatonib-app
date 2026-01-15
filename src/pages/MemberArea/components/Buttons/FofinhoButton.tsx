@@ -14,6 +14,7 @@ import {
   EventAvailable as EventAvailableIcon,
   Badge as BadgeIcon,
   ChildCare as ShelteredCareIcon,
+  Groups as GroupsIcon,
 } from '@mui/icons-material';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
@@ -178,10 +179,16 @@ const buttonMap: Record<string, FofinhoButtonProps> = {
     color: 'primary',
   },
   shelteredrenArea: {
-    to: '/area-dos-abrigados',
-    label: 'Área dos Abrigados',
+    to: '/area-dos-acolhidos',
+    label: 'Área dos Acolhidos',
     icon: ShelteredCareIcon,
     color: 'primary',
+  },
+  integrations: {
+    to: '/adm/integracoes',
+    label: 'Integrações FM',
+    icon: GroupsIcon,
+    color: 'secondary',
   },
 };
 
@@ -200,7 +207,7 @@ const ButtonSection: React.FC<ButtonSectionProps> = ({ references }) => {
     .map((ref) => buttonMap[ref])
     .filter((btn): btn is FofinhoButtonProps => {
       if (!btn) return false;
-      if (btn.to === '/area-dos-abrigados' && !isPagelasEnabled) return false;
+      if (btn.to === '/area-dos-acolhidos' && !isPagelasEnabled) return false;
       return true;
     });
 

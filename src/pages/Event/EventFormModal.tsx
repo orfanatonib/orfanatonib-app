@@ -61,16 +61,16 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   useEffect(() => {
     if (initialData && open) {
       setTitle(initialData.title || '');
-      
+
       if (initialData.date) {
-        
+
         const isoString = initialData.date;
 
         const dateMatch = isoString.match(/^(\d{4}-\d{2}-\d{2})/);
         const timeMatch = isoString.match(/T(\d{2}:\d{2})/);
-        
-        if (dateMatch) setDate(dateMatch[1]); 
-        if (timeMatch) setTime(timeMatch[1]); 
+
+        if (dateMatch) setDate(dateMatch[1]);
+        if (timeMatch) setTime(timeMatch[1]);
       } else {
         setDate('');
         setTime('');
@@ -82,7 +82,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       setExistingImageUrl(initialData.media?.url || null);
       setRemoveImage(false);
     } else {
-      
+
       setTitle('');
       const today = new Date().toISOString().split('T')[0];
       setDate(today);
@@ -264,7 +264,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               <MenuItem value="members">Membros</MenuItem>
               <MenuItem value="leaders">Líderes</MenuItem>
             </TextField>
-            
+
             <Box>
               {existingImageUrl && !removeImage && !imagePreview && (
                 <Box sx={{ mb: 2 }}>
@@ -290,7 +290,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                   />
                 </Box>
               )}
-              
+
               {imagePreview && (
                 <Box sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -321,7 +321,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                   />
                 </Box>
               )}
-              
+
               {removeImage && (
                 <Button
                   variant="outlined"
@@ -337,7 +337,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                   Cancelar Remoção
                 </Button>
               )}
-              
+
               {!imagePreview && (
                 <Button variant="outlined" component="label" fullWidth>
                   {imageFile?.name || 'Selecionar Imagem'}
@@ -370,7 +370,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       </Dialog>
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

@@ -64,13 +64,35 @@ function PagelaSheltersManagerForLeader() {
       try {
         setLoadingShelters(true);
         const sheltersData = await apiGetMyShelters();
-        setLeaderShelters(sheltersData);
+        setLeaderShelters(sheltersData.map(s => ({
+          ...s,
+          address: s.address ?? {
+            id: '',
+            street: '',
+            number: '',
+            district: '',
+            city: '',
+            state: '',
+            postalCode: '',
+            createdAt: '',
+            updatedAt: '',
+          },
+          leaders: s.teams?.flatMap(t => t.leaders || []).map(l => ({
+            id: l.id,
+            active: true,
+            user: { id: l.id, name: l.name, email: l.email, phone: '', active: true, completed: true, commonUser: false },
+          })) || [],
+          members: s.teams?.flatMap(t => t.members || []).map(m => ({
+            id: m.id,
+            active: m.active ?? true,
+            user: { id: m.user?.id || m.id, name: m.user?.name || '', email: m.user?.email || '', phone: '', active: true, completed: true, commonUser: false },
+          })) || [],
+        } as ShelterDto)));
         
         if (sheltersData.length > 0) {
           setSelectedShelterId(sheltersData[0].id);
         }
-      } catch (error) {
-        console.error('Error fetching leader shelters:', error);
+      } catch {
       } finally {
         setLoadingShelters(false);
       }
@@ -315,7 +337,7 @@ function PagelaSheltersManagerForLeader() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {mobileStep === "sheltered" && "Abrigados"}
+                        {mobileStep === "sheltered" && "Acolhidos"}
                         {mobileStep === "pagelas" && "Pagelas"}
                       </Typography>
                       {selectedShelter && leaderShelters.length === 1 && (
@@ -605,7 +627,7 @@ function PagelaSheltersManagerForAdmin() {
                       }}
                     >
                       {mobileStep === "shelters" && "Abrigos"}
-                      {mobileStep === "sheltered" && "Abrigados"}
+                      {mobileStep === "sheltered" && "Acolhidos"}
                       {mobileStep === "pagelas" && "Pagelas"}
                     </Typography>
                   </Stack>

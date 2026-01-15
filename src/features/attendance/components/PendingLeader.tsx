@@ -13,44 +13,46 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { getPendingForLeader } from '../api';
-import type { PendingForLeaderDto } from '../types';
+import { getAllPendings } from '../api';
+import { EventCategory } from '../types';
+import type { PendingForLeaderDto, TeamPendingsDto } from '../types';
 
 interface Props {
-  teamId: string;
+  teamId?: string;
   disabled?: boolean;
 }
 
 const formatScheduleLabel = (pending: PendingForLeaderDto) => {
-  const date = pending.visitDate || pending.meetingDate;
-  const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
-  const kind = pending.visitDate ? 'Visita' : 'Reunião';
+  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
 
 const PendingLeader = ({ teamId, disabled }: Props) => {
-  const [pendings, setPendings] = useState<PendingForLeaderDto[]>([]);
+  const [teamPendings, setTeamPendings] = useState<TeamPendingsDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFetch = async () => {
-    if (!teamId) {
-      setError('Selecione um time para buscar pendências.');
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
-      const res = await getPendingForLeader(teamId);
-      setPendings(res);
+      const res = await getAllPendings();
+      let leaderPendings = res.leaderPendings;
+      if (teamId) {
+        leaderPendings = leaderPendings.filter(tp => tp.teamId === teamId);
+      }
+      setTeamPendings(leaderPendings);
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
       setError(message);
-      setPendings([]);
+      setTeamPendings([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const totalPendings = teamPendings.reduce((acc, tp) => acc + tp.pendings.length, 0);
 
   return (
     <Card variant="outlined">
@@ -68,7 +70,7 @@ const PendingLeader = ({ teamId, disabled }: Props) => {
           <Button
             variant="contained"
             onClick={handleFetch}
-            disabled={loading || !teamId || disabled}
+            disabled={loading || disabled}
             startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
           >
             {loading ? 'Buscando...' : 'Buscar pendências'}
@@ -99,36 +101,48 @@ const PendingLeader = ({ teamId, disabled }: Props) => {
             </Stack>
           )}
 
-          {pendings.length === 0 && !loading && (
+          {totalPendings === 0 && !loading && (
             <Alert severity="info">Nenhuma pendência encontrada.</Alert>
           )}
 
-          {!loading && pendings.length > 0 && (
-          <Stack spacing={2}>
-            {pendings.map(pending => (
-              <Card key={pending.scheduleId} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                      <Typography variant="subtitle1">{formatScheduleLabel(pending)}</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      {pending.lessonContent}
-                    </Typography>
+          {!loading && totalPendings > 0 && (
+          <Stack spacing={3}>
+            {teamPendings.map(team => (
+              <Box key={team.teamId}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                  {team.teamName} • {team.shelterName}
+                </Typography>
+                <Stack spacing={2}>
+                  {team.pendings.map(pending => (
+                    <Card key={`${pending.scheduleId}-${pending.category}`} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+                      <CardContent>
+                        <Stack spacing={1}>
+                          <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                            <Typography variant="subtitle1">{formatScheduleLabel(pending)}</Typography>
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            {pending.location}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {pending.lessonContent}
+                          </Typography>
 
-                    <List dense disablePadding>
-                      {pending.pendingMembers.map(member => (
-                        <ListItem key={member.memberId} disableGutters>
-                          <ListItemText
-                            primary={member.memberName}
-                            secondary={member.memberEmail}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Stack>
-                </CardContent>
-              </Card>
+                          <List dense disablePadding>
+                            {pending.pendingMembers.map(member => (
+                              <ListItem key={member.memberId} disableGutters>
+                                <ListItemText
+                                  primary={member.memberName}
+                                  secondary={member.memberEmail}
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+              </Box>
             ))}
           </Stack>
           )}

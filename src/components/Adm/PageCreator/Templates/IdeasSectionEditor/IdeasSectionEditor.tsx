@@ -29,7 +29,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
+
   const existingSection = useSelector((state: RootState) => state.ideas.ideasSectionData);
 
   const {
@@ -132,17 +132,17 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         const res = await api.post('/ideas-sections', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        
+
         if (!res?.data) throw new Error('Erro ao criar seção');
-        
+
         setSnackbar({
           open: true,
           message: 'Seção criada com sucesso!',
           severity: 'success',
         });
-        
+
         dispatch(clearIdeasSectionData());
-        
+
         const currentPath = window.location.pathname;
         if (currentPath === '/compartilhar-ideia') {
           navigate('/area-do-membro');
@@ -157,22 +157,21 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
             headers: { 'Content-Type': 'multipart/form-data' },
           }
         );
-        
+
         if (!res?.data) throw new Error('Erro ao salvar seção');
-        
+
         setSnackbar({
           open: true,
           message: 'Seção salva e publicada com sucesso!',
           severity: 'success',
         });
-        
+
         dispatch(clearIdeasSectionData());
         navigate('/adm/ideias-compartilhadas');
       } else {
         throw new Error('Seção não encontrada para edição');
       }
-    } catch (err) {
-      console.error('Error saving:', err);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a seção.',
@@ -191,7 +190,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         flexDirection: 'column',
       }}
     >
-      <Box sx={{ 
+      <Box sx={{
         p: { xs: 3, md: 4 },
         borderBottom: '1px solid',
         borderColor: 'divider',
@@ -216,7 +215,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         >
           {fromTemplatePage ? 'Criar e compartilhar ideia incrível' : 'Editar Seção de Ideias'}
         </Typography>
-        
+
         {fromTemplatePage && (
           <Typography
             variant="body1"
@@ -235,10 +234,10 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
             Compartilhe uma ideia incrível que você teve nessa semana no seu Abrigo
           </Typography>
         )}
-        
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 3, 
+
+        <Box sx={{
+          display: 'flex',
+          gap: 3,
           alignItems: 'center',
           flexWrap: 'wrap',
           mt: 2,
@@ -293,7 +292,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
             onClick={handleSaveSection}
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : null}
-            sx={{ 
+            sx={{
               ml: fromTemplatePage ? 0 : 'auto',
               px: 4,
               py: 1.5,
@@ -311,10 +310,10 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         </Box>
 
         {selectedPage && !fromTemplatePage && (
-          <Box sx={{ 
-            mt: 1, 
-            p: 1.5, 
-            bgcolor: 'primary.light', 
+          <Box sx={{
+            mt: 1,
+            p: 1.5,
+            bgcolor: 'primary.light',
             borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
@@ -332,8 +331,8 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         )}
       </Box>
 
-      <Box sx={{ 
-        flex: 1, 
+      <Box sx={{
+        flex: 1,
         p: { xs: 3, md: 4 },
         bgcolor: 'background.default',
         minHeight: 'calc(100vh - 200px)',
@@ -358,7 +357,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       >
         <Alert severity={snackbar.severity} variant="filled">

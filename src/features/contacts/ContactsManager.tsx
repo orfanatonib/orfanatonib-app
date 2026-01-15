@@ -80,26 +80,26 @@ export default function ContactsManager() {
           onDeleteAsk={(c) => setToDelete(c)}
         />
 
-      <ContactDetailsModal
-        contact={selected}
-        onClose={() => setSelected(null)}
-        onMarkAsRead={handleMarkAsRead}
-        onDelete={() => {
-          if (selected) setToDelete(selected);
-          setSelected(null);
-        }}
-      />
+        <ContactDetailsModal
+          contact={selected}
+          onClose={() => setSelected(null)}
+          onMarkAsRead={handleMarkAsRead}
+          onDelete={() => {
+            if (selected) setToDelete(selected);
+            setSelected(null);
+          }}
+        />
 
-      <DeleteConfirmDialog
-        open={!!toDelete}
-        title={toDelete?.name || ""}
-        onClose={() => setToDelete(null)}
-        onConfirm={handleDelete}
-      />
+        <DeleteConfirmDialog
+          open={!!toDelete}
+          title={toDelete?.name || ""}
+          onClose={() => setToDelete(null)}
+          onConfirm={handleDelete}
+        />
 
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={4000}
+          autoHideDuration={5000}
           onClose={() => setSnackbar((p) => ({ ...p, open: false }))}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >

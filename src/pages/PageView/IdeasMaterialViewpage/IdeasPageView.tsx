@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Box, Container, useTheme, alpha, Grid } from "@mui/material";
 import { AnimatePresence } from "framer-motion";
 
-import { RootState } from "store/slices";
+import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 
@@ -103,7 +103,12 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <AnimatePresence>
               {sections.map((section, sectionIndex) => {
-                const { videos, documents, images } = groupSectionMedias(section.medias);
+                const mediasWithId = (section.medias ?? []).map((m, i) => ({
+                  ...m,
+                  id: m.id ?? `${sectionIndex}-${i}`,
+                  mediaType: m.mediaType as "image" | "video" | "document",
+                }));
+                const { videos, documents, images } = groupSectionMedias(mediasWithId);
 
                 return (
                   <Grid item xs={12} lg={6} key={section.id || sectionIndex}>
@@ -117,7 +122,7 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
                       images={images}
                       expandedMediaTypes={expandedMediaTypes}
                       onToggleMediaType={toggleMediaType}
-                      user={section.user}
+                      user={(section as any).user}
                       isExpanded={expandedSectionId === (section.id || sectionIndex.toString())}
                       onToggleSection={handleToggleSection}
                     />

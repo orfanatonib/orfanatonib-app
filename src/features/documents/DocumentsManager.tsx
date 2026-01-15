@@ -343,20 +343,20 @@ const DocumentsManager: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-      <DocumentDetailsModal open={!!detailsModalOpen} document={detailsModalOpen} onClose={() => setDetailsModalOpen(null)} />
-      <DocumentPreviewModal open={!!previewModalOpen} document={previewModalOpen} onClose={() => setPreviewModalOpen(null)} />
-      <DocumentViewModal open={!!viewModalOpen} document={viewModalOpen} onClose={() => setViewModalOpen(null)} />
+        <DocumentDetailsModal open={!!detailsModalOpen} document={detailsModalOpen} onClose={() => setDetailsModalOpen(null)} />
+        <DocumentPreviewModal open={!!previewModalOpen} document={previewModalOpen} onClose={() => setPreviewModalOpen(null)} />
+        <DocumentViewModal open={!!viewModalOpen} document={viewModalOpen} onClose={() => setViewModalOpen(null)} />
 
-      <DeleteConfirmDialog
-        open={!!deleteModalOpen}
-        title={deleteModalOpen?.name}
-        onClose={() => setDeleteModalOpen(null)}
-        onConfirm={handleConfirmDelete}
-      />
+        <DeleteConfirmDialog
+          open={!!deleteModalOpen}
+          title={deleteModalOpen?.name}
+          onClose={() => setDeleteModalOpen(null)}
+          onConfirm={handleConfirmDelete}
+        />
 
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={4000}
+          autoHideDuration={5000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >

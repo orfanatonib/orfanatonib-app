@@ -60,18 +60,19 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
           </IconButton>
         </Box>
 
-        <Stack spacing={2} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
+        <Stack spacing={{ xs: 1.5, md: 2 }} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
           <Typography
             variant="h3"
             fontWeight="bold"
             textAlign="center"
             sx={{
-              fontSize: { xs: '1.75rem', sm: '2.125rem', md: '2.5rem' },
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              mb: 1,
+              mb: 0.5,
+              lineHeight: 1.2,
             }}
           >
             Controle de Frequência
@@ -81,8 +82,10 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
             color="text.secondary"
             textAlign="center"
             sx={{
-              fontSize: { xs: '0.875rem', sm: '1rem' },
+              fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' },
               maxWidth: 600,
+              lineHeight: 1.5,
+              px: { xs: 1, sm: 0 },
             }}
           >
             Gerencie a presença das equipes em seus abrigos de forma organizada e eficiente

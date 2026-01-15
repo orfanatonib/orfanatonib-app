@@ -83,9 +83,8 @@ const SiteFeedbackForm: React.FC = () => {
                 navigate('/area-do-membro');
             }, 2000);
 
-        } catch (error) {
+        } catch {
             setErrorMessage('Erro ao enviar feedback. Tente novamente.');
-            console.error('Error sending feedback:', error);
         }
     };
 
@@ -224,7 +223,7 @@ const SiteFeedbackForm: React.FC = () => {
 
             <Snackbar
                 open={submitted}
-                autoHideDuration={4000}
+                autoHideDuration={5000}
                 onClose={() => setSubmitted(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >

@@ -45,8 +45,7 @@ const VisitMaterialsList = () => {
             const data = await listVisitMaterials(params);
             const publicMaterials = data.filter((material) => material.route?.public);
             setMaterials(publicMaterials);
-        } catch (error) {
-            console.error('Error fetching visit materials:', error);
+        } catch {
         } finally {
             setLoading(false);
             setIsFiltering(false);

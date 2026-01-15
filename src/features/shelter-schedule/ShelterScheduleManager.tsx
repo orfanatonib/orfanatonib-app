@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Box, CircularProgress, Alert, Button, Fab, useTheme, useMediaQuery } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Box, CircularProgress, Alert, Button, Fab, useTheme, useMediaQuery, TextField, InputAdornment } from "@mui/material";
+import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
@@ -63,6 +63,7 @@ export default function ShelterScheduleManager() {
   const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<ShelterScheduleResponseDto | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const groupedData = useMemo((): ShelterGroup[] => {
     const shelterMap = new Map<string, ShelterGroup>();
@@ -115,6 +116,15 @@ export default function ShelterScheduleManager() {
     );
   }, [schedules]);
 
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return groupedData;
+
+    const term = searchTerm.toLowerCase();
+    return groupedData.filter(shelter =>
+      shelter.shelterName.toLowerCase().includes(term)
+    );
+  }, [groupedData, searchTerm]);
+
   React.useEffect(() => {
     if (groupedData.length > 0 && expandedShelterId === null && isLeader && !isAdmin) {
       setExpandedShelterId(groupedData[0].shelterId);
@@ -165,7 +175,6 @@ export default function ShelterScheduleManager() {
       }
       handleCloseForm();
     } catch (err: any) {
-      console.error("Error saving schedule:", err);
       throw err;
     } finally {
       setSubmitting(false);
@@ -181,8 +190,7 @@ export default function ShelterScheduleManager() {
       if (selectedSchedule?.id === deletingSchedule.id) {
         setSelectedSchedule(null);
       }
-    } catch (err: any) {
-      console.error("Error deleting schedule:", err);
+    } catch {
     } finally {
       setSubmitting(false);
     }
@@ -237,21 +245,56 @@ export default function ShelterScheduleManager() {
       )}
 
       {schedules.length > 0 && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {groupedData.map((shelter) => (
-            <ShelterCard
-              key={shelter.shelterId}
-              shelter={shelter}
-              isExpanded={expandedShelterId === shelter.shelterId}
-              selectedScheduleId={selectedSchedule?.id || null}
-              getVisitColor={getVisitColor}
-              onToggleExpand={toggleShelter}
-              onViewDetails={handleViewDetails}
-              onEdit={handleOpenEdit}
-              onDelete={handleOpenDelete}
-            />
-          ))}
-        </Box>
+        <>
+          <TextField
+            fullWidth
+            placeholder="Buscar por nome do abrigo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ mb: 3 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "repeat(2, 1fr)",
+              },
+              gap: { xs: 2, md: 3 },
+            }}
+          >
+            {filteredData.length === 0 ? (
+              <Box sx={{ gridColumn: "1 / -1", textAlign: "center", py: 8 }}>
+                <Alert severity="info">
+                  Nenhum abrigo encontrado com o termo "{searchTerm}"
+                </Alert>
+              </Box>
+            ) : (
+              filteredData.map((shelter) => (
+                <ShelterCard
+                  key={shelter.shelterId}
+                  shelter={shelter}
+                  isExpanded={expandedShelterId === shelter.shelterId}
+                  selectedScheduleId={selectedSchedule?.id || null}
+                  getVisitColor={getVisitColor}
+                  onToggleExpand={toggleShelter}
+                  onViewDetails={handleViewDetails}
+                  onEdit={handleOpenEdit}
+                  onDelete={handleOpenDelete}
+                />
+              ))
+            )}
+          </Box>
+        </>
       )}
 
       {isMobile && (

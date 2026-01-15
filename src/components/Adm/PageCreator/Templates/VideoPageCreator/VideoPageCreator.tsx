@@ -142,7 +142,7 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
           isLocalFile: video.uploadType === MediaUploadType.UPLOAD,
           url:
             video.uploadType === MediaUploadType.LINK ||
-            (video.uploadType === MediaUploadType.UPLOAD && video.id)
+              (video.uploadType === MediaUploadType.UPLOAD && video.id)
               ? video.url
               : undefined,
           platformType: video.uploadType === MediaUploadType.LINK ? video.platformType : undefined,
@@ -164,11 +164,11 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
 
       const response = fromTemplatePage
         ? await api.post('/video-pages', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
         : await api.patch(`/video-pages/${videoData!.id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
@@ -177,8 +177,7 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       );
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (error) {
-      console.error('Erro ao salvar página', error);
+    } catch {
       showError('Erro ao salvar a página. Tente novamente.');
     } finally {
       setLoading(false);
@@ -506,7 +505,7 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+      <Snackbar open={snackbarOpen} autoHideDuration={5000} onClose={() => setSnackbarOpen(false)}>
         <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
           {snackbarMessage}
         </Alert>

@@ -120,8 +120,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess }) => {
       onSuccess();
 
       if (!isEditing) resetForm();
-    } catch (error) {
-      console.error('Erro ao salvar documento:', error);
+    } catch {
       setSnackbar({ open: true, message: 'Erro ao salvar documento.', severity: 'error' });
     } finally {
       setLoading(false);
@@ -174,7 +173,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess }) => {
         </Grid>
       </Grid>
 
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}>
+      <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}>
         <Alert severity={snackbar.severity} variant="filled">
           {snackbar.message}
         </Alert>

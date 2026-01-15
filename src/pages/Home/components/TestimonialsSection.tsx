@@ -10,7 +10,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
 
   useEffect(() => {
     if (testimonials.length === 0) return;
-    
+
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % testimonials.length);
     }, 5000);
@@ -62,7 +62,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
           borderTopRightRadius: 0,
         }}
       />
-      
+
       <motion.div
         style={{
           position: 'absolute',
@@ -109,11 +109,11 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
             sx={{
               fontSize: { xs: '1.5rem', sm: '2.5rem', md: '3rem' },
               fontWeight: 800,
-              color: '#000000',
+              color: '#FFFFFF',
               textAlign: 'center',
               mb: { xs: 4, md: 6 },
               fontFamily: "'Poppins', sans-serif",
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              textShadow: '0 4px 12px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)',
             }}
           >
             O que dizem sobre o Ministério de Ofarnatos
@@ -137,11 +137,11 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
             >
               <Card
                 sx={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.9) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(249, 252, 250, 0.94) 100%)',
+                  backdropFilter: 'blur(15px)',
+                  border: '1px solid rgba(0, 153, 51, 0.15)',
                   borderRadius: 4,
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 20px 40px rgba(0, 153, 51, 0.12), 0 10px 20px rgba(0, 0, 0, 0.08)',
                   position: 'relative',
                   overflow: 'hidden',
                   '&::before': {
@@ -151,7 +151,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
                     left: 0,
                     right: 0,
                     height: '4px',
-                    background: 'linear-gradient(90deg, #FFD700, #FFA500)',
+                    background: 'linear-gradient(90deg, #009933 0%, #2ecc71 50%, #f1c40f 100%)',
                   },
                 }}
               >
@@ -164,7 +164,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
                     <FormatQuote
                       sx={{
                         fontSize: 60,
-                        color: '#333333',
+                        color: '#009933',
                         mb: 2,
                         opacity: 0.3,
                       }}
@@ -219,13 +219,18 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
               left: { xs: -20, md: -60 },
               top: '50%',
               transform: 'translateY(-50%)',
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#667eea',
+              background: 'rgba(255, 255, 255, 0.98)',
+              color: '#009933',
+              border: '2px solid rgba(0, 153, 51, 0.2)',
+              boxShadow: '0 4px 12px rgba(0, 153, 51, 0.15)',
               '&:hover': {
-                background: 'rgba(255, 255, 255, 1)',
-                transform: 'translateY(-50%) scale(1.1)',
+                background: '#009933',
+                color: '#FFFFFF',
+                borderColor: '#009933',
+                transform: 'translateY(-50%) scale(1.12)',
+                boxShadow: '0 6px 20px rgba(0, 153, 51, 0.35)',
               },
-              transition: 'all 0.3s ease',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
             <ChevronLeft />
@@ -238,43 +243,22 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
               right: { xs: -20, md: -60 },
               top: '50%',
               transform: 'translateY(-50%)',
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#667eea',
+              background: 'rgba(255, 255, 255, 0.98)',
+              color: '#009933',
+              border: '2px solid rgba(0, 153, 51, 0.2)',
+              boxShadow: '0 4px 12px rgba(0, 153, 51, 0.15)',
               '&:hover': {
-                background: 'rgba(255, 255, 255, 1)',
-                transform: 'translateY(-50%) scale(1.1)',
+                background: '#009933',
+                color: '#FFFFFF',
+                borderColor: '#009933',
+                transform: 'translateY(-50%) scale(1.12)',
+                boxShadow: '0 6px 20px rgba(0, 153, 51, 0.35)',
               },
-              transition: 'all 0.3s ease',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
             <ChevronRight />
           </IconButton>
-
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 1,
-              mt: 4,
-            }}
-          >
-            {testimonials.map((_, index) => (
-              <motion.div
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  background: index === currentIndex ? '#FFD700' : 'rgba(255, 255, 255, 0.5)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-              />
-            ))}
-          </Box>
         </Box>
       </Container>
 
@@ -291,7 +275,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials 
           borderBottomRightRadius: 0,
         }}
       />
-      
+
       <motion.div
         style={{
           position: 'absolute',

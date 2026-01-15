@@ -117,8 +117,7 @@ export default function ImageSectionEditorAdmin() {
     try {
       await saveSection(formData);
       navigate('/adm/fotos-abrigos');
-    } catch (error) {
-      console.error('Erro ao salvar a seção:', error);
+    } catch {
       showError('Falha ao publicar as imagens compartilhadas. Tente novamente.');
     } finally {
       setIsSaving(false);
@@ -380,7 +379,7 @@ export default function ImageSectionEditorAdmin() {
                 initialIsPublic={sectionData?.public ?? true}
                 initialMediaItems={sectionData?.mediaItems || []}
                 onChange={handleChange}
-                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Abrigados aprendendo sobre ressurreição"
+                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
                 descriptionPlaceholder="EX: Revisar e aprimorar a descrição das atividades do Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos e momentos especiais registrados."
               />
             </motion.div>

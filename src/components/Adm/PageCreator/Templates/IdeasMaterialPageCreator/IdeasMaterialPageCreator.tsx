@@ -104,7 +104,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
   const handleSavePage = async () => {
     setTouched({ title: true, description: true });
-    
+
     if (Object.values(errors).some(Boolean)) {
       setSnackbar({
         open: true,
@@ -165,8 +165,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a página.',
@@ -429,7 +428,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       >
         <Alert severity={snackbar.severity} variant="filled">

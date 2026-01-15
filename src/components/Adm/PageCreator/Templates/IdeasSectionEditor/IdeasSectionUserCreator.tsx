@@ -24,7 +24,7 @@ export function IdeasSectionUserCreator() {
     title: '',
     description: '',
     medias: [],
-    public: true, 
+    public: true,
   });
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -123,7 +123,7 @@ export function IdeasSectionUserCreator() {
       formData.append('sectionData', JSON.stringify({
         title: sectionData.title,
         description: sectionData.description,
-        public: true, 
+        public: true,
         medias: mediasPayload,
       }));
 
@@ -149,8 +149,7 @@ export function IdeasSectionUserCreator() {
       setTimeout(() => {
         navigate('/area-do-membro');
       }, 2000);
-    } catch (error) {
-      console.error('Error sharing idea:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Ops! Algo deu errado ao compartilhar sua ideia. Tente novamente.',
@@ -210,13 +209,13 @@ export function IdeasSectionUserCreator() {
           sx={{
             fontWeight: 'bold',
             fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.5rem' },
-            mb: { xs: 3, md: 2 }, 
+            mb: { xs: 3, md: 2 },
             color: 'white',
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            mt: { xs: 4, md: 5 }, 
-            px: 0, 
-            maxWidth: '100%', 
-            mx: 0, 
+            mt: { xs: 4, md: 5 },
+            px: 0,
+            maxWidth: '100%',
+            mx: 0,
           }}
         >
           ✨ Criar e compartilhar ideia incrível
@@ -227,7 +226,7 @@ export function IdeasSectionUserCreator() {
           sx={{
             color: 'rgba(255,255,255,0.9)',
             fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' },
-            mb: { xs: 4, md: 2 }, 
+            mb: { xs: 4, md: 2 },
             maxWidth: '700px',
             mx: 'auto',
             lineHeight: 1.5,
@@ -253,7 +252,7 @@ export function IdeasSectionUserCreator() {
         zIndex: 1,
       }}>
         <Box sx={{
-          maxWidth: '1200px', 
+          maxWidth: '1200px',
           mx: 'auto',
           bgcolor: 'background.paper',
           borderRadius: '20px',
@@ -262,7 +261,7 @@ export function IdeasSectionUserCreator() {
           border: '1px solid',
           borderColor: 'divider',
           position: 'relative',
-          width: { xs: '98%', md: '95%' }, 
+          width: { xs: '98%', md: '95%' },
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -310,7 +309,7 @@ export function IdeasSectionUserCreator() {
                   flex: 1,
                 }}
               >
-                {sectionData.medias.length > 0 
+                {sectionData.medias.length > 0
                   ? `✅ ${sectionData.medias.length} mídia(s) adicionada(s)`
                   : '⚠️ Adicione pelo menos uma mídia (vídeo, imagem ou documento)'
                 }
@@ -354,7 +353,7 @@ export function IdeasSectionUserCreator() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ zIndex: 1400 }}

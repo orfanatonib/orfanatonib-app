@@ -253,7 +253,6 @@ export default function UsersToolbar({
                 alignItems: "center",
                 gap: 1.5,
                 flexWrap: "wrap",
-                useFlexGap: true,
               }}
             >
               {hasFilters && (

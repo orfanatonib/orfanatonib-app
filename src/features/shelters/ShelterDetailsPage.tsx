@@ -84,7 +84,6 @@ export default function ShelterDetailsPage() {
         const initialShelterId = shelters[0].id;
         setSelectedShelterId(initialShelterId);
       } catch (err: any) {
-        console.error("Error loading shelters:", err);
         setError(
           err?.response?.data?.message ||
             err?.message ||

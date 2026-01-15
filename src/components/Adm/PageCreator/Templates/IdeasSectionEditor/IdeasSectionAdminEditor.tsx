@@ -60,8 +60,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       try {
         const res = await api.get('/ideas-pages');
         setPages(res.data || []);
-      } catch (error) {
-        console.error('Error loading pages:', error);
+      } catch {
         setSnackbar({
           open: true,
           message: 'Erro ao carregar páginas disponíveis',
@@ -85,7 +84,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
   const handleSaveSection = async () => {
     setTouched({ page: true });
-    
+
     if (!selectedPage) {
       setSnackbar({
         open: true,
@@ -193,8 +192,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       setTimeout(() => {
         navigate('/adm/ideias-compartilhadas');
       }, 2000);
-    } catch (error) {
-      console.error('Error saving section:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Ops! Algo deu errado ao salvar a seção. Tente novamente.',
@@ -257,7 +255,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
             <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
               ⚙️ Configurações
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth required error={touched.page && !selectedPage}>
@@ -446,7 +444,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >

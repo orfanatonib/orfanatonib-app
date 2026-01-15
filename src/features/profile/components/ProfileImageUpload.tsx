@@ -60,17 +60,17 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
     const isAndroid = /android/i.test(userAgent);
     const isMobile = isIOS || isAndroid;
-    
+
     const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
     const isSafari = /Safari/.test(userAgent) && !isChrome;
     const isFirefox = /Firefox/.test(userAgent);
-    
+
     return { isIOS, isAndroid, isMobile, isChrome, isSafari, isFirefox };
   };
 
   const handleCameraClick = async () => {
     const device = detectDevice();
-    
+
     if (device.isIOS && device.isSafari) {
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
@@ -78,7 +78,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       }
       return;
     }
-    
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
@@ -91,17 +91,17 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
     try {
       const videoConstraints: MediaTrackConstraints = device.isMobile
-        ? { 
-            facingMode: { ideal: cameraFacingMode }, 
-            width: { ideal: 720 },
-            height: { ideal: 1280 }
-          }
-        : { 
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          };
+        ? {
+          facingMode: { ideal: cameraFacingMode },
+          width: { ideal: 720 },
+          height: { ideal: 1280 }
+        }
+        : {
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        };
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: videoConstraints,
         audio: false
       });
@@ -109,15 +109,15 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       let activeFacingMode: 'environment' | 'user' = cameraFacingMode;
       let activeDeviceId: string | undefined =
         activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
-      
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         stream.getTracks().forEach(track => track.stop());
         throw new Error('Não foi possível criar o contexto do canvas');
       }
-      
+
       const modal = document.createElement('div');
       modal.id = 'camera-modal';
       modal.style.cssText = `
@@ -136,7 +136,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         padding: ${device.isMobile ? '12px' : '20px'};
         box-sizing: border-box;
       `;
-      
+
       const videoWrapper = document.createElement('div');
       videoWrapper.style.cssText = `
         position: relative;
@@ -159,12 +159,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       videoElement.muted = true;
-      
+
       if (device.isMobile) {
         videoElement.setAttribute('playsinline', 'true');
         videoElement.setAttribute('webkit-playsinline', 'true');
       }
-      
+
       const buttonContainer = document.createElement('div');
       buttonContainer.style.cssText = `
         display: flex;
@@ -174,7 +174,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         width: 100%;
         max-width: 500px;
       `;
-      
+
       const captureButton = document.createElement('button');
       captureButton.textContent = 'Capturar Foto';
       captureButton.style.cssText = `
@@ -189,7 +189,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         min-width: 140px;
         box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
       `;
-      
+
       const cancelButton = document.createElement('button');
       cancelButton.textContent = 'Cancelar';
       cancelButton.style.cssText = `
@@ -271,15 +271,15 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                 stroke-linecap="round"></path>
         </svg>
       `;
-      
+
       let videoReady = false;
-      
+
       videoElement.addEventListener('loadedmetadata', () => {
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
         videoReady = true;
       });
-      
+
       const cleanup = () => {
         activeStream.getTracks().forEach(track => {
           track.stop();
@@ -289,13 +289,13 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           document.body.removeChild(existingModal);
         }
       };
-      
+
       captureButton.onclick = () => {
         if (!videoReady) {
           onError('Aguarde a câmera carregar completamente');
           return;
         }
-        
+
         try {
           ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
           canvas.toBlob((blob) => {
@@ -307,15 +307,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               onError('Erro ao processar a imagem');
             }
           }, 'image/jpeg', 0.9);
-          
+
           cleanup();
-        } catch (err) {
-          console.error('Erro ao capturar foto:', err);
+        } catch {
           onError('Erro ao capturar a foto. Tente novamente.');
           cleanup();
         }
       };
-      
+
       cancelButton.onclick = () => {
         cleanup();
       };
@@ -375,8 +374,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           setCameraFacingMode(nextFacingMode);
           activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
           videoElement.srcObject = activeStream;
-        } catch (err: any) {
-          console.error('Erro ao trocar câmera:', err);
+        } catch {
           onError('Não foi possível trocar a câmera. Seu dispositivo pode não ter câmera frontal ou o navegador bloqueou.');
           try {
             const fallbackStream = await navigator.mediaDevices.getUserMedia({
@@ -391,27 +389,25 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           }
         }
       };
-      
+
       buttonContainer.appendChild(captureButton);
       buttonContainer.appendChild(cancelButton);
-      
+
       videoWrapper.appendChild(videoElement);
       videoWrapper.appendChild(maskOverlay);
       videoWrapper.appendChild(switchCameraIconButton);
       modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
       document.body.appendChild(modal);
-      
+
       videoElement.onerror = () => {
         onError('Erro ao carregar a câmera. Tente novamente ou use a opção de selecionar da galeria.');
         cleanup();
       };
-      
+
     } catch (err: any) {
-      console.error('Erro ao acessar câmera:', err);
-      
       let errorMessage = 'Erro ao acessar a câmera. ';
-      
+
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         errorMessage += 'Permissão negada. Por favor, permita o acesso à câmera nas configurações do navegador.';
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -423,9 +419,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       } else {
         errorMessage += 'Tente usar a opção de selecionar da galeria.';
       }
-      
+
       onError(errorMessage);
-      
+
       if (cameraInputRef.current) {
         cameraInputRef.current.setAttribute('capture', cameraFacingMode);
         cameraInputRef.current.click();
@@ -462,17 +458,18 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       if (cameraInputRef.current) {
         cameraInputRef.current.value = '';
       }
-      
+
       try {
         await dispatch(fetchCurrentUser()).unwrap();
-      } catch (err) {
-        console.error('Erro ao atualizar usuário no Redux:', err);
+      } catch {
       }
-      
-      if (updatedProfile.image?.url) {
-        setPreview(updatedProfile.image.url);
+
+      const newImage = updatedProfile.image || (updatedProfile.mediaItems && updatedProfile.mediaItems.length > 0 ? updatedProfile.mediaItems[0] : null);
+
+      if (newImage?.url) {
+        setPreview(newImage.url);
       }
-      
+
       onUpdate();
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
