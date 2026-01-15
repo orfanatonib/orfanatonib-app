@@ -109,7 +109,7 @@ export function PagelasPanel({
               fontSize: { xs: '0.75rem', sm: '0.875rem' }
             }}
           >
-            Abrigado: {shelteredName}
+            Acolhido: {shelteredName}
           </Typography>
         )}
         {shelterName && (
@@ -175,7 +175,7 @@ export function PagelasPanel({
           <EmptyState
             icon={<BookmarksIcon />}
             title="Nenhuma pagela encontrada"
-            description={search ? "Tente ajustar os filtros de busca" : "Não há registros de pagelas para este abrigado"}
+            description={search ? "Tente ajustar os filtros de busca" : "Não há registros de pagelas para este acolhido"}
           />
         ) : (
         <Stack spacing={{ xs: 1, sm: 1.5 }}>

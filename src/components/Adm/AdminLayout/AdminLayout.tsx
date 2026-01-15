@@ -89,7 +89,7 @@ function AdminLayout() {
           { label: "Perfis", to: "/adm/perfis", icon: <Favorite /> },
           { label: "Membros", to: "/adm/membros", icon: <School /> },
           { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
-          { label: "Abrigados", to: "/adm/abrigados", icon: <Group /> },
+          { label: "Acolhidos", to: "/adm/acolhidos", icon: <Group /> },
         ],
       },
       {
@@ -144,7 +144,7 @@ function AdminLayout() {
   );
 
   const leaderAllowed = new Set<string>([
-    "/adm/abrigados",
+    "/adm/acolhidos",
     "/adm/membros",
     "/adm/perfis",
     "/adm/abrigos",
@@ -154,7 +154,7 @@ function AdminLayout() {
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
-    if (item.to === '/adm/abrigados' && !isShelterManagementEnabled) return false;
+    if (item.to === '/adm/acolhidos' && !isShelterManagementEnabled) return false;
     if (item.to === '/adm/pagelas' && !isPagelasEnabled) return false;
 
     if (isAdmin) return true;
@@ -176,7 +176,7 @@ function AdminLayout() {
       path.startsWith("/adm/perfis") ||
       path.startsWith("/adm/membros") ||
       path.startsWith("/adm/lideres") ||
-      path.startsWith("/adm/abrigados")
+      path.startsWith("/adm/acolhidos")
     ) {
       return "pessoas";
     }

@@ -52,7 +52,7 @@ const MobileNavigation: React.FC = () => {
   };
 
   const handleShelteredArea = () => {
-    navigate('/area-dos-abrigados');
+    navigate('/area-dos-acolhidos');
     closeDrawer();
   };
 
@@ -197,7 +197,7 @@ const MobileNavigation: React.FC = () => {
                   <ListItemIcon>
                     <HomeIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
                   </ListItemIcon>
-                  <ListItemText>Área dos Abrigados</ListItemText>
+                  <ListItemText>Área dos Acolhidos</ListItemText>
                 </MenuItem>
               )}
               {(isAdmin || isLeader) && (

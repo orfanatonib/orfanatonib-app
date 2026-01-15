@@ -169,7 +169,7 @@ export default function ShelteredManager() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <BackHeader title="Gerenciar Abrigados" />
+          <BackHeader title="Gerenciar Acolhidos" />
         </motion.div>
 
         <motion.div
@@ -201,7 +201,7 @@ export default function ShelteredManager() {
           >
             <CircularProgress size={48} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando abrigados...
+              Carregando acolhidos...
             </Typography>
           </Box>
         )}
@@ -227,10 +227,10 @@ export default function ShelteredManager() {
           >
             <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum abrigado encontrado
+              Nenhum acolhido encontrado
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tente ajustar os filtros de busca ou criar um novo abrigado.
+              Tente ajustar os filtros de busca ou criar um novo acolhido.
             </Typography>
           </Paper>
         )}

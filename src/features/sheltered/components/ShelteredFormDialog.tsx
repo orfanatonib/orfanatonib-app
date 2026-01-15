@@ -236,7 +236,7 @@ export default function ShelteredFormDialog({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
-      <DialogTitle>{isCreate ? "Cadastrar Abrigado" : "Editar Abrigado"}</DialogTitle>
+      <DialogTitle>{isCreate ? "Cadastrar Acolhido" : "Editar Acolhido"}</DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

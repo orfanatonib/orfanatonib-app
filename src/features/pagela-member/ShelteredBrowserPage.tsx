@@ -243,8 +243,8 @@ export default function ShelteredBrowserPage() {
       setCreating(null);
       setDialogError("");
     } catch (error: any) {
-      console.error('Erro ao criar abrigado:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao criar abrigado. Tente novamente.");
+      console.error('Erro ao criar acolhido:', error);
+      setDialogError(error?.response?.data?.message || error?.message || "Erro ao criar acolhido. Tente novamente.");
     }
   };
 
@@ -279,7 +279,7 @@ export default function ShelteredBrowserPage() {
       });
       setDialogError("");
     } catch (e: any) {
-      setDialogError(e?.response?.data?.message || e?.message || "Não foi possível abrir o abrigado para edição");
+      setDialogError(e?.response?.data?.message || e?.message || "Não foi possível abrir o acolhido para edição");
     }
   };
 
@@ -291,13 +291,13 @@ export default function ShelteredBrowserPage() {
       setEditing(null);
       setDialogError("");
     } catch (error: any) {
-      console.error('Erro ao atualizar abrigado:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao atualizar abrigado. Tente novamente.");
+      console.error('Erro ao atualizar acolhido:', error);
+      setDialogError(error?.response?.data?.message || error?.message || "Erro ao atualizar acolhido. Tente novamente.");
     }
   };
 
   React.useEffect(() => {
-    document.title = "Lançar Pagela • Selecionar Abrigado";
+    document.title = "Lançar Pagela • Selecionar Acolhido";
   }, []);
 
   if (canAccess && !hasLinkedShelter) {
@@ -349,7 +349,7 @@ export default function ShelteredBrowserPage() {
               fontWeight={900}
               sx={{ color: "#2c3e50", fontSize: { xs: "1.25rem", md: "1.75rem" } }}
             >
-              Área dos abrigados
+              Área dos acolhidos
             </Typography>
             {canAccess && (
               <Typography
@@ -357,7 +357,7 @@ export default function ShelteredBrowserPage() {
                 color="text.secondary"
                 sx={{ display: { xs: "none", md: "block" }, mt: 0.5 }}
               >
-                Toque em um abrigado para abrir suas pagelas
+                Toque em um acolhido para abrir suas pagelas
               </Typography>
             )}
           </Box>
@@ -375,7 +375,7 @@ export default function ShelteredBrowserPage() {
                 display: { xs: "none", sm: "block" }
               }}
             >
-              Abrigados do Abrigo {shelterName}
+              Acolhidos do Abrigo {shelterName}
             </Typography>
           )}
           {canAccess && (
@@ -385,7 +385,7 @@ export default function ShelteredBrowserPage() {
               variant="contained"
               sx={{ display: { xs: "none", md: "inline-flex" } }}
             >
-              Cadastrar abrigado
+              Cadastrar acolhido
             </Button>
           )}
         </Box>
@@ -394,7 +394,7 @@ export default function ShelteredBrowserPage() {
       {canAccess && (
         <Fab
           color="primary"
-          aria-label="Cadastrar abrigado"
+          aria-label="Cadastrar acolhido"
           onClick={openCreate}
           sx={{
             position: "fixed",
@@ -438,7 +438,7 @@ export default function ShelteredBrowserPage() {
                 fontSize: { xs: "1rem", sm: "1.25rem" }
               }}
             >
-              Selecionar Abrigado
+              Selecionar Acolhido
             </Typography>
             <Box
               sx={{
@@ -459,7 +459,7 @@ export default function ShelteredBrowserPage() {
                     fontSize: { xs: "0.875rem", sm: "1rem" }
                   },
                 }}
-                placeholder={isXs ? "Buscar abrigado…" : "Buscar por nome do abrigo, nome do responsável ou telefone do responsável…"}
+                placeholder={isXs ? "Buscar acolhido…" : "Buscar por nome do abrigo, nome do responsável ou telefone do responsável…"}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -572,7 +572,7 @@ export default function ShelteredBrowserPage() {
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
               >
-                {q ? "Nenhum abrigado encontrado com os filtros aplicados." : "Nenhum abrigado cadastrado."}
+                {q ? "Nenhum acolhido encontrado com os filtros aplicados." : "Nenhum acolhido cadastrado."}
               </Typography>
 
               {!q && (
@@ -590,7 +590,7 @@ export default function ShelteredBrowserPage() {
                       borderRadius: 2,
                     }}
                   >
-                    Cadastrar abrigado
+                    Cadastrar acolhido
                   </Button>
                 </Box>
               )}
@@ -621,7 +621,7 @@ export default function ShelteredBrowserPage() {
                     <Grid key={sheltered.id} item xs={12} sm={6} md={4} lg={3} xl={2.4 as any}>
                       <ShelteredCard
                         sheltered={sheltered}
-                        onClick={(c) => nav(`/area-dos-abrigados/${c.id}`, { state: { sheltered: c } })}
+                        onClick={(c) => nav(`/area-dos-acolhidos/${c.id}`, { state: { sheltered: c } })}
                         onEdit={(c) => openEdit(c.id)}
                         onRefresh={refetch}
                         onToggleStatus={updateStatus}
@@ -655,7 +655,7 @@ export default function ShelteredBrowserPage() {
                     color="text.secondary"
                     sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
                   >
-                    Mostrando {items.length} de {pagination.totalItems} abrigado(s)
+                    Mostrando {items.length} de {pagination.totalItems} acolhido(s)
                   </Typography>
                 </Stack>
               )}

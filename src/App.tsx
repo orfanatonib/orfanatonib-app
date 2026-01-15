@@ -181,7 +181,7 @@ function App() {
                   <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
                   <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
                   <Route
-                    path="/area-dos-abrigados"
+                    path="/area-dos-acolhidos"
                     element={
                       <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
                         <ShelteredBrowserPage />
@@ -189,7 +189,7 @@ function App() {
                     }
                   />
                   <Route
-                    path="/area-dos-abrigados/:shelteredId"
+                    path="/area-dos-acolhidos/:shelteredId"
                     element={
                       <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
                         <ShelteredPagelasPage />
@@ -222,7 +222,7 @@ function App() {
                     <Route path="lideres" element={<LeaderProfilesManager />} />
                     <Route path="membros" element={<MemberProfilesManager />} />
                     <Route
-                      path="abrigados"
+                      path="acolhidos"
                       element={
                         <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}>
                           <ShelteredManager />

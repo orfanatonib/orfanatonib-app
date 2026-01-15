@@ -119,7 +119,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
             borderColor: "rgba(255, 152, 0, 0.2)"
           }}>
             <Typography sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary", mb: 0.5 }}>
-              Abrigado(a)
+              Acolhido(a)
             </Typography>
             <Typography sx={{ fontSize: { xs: "1rem", sm: "1.1rem" }, fontWeight: 700 }}>
               {sheltered.name}

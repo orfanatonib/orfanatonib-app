@@ -379,7 +379,7 @@ export default function ImageSectionEditorAdmin() {
                 initialIsPublic={sectionData?.public ?? true}
                 initialMediaItems={sectionData?.mediaItems || []}
                 onChange={handleChange}
-                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Abrigados aprendendo sobre ressurreição"
+                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
                 descriptionPlaceholder="EX: Revisar e aprimorar a descrição das atividades do Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos e momentos especiais registrados."
               />
             </motion.div>

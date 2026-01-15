@@ -83,7 +83,7 @@ export default function ShelteredPagelasPage() {
           });
         })
         .catch((err: any) => {
-          setCErr(err?.response?.data?.message || err.message || "Erro ao carregar abrigado");
+          setCErr(err?.response?.data?.message || err.message || "Erro ao carregar acolhido");
         })
         .finally(() => {
           setLoadingShelteredren(false);
@@ -212,7 +212,7 @@ export default function ShelteredPagelasPage() {
                 }}
                 title={sheltered?.name}
               >
-                {sheltered?.name || "Abrigado"}
+                {sheltered?.name || "Acolhido"}
               </Typography>
 
               <Stack direction="row" spacing={0.75} alignItems="center" sx={{ color: "rgba(0,0,0,.75)" }}>
@@ -296,7 +296,7 @@ export default function ShelteredPagelasPage() {
                   >
                     Pagela {((sheltered as any)?.gender === "F" ? "da" : "do")}{" "}
                     <Box component="span" sx={{ fontWeight: 900 }}>
-                      {sheltered?.name || "Abrigado"}
+                      {sheltered?.name || "Acolhido"}
                     </Box>
                   </Typography>
 
