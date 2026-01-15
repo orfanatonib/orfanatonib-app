@@ -69,7 +69,7 @@ export default function NoShelterLinkedPage({
                 Seu perfil ainda não está vinculado a um abrigo
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}>
-                Para acessar a Área dos Abrigados, peça para a coordenação vincular seu perfil a uma equipe/abrigo.
+                Para acessar a Área dos Acolhidos, peça para a coordenação vincular seu perfil a uma equipe/abrigo.
               </Typography>
             </Box>
 

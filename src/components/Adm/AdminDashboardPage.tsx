@@ -64,7 +64,7 @@ const cardData: CardData[] = [
   { title: "Perfis", description: "Conheça melhor as pessoas do ministério.", icon: <Favorite fontSize="large" color="primary" />, path: "/adm/perfis", section: "pessoas" },
   { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
   { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
-  { title: "Abrigados", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/abrigados", section: "pessoas" },
+  { title: "Acolhidos", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/acolhidos", section: "pessoas" },
 
   { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
 
   const normalizedQuery = query.trim().toLowerCase();
   const leaderAllowed = new Set<string>([
-    "/adm/abrigados",
+    "/adm/acolhidos",
     "/adm/membros",
     "/adm/perfis",
     "/adm/abrigos",
@@ -138,7 +138,7 @@ export default function AdminDashboardPage() {
   ]);
 
   const canSeeCard = (card: CardData): boolean => {
-    if (card.path === '/adm/abrigados' && !isShelterManagementEnabled) return false;
+    if (card.path === '/adm/acolhidos' && !isShelterManagementEnabled) return false;
     if (card.path === '/adm/pagelas' && !isPagelasEnabled) return false;
 
     if (isAdmin) return true;

@@ -49,7 +49,7 @@ function ShelteredTableDesktop(props: Props) {
   const columns = useMemo<ColumnDef<ShelteredResponseDto>[]>(() => ([
     {
       accessorKey: "name",
-      header: "Nome do Abrigado",
+      header: "Nome do Acolhido",
       cell: ({ getValue }) => <Typography fontWeight={700}>{String(getValue())}</Typography>,
       meta: { width: 220 },
     },
@@ -198,7 +198,7 @@ function ShelteredTableDesktop(props: Props) {
             {table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
-                  <Typography variant="body2" color="text.secondary">Nenhum abrigado encontrado.</Typography>
+                  <Typography variant="body2" color="text.secondary">Nenhum acolhido encontrado.</Typography>
                 </TableCell>
               </TableRow>
             ) : (

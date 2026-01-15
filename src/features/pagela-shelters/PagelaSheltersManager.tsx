@@ -337,7 +337,7 @@ function PagelaSheltersManagerForLeader() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {mobileStep === "sheltered" && "Abrigados"}
+                        {mobileStep === "sheltered" && "Acolhidos"}
                         {mobileStep === "pagelas" && "Pagelas"}
                       </Typography>
                       {selectedShelter && leaderShelters.length === 1 && (
@@ -627,7 +627,7 @@ function PagelaSheltersManagerForAdmin() {
                       }}
                     >
                       {mobileStep === "shelters" && "Abrigos"}
-                      {mobileStep === "sheltered" && "Abrigados"}
+                      {mobileStep === "sheltered" && "Acolhidos"}
                       {mobileStep === "pagelas" && "Pagelas"}
                     </Typography>
                   </Stack>

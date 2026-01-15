@@ -215,7 +215,7 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
             label="Busca Geral"
             value={filters.shelteredSearchingString ?? ""}
             onChange={e => set("shelteredSearchingString", e.target.value)}
-            placeholder="Nome do abrigado, responsável ou telefone"
+            placeholder="Nome do acolhido, responsável ou telefone"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -399,10 +399,10 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                     </Fab>
                   </Tooltip>
 
-                  <Tooltip title="Nova Abrigado">
+                  <Tooltip title="Nova Acolhido">
                     <Fab
                       color="primary"
-                      aria-label="Nova Abrigado"
+                      aria-label="Nova Acolhido"
                       onClick={onCreateClick}
                     >
                       <Add />
@@ -458,7 +458,7 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                   },
                 }}
               >
-                Criar Abrigado
+                Criar Acolhido
               </Button>
             </Stack>
           )}

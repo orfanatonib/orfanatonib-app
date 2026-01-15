@@ -105,7 +105,7 @@ export function ShelteredPanel({
             display: { xs: 'none', sm: 'block' } 
           }}
         >
-          Abrigados
+          Acolhidos
         </Typography>
         {shelterName && (
           <Typography 
@@ -123,8 +123,8 @@ export function ShelteredPanel({
       <TextField
           fullWidth
         size="small"
-          label="Buscar abrigados"
-          placeholder="Buscar abrigados..."
+          label="Buscar acolhidos"
+          placeholder="Buscar acolhidos..."
         value={search}
           onChange={(e) => setSearch(e.target.value)}
         InputProps={{
@@ -169,8 +169,8 @@ export function ShelteredPanel({
         ) : sheltered.length === 0 ? (
           <EmptyState
             icon={<SearchIcon />}
-            title="Nenhum abrigado encontrado"
-            description={search ? "Tente ajustar os filtros de busca" : "Não há abrigados cadastrados neste abrigo"}
+            title="Nenhum acolhido encontrado"
+            description={search ? "Tente ajustar os filtros de busca" : "Não há acolhidos cadastrados neste abrigo"}
           />
         ) : (
           <Stack spacing={{ xs: 1.5, sm: 1.5 }}>

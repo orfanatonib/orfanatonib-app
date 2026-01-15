@@ -150,7 +150,7 @@ export default function ShelteredCard({
         </Tooltip>
 
         {!!onEdit && (
-          <Tooltip title="Editar abrigado">
+          <Tooltip title="Editar acolhido">
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); onEdit(sheltered); }}
@@ -310,10 +310,10 @@ export default function ShelteredCard({
                   }}
                 >
                   {sheltered.active 
-                    ? "O abrigado não está mais frequentando?" 
-                    : "O abrigado voltou a frequentar?"}
+                    ? "O acolhido não está mais frequentando?" 
+                    : "O acolhido voltou a frequentar?"}
                 </Typography>
-                <Tooltip title={sheltered.active ? "Desativar abrigado" : "Ativar abrigado"}>
+                <Tooltip title={sheltered.active ? "Desativar acolhido" : "Ativar acolhido"}>
                   <Switch
                     checked={sheltered.active}
                     onChange={async (e) => {
@@ -350,12 +350,12 @@ export default function ShelteredCard({
 
       <ConfirmDialog
         open={confirmToggleOpen}
-        title={pendingActive ? "Ativar abrigado" : "Desativar abrigado"}
+        title={pendingActive ? "Ativar acolhido" : "Desativar acolhido"}
         content={
           <Typography sx={{ wordBreak: "break-word" }}>
             {pendingActive
-              ? `Deseja ativar o abrigado "${sheltered.name}"?`
-              : `Deseja desativar o abrigado "${sheltered.name}"?`}
+              ? `Deseja ativar o acolhido "${sheltered.name}"?`
+              : `Deseja desativar o acolhido "${sheltered.name}"?`}
           </Typography>
         }
         confirmText={pendingActive ? "Ativar" : "Desativar"}

@@ -73,7 +73,7 @@ const NavBar: React.FC = () => {
   };
 
   const handleShelteredArea = () => {
-    navigate('/area-dos-abrigados');
+    navigate('/area-dos-acolhidos');
     handleClose();
   };
 
@@ -199,7 +199,7 @@ const NavBar: React.FC = () => {
                         <ListItemIcon>
                           <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
                         </ListItemIcon>
-                        <ListItemText>Área dos Abrigados</ListItemText>
+                        <ListItemText>Área dos Acolhidos</ListItemText>
                       </MenuItem>
                     )}
                     {(isAdmin || isLeader) && (

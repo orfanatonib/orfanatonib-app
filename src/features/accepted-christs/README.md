@@ -1,7 +1,7 @@
 # 📖 Módulo Accepted Christs
 
 ## 🎯 Objetivo
-Gerenciar decisões espirituais dos abrigados, registrando quando aceitam Cristo ou se reconciliam.
+Gerenciar decisões espirituais dos acolhidos, registrando quando aceitam Cristo ou se reconciliam.
 
 ## 📊 Estrutura de Dados
 
@@ -15,7 +15,7 @@ Gerenciar decisões espirituais dos abrigados, registrando quando aceitam Cristo
 #### `CreateAcceptedChristDto`
 ```typescript
 {
-  shelteredId: string;          // UUID do abrigado (obrigatório)
+  shelteredId: string;          // UUID do acolhido (obrigatório)
   decision?: DecisionType | null; // Tipo de decisão (opcional)
   notes?: string | null;         // Observações até 500 caracteres (opcional)
 }
@@ -87,7 +87,7 @@ Cria uma nova decisão espiritual.
 ⚠️ **Importante:** O módulo não possui endpoint GET próprio. Para visualizar decisões, use:
 
 #### GET `/sheltered/:id`
-Retorna o abrigado com array de `acceptedChrists`.
+Retorna o acolhido com array de `acceptedChrists`.
 
 ```json
 {
@@ -124,7 +124,7 @@ Modal para registrar decisões espirituais com:
 - ✅ Mobile first design
 
 ### ShelteredCard
-Card de abrigado com indicador de decisões:
+Card de acolhido com indicador de decisões:
 - ❤️ Ícone de coração colorido por status:
   - Cinza: Nenhuma decisão
   - Verde (success): Aceitou Cristo
@@ -151,15 +151,15 @@ Card de abrigado com indicador de decisões:
 ## 💡 Casos de Uso
 
 1. **Primeira Decisão**
-   - Abrigado aceita Cristo pela primeira vez
+   - Acolhido aceita Cristo pela primeira vez
    - `decision: "ACCEPTED"`
 
 2. **Reconciliação**
-   - Abrigado já aceitou Cristo e deseja renovar compromisso
+   - Acolhido já aceitou Cristo e deseja renovar compromisso
    - `decision: "RECONCILED"`
 
 3. **Múltiplas Decisões**
-   - Permitido registrar várias decisões para mesmo abrigado
+   - Permitido registrar várias decisões para mesmo acolhido
    - Útil para acompanhar jornada espiritual
 
 4. **Registro Sem Decisão Formal**
@@ -180,7 +180,7 @@ Authorization: Bearer <token>
 import { apiCreateAcceptedChrist } from "@/features/accepted-christs";
 
 await apiCreateAcceptedChrist({
-  shelteredId: "uuid-do-abrigado",
+  shelteredId: "uuid-do-acolhido",
   decision: "ACCEPTED",
   notes: "Observações opcionais"
 });
@@ -203,7 +203,7 @@ import DecisionModal from "@/features/pagela-member/components/DecisionModal";
 
 ## 📝 Notas Técnicas
 
-- Múltiplas decisões permitidas para mesmo abrigado
+- Múltiplas decisões permitidas para mesmo acolhido
 - Decisões são imutáveis (sem endpoint PUT/DELETE)
 - Relacionamento ManyToOne com Sheltered
 - Timestamps automáticos (createdAt, updatedAt)
