@@ -103,8 +103,7 @@ export default function EventPageCreator() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Erro ao salvar página');
-    } catch (err) {
-      console.error('Erro ao salvar página', err);
+    } catch {
     }
   };
 

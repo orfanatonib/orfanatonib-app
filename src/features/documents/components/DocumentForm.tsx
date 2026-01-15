@@ -120,8 +120,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess }) => {
       onSuccess();
 
       if (!isEditing) resetForm();
-    } catch (error) {
-      console.error('Erro ao salvar documento:', error);
+    } catch {
       setSnackbar({ open: true, message: 'Erro ao salvar documento.', severity: 'error' });
     } finally {
       setLoading(false);

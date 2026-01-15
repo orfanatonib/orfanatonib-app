@@ -120,7 +120,6 @@ const ProfilePage: React.FC = () => {
       setError(null);
       await dispatch(fetchCurrentUser() as any);
     } catch (err: any) {
-      console.error('Error updating profile:', err);
       setError(err?.response?.data?.message || 'Erro ao atualizar perfil.');
     }
   };

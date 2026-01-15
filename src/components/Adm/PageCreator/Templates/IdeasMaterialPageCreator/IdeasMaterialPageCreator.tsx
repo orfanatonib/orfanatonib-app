@@ -165,8 +165,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a página.',

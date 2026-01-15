@@ -217,8 +217,7 @@ export default function VisitMaterialPageCreator({
       });
 
       navigate(`/${res.data.route.path}`);
-    } catch (err) {
-      console.error('Erro ao salvar:', err);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a página.',

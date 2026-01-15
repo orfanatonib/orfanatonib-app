@@ -27,7 +27,6 @@ export async function apiUpdateTeam(teamId: string, payload: UpdateTeamDto) {
     const response = await api.put<TeamResponseDto>(`/teams/${teamId}`, payload);
     return response.data;
   } catch (error: any) {
-    console.error('Error updating team:', error);
     throw error;
   }
 }

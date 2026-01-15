@@ -59,8 +59,7 @@ export default function MemberMeditationBanner() {
         dispatch(setMeditationData(response.data.meditation as MeditationData));
         setOpenModal(true);
       }
-    } catch (error) {
-      console.error('Error loading meditation:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

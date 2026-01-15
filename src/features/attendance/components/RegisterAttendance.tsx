@@ -32,6 +32,7 @@ import {
   formatScheduleLabel,
   formatDateBR
 } from '../utils';
+import { useFormSubmit } from '@/hooks/error-handling';
 
 
 
@@ -45,11 +46,19 @@ const RegisterAttendance = ({ schedules, disabled, onSuccess }: Props) => {
   const [scheduleId, setScheduleId] = useState<string>(schedules[0]?.id || '');
   const [type, setType] = useState<AttendanceType>(AttendanceType.PRESENT);
   const [comment, setComment] = useState('');
-  const [formState, setFormState] = useState<AttendanceFormState>({
-    loading: false,
-    error: null,
-    feedback: null,
-  });
+
+  const submitAttendance = useCallback(async (data: RegisterAttendanceDto) => {
+    await registerAttendance(data);
+  }, []);
+
+  const { submit, isSubmitting, error, clearError } = useFormSubmit(
+    submitAttendance,
+    'register-attendance',
+    {
+      showSuccessNotification: true,
+      successMessage: 'Presença registrada com sucesso!',
+    }
+  );
 
   const selectedSchedule = useMemo(
     () => schedules.find(s => s.id === scheduleId),
@@ -83,70 +92,28 @@ const RegisterAttendance = ({ schedules, disabled, onSuccess }: Props) => {
     e.preventDefault();
 
     if (!scheduleId) {
-      setFormState(prev => ({
-        ...prev,
-        error: 'Selecione um evento para registrar a presença.',
-        feedback: null,
-      }));
+      // This would be handled by form validation, but let's be explicit
       return;
     }
 
-    if (!scheduleValidation.isValid) {
-      setFormState(prev => ({
-        ...prev,
-        error: scheduleValidation.errors.join(', '),
-        feedback: null,
-      }));
+    if (!scheduleValidation.isValid || !commentValidation.isValid) {
       return;
     }
 
-    if (!commentValidation.isValid) {
-      setFormState(prev => ({
-        ...prev,
-        error: commentValidation.errors.join(', '),
-        feedback: null,
-      }));
-      return;
-    }
+    const dto: RegisterAttendanceDto = {
+      scheduleId,
+      type,
+      comment: comment.trim() || undefined,
+    };
 
-    setFormState(prev => ({
-      ...prev,
-      loading: true,
-      error: null,
-      feedback: null,
-    }));
-
-    try {
-      const dto: RegisterAttendanceDto = {
-        scheduleId,
-        type,
-        comment: comment.trim() || undefined,
-      };
-
-      await registerAttendance(dto);
-
-      setFormState(prev => ({
-        ...prev,
-        loading: false,
-        feedback: {
-          status: 'success',
-          message: 'Presença registrada com sucesso! Se já existia um registro, foi atualizado.',
-        },
-      }));
-
+    const success = await submit(dto);
+    if (success) {
       setComment('');
       if (onSuccess) {
         onSuccess();
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar presença. Tente novamente.';
-      setFormState(prev => ({
-        ...prev,
-        loading: false,
-        error: message,
-      }));
     }
-  }, [scheduleId, scheduleValidation.isValid, commentValidation.isValid, type, comment, onSuccess]);
+  }, [scheduleId, scheduleValidation.isValid, commentValidation.isValid, type, comment, submit, onSuccess]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -293,27 +260,18 @@ const RegisterAttendance = ({ schedules, disabled, onSuccess }: Props) => {
               <Button
                 type="submit"
                 variant="contained"
-                disabled={!isFormValid || !scheduleId}
-                startIcon={formState.loading ? <CircularProgress size={16} color="inherit" /> : null}
-                aria-label={formState.loading ? 'Enviando registro de presença' : 'Registrar presença no evento selecionado'}
+                disabled={!isFormValid || !scheduleId || isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : null}
+                aria-label={isSubmitting ? 'Enviando registro de presença' : 'Registrar presença no evento selecionado'}
               >
-                {formState.loading ? 'Enviando...' : 'Registrar Presença'}
+                {isSubmitting ? 'Enviando...' : 'Registrar Presença'}
               </Button>
             </Stack>
           </form>
 
-          {formState.error && (
-            <Alert severity="error" onClose={() => setFormState(prev => ({ ...prev, error: null }))}>
-              {formState.error}
-            </Alert>
-          )}
-
-          {formState.feedback && (
-            <Alert
-              severity={formState.feedback.status}
-              onClose={() => setFormState(prev => ({ ...prev, feedback: null }))}
-            >
-              {formState.feedback.message}
+          {error && (
+            <Alert severity="error" onClose={clearError}>
+              {error.message}
             </Alert>
           )}
         </Stack>

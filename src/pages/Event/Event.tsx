@@ -45,7 +45,6 @@ import { setEvents } from '@/store/slices/events/eventsSlice';
 import EventDetailsModal from './EventDetailsModal';
 
 const fallbackImageUrl = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL;
-console.log('Fallback Image URL Event:', fallbackImageUrl);
 import EventFormModal from './EventFormModal';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { motion } from 'framer-motion';
@@ -335,8 +334,7 @@ const Eventos: React.FC = () => {
         });
         dispatch(setEvents(mapped));
         setEventos(mapped);
-      } catch (error) {
-        console.error('Error loading events:', error);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -383,8 +381,7 @@ const Eventos: React.FC = () => {
       setDialogDeleteOpen(false);
       setDeleteTargetEvent(null);
       await reloadEventsAndLeaveEditMode();
-    } catch (error) {
-      console.error('Error deleting event:', error);
+    } catch {
     }
   };
 
@@ -408,8 +405,7 @@ const Eventos: React.FC = () => {
       });
       dispatch(setEvents(mapped));
       setEventos(mapped);
-    } catch (err) {
-      console.error('Error reloading events:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

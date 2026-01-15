@@ -63,30 +63,30 @@ export default function PagelaQuickForm({
 
   React.useEffect(() => {
     const refreshUserData = async () => {
-      
+
       if ((isMember && !user?.memberProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
         try {
           await dispatch(fetchCurrentUser()).unwrap();
-        } catch (err) {
-          console.error('Erro ao atualizar dados do usuário:', err);
+        } catch (err: any) {
+          console.warn('PagelaQuickForm: Failed to refresh user data', err);
         }
       }
     };
-    
+
     refreshUserData();
   }, [dispatch, isMember, isLeader, user?.memberProfile?.id, user?.leaderProfile?.id]);
-  
-  const memberProfileIdFromRedux = isMember 
-    ? (user?.memberProfile?.id ?? null) 
+
+  const memberProfileIdFromRedux = isMember
+    ? (user?.memberProfile?.id ?? null)
     : null;
-  const leaderProfileIdFromRedux = isLeader 
-    ? (user?.leaderProfile?.id ?? null) 
+  const leaderProfileIdFromRedux = isLeader
+    ? (user?.leaderProfile?.id ?? null)
     : null;
 
-  const effectiveMemberProfileId = isMember 
+  const effectiveMemberProfileId = isMember
     ? (memberProfileIdFromRedux ?? memberProfileId ?? null)
     : null;
-  const effectiveLeaderProfileId = isLeader 
+  const effectiveLeaderProfileId = isLeader
     ? (leaderProfileIdFromRedux ?? null)
     : null;
 
@@ -163,15 +163,15 @@ export default function PagelaQuickForm({
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalMemberProfileId = updatedUser?.memberProfile?.id ?? null;
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
+      } catch (err: any) {
+        console.warn('PagelaQuickForm: Failed to fetch member profile for save', err);
       }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
+      } catch (err: any) {
+        console.warn('PagelaQuickForm: Failed to fetch leader profile for save', err);
       }
     }
 
@@ -188,8 +188,6 @@ export default function PagelaQuickForm({
     } else if (isLeader && finalLeaderProfileId) {
       payloadCommon.leaderProfileId = finalLeaderProfileId;
     } else {
-      
-      console.error('Não foi possível obter memberProfileId ou leaderProfileId');
       return;
     }
 

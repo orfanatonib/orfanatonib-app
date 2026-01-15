@@ -175,7 +175,6 @@ export default function ShelterScheduleManager() {
       }
       handleCloseForm();
     } catch (err: any) {
-      console.error("Error saving schedule");
       throw err;
     } finally {
       setSubmitting(false);
@@ -191,8 +190,7 @@ export default function ShelterScheduleManager() {
       if (selectedSchedule?.id === deletingSchedule.id) {
         setSelectedSchedule(null);
       }
-    } catch (err: any) {
-      console.error("Error deleting schedule:", err);
+    } catch {
     } finally {
       setSubmitting(false);
     }

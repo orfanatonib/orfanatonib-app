@@ -44,8 +44,7 @@ const DocumentsSection: React.FC = () => {
       const response = await api.get(`/documents/${route.idToFetch}`);
       dispatch(setDocumentData(response.data));
       setOpenModal(true);
-    } catch (error) {
-      console.error('Error fetching document:', error);
+    } catch {
       setError('Não foi possível carregar o documento.');
     }
   };

@@ -60,8 +60,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       try {
         const res = await api.get('/ideas-pages');
         setPages(res.data || []);
-      } catch (error) {
-        console.error('Error loading pages:', error);
+      } catch {
         setSnackbar({
           open: true,
           message: 'Erro ao carregar páginas disponíveis',
@@ -193,8 +192,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       setTimeout(() => {
         navigate('/adm/ideias-compartilhadas');
       }, 2000);
-    } catch (error) {
-      console.error('Error saving section:', error);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Ops! Algo deu errado ao salvar a seção. Tente novamente.',

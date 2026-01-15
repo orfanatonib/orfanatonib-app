@@ -154,8 +154,7 @@ export default function TeamManagementDialog({
       ]);
       setLeaderOptions(leaders || []);
       setMemberOptions(members || []);
-    } catch (err) {
-      console.error("Erro ao carregar opções:", err);
+    } catch {
     }
   };
 
@@ -163,8 +162,7 @@ export default function TeamManagementDialog({
     try {
       const data = await apiFetchSheltersSimple();
       setShelterOptions(data?.map(s => ({ id: s.id, name: s.name })) || []);
-    } catch (err) {
-      console.error("Error loading shelters:", err);
+    } catch {
     }
   };
 

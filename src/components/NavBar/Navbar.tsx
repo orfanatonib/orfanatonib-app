@@ -89,8 +89,7 @@ const NavBar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Error during logout:', error);
+    } catch {
     } finally {
       dispatch(logout());
       navigate('/');

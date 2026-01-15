@@ -96,7 +96,6 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
         
         setTeams(allTeams);
       } catch (err: any) {
-        console.error("Error loading shelter:", err);
         setError(err?.response?.data?.message || "Error loading shelter");
       } finally {
         setLoading(false);
@@ -111,8 +110,7 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
         ]);
         setLeaderOptions(leaders || []);
         setMemberOptions(members || []);
-      } catch (err: any) {
-        console.error("Error loading options:", err);
+      } catch {
       }
     }, []);
 

@@ -8,7 +8,7 @@ import {
 import { Search, PersonAdd, ArrowBack, Favorite, CheckCircle, Cancel, Clear } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { RootState } from "@/store/slices";
+import { RootState, AppDispatch } from "@/store/slices";
 import { selectIsAdmin, selectIsLeader, selectIsMember } from "@/store/selectors/routeSelectors";
 
 import { useShelteredBrowser } from "./hooks";
@@ -23,7 +23,7 @@ import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isAdmin = useSelector(selectIsAdmin);
@@ -37,13 +37,13 @@ export default function ShelteredBrowserPage() {
   const hasCheckedProfileRef = React.useRef(false);
 
   const memberShelter = React.useMemo(() => {
-    
+
     if (fullProfile?.memberProfile?.team?.shelter?.id) {
       return fullProfile.memberProfile.team.shelter;
     }
 
     if (user?.memberProfile) {
-      
+
       if ((user.memberProfile as any)?.team?.shelter?.id) {
         return (user.memberProfile as any).team.shelter;
       }
@@ -52,7 +52,7 @@ export default function ShelteredBrowserPage() {
         return (user.memberProfile as any).shelter;
       }
     }
-    
+
     return null;
   }, [user?.memberProfile, fullProfile]);
 
@@ -79,12 +79,12 @@ export default function ShelteredBrowserPage() {
     if (user?.leaderProfile?.team?.shelter?.id) {
       return user.leaderProfile.team.shelter;
     }
-    
+
     return null;
   }, [user?.leaderProfile, fullProfile]);
 
   React.useEffect(() => {
-    
+
     if (hasCheckedProfileRef.current) return;
 
     if (fullProfile) {
@@ -93,18 +93,18 @@ export default function ShelteredBrowserPage() {
     }
 
     const hasMemberShelter = isMember && (
-      (user?.memberProfile as any)?.team?.shelter?.id || 
+      (user?.memberProfile as any)?.team?.shelter?.id ||
       (user?.memberProfile as any)?.shelter?.id
     );
-    
+
     const hasLeaderShelter = isLeader && (
       user?.leaderProfile?.team?.shelter?.id ||
-      (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) && 
-       user.leaderProfile.teams.some((t: any) => t?.shelter?.id))
+      (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) &&
+        user.leaderProfile.teams.some((t: any) => t?.shelter?.id))
     );
-    
+
     const hasShelterFromRedux = hasMemberShelter || hasLeaderShelter;
-    
+
     if (hasShelterFromRedux) {
       hasCheckedProfileRef.current = true;
       return;
@@ -123,20 +123,19 @@ export default function ShelteredBrowserPage() {
       try {
         setCheckingShelter(true);
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
-        
+
         setFullProfile(updatedUser);
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
-        
+      } catch (error) {
+        console.error('Falha ao verificar vínculo com abrigo:', error);
         hasCheckedProfileRef.current = false;
       } finally {
         setCheckingShelter(false);
       }
     };
-    
+
     checkShelterLink();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []);
 
   const hasLinkedShelter = React.useMemo(() => {
     if (isMember) {
@@ -144,16 +143,16 @@ export default function ShelteredBrowserPage() {
       return !!shelterId;
     }
     if (isLeader) {
-      
-      const shelterId = 
-        leaderShelter?.id || 
+
+      const shelterId =
+        leaderShelter?.id ||
         user?.leaderProfile?.team?.shelter?.id ||
-        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams) 
+        (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams)
           ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.id
           : null);
       return !!shelterId;
     }
-    return true; 
+    return true;
   }, [isMember, isLeader, memberShelter?.id, leaderShelter?.id, user?.leaderProfile]);
 
   const shelterName = React.useMemo(() => {
@@ -161,8 +160,8 @@ export default function ShelteredBrowserPage() {
       return memberShelter.name;
     }
     if (isLeader) {
-      const name = 
-        leaderShelter?.name || 
+      const name =
+        leaderShelter?.name ||
         user?.leaderProfile?.team?.shelter?.name ||
         (user?.leaderProfile?.teams && Array.isArray(user.leaderProfile.teams)
           ? user.leaderProfile.teams.find((t: any) => t?.shelter?.id)?.shelter?.name
@@ -186,22 +185,22 @@ export default function ShelteredBrowserPage() {
     refetch,
     updateStatus,
     pagination,
-  } = canAccess ? useShelteredBrowser() : { 
-    q: "", 
-    onChangeQ: () => {},
+  } = canAccess ? useShelteredBrowser() : {
+    q: "",
+    onChangeQ: () => { },
     acceptedJesus: "all" as const,
-    onChangeAcceptedJesus: () => {},
+    onChangeAcceptedJesus: () => { },
     active: "all" as const,
-    onChangeActive: () => {},
-    items: [], 
-    loading: false, 
-    error: "", 
-    setError: () => { }, 
+    onChangeActive: () => { },
+    items: [],
+    loading: false,
+    error: "",
+    setError: () => { },
     refetch: () => { },
-    updateStatus: async () => {},
+    updateStatus: async () => { },
     pagination: {
       page: 1,
-      setPage: () => {},
+      setPage: () => { },
       limit: 10,
       totalItems: 0,
       totalPages: 0,
@@ -243,7 +242,10 @@ export default function ShelteredBrowserPage() {
       await createSheltered(payload, 1, 12);
       setCreating(null);
       setDialogError("");
-    } catch { }
+    } catch (error: any) {
+      console.error('Erro ao criar abrigado:', error);
+      setDialogError(error?.response?.data?.message || error?.message || "Erro ao criar abrigado. Tente novamente.");
+    }
   };
 
   const openEdit = async (shelteredId: string) => {
@@ -288,7 +290,10 @@ export default function ShelteredBrowserPage() {
       await updateSheltered(id, rest, 1, 12);
       setEditing(null);
       setDialogError("");
-    } catch { }
+    } catch (error: any) {
+      console.error('Erro ao atualizar abrigado:', error);
+      setDialogError(error?.response?.data?.message || error?.message || "Erro ao atualizar abrigado. Tente novamente.");
+    }
   };
 
   React.useEffect(() => {
@@ -363,7 +368,7 @@ export default function ShelteredBrowserPage() {
             <Typography
               variant="body1"
               fontWeight={600}
-              sx={{ 
+              sx={{
                 fontSize: { xs: "0.875rem", sm: "1rem", md: "1.125rem" },
                 color: "primary.main",
                 textAlign: "right",
@@ -416,28 +421,28 @@ export default function ShelteredBrowserPage() {
         <>
           <Paper
             elevation={0}
-            sx={{ 
-              p: { xs: 1.5, sm: 2 }, 
-              mb: { xs: 1.5, sm: 2 }, 
-              borderRadius: { xs: 2, sm: 3 }, 
-              border: "1px solid", 
-              borderColor: "divider" 
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              mb: { xs: 1.5, sm: 2 },
+              borderRadius: { xs: 2, sm: 3 },
+              border: "1px solid",
+              borderColor: "divider"
             }}
           >
-            <Typography 
-              variant="h6" 
-              fontWeight={900} 
-              sx={{ 
-                mb: { xs: 0.75, sm: 1 }, 
+            <Typography
+              variant="h6"
+              fontWeight={900}
+              sx={{
+                mb: { xs: 0.75, sm: 1 },
                 color: "#2c3e50",
                 fontSize: { xs: "1rem", sm: "1.25rem" }
               }}
             >
               Selecionar Abrigado
             </Typography>
-            <Box 
-              sx={{ 
-                display: "flex", 
+            <Box
+              sx={{
+                display: "flex",
                 flexDirection: { xs: "column", sm: "row" },
                 gap: { xs: 1.5, sm: 1.5 },
                 flexWrap: "wrap"
@@ -447,7 +452,7 @@ export default function ShelteredBrowserPage() {
                 value={q}
                 onChange={(e) => onChangeQ(e.target.value)}
                 size="small"
-                sx={{ 
+                sx={{
                   flex: { xs: "1 1 100%", sm: "0 0 40%" },
                   width: { xs: "100%", sm: "40%" },
                   "& .MuiInputBase-root": {
@@ -463,10 +468,10 @@ export default function ShelteredBrowserPage() {
                   ),
                 }}
               />
-              
-              <FormControl 
-                size="small" 
-                sx={{ 
+
+              <FormControl
+                size="small"
+                sx={{
                   flex: { xs: "1 1 100%", sm: "0 0 20%" },
                   width: { xs: "100%", sm: "20%" }
                 }}
@@ -489,9 +494,9 @@ export default function ShelteredBrowserPage() {
                 </Select>
               </FormControl>
 
-              <FormControl 
-                size="small" 
-                sx={{ 
+              <FormControl
+                size="small"
+                sx={{
                   flex: { xs: "1 1 100%", sm: "0 0 20%" },
                   width: { xs: "100%", sm: "20%" }
                 }}
@@ -562,8 +567,8 @@ export default function ShelteredBrowserPage() {
             </Box>
           ) : items.length === 0 ? (
             <Box textAlign="center" my={{ xs: 4, sm: 6 }} px={2}>
-              <Typography 
-                variant="body1" 
+              <Typography
+                variant="body1"
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
               >
@@ -593,21 +598,21 @@ export default function ShelteredBrowserPage() {
           ) : (
             <>
               <Fade in={loading && items.length > 0}>
-                <LinearProgress 
-                  sx={{ 
-                    mb: 2, 
+                <LinearProgress
+                  sx={{
+                    mb: 2,
                     borderRadius: 1,
                     height: 3,
                     "& .MuiLinearProgress-bar": {
                       borderRadius: 1,
                     }
-                  }} 
+                  }}
                 />
               </Fade>
-              
-              <Box sx={{ 
-                position: "relative", 
-                opacity: loading && items.length > 0 ? 0.6 : 1, 
+
+              <Box sx={{
+                position: "relative",
+                opacity: loading && items.length > 0 ? 0.6 : 1,
                 transition: "opacity 0.2s ease",
                 pointerEvents: loading && items.length > 0 ? "none" : "auto"
               }}>
@@ -625,7 +630,7 @@ export default function ShelteredBrowserPage() {
                   ))}
                 </Grid>
               </Box>
-              
+
               {pagination.totalPages > 1 && (
                 <Stack spacing={2} alignItems="center" sx={{ mt: { xs: 3, md: 4 }, mb: { xs: 2, md: 2 }, position: "relative" }}>
                   {loading && items.length > 0 && (
@@ -645,8 +650,8 @@ export default function ShelteredBrowserPage() {
                     boundaryCount={isXs ? 1 : 1}
                     disabled={loading}
                   />
-                  <Typography 
-                    variant="body2" 
+                  <Typography
+                    variant="body2"
                     color="text.secondary"
                     sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
                   >

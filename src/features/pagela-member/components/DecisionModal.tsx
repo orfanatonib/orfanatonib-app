@@ -62,7 +62,6 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
       if (onSuccess) await onSuccess();
       handleClose();
     } catch (e: any) {
-      console.error("Erro ao salvar decisão", e);
       setError(e?.response?.data?.message || e?.message || "Erro ao salvar decisão espiritual");
     } finally {
       setLoading(false);

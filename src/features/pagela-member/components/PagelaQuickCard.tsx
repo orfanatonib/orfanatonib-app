@@ -25,8 +25,9 @@ import {
 import { alpha } from "@mui/material/styles";
 import { useSelector, useDispatch } from "react-redux";
 import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
+import { AppDispatch } from "@/store/slices";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
-import { todayISO, toLabelWeek } from "../utils";
+import { todayISO, toLabelVisit } from "../utils";
 
 type Props = {
   shelteredName?: string;
@@ -48,7 +49,7 @@ const titleSx = {
 
 function formatDateBRLong(date = new Date()) {
   const dd = String(date.getDate()).padStart(2, "0");
-  const months = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const months = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   const month = months[date.getMonth()];
   const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
   const yyyy = date.getFullYear();
@@ -60,7 +61,7 @@ export default function PagelaQuickCard({
   current,
   shelteredId,
   year,
-  week,
+  visit,
   memberProfileId,
   onCreate,
   onUpdate,
@@ -78,7 +79,7 @@ export default function PagelaQuickCard({
     setNotes(current?.notes ?? "");
   }, [current]);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((s: any) => s?.auth?.user);
   const userRole = user?.role;
   const isMember = userRole === UserRole.MEMBER;
@@ -89,31 +90,31 @@ export default function PagelaQuickCard({
       if ((isMember && !user?.memberProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
         try {
           await dispatch(fetchCurrentUser()).unwrap();
-        } catch (err) {
-          console.error('Erro ao atualizar dados do usuário:', err);
+        } catch (err: any) {
+          console.warn('PagelaQuickCard: Failed to refresh user data', err);
         }
       }
     };
-    
+
     refreshUserData();
   }, [dispatch, isMember, isLeader, user?.memberProfile?.id, user?.leaderProfile?.id]);
-  
-  const memberProfileIdFromRedux = isMember 
-    ? (user?.memberProfile?.id ?? null) 
+
+  const memberProfileIdFromRedux = isMember
+    ? (user?.memberProfile?.id ?? null)
     : null;
-  const leaderProfileIdFromRedux = isLeader 
-    ? (user?.leaderProfile?.id ?? null) 
+  const leaderProfileIdFromRedux = isLeader
+    ? (user?.leaderProfile?.id ?? null)
     : null;
 
-  const effectiveMemberProfileId = isMember 
+  const effectiveMemberProfileId = isMember
     ? (memberProfileIdFromRedux ?? memberProfileId ?? null)
     : null;
-  const effectiveLeaderProfileId = isLeader 
+  const effectiveLeaderProfileId = isLeader
     ? (leaderProfileIdFromRedux ?? null)
     : null;
 
   const handleSave = async () => {
-    
+
     let finalMemberProfileId = effectiveMemberProfileId;
     let finalLeaderProfileId = effectiveLeaderProfileId;
 
@@ -121,20 +122,20 @@ export default function PagelaQuickCard({
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalMemberProfileId = updatedUser?.memberProfile?.id ?? null;
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
+      } catch (err: any) {
+        console.warn('PagelaQuickCard: Failed to fetch member profile for save', err);
       }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
-      } catch (err) {
-        console.error('Erro ao atualizar dados do usuário:', err);
+      } catch (err: any) {
+        console.warn('PagelaQuickCard: Failed to fetch leader profile for save', err);
       }
     }
-    
+
     const referenceDate = todayISO();
-    
+
     const payloadCommon: any = {
       referenceDate,
       year,
@@ -148,11 +149,9 @@ export default function PagelaQuickCard({
     } else if (isLeader && finalLeaderProfileId) {
       payloadCommon.leaderProfileId = finalLeaderProfileId;
     } else {
-      
-      console.error('Não foi possível obter memberProfileId ou leaderProfileId');
       return;
     }
-    
+
     if (current?.id) {
       await onUpdate(current.id, payloadCommon);
     } else {

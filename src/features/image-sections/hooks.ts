@@ -18,7 +18,6 @@ export function useImageSections() {
       setSections(data);
       setFilteredSections(data);
     } catch (e) {
-      console.error('Erro ao buscar seções de imagens:', e);
       setError('Erro ao buscar seções de imagens');
     } finally {
       setLoading(false);

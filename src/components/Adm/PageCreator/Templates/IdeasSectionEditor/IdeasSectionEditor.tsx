@@ -171,8 +171,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
       } else {
         throw new Error('Seção não encontrada para edição');
       }
-    } catch (err) {
-      console.error('Error saving:', err);
+    } catch {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar a seção.',

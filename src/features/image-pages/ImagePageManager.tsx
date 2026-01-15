@@ -55,8 +55,7 @@ export default function ImagePageManager() {
     setPageToDelete(null);
     try {
       await removePage(id || '');
-    } catch (err) {
-      console.error('Erro ao deletar página de imagens:', err);
+    } catch {
       setError('Erro ao deletar página de imagens');
       await fetchPages();
     }

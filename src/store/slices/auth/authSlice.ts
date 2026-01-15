@@ -213,7 +213,9 @@ const authSlice = createSlice({
       try {
         localStorage.setItem('accessToken', state.accessToken!);
         localStorage.setItem('refreshToken', state.refreshToken!);
-      } catch { }
+      } catch (e) {
+        console.warn('Failed to save auth to localStorage', e);
+      }
     },
     logout: (state) => {
       state.accessToken = null;
@@ -227,7 +229,9 @@ const authSlice = createSlice({
       try {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-      } catch { }
+      } catch (e) {
+        console.warn('Failed to remove auth from localStorage', e);
+      }
     },
     setEmailVerificationAlert: (state, action: PayloadAction<{ verificationEmailSent: boolean; message?: string } | null>) => {
       state.emailVerificationAlert = action.payload;
@@ -278,7 +282,9 @@ const authSlice = createSlice({
         try {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-        } catch { }
+        } catch (e) {
+          console.warn('Failed to clear auth from localStorage', e);
+        }
       });
   },
 });

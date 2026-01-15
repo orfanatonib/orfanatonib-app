@@ -96,8 +96,7 @@ export default function IdeasSectionManager() {
     try {
       await deleteIdeasSection(id);
       await fetchSections();
-    } catch (e) {
-      console.error('Erro ao deletar seção de ideias:', e);
+    } catch {
       setError('Erro ao deletar seção de ideias');
     }
   };

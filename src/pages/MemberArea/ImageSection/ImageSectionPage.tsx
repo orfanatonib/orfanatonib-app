@@ -118,8 +118,7 @@ export default function ImageSectionPage() {
       await saveSection(formData);
 
       navigate('/area-do-membro');
-    } catch (error) {
-      console.error('Error saving section:', error);
+    } catch {
       showError('Falha ao compartilhar as imagens do seu Abrigo. Tente novamente.');
     } finally {
       setIsSaving(false);

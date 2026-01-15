@@ -129,13 +129,10 @@ const Login: React.FC = () => {
     try {
       const response = await api.post<LoginResponse>('/auth/login', { email, password });
 
-      console.log('Login response:', response.data);
-
       if (response.data.user.active === false) {
         handleUserInactive();
 
         if (response.data.emailVerification?.verificationEmailSent) {
-          console.log('Email verification detected for inactive user:', response.data.emailVerification);
           setEmailVerification(response.data.emailVerification);
         } else {
           setEmailVerification(null);
@@ -146,7 +143,6 @@ const Login: React.FC = () => {
       }
 
       if (response.data.emailVerification?.verificationEmailSent) {
-        console.log('Email verification detected:', response.data.emailVerification);
         setEmailVerification(response.data.emailVerification);
         dispatch(setEmailVerificationAlert(response.data.emailVerification));
       } else {

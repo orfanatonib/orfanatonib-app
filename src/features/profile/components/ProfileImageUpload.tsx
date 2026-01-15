@@ -309,8 +309,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           }, 'image/jpeg', 0.9);
 
           cleanup();
-        } catch (err) {
-          console.error('Erro ao capturar foto:', err);
+        } catch {
           onError('Erro ao capturar a foto. Tente novamente.');
           cleanup();
         }
@@ -375,8 +374,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           setCameraFacingMode(nextFacingMode);
           activeDeviceId = activeStream.getVideoTracks?.()?.[0]?.getSettings?.()?.deviceId;
           videoElement.srcObject = activeStream;
-        } catch (err: any) {
-          console.error('Erro ao trocar câmera:', err);
+        } catch {
           onError('Não foi possível trocar a câmera. Seu dispositivo pode não ter câmera frontal ou o navegador bloqueou.');
           try {
             const fallbackStream = await navigator.mediaDevices.getUserMedia({
@@ -408,8 +406,6 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       };
 
     } catch (err: any) {
-      console.error('Erro ao acessar câmera:', err);
-
       let errorMessage = 'Erro ao acessar a câmera. ';
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -465,8 +461,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       try {
         await dispatch(fetchCurrentUser()).unwrap();
-      } catch (err) {
-        console.error('Erro ao atualizar usuário no Redux:', err);
+      } catch {
       }
 
       const newImage = updatedProfile.image || (updatedProfile.mediaItems && updatedProfile.mediaItems.length > 0 ? updatedProfile.mediaItems[0] : null);

@@ -107,7 +107,7 @@ jobs:
           aws amplify update-branch \
             --app-id "$APP_ID" \
             --branch-name "$BRANCH_NAME" \
-            --environment-variables VITE_API_URL=https://staging-api.orfanatonib.com,VITE_FEED_MINISTERIO_ID=afa51053-1296-4c89-9059-a8ad8bd1ec90,VITE_GOOGLE_CLIENT_ID=135271087774-e16t22n2jg0b6s2eb5hd74qjdnc1t209.apps.googleusercontent.com,VITE_SPECIAL_FAMILY_DAY_ID=a2f9913a-e123-46b2-b6f4-a4138686042f \
+            --environment-variables VITE_API_URL=https://staging-api.orfanatonib.com,VITE_FEED_MINISTERIO_ID=6287f88-f306-490d-87f6-031dc64a7ed8,VITE_GOOGLE_CLIENT_ID=135271087774-e16t22n2jg0b6s2eb5hd74qjdnc1t209.apps.googleusercontent.com,VITE_SPECIAL_FAMILY_DAY_ID=a2f9913a-e123-46b2-b6f4-a4138686042f \
             --region ${{ env.AWS_REGION }}
           echo "✅ Environment variables configured"
 

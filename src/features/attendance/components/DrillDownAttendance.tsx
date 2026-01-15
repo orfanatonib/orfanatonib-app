@@ -76,8 +76,7 @@ const DrillDownAttendance = memo(() => {
       const schedules = response || [];
 
       setTeamSchedules(schedules);
-    } catch (err: any) {
-      console.error('Erro ao carregar eventos da equipe:', err);
+    } catch {
       setTeamSchedules([]);
     } finally {
       setLoadingSchedules(false);
@@ -108,8 +107,7 @@ const DrillDownAttendance = memo(() => {
         }
         return prev;
       });
-    } catch (err) {
-      console.error('Error loading team members:', err);
+    } catch {
     }
   }, [loadTeamSchedules]);
 

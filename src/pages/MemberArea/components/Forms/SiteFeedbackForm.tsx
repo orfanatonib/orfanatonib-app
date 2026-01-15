@@ -83,9 +83,8 @@ const SiteFeedbackForm: React.FC = () => {
                 navigate('/area-do-membro');
             }, 2000);
 
-        } catch (error) {
+        } catch {
             setErrorMessage('Erro ao enviar feedback. Tente novamente.');
-            console.error('Error sending feedback:', error);
         }
     };
 
