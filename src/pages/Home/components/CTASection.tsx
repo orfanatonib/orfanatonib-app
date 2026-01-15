@@ -10,7 +10,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
     <Box
       sx={{
         py: { xs: 6, md: 10 },
-        background: 'linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 50%, #f0f8ff 100%)',
+        background: 'linear-gradient(135deg, #f0f8f4 0%, #e8f5e9 50%, #f1f8e9 100%)',
         position: 'relative',
         overflow: 'hidden',
         '&::before': {
@@ -20,7 +20,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%)',
+          background: 'radial-gradient(circle at 20% 50%, rgba(0, 153, 51, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(46, 204, 113, 0.08) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(241, 196, 15, 0.08) 0%, transparent 50%)',
           zIndex: 0,
         },
       }}
