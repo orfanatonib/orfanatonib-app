@@ -74,6 +74,8 @@ import { ProfilePage } from './features/profile';
 import EventosPage from './pages/Event/EventosPage';
 import ShelterScheduleManager from './features/shelter-schedule/ShelterScheduleManager';
 import ProfilesManager from './features/profile/ProfilesManager';
+import IntegrationManager from './features/integration/IntegrationManager';
+import IntegrationShelteredPage from './features/integration/IntegrationShelteredPage';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -180,6 +182,7 @@ function App() {
                   <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
                   <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
                   <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
+                  <Route path="/integracao" element={<IntegrationShelteredPage />} />
                   <Route
                     path="/area-dos-acolhidos"
                     element={
@@ -241,6 +244,7 @@ function App() {
                       }
                     />
                     <Route path="agendamentos" element={<ShelterScheduleManager />} />
+                    <Route path="integracoes" element={<IntegrationManager />} />
 
                     <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                     <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />

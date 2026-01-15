@@ -14,6 +14,7 @@ import {
   EventAvailable as EventAvailableIcon,
   Badge as BadgeIcon,
   ChildCare as ShelteredCareIcon,
+  Groups as GroupsIcon,
 } from '@mui/icons-material';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
@@ -182,6 +183,12 @@ const buttonMap: Record<string, FofinhoButtonProps> = {
     label: 'Área dos Acolhidos',
     icon: ShelteredCareIcon,
     color: 'primary',
+  },
+  integrations: {
+    to: '/adm/integracoes',
+    label: 'Integrações FM',
+    icon: GroupsIcon,
+    color: 'secondary',
   },
 };
 
