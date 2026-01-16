@@ -27,7 +27,7 @@ type FormData = {
 interface IntegrationFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateIntegrationDto | UpdateIntegrationDto, file?: File) => Promise<void>;
+  onSubmit: (data: CreateIntegrationDto | UpdateIntegrationDto, files?: File[]) => Promise<void>;
   editing?: IntegrationResponseDto | null;
   loading?: boolean;
   error?: string;
@@ -44,6 +44,7 @@ export default function IntegrationFormDialog({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
+  const [deletedImages, setDeletedImages] = React.useState<Set<string>>(new Set());
 
   const [formData, setFormData] = React.useState<FormData>({
     name: editing?.name || "",
@@ -58,27 +59,56 @@ export default function IntegrationFormDialog({
     }
   }, [open, editing]);
 
+  const handleImageDelete = (imageId: string) => {
+    setDeletedImages(prev => new Set(prev).add(imageId));
+  };
+
   const handleFormSubmit = async () => {
     try {
-      // Preparar dados das imagens
-      const imagesData = selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
-        title: formData.name ? `Foto ${index + 1} - ${formData.name}` : `Foto ${index + 1}`,
-        description: formData.name
-          ? `Foto da integração de ${formData.name} na Feira de Ministério`
-          : "Foto da integração na Feira de Ministério",
-        fieldKey: index === 0 ? 'profile' : `additional-${index}`,
-      })) : undefined;
+      let imagesData;
+
+      if (editing) {
+        // Modo edição: incluir imagens existentes + novas
+        const existingImages = (editing.images || [])
+          .filter(img => !deletedImages.has(img.id))
+          .map(img => ({
+            id: img.id,
+            title: img.title,
+            description: img.description,
+            url: img.url,
+          }));
+
+        const newImages = selectedFiles.map((file, index) => ({
+          title: formData.name ? `Foto ${existingImages.length + index + 1} - ${formData.name}` : `Foto ${existingImages.length + index + 1}`,
+          description: formData.name
+            ? `Foto da integração de ${formData.name} na Feira de Ministério`
+            : "Foto da integração na Feira de Ministério",
+          fieldKey: `files[${index}]`,
+        }));
+
+        imagesData = [...existingImages, ...newImages];
+      } else {
+        // Modo criação: apenas novas imagens
+        imagesData = selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
+          title: formData.name ? `Foto ${index + 1} - ${formData.name}` : `Foto ${index + 1}`,
+          description: formData.name
+            ? `Foto da integração de ${formData.name} na Feira de Ministério`
+            : "Foto da integração na Feira de Ministério",
+          fieldKey: `files[${index}]`,
+        })) : undefined;
+      }
 
       const submitData = {
         name: formData.name,
         integrationYear: editing ? editing.integrationYear : new Date().getFullYear(),
-        ...(imagesData && { images: imagesData }),
+        ...(imagesData && imagesData.length > 0 && { images: imagesData }),
+        ...(deletedImages.size > 0 && { deletedImageIds: Array.from(deletedImages) }),
       };
 
-      await onSubmit(submitData, selectedFiles.length > 0 ? selectedFiles[0] : undefined);
+      await onSubmit(submitData, selectedFiles.length > 0 ? selectedFiles : undefined);
       onClose();
     } catch (error) {
-      // Error is handled by parent component
+      // Error handled by parent component
     }
   };
 
@@ -162,7 +192,6 @@ export default function IntegrationFormDialog({
               />
             </Grid>
 
-            {/* Imagens */}
             <Grid item xs={12}>
               <Typography
                 variant={isMobile ? "h6" : "subtitle1"}
@@ -180,11 +209,11 @@ export default function IntegrationFormDialog({
               <Box sx={{ mt: isMobile ? 1 : 2 }}>
                 <IntegrationImageUpload
                   onImagesSelect={(files) => setSelectedFiles(prev => [...prev, ...files])}
+                  onImageDelete={editing ? handleImageDelete : undefined}
                   onError={(error) => {
-                    // O erro será tratado pelo componente pai através do dialogError
                     console.error('Erro no upload:', error);
                   }}
-                  currentImages={editing?.images || []}
+                  currentImages={(editing?.images || []).filter(img => !deletedImages.has(img.id))}
                   personName={formData.name}
                 />
               </Box>

@@ -20,6 +20,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
 interface IntegrationImageUploadProps {
   onImagesSelect: (files: File[]) => void;
+  onImageDelete?: (imageId: string) => void;
   onError: (error: string) => void;
   currentImages?: Array<{ id?: string; url?: string; title?: string; }>;
   personName?: string;
@@ -27,6 +28,7 @@ interface IntegrationImageUploadProps {
 
 const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
   onImagesSelect,
+  onImageDelete,
   onError,
   currentImages = [],
   personName,
@@ -37,14 +39,10 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Gerar título e descrição automaticamente baseado no nome da pessoa
   const title = personName
     ? `Foto da Integração - ${personName}`
     : "Foto da Integração";
 
-  const descriptionText = personName
-    ? `Foto da integração de ${personName} na Feira de Ministério`
-    : "Foto da pessoa sendo integrada na Feira de Ministério";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -72,7 +70,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       return;
     }
 
-    // Limitar a 5 imagens por integração
     const totalImages = currentImages.length + selectedFiles.length + validFiles.length;
     if (totalImages > 5) {
       onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length} e está tentando adicionar ${validFiles.length} mais.`);
@@ -263,42 +260,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
         </svg>
       `;
 
-      const maskOverlay = document.createElement('div');
-      maskOverlay.style.cssText = `
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 4;
-      `;
-      maskOverlay.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <!-- overlay suave para direcionar o olhar ao centro -->
-          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.28)"></rect>
-
-          <!-- Cabeça -->
-          <circle cx="50" cy="32" r="13"
-                  fill="transparent"
-                  stroke="rgba(255,255,255,0.70)"
-                  stroke-width="1.6"
-                  vector-effect="non-scaling-stroke"></circle>
-
-          <!-- Ombros (arco) -->
-          <path d="M22 86 C26 66 38 58 50 58 C62 58 74 66 78 86"
-                fill="transparent"
-                stroke="rgba(255,255,255,0.55)"
-                stroke-width="1.6"
-                vector-effect="non-scaling-stroke"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-
-          <!-- Linha base bem discreta (para sugerir o enquadramento) -->
-          <path d="M20 92 H80"
-                stroke="rgba(255,255,255,0.25)"
-                stroke-width="1.2"
-                vector-effect="non-scaling-stroke"
-                stroke-linecap="round"></path>
-        </svg>
-      `;
 
       let videoReady = false;
 
@@ -330,7 +291,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
             if (blob) {
               const file = new File([blob], `integracao-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-              // Verificar limite de 5 imagens
               const totalImages = currentImages.length + selectedFiles.length + 1;
               if (totalImages > 5) {
                 onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length + selectedFiles.length} imagens.`);
@@ -431,7 +391,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       buttonContainer.appendChild(cancelButton);
 
       videoWrapper.appendChild(videoElement);
-      videoWrapper.appendChild(maskOverlay);
       videoWrapper.appendChild(switchCameraIconButton);
       modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
@@ -483,7 +442,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       transition={{ duration: 0.4 }}
     >
       <Box sx={{ width: '100%' }}>
-        {/* Preview das imagens atuais e selecionadas */}
         {(currentImages.length > 0 || selectedFiles.length > 0) && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
@@ -491,7 +449,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
             </Typography>
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {/* Imagens atuais */}
               {currentImages.map((image, index) => (
                 <Box key={`current-${image.id || index}`} sx={{ position: 'relative' }}>
                   <Paper
@@ -514,7 +471,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
                         display: 'block',
                       }}
                       onError={() => {
-                        // Remover imagem com erro do estado
                         setImageErrors(prev => new Set(prev).add(image.id || `current-${index}`));
                       }}
                     />
@@ -530,11 +486,28 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
                         height: '16px',
                       }}
                     />
+                    {onImageDelete && image.id && (
+                      <IconButton
+                        size="small"
+                        onClick={() => onImageDelete(image.id!)}
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          left: 4,
+                          bgcolor: 'rgba(244, 67, 54, 0.8)',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.9)' },
+                          width: '20px',
+                          height: '20px',
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: '14px' }} />
+                      </IconButton>
+                    )}
                   </Paper>
                 </Box>
               ))}
 
-              {/* Imagens recém-selecionadas */}
               {selectedFiles.map((file, index) => (
                 <Box key={`selected-${index}`} sx={{ position: 'relative' }}>
                   <Paper
@@ -593,7 +566,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           </Box>
         )}
 
-        {/* Inputs ocultos para arquivo e câmera */}
         <input
           ref={fileInputRef}
           type="file"
@@ -611,7 +583,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           style={{ display: 'none' }}
         />
 
-        {/* Botões de seleção */}
         <Stack spacing={2}>
           <Button
             variant="outlined"
@@ -671,10 +642,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
         </Stack>
 
 
-        {/* Descrição */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-          {descriptionText} (máximo 5 imagens)
-        </Typography>
       </Box>
     </motion.div>
   );

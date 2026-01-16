@@ -75,6 +75,7 @@ export type UpdateIntegrationDto = {
     fieldKey?: string;
     isLocalFile?: boolean;
   }[];
+  deletedImageIds?: string[];
 };
 
 export type IntegrationFilters = QueryIntegrationDto;

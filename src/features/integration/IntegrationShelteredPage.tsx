@@ -58,7 +58,7 @@ export default function IntegrationShelteredPage() {
         description: shelteredName
           ? `Foto da integração de ${shelteredName} na Feira de Ministério`
           : "Foto tirada durante o registro da integração GA",
-        fieldKey: index === 0 ? 'profile' : `additional-${index}`,
+        fieldKey: `files[${index}]`,
       })) : undefined;
 
       const integrationData: CreateIntegrationDto = {
@@ -67,14 +67,12 @@ export default function IntegrationShelteredPage() {
         ...(imagesData && { images: imagesData }),
       };
 
-      await apiCreateIntegration(integrationData, selectedFiles.length > 0 ? selectedFiles[0] : undefined);
+      await apiCreateIntegration(integrationData, selectedFiles.length > 0 ? selectedFiles : undefined);
       setSuccess(true);
 
-      // Limpar formulário após sucesso
       reset();
       setSelectedFiles([]);
 
-      // Redirecionar após alguns segundos
       setTimeout(() => {
         navigate('/area-dos-acolhidos');
       }, 3000);
@@ -100,7 +98,7 @@ export default function IntegrationShelteredPage() {
         pb: 4,
       }}
     >
-      <BackHeader title="Registrar Integração GA" />
+      <BackHeader title="Registrar Integração Feira de Ministérios" />
 
       <Container maxWidth="md" sx={{ pt: 2 }}>
         {error && (
@@ -117,7 +115,6 @@ export default function IntegrationShelteredPage() {
             backgroundColor: "#ffffff",
           }}
         >
-          {/* Cabeçalho */}
           <Box sx={{ textAlign: "center", mb: 4 }}>
             <Avatar
               sx={{
@@ -132,7 +129,7 @@ export default function IntegrationShelteredPage() {
               {shelteredName.charAt(0)?.toUpperCase() || "I"}
             </Avatar>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Registrar Integração GA
+              Registrar Integração Feira de Ministérios
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Registre a integração de {shelteredName || "uma pessoa"} na Feira de Ministério
@@ -141,7 +138,6 @@ export default function IntegrationShelteredPage() {
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
-              {/* Informações Pessoais */}
               <Grid item xs={12}>
                 <Controller
                   name="name"
@@ -158,7 +154,6 @@ export default function IntegrationShelteredPage() {
                 />
               </Grid>
 
-            {/* Foto da Integração */}
             <Grid item xs={12}>
               <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
                 Foto da Integração
@@ -175,7 +170,6 @@ export default function IntegrationShelteredPage() {
               </Box>
             </Grid>
 
-              {/* Botões */}
               <Grid item xs={12}>
                 <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 2 }}>
                   <Button
@@ -204,7 +198,6 @@ export default function IntegrationShelteredPage() {
           </form>
         </Paper>
 
-        {/* Snackbar de sucesso */}
         <Snackbar
           open={success}
           autoHideDuration={3000}

@@ -20,12 +20,14 @@ interface IntegrationViewDialogProps {
   open: boolean;
   onClose: () => void;
   integration: IntegrationResponseDto | null;
+  onImageClick?: (integration: IntegrationResponseDto, startIndex: number) => void;
 }
 
 export default function IntegrationViewDialog({
   open,
   onClose,
   integration,
+  onImageClick,
 }: IntegrationViewDialogProps) {
   if (!integration) return null;
 
@@ -65,7 +67,7 @@ export default function IntegrationViewDialog({
               {integration.name || "Nome não informado"}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Integração GA • {integration.integrationYear || "Ano não informado"}
+              Integração Feira de Ministérios • {integration.integrationYear || "Ano não informado"}
             </Typography>
           </Box>
         </Box>
@@ -73,7 +75,6 @@ export default function IntegrationViewDialog({
 
       <DialogContent sx={{ pt: 1 }}>
         <Grid container spacing={3}>
-          {/* Imagens */}
           {integration.images && integration.images.length > 0 && (
             <Grid item xs={12}>
               <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
@@ -81,7 +82,19 @@ export default function IntegrationViewDialog({
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
                 {integration.images.map((image, index) => (
-                  <Box key={image.id} sx={{ position: "relative" }}>
+                  <Box
+                    key={image.id}
+                    sx={{
+                      position: "relative",
+                      cursor: onImageClick ? "pointer" : "default",
+                      transition: "transform 0.2s",
+                      "&:hover": onImageClick ? {
+                        transform: "scale(1.05)",
+                        boxShadow: 2,
+                      } : {},
+                    }}
+                    onClick={() => onImageClick?.(integration, index)}
+                  >
                     <img
                       src={image.url}
                       alt={image.title || `Foto ${index + 1}`}
@@ -109,13 +122,46 @@ export default function IntegrationViewDialog({
                     >
                       {index + 1}
                     </Box>
+                    {onImageClick && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          bgcolor: "rgba(0, 0, 0, 0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.2s",
+                          "&:hover": {
+                            opacity: 1,
+                          },
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "white",
+                            bgcolor: "rgba(0, 0, 0, 0.6)",
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontSize: "0.6rem",
+                          }}
+                        >
+                          Ampliar
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 ))}
               </Box>
             </Grid>
           )}
 
-          {/* Informações do Sistema */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
               Informações do Sistema
@@ -144,14 +190,6 @@ export default function IntegrationViewDialog({
                   </Typography>
                   <Typography variant="body1" fontWeight="medium">
                     {formatDate(integration.updatedAt)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    ID do Registro
-                  </Typography>
-                  <Typography variant="body1" fontFamily="monospace" fontSize="0.875rem">
-                    {integration.id}
                   </Typography>
                 </Grid>
               </Grid>

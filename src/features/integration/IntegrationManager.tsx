@@ -37,6 +37,7 @@ import type { IntegrationFilters, IntegrationResponseDto, CreateIntegrationDto, 
 import BackHeader from "@/components/common/header/BackHeader";
 import IntegrationFormDialog from "./components/IntegrationFormDialog";
 import IntegrationViewDialog from "./components/IntegrationViewDialog";
+import ImageCarouselDialog from "./components/ImageCarouselDialog";
 
 export default function IntegrationManager() {
   const theme = useTheme();
@@ -77,6 +78,7 @@ export default function IntegrationManager() {
   };
 
   const [viewing, setViewing] = React.useState<IntegrationResponseDto | null>(null);
+  const [viewingImages, setViewingImages] = React.useState<{ integration: IntegrationResponseDto; startIndex: number } | null>(null);
   const [editing, setEditing] = React.useState<IntegrationResponseDto | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [deleting, setDeleting] = React.useState<IntegrationResponseDto | null>(null);
@@ -121,16 +123,16 @@ export default function IntegrationManager() {
     }
   }, [deleting, handleDelete, showSnack]);
 
-  const handleCreateSubmit = React.useCallback(async (data: CreateIntegrationDto, file?: File) => {
-    await handleCreate(data, file, () => {
+  const handleCreateSubmit = React.useCallback(async (data: CreateIntegrationDto, files?: File[]) => {
+    await handleCreate(data, files, () => {
       showSnack("Integração criada com sucesso!", "success");
       setCreating(false);
     });
   }, [handleCreate, showSnack]);
 
-  const handleEditSubmit = React.useCallback(async (data: UpdateIntegrationDto, file?: File) => {
+  const handleEditSubmit = React.useCallback(async (data: UpdateIntegrationDto, files?: File[]) => {
     if (!editing) return;
-    await handleUpdate(editing.id, data, file, () => {
+    await handleUpdate(editing.id, data, files, () => {
       showSnack("Integração atualizada com sucesso!", "success");
       setEditing(null);
     });
@@ -180,7 +182,6 @@ export default function IntegrationManager() {
           </motion.div>
         )}
 
-        {/* Header com filtros e ações */}
         <Paper
           elevation={2}
           sx={{
@@ -223,7 +224,6 @@ export default function IntegrationManager() {
             </Button>
           </Box>
 
-          {/* Filtros */}
           <Box
             sx={{
               mt: 3,
@@ -293,7 +293,6 @@ export default function IntegrationManager() {
           </Box>
         </Paper>
 
-        {/* Conteúdo principal */}
         {loading ? (
           <Box
             sx={{
@@ -311,7 +310,6 @@ export default function IntegrationManager() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Lista de integrações será implementada aqui */}
             <Paper
               elevation={2}
               sx={{
@@ -355,13 +353,9 @@ export default function IntegrationManager() {
                             transition: "all 0.2s ease-in-out",
                           }}
                         >
-                          {/* Conteúdo à esquerda */}
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 0.5, fontSize: '1rem' }}>
                               {integration.name || "Nome não informado"}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.8rem' }}>
-                              Líder: {integration.gaLeader || "Não informado"}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.8rem' }}>
                               Ano: {integration.integrationYear || "Não informado"}
@@ -399,7 +393,6 @@ export default function IntegrationManager() {
                             </Box>
                           </Box>
 
-                          {/* Fotos à direita */}
                           <Box
                             sx={{
                               width: 80,
@@ -408,11 +401,16 @@ export default function IntegrationManager() {
                               overflow: "hidden",
                               flexShrink: 0,
                               position: "relative",
+                              cursor: (integration.images && integration.images.length > 0) ? "pointer" : "default",
+                            }}
+                            onClick={() => {
+                              if (integration.images && integration.images.length > 0) {
+                                setViewingImages({ integration, startIndex: 0 });
+                              }
                             }}
                           >
                             {integration.images && integration.images.length > 0 ? (
                               <>
-                                {/* Imagem principal */}
                                 <img
                                   src={integration.images[0].url}
                                   alt={`Foto de ${integration.name || "integração"}`}
@@ -425,7 +423,6 @@ export default function IntegrationManager() {
                                   onError={() => handleImageError(integration.id)}
                                 />
 
-                                {/* Overlay com contador se houver múltiplas imagens */}
                                 {integration.images.length > 1 && (
                                   <Box
                                     sx={{
@@ -444,6 +441,39 @@ export default function IntegrationManager() {
                                     +{integration.images.length - 1}
                                   </Box>
                                 )}
+
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    bgcolor: "rgba(0, 0, 0, 0.1)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    opacity: 0,
+                                    transition: "opacity 0.2s",
+                                    "&:hover": {
+                                      opacity: 1,
+                                    },
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "white",
+                                      bgcolor: "rgba(0, 0, 0, 0.6)",
+                                      px: 1,
+                                      py: 0.5,
+                                      borderRadius: 1,
+                                      fontSize: "0.6rem",
+                                    }}
+                                  >
+                                    Ampliar
+                                  </Typography>
+                                </Box>
                               </>
                             ) : (
                               <img
@@ -466,7 +496,6 @@ export default function IntegrationManager() {
                 </Box>
               )}
 
-              {/* Informações de paginação e controles */}
               {total > 0 && (
                 <Box sx={{
                   display: "flex",
@@ -502,7 +531,6 @@ export default function IntegrationManager() {
                 </Box>
               )}
 
-              {/* Controles de paginação */}
               {total > pageSize && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                   <Pagination
@@ -520,7 +548,6 @@ export default function IntegrationManager() {
           </motion.div>
         )}
 
-        {/* Botão flutuante para voltar ao topo (mobile) */}
         {showTop && (
           <Fab
             color="primary"
@@ -533,7 +560,6 @@ export default function IntegrationManager() {
           </Fab>
         )}
 
-        {/* Snackbar para notificações */}
         <Snackbar
           open={snack.open}
           autoHideDuration={4000}
@@ -551,11 +577,10 @@ export default function IntegrationManager() {
         </Snackbar>
       </Container>
 
-      {/* Dialogs */}
       <IntegrationFormDialog
         open={creating}
         onClose={handleCloseDialogs}
-        onSubmit={handleCreateSubmit}
+        onSubmit={handleCreateSubmit as any}
         loading={dialogLoading}
         error={dialogError}
       />
@@ -563,7 +588,7 @@ export default function IntegrationManager() {
       <IntegrationFormDialog
         open={!!editing}
         onClose={handleCloseDialogs}
-        onSubmit={handleEditSubmit}
+        onSubmit={handleEditSubmit as any}
         editing={editing}
         loading={dialogLoading}
         error={dialogError}
@@ -573,9 +598,16 @@ export default function IntegrationManager() {
         open={!!viewing}
         onClose={handleCloseDialogs}
         integration={viewing}
+        onImageClick={(integration, startIndex) => setViewingImages({ integration, startIndex })}
       />
 
-      {/* Modal de Confirmação de Delete */}
+      <ImageCarouselDialog
+        open={!!viewingImages}
+        onClose={() => setViewingImages(null)}
+        integration={viewingImages?.integration || null}
+        startIndex={viewingImages?.startIndex || 0}
+      />
+
       <Dialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
