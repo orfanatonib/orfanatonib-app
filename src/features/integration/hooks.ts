@@ -118,13 +118,13 @@ export function useIntegrationMutations(
 
   const handleCreate = useCallback(async (
     data: CreateIntegrationDto,
-    file?: File,
+    files?: File[],
     onSuccess?: () => void
   ) => {
     setDialogLoading(true);
     setDialogError("");
     try {
-      await apiCreateIntegration(data, file);
+      await apiCreateIntegration(data, files);
       await refreshPage();
       onSuccess?.();
     } catch (err: any) {
@@ -140,13 +140,13 @@ export function useIntegrationMutations(
   const handleUpdate = useCallback(async (
     id: string,
     data: UpdateIntegrationDto,
-    file?: File,
+    files?: File[],
     onSuccess?: () => void
   ) => {
     setDialogLoading(true);
     setDialogError("");
     try {
-      await apiUpdateIntegration(id, data, file);
+      await apiUpdateIntegration(id, data, files);
       await refreshOne(id);
       onSuccess?.();
     } catch (err: any) {

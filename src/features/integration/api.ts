@@ -13,16 +13,16 @@ export type ApiMessage = { message?: string };
 
 export async function apiCreateIntegration(
   data: CreateIntegrationDto,
-  file?: File
+  files?: File[]
 ): Promise<IntegrationResponseDto> {
   const formData = new FormData();
 
-  // Adiciona os dados JSON
   formData.append('integrationData', JSON.stringify(data));
 
-  // Adiciona o arquivo se existir
-  if (file) {
-    formData.append('file', file);
+  if (files && files.length > 0) {
+    files.forEach((file, index) => {
+      formData.append(`files[${index}]`, file);
+    });
   }
 
   const { data: response } = await api.post<IntegrationResponseDto>(
@@ -62,16 +62,16 @@ export async function apiGetIntegration(integrationId: string): Promise<Integrat
 export async function apiUpdateIntegration(
   integrationId: string,
   data: UpdateIntegrationDto,
-  file?: File
+  files?: File[]
 ): Promise<IntegrationResponseDto> {
   const formData = new FormData();
 
-  // Adiciona os dados JSON
   formData.append('integrationData', JSON.stringify(data));
 
-  // Adiciona o arquivo se existir
-  if (file) {
-    formData.append('file', file);
+  if (files && files.length > 0) {
+    files.forEach((file, index) => {
+      formData.append(`files[${index}]`, file);
+    });
   }
 
   const { data: response } = await api.put<IntegrationResponseDto>(

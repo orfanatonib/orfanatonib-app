@@ -7,63 +7,77 @@ import {
   Alert,
   Stack,
   Paper,
+  Chip,
+  IconButton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
 interface IntegrationImageUploadProps {
-  onImageSelect: (file: File) => void;
+  onImagesSelect: (files: File[]) => void;
+  onImageDelete?: (imageId: string) => void;
   onError: (error: string) => void;
-  currentImageUrl?: string;
+  currentImages?: Array<{ id?: string; url?: string; title?: string; }>;
   personName?: string;
 }
 
 const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
-  onImageSelect,
+  onImagesSelect,
+  onImageDelete,
   onError,
-  currentImageUrl,
+  currentImages = [],
   personName,
 }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Gerar título e descrição automaticamente baseado no nome da pessoa
   const title = personName
     ? `Foto da Integração - ${personName}`
     : "Foto da Integração";
 
-  const descriptionText = personName
-    ? `Foto da integração de ${personName} na Feira de Ministério`
-    : "Foto da pessoa sendo integrada na Feira de Ministério";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
-      onError('Por favor, selecione apenas arquivos de imagem');
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    files.forEach((file, index) => {
+      if (!file.type.startsWith('image/')) {
+        errors.push(`Arquivo ${index + 1}: Por favor, selecione apenas arquivos de imagem`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`Arquivo ${index + 1}: O arquivo deve ter no máximo 5MB`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      onError(errors.join('\n'));
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      onError('O arquivo deve ter no máximo 5MB');
+    const totalImages = currentImages.length + selectedFiles.length + validFiles.length;
+    if (totalImages > 5) {
+      onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length} e está tentando adicionar ${validFiles.length} mais.`);
       return;
     }
 
-    setSelectedFile(file);
-    onImageSelect(file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    onImagesSelect(validFiles);
   };
 
   const detectDevice = () => {
@@ -246,42 +260,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
         </svg>
       `;
 
-      const maskOverlay = document.createElement('div');
-      maskOverlay.style.cssText = `
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 4;
-      `;
-      maskOverlay.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <!-- overlay suave para direcionar o olhar ao centro -->
-          <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.28)"></rect>
-
-          <!-- Cabeça -->
-          <circle cx="50" cy="32" r="13"
-                  fill="transparent"
-                  stroke="rgba(255,255,255,0.70)"
-                  stroke-width="1.6"
-                  vector-effect="non-scaling-stroke"></circle>
-
-          <!-- Ombros (arco) -->
-          <path d="M22 86 C26 66 38 58 50 58 C62 58 74 66 78 86"
-                fill="transparent"
-                stroke="rgba(255,255,255,0.55)"
-                stroke-width="1.6"
-                vector-effect="non-scaling-stroke"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-
-          <!-- Linha base bem discreta (para sugerir o enquadramento) -->
-          <path d="M20 92 H80"
-                stroke="rgba(255,255,255,0.25)"
-                stroke-width="1.2"
-                vector-effect="non-scaling-stroke"
-                stroke-linecap="round"></path>
-        </svg>
-      `;
 
       let videoReady = false;
 
@@ -312,9 +290,16 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           canvas.toBlob((blob) => {
             if (blob) {
               const file = new File([blob], `integracao-${Date.now()}.jpg`, { type: 'image/jpeg' });
-              setSelectedFile(file);
-              onImageSelect(file);
-              setPreview(URL.createObjectURL(blob));
+
+              const totalImages = currentImages.length + selectedFiles.length + 1;
+              if (totalImages > 5) {
+                onError(`Máximo de 5 imagens por integração. Você já tem ${currentImages.length + selectedFiles.length} imagens.`);
+                cleanup();
+                return;
+              }
+
+              setSelectedFiles(prev => [...prev, file]);
+              onImagesSelect([file]);
             } else {
               onError('Erro ao processar a imagem');
             }
@@ -406,7 +391,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       buttonContainer.appendChild(cancelButton);
 
       videoWrapper.appendChild(videoElement);
-      videoWrapper.appendChild(maskOverlay);
       videoWrapper.appendChild(switchCameraIconButton);
       modal.appendChild(videoWrapper);
       modal.appendChild(buttonContainer);
@@ -442,8 +426,7 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
   };
 
   const clearSelection = () => {
-    setSelectedFile(null);
-    setPreview(currentImageUrl || null);
+    setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -459,41 +442,135 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
       transition={{ duration: 0.4 }}
     >
       <Box sx={{ width: '100%' }}>
-        {/* Preview da imagem atual ou selecionada */}
-        {preview && (
-          <Box sx={{ mb: 3, textAlign: 'center' }}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: 1,
-                display: 'inline-block',
-                borderRadius: 2,
-                backgroundColor: '#f8f9fa',
-              }}
-            >
-              <img
-                src={preview}
-                alt="Preview"
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  objectFit: 'cover',
-                  borderRadius: '8px',
-                  display: 'block',
-                }}
-              />
-            </Paper>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {title}
+        {(currentImages.length > 0 || selectedFiles.length > 0) && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+              Imagens Selecionadas ({currentImages.length + selectedFiles.length}/5)
             </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {currentImages.map((image, index) => (
+                <Box key={`current-${image.id || index}`} sx={{ position: 'relative' }}>
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      backgroundColor: '#f8f9fa',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={image.url}
+                      alt={image.title || `Imagem ${index + 1}`}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        display: 'block',
+                      }}
+                      onError={() => {
+                        setImageErrors(prev => new Set(prev).add(image.id || `current-${index}`));
+                      }}
+                    />
+                    <Chip
+                      label="Atual"
+                      size="small"
+                      color="primary"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        fontSize: '0.6rem',
+                        height: '16px',
+                      }}
+                    />
+                    {onImageDelete && image.id && (
+                      <IconButton
+                        size="small"
+                        onClick={() => onImageDelete(image.id!)}
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          left: 4,
+                          bgcolor: 'rgba(244, 67, 54, 0.8)',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.9)' },
+                          width: '20px',
+                          height: '20px',
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: '14px' }} />
+                      </IconButton>
+                    )}
+                  </Paper>
+                </Box>
+              ))}
+
+              {selectedFiles.map((file, index) => (
+                <Box key={`selected-${index}`} sx={{ position: 'relative' }}>
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      backgroundColor: '#e8f5e9',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Nova imagem ${index + 1}`}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        display: 'block',
+                      }}
+                    />
+                    <Chip
+                      label="Nova"
+                      size="small"
+                      color="success"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        fontSize: '0.6rem',
+                        height: '16px',
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 4,
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                        width: '20px',
+                        height: '20px',
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: '14px' }} />
+                    </IconButton>
+                  </Paper>
+                </Box>
+              ))}
+            </Box>
           </Box>
         )}
 
-        {/* Inputs ocultos para arquivo e câmera */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handleFileChange}
           style={{ display: 'none' }}
         />
@@ -506,7 +583,6 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           style={{ display: 'none' }}
         />
 
-        {/* Botões de seleção */}
         <Stack spacing={2}>
           <Button
             variant="outlined"
@@ -528,6 +604,21 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           >
             Selecionar da Galeria
           </Button>
+
+          {selectedFiles.length > 0 && (
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setSelectedFiles([])}
+              sx={{
+                textTransform: 'none',
+                color: 'text.secondary',
+                fontSize: '0.8rem',
+              }}
+            >
+              Limpar seleções ({selectedFiles.length})
+            </Button>
+          )}
           <Button
             variant="contained"
             fullWidth
@@ -550,31 +641,7 @@ const IntegrationImageUpload: React.FC<IntegrationImageUploadProps> = ({
           </Button>
         </Stack>
 
-        {/* Informações sobre arquivo selecionado */}
-        {selectedFile && (
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              Foto selecionada: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-            </Typography>
-            <Button
-              variant="text"
-              size="small"
-              onClick={clearSelection}
-              sx={{
-                textTransform: 'none',
-                color: 'primary.main',
-                fontSize: '0.75rem',
-              }}
-            >
-              Escolher outra foto
-            </Button>
-          </Box>
-        )}
 
-        {/* Descrição */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-          {descriptionText}
-        </Typography>
       </Box>
     </motion.div>
   );

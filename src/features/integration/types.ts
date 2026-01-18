@@ -20,7 +20,7 @@ export type IntegrationResponseDto = {
   churchYears?: number;
   previousMinistry?: string;
   integrationYear?: number;
-  image?: IntegrationImage | null;
+  images?: IntegrationImage[];
   createdAt: string;
   updatedAt: string;
 };
@@ -50,10 +50,13 @@ export type CreateIntegrationDto = {
   churchYears?: number;
   previousMinistry?: string;
   integrationYear?: number;
-  media?: {
+  images?: {
     title?: string;
     description?: string;
-  };
+    url?: string;
+    fieldKey?: string;
+    isLocalFile?: boolean;
+  }[];
 };
 
 export type UpdateIntegrationDto = {
@@ -64,11 +67,15 @@ export type UpdateIntegrationDto = {
   churchYears?: number;
   previousMinistry?: string;
   integrationYear?: number;
-  media?: {
+  images?: {
     id?: string;
     title?: string;
     description?: string;
-  };
+    url?: string;
+    fieldKey?: string;
+    isLocalFile?: boolean;
+  }[];
+  deletedImageIds?: string[];
 };
 
 export type IntegrationFilters = QueryIntegrationDto;

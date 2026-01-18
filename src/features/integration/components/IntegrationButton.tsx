@@ -24,10 +24,8 @@ export default function IntegrationButton({
 
   const handleClick = () => {
     if (shelteredId) {
-      // Se tem ID do abrigado, vai para página de integração com o abrigado pré-selecionado
       navigate(`/integracao?shelteredId=${shelteredId}&shelteredName=${encodeURIComponent(shelteredName || '')}`);
     } else {
-      // Se não tem ID, vai para página geral de integração
       navigate('/integracao');
     }
   };
@@ -50,7 +48,7 @@ export default function IntegrationButton({
           ...sx,
         }}
       >
-        Integração GA
+        Integração Feira de Ministérios
       </Button>
     </Tooltip>
   );
