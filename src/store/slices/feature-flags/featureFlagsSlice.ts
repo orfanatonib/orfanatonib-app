@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
+import { API_ERROR_MESSAGES } from '@/constants/errors';
 
 export interface FeatureFlag {
     id: string;
@@ -38,7 +39,7 @@ export const fetchFeatureFlags = createAsyncThunk<
             const response = await apiAxios.get<FeatureFlag[]>('/feature-flags');
             return response.data;
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || 'Failed to load feature flags';
+            const errorMessage = error?.response?.data?.message || API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS;
             return rejectWithValue(errorMessage);
         }
     }

@@ -15,6 +15,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import api from '@/config/axiosConfig';
+import {
+    AUTH_ERROR_MESSAGES,
+    AUTH_SUCCESS_MESSAGES,
+    AUTH_VALIDATION
+} from '@/constants/errors';
+import type { ValidateTokenResponse, ResetPasswordResponse } from '@/types/api/auth';
 
 const ResetPassword: React.FC = () => {
     const { token } = useParams<{ token: string }>();
@@ -34,22 +40,22 @@ const ResetPassword: React.FC = () => {
 
     useEffect(() => {
         if (!token) {
-            setValidationError('Token não fornecido.');
+            setValidationError(AUTH_ERROR_MESSAGES.TOKEN_NOT_PROVIDED);
             setLoading(false);
             return;
         }
 
         const validateToken = async () => {
             try {
-                const response = await api.get(`/auth/reset-password/validate?token=${token}`);
+                const response = await api.get<ValidateTokenResponse>(`/auth/reset-password/validate?token=${token}`);
                 if (response.data.valid) {
                     setIsValidToken(true);
-                    setUserEmail(response.data.email);
+                    setUserEmail(response.data.email || '');
                 } else {
-                    setValidationError('Token inválido ou expirado.');
+                    setValidationError(AUTH_ERROR_MESSAGES.TOKEN_INVALID);
                 }
             } catch (error) {
-                setValidationError('Token inválido ou expirado.');
+                setValidationError(AUTH_ERROR_MESSAGES.TOKEN_INVALID);
             } finally {
                 setLoading(false);
             }
@@ -61,11 +67,11 @@ const ResetPassword: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newPassword !== confirmPassword) {
-            setSubmitError('As senhas não coincidem.');
+            setSubmitError(AUTH_ERROR_MESSAGES.PASSWORDS_DO_NOT_MATCH);
             return;
         }
-        if (newPassword.length < 6) {
-            setSubmitError('A senha deve ter pelo menos 6 caracteres.');
+        if (newPassword.length < AUTH_VALIDATION.MIN_PASSWORD_LENGTH) {
+            setSubmitError(AUTH_ERROR_MESSAGES.PASSWORD_TOO_SHORT);
             return;
         }
 
@@ -73,11 +79,11 @@ const ResetPassword: React.FC = () => {
         setSubmitError(null);
 
         try {
-            await api.post('/auth/reset-password', { token, newPassword });
+            await api.post<ResetPasswordResponse>('/auth/reset-password', { token, newPassword });
             setSuccess(true);
-            setTimeout(() => navigate('/login'), 3000);
+            setTimeout(() => navigate('/login'), AUTH_VALIDATION.REDIRECT_DELAY_MS);
         } catch (error: any) {
-            setSubmitError(error.response?.data?.message || 'Erro ao redefinir senha.');
+            setSubmitError(error.response?.data?.message || AUTH_ERROR_MESSAGES.RESET_PASSWORD_GENERIC);
         } finally {
             setSubmitting(false);
         }
@@ -149,7 +155,7 @@ const ResetPassword: React.FC = () => {
 
                     {success ? (
                         <Alert severity="success">
-                            Senha alterada com sucesso! Redirecionando para o login...
+                            {AUTH_SUCCESS_MESSAGES.PASSWORD_CHANGED}
                         </Alert>
                     ) : (
                         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

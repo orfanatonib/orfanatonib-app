@@ -6,6 +6,7 @@ import { apiFetchShelter } from '@/features/shelters/api';
 import { ShelterResponseDto } from '@/features/shelters/types';
 import { RootState } from '@/store/slices';
 import type { TeamWithMembersDto } from '@/features/teams/types';
+import { API_ERROR_MESSAGES } from '@/constants/errors';
 
 export const useShelterPage = (idToFetch: string) => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export const useShelterPage = (idToFetch: string) => {
         const data = await apiFetchShelter(idToFetch);
         setShelter(data);
       } catch (err: any) {
-        setError(err?.response?.data?.message || 'Erro ao carregar o abrigo. Tente novamente mais tarde.');
+        setError(err?.response?.data?.message || API_ERROR_MESSAGES.FETCH_SHELTER);
       } finally {
         setLoading(false);
       }
@@ -80,7 +81,7 @@ export const useShelterPage = (idToFetch: string) => {
   }, [shelter?.teams]);
 
   return {
-    
+
     initialized,
     loadingUser,
     isAuthenticated,
