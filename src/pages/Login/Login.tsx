@@ -19,6 +19,7 @@ import axios from 'axios';
 
 import api from '@/config/axiosConfig';
 import { RootState as RootStateType, AppDispatch as AppDispatchType } from '@/store/slices';
+import { LOGIN_ERROR_MESSAGES, LOGIN_SUCCESS_MESSAGES, LOGIN_VALIDATION } from '@/constants/errors';
 import {
   login,
   LoginResponse,
@@ -30,7 +31,7 @@ import {
 import { isValidEmail } from '@/utils/validators';
 
 const isPasswordValid = (password: string): boolean => {
-  return password.length >= 6;
+  return password.length >= LOGIN_VALIDATION.MIN_PASSWORD_LENGTH;
 };
 
 const mapLoginError = (err: unknown): string => {
@@ -40,21 +41,21 @@ const mapLoginError = (err: unknown): string => {
     const serverMsg = Array.isArray(raw) ? raw.join(' ') : String(raw ?? '');
 
     if (status === 401) {
-      return 'Email ou senha inválidos.';
+      return LOGIN_ERROR_MESSAGES.INVALID_CREDENTIALS;
     }
 
     if (/user.*inactive|blocked|disabled/i.test(serverMsg)) {
-      return 'Usuário inativo ou sem permissão.';
+      return LOGIN_ERROR_MESSAGES.USER_INACTIVE;
     }
 
     if (serverMsg) {
       return serverMsg;
     }
 
-    return 'Erro inesperado. Tente novamente mais tarde.';
+    return LOGIN_ERROR_MESSAGES.UNEXPECTED_ERROR;
   }
 
-  return 'Erro inesperado. Tente novamente mais tarde.';
+  return LOGIN_ERROR_MESSAGES.UNEXPECTED_ERROR;
 };
 
 const Login: React.FC = () => {
@@ -107,18 +108,14 @@ const Login: React.FC = () => {
   };
 
   const handleUserInactive = (): void => {
-    setErrorMessage(
-      'Usuário não validado, entre em contato com (61) 8254-9780 ou (92) 98155-3139'
-    );
+    setErrorMessage(LOGIN_ERROR_MESSAGES.USER_NOT_VALIDATED);
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
     if (!isFormValid()) {
-      setErrorMessage(
-        'Por favor, insira um email válido e uma senha com pelo menos 6 caracteres.'
-      );
+      setErrorMessage(LOGIN_ERROR_MESSAGES.INVALID_FORM);
       return;
     }
 
@@ -205,7 +202,7 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleError = (): void => {
-    setErrorMessage('Erro ao fazer login com Google. Tente novamente.');
+    setErrorMessage(LOGIN_ERROR_MESSAGES.GOOGLE_LOGIN_ERROR);
   };
 
   const handleNavigateToRegister = (): void => {
@@ -246,7 +243,7 @@ const Login: React.FC = () => {
             )}
 
             {emailVerification && emailVerification.verificationEmailSent && (
-              <EmailVerificationAlert message="Seu email ainda não foi verificado. Verifique sua caixa de entrada." />
+              <EmailVerificationAlert message={LOGIN_SUCCESS_MESSAGES.EMAIL_VERIFICATION_SENT} />
             )}
 
             <Box
@@ -266,7 +263,7 @@ const Login: React.FC = () => {
                 aria-label="Digite seu email"
                 variant="outlined"
                 error={!!errorMessage && !email}
-                helperText={!!errorMessage && !email ? 'Email é obrigatório' : ''}
+                helperText={!!errorMessage && !email ? LOGIN_ERROR_MESSAGES.EMAIL_REQUIRED : ''}
               />
 
               <TextField
@@ -280,7 +277,7 @@ const Login: React.FC = () => {
                 aria-label="Digite sua senha"
                 variant="outlined"
                 error={!!errorMessage && !password}
-                helperText={!!errorMessage && !password ? 'Senha é obrigatória' : ''}
+                helperText={!!errorMessage && !password ? LOGIN_ERROR_MESSAGES.PASSWORD_REQUIRED : ''}
               />
 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

@@ -3,6 +3,7 @@ import api from '@/config/axiosConfig';
 import { ContactFormData } from './types';
 import { digitsOnly } from '@/utils/masks';
 import { normalizeEmail } from '@/utils/validators';
+import { CONTACT_ERROR_MESSAGES } from '@/constants/errors';
 
 export const useContactForm = () => {
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export const useContactForm = () => {
       });
       setSubmitted(true);
     } catch (error) {
-      setGlobalError('Erro ao enviar a mensagem. Tente novamente mais tarde.');
+      setGlobalError(CONTACT_ERROR_MESSAGES.SUBMIT_GENERIC);
     } finally {
       setLoading(false);
     }
