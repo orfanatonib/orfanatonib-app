@@ -39,6 +39,7 @@ import PasswordChangeForm from '@/features/profile/components/PasswordChangeForm
 import ProfileImageUpload from '@/features/profile/components/ProfileImageUpload';
 import PersonalDataForm from '@/features/profile/components/PersonalDataForm';
 import PreferencesForm from '@/features/profile/components/PreferencesForm';
+import { PROFILE_ERROR_MESSAGES } from '@/constants/errors';
 
 const menuItems = [
   { icon: <PersonIcon />, label: 'Informações da Conta', shortLabel: 'Conta' },
@@ -57,7 +58,7 @@ const ProfilePage: React.FC = () => {
   const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const initialTab = React.useMemo(() => {
     if (typeof window !== 'undefined') {
       if (window.location.hash === '#foto') return 4;
@@ -91,7 +92,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && !user) {
-      
+
       dispatch(fetchCurrentUser());
     }
   }, [isAuthenticated, user, dispatch]);
@@ -146,7 +147,7 @@ const ProfilePage: React.FC = () => {
       setError(null);
       await dispatch(fetchCurrentUser());
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Erro ao atualizar perfil.');
+      setError(err?.response?.data?.message || PROFILE_ERROR_MESSAGES.UPDATE_GENERIC);
     }
   };
 
@@ -198,7 +199,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const isLoading = loadingUser || loading;
-  
+
   if (!initialized || isLoading) {
     return (
       <Box

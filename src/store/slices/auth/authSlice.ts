@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
 import { MediaItem } from '@/store/slices/types';
+import { API_ERROR_MESSAGES } from '@/constants/errors';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -153,7 +154,7 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { rejectValue: stri
         log('[Auth] Request timeout');
         return rejectWithValue('Timeout ao verificar autenticação');
       }
-      const errorMessage = error?.response?.data?.message || 'Erro ao buscar usuário';
+      const errorMessage = error?.response?.data?.message || API_ERROR_MESSAGES.FETCH_USER;
       log('[Auth] Error fetching user:', errorMessage);
       return rejectWithValue(errorMessage);
     }

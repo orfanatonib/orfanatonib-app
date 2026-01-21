@@ -23,6 +23,12 @@ import api from '@/config/axiosConfig';
 import { RootState } from '@/store/slices';
 import { digitsOnly, maskPhoneBR } from '@/utils/masks';
 import { isValidEmail, normalizeEmail } from '@/utils/validators';
+import {
+  REGISTER_ERROR_MESSAGES,
+  REGISTER_SUCCESS_MESSAGES,
+  REGISTER_VALIDATION_MESSAGES,
+  REGISTER_VALIDATION
+} from '@/constants/errors';
 
 interface RegisterProps {
   commonUser: boolean;
@@ -47,52 +53,40 @@ interface GoogleUserCache {
 }
 
 const GOOGLE_USER_CACHE_KEY = 'google_user_register_cache';
-const CACHE_DURATION = 30 * 60 * 1000;
-
-const MESSAGES = {
-  SUCCESS: {
-    TITLE: 'Cadastro concluído com sucesso!',
-    SUBTITLE: 'Aguarde a aprovação do seu cadastro.',
-    NOTIFICATION: 'Você será notificado pelo WhatsApp.',
-  },
-  ERROR: {
-    GENERIC: 'Erro ao cadastrar. Tente novamente.',
-    UNEXPECTED: 'Erro inesperado. Tente novamente mais tarde.',
-  },
-} as const;
+const CACHE_DURATION = REGISTER_VALIDATION.CACHE_DURATION_MS;
 
 const getSchema = (commonUser: boolean) =>
   Yup.object({
     name: Yup.string()
-      .required('Nome é obrigatório')
-      .min(2, 'Nome deve ter pelo menos 2 caracteres'),
+      .required(REGISTER_VALIDATION_MESSAGES.NAME_REQUIRED)
+      .min(REGISTER_VALIDATION.MIN_NAME_LENGTH, REGISTER_VALIDATION_MESSAGES.NAME_MIN_LENGTH),
     email: Yup.string()
-      .required('Email é obrigatório')
-      .test('valid-email', 'Email inválido', (val) => isValidEmail(val)),
+      .required(REGISTER_VALIDATION_MESSAGES.EMAIL_REQUIRED)
+      .test('valid-email', REGISTER_VALIDATION_MESSAGES.EMAIL_INVALID, (val) => isValidEmail(val)),
     ...(commonUser && {
       confirmEmail: Yup.string()
-        .required('Confirme o email')
-        .test('emails-match', 'Os emails não coincidem', function (val) {
+        .required(REGISTER_VALIDATION_MESSAGES.CONFIRM_EMAIL_REQUIRED)
+        .test('emails-match', REGISTER_VALIDATION_MESSAGES.EMAILS_NOT_MATCH, function (val) {
           const email = (this.parent as any)?.email;
           return normalizeEmail(val) === normalizeEmail(email);
         }),
       password: Yup.string()
-        .min(6, 'Senha deve ter pelo menos 6 caracteres')
-        .required('Senha obrigatória'),
+        .min(REGISTER_VALIDATION.MIN_PASSWORD_LENGTH, REGISTER_VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH)
+        .required(REGISTER_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
       confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password')], 'As senhas não coincidem')
-        .required('Confirme a senha'),
+        .oneOf([Yup.ref('password')], REGISTER_VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH)
+        .required(REGISTER_VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED),
     }),
     phone: Yup.string()
-      .test('len', 'Telefone inválido (DDD + número)', (val) => {
+      .test('len', REGISTER_VALIDATION_MESSAGES.PHONE_INVALID, (val) => {
         const digits = digitsOnly(val);
         if (digits.startsWith("55")) return digits.length === 12 || digits.length === 13;
         return digits.length === 10 || digits.length === 11;
       })
-      .required('Telefone é obrigatório'),
+      .required(REGISTER_VALIDATION_MESSAGES.PHONE_REQUIRED),
     role: (Yup.mixed<RoleChoice>()
       .oneOf(['member', 'leader'])
-      .required('Selecione seu perfil')) as any,
+      .required(REGISTER_VALIDATION_MESSAGES.ROLE_REQUIRED)) as any,
   });
 
 const cacheGoogleUser = (name: string, email: string): void => {
@@ -135,9 +129,9 @@ const clearGoogleUserCache = (): void => {
 
 const mapApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || MESSAGES.ERROR.GENERIC;
+    return error.response?.data?.message || REGISTER_ERROR_MESSAGES.GENERIC;
   }
-  return MESSAGES.ERROR.UNEXPECTED;
+  return REGISTER_ERROR_MESSAGES.UNEXPECTED;
 };
 
 const Register: React.FC<RegisterProps> = ({ commonUser }) => {
@@ -243,13 +237,13 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         }}
       >
         <Box sx={{ mb: { xs: 0.5, md: 1 }, fontSize: { xs: '0.95rem', md: '1.1rem' } }}>
-          {MESSAGES.SUCCESS.TITLE}
+          {REGISTER_SUCCESS_MESSAGES.TITLE}
         </Box>
         <Box sx={{ fontSize: { xs: '0.85rem', md: '1rem' }, fontWeight: 500, mt: 0.5 }}>
-          {MESSAGES.SUCCESS.SUBTITLE}
+          {REGISTER_SUCCESS_MESSAGES.SUBTITLE}
         </Box>
         <Box sx={{ fontSize: { xs: '0.85rem', md: '1rem' }, fontWeight: 500, mt: 0.5 }}>
-          {MESSAGES.SUCCESS.NOTIFICATION}
+          {REGISTER_SUCCESS_MESSAGES.NOTIFICATION}
         </Box>
       </Alert>
 
@@ -276,7 +270,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
               lineHeight: 1.5,
             }}
           >
-            📧 Um email de verificação foi enviado para o seu endereço.
+            📧 {REGISTER_SUCCESS_MESSAGES.EMAIL_VERIFICATION_SENT}
           </Typography>
 
           <Button
@@ -399,7 +393,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             fullWidth
             margin="normal"
             error={!!errors.role}
-            helperText={errors.role?.message || 'Informe se você é Membro ou Líder'}
+            helperText={errors.role?.message || REGISTER_VALIDATION_MESSAGES.ROLE_HELPER}
           >
             <MenuItem value="">
               <em>Selecione</em>

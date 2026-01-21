@@ -11,6 +11,13 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '@/config/axiosConfig';
+import {
+    AuthErrorStatus,
+    AUTH_ERROR_MESSAGES,
+    AUTH_SUCCESS_MESSAGES,
+    AUTH_VALIDATION
+} from '@/constants/errors';
+import type { ForgotPasswordResponse } from '@/types/api/auth';
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -39,17 +46,17 @@ const ForgotPassword: React.FC = () => {
         setErrorMessage(null);
 
         try {
-            const response = await api.post('/auth/forgot-password', { email });
+            const response = await api.post<ForgotPasswordResponse>('/auth/forgot-password', { email });
 
-            if (response.data.status === 'VERIFICATION_EMAIL_SENT') {
+            if (response.data.status === AuthErrorStatus.VERIFICATION_EMAIL_SENT) {
                 setErrorMessage(null);
-                setSuccessMessage('Seu email ainda não foi verificado na AWS. Enviamos um email de verificação. Após confirmar seu email, solicite a recuperação de senha novamente.');
+                setSuccessMessage(AUTH_SUCCESS_MESSAGES.SES_NOT_VERIFIED);
             } else {
-                setSuccessMessage(response.data.message || 'Instruções enviadas para o seu email.');
+                setSuccessMessage(response.data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
             }
-            setCooldown(120);
+            setCooldown(AUTH_VALIDATION.COOLDOWN_SECONDS);
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'Erro ao processar solicitação.';
+            const msg = error.response?.data?.message || AUTH_ERROR_MESSAGES.FORGOT_PASSWORD_GENERIC;
             setErrorMessage(msg);
         } finally {
             setLoading(false);

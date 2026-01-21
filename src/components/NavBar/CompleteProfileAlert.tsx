@@ -38,6 +38,7 @@ import { AttendanceType, EventCategory } from '@/features/attendance/types';
 import type { PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto, TeamPendingsDto } from '@/features/attendance/types';
 import type { RootState as RootStateType } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
+import { ATTENDANCE_ERROR_MESSAGES, ATTENDANCE_SUCCESS_MESSAGES } from '@/constants/errors';
 
 export interface ProfileAlert {
   id: string;
@@ -133,7 +134,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
         comment: comment.trim() || undefined
       };
       await registerAttendance(dto);
-      setFeedback(type === AttendanceType.ABSENT ? 'Falta registrada com sucesso!' : 'Presença registrada com sucesso!');
+      setFeedback(type === AttendanceType.ABSENT ? ATTENDANCE_SUCCESS_MESSAGES.ABSENCE_REGISTERED : ATTENDANCE_SUCCESS_MESSAGES.PRESENCE_REGISTERED);
       setComment('');
 
       if (attendancePendings?.refetch) {
@@ -149,7 +150,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
         setFeedback(null);
       }, 2000);
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar presença.';
+      const message = err?.response?.data?.message || ATTENDANCE_ERROR_MESSAGES.REGISTER_GENERIC;
       setPendingError(message);
     } finally {
       setSaving(false);
@@ -177,7 +178,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
 
       {!loading && memberPendings.length === 0 && (
         <Alert severity="success" sx={{ borderRadius: 2 }}>
-          Nenhuma pendência de presença para você.
+          {ATTENDANCE_SUCCESS_MESSAGES.NO_PENDINGS}
         </Alert>
       )}
 

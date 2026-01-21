@@ -1,5 +1,6 @@
 import apiAxios from '@/config/axiosConfig';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_ERROR_MESSAGES } from '@/constants/errors';
 
 export enum Type {
   Page = 'page',
@@ -9,7 +10,7 @@ export enum Type {
 export interface RouteData {
   id: string;
   title: string;
-  public: boolean;  
+  public: boolean;
   current: boolean;
   subtitle: string;
   path: string;
@@ -56,7 +57,7 @@ const routeSlice = createSlice({
       })
       .addCase(fetchRoutes.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Erro ao buscar rotas.';
+        state.error = action.error.message || API_ERROR_MESSAGES.FETCH_ROUTES;
       });
   },
 });
