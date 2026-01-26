@@ -184,7 +184,7 @@ const roleConfig: Record<string, { gradient: string; color: string; label: strin
   member: {
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     color: '#4facfe',
-    label: 'Professor',
+    label: 'Membro',
     icon: <MemberIcon sx={{ fontSize: 14 }} />,
     bgLight: 'rgba(79, 172, 254, 0.08)',
   },
