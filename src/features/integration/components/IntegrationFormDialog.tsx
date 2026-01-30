@@ -119,15 +119,14 @@ export default function IntegrationFormDialog({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: isMobile ? 0 : 3,
-          width: isMobile ? '98vw' : 'auto',
-          height: isMobile ? '98vh' : 'auto',
+          borderRadius: isMobile ? 3 : 3,
+          width: isMobile ? '90vw' : 'auto',
+          height: 'auto',
           maxWidth: isMobile ? '98vw' : '900px',
-          maxHeight: isMobile ? '98vh' : '90vh',
-          margin: isMobile ? '1vh 1vw' : 'auto',
+          maxHeight: isMobile ? '90vh' : '90vh',
+          margin: isMobile ? 'auto' : 'auto',
         },
       }}
     >

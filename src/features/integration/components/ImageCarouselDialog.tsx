@@ -7,48 +7,103 @@ import {
   Typography,
   MobileStepper,
   Paper,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { Close as CloseIcon, NavigateBefore, NavigateNext } from "@mui/icons-material";
-import type { IntegrationResponseDto } from "../types";
+import { Close as CloseIcon, NavigateBefore, NavigateNext, RotateRight as RotateRightIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from "@mui/icons-material";
+
+export interface CarouselImage {
+  url: string;
+  title?: string;
+}
 
 interface ImageCarouselDialogProps {
   open: boolean;
   onClose: () => void;
-  integration: IntegrationResponseDto | null;
+  images: CarouselImage[];
+  title?: string;
   startIndex?: number;
 }
 
 export default function ImageCarouselDialog({
   open,
   onClose,
-  integration,
+  images = [],
+  title,
   startIndex = 0,
 }: ImageCarouselDialogProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeStep, setActiveStep] = React.useState(startIndex);
+  const [rotation, setRotation] = React.useState(0);
+  const [scale, setScale] = React.useState(1);
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null); // Reset touch end
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNext();
+    }
+    if (isRightSwipe) {
+      handleBack();
+    }
+  };
 
   React.useEffect(() => {
-    if (open && integration?.images) {
+    if (open) {
       setActiveStep(startIndex);
+      setRotation(0);
+      setScale(1);
     }
-  }, [open, integration, startIndex]);
+  }, [open, startIndex]);
 
-  if (!integration || !integration.images || integration.images.length === 0) {
+  const maxSteps = images.length;
+
+  if (!open || maxSteps === 0) {
     return null;
   }
 
-  const images = integration.images;
-  const maxSteps = images.length;
-
   const handleNext = () => {
     setActiveStep((prevActiveStep) => (prevActiveStep + 1) % maxSteps);
+    setRotation(0);
+    setScale(1);
   };
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => (prevActiveStep - 1 + maxSteps) % maxSteps);
+    setRotation(0);
+    setScale(1);
   };
 
-  const handleStepChange = (step: number) => {
-    setActiveStep(step);
+  const handleRotate = () => {
+    setRotation((prev) => (prev + 90) % 360);
+    setScale(1);
+  };
+
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.5, 3));
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.5, 1));
   };
 
   return (
@@ -57,16 +112,19 @@ export default function ImageCarouselDialog({
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
           bgcolor: "black",
           color: "white",
-          maxHeight: "90vh",
-          maxWidth: "90vw",
+          maxHeight: isMobile ? "100vh" : "90vh",
+          maxWidth: isMobile ? "100vw" : "90vw",
+          m: isMobile ? 0 : 2,
+          borderRadius: isMobile ? 0 : 2,
         },
       }}
     >
-      <DialogContent sx={{ p: 0, position: "relative", bgcolor: "black" }}>
+      <DialogContent sx={{ p: 0, position: "relative", bgcolor: "black", overflow: scale > 1 ? "auto" : "hidden" }}>
         <IconButton
           onClick={onClose}
           sx={{
@@ -84,13 +142,70 @@ export default function ImageCarouselDialog({
           <CloseIcon />
         </IconButton>
 
+        <Box sx={{ position: "absolute", right: 72, top: 16, display: "flex", gap: 1, zIndex: 10 }}>
+          <IconButton
+            onClick={handleZoomOut}
+            disabled={scale <= 1}
+            sx={{
+              color: "white",
+              bgcolor: "rgba(0, 0, 0, 0.5)",
+              "&:hover": {
+                bgcolor: "rgba(0, 0, 0, 0.7)",
+              },
+              "&.Mui-disabled": {
+                color: "rgba(255, 255, 255, 0.3)",
+                bgcolor: "rgba(0, 0, 0, 0.3)",
+              }
+            }}
+          >
+            <ZoomOutIcon />
+          </IconButton>
+
+          <IconButton
+            onClick={handleZoomIn}
+            disabled={scale >= 3}
+            sx={{
+              color: "white",
+              bgcolor: "rgba(0, 0, 0, 0.5)",
+              "&:hover": {
+                bgcolor: "rgba(0, 0, 0, 0.7)",
+              },
+              "&.Mui-disabled": {
+                color: "rgba(255, 255, 255, 0.3)",
+                bgcolor: "rgba(0, 0, 0, 0.3)",
+              }
+            }}
+          >
+            <ZoomInIcon />
+          </IconButton>
+
+          <IconButton
+            onClick={handleRotate}
+            sx={{
+              color: "white",
+              bgcolor: "rgba(0, 0, 0, 0.5)",
+              "&:hover": {
+                bgcolor: "rgba(0, 0, 0, 0.7)",
+              },
+            }}
+          >
+            <RotateRightIcon />
+          </IconButton>
+        </Box>
+
+
         <Box
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "60vh",
+            minHeight: isMobile ? "100vh" : "60vh",
+            height: isMobile ? "100%" : "auto",
             position: "relative",
+            width: '100%',
           }}
         >
           {maxSteps > 1 && (
@@ -114,17 +229,23 @@ export default function ImageCarouselDialog({
           <Box
             component="img"
             src={images[activeStep].url}
-            alt={images[activeStep].title || `Foto ${activeStep + 1} de ${integration.name}`}
+            alt={images[activeStep].title || `Foto ${activeStep + 1}`}
             sx={{
               maxWidth: "100%",
-              maxHeight: "60vh",
+              maxHeight: isMobile ? "100vh" : "60vh",
+              width: isMobile ? "100%" : "auto",
+              height: isMobile ? "100%" : "auto",
               objectFit: "contain",
-              borderRadius: 1,
+              borderRadius: isMobile ? 0 : 1,
+              transform: `rotate(${rotation}deg) scale(${scale})`,
+              transition: "transform 0.3s ease",
             }}
             onError={(e) => {
               e.currentTarget.src = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL || "";
             }}
           />
+
+
 
           {maxSteps > 1 && (
             <IconButton
@@ -145,46 +266,51 @@ export default function ImageCarouselDialog({
           )}
         </Box>
 
-        <Paper
-          square
-          elevation={0}
-          sx={{
-            bgcolor: "rgba(0, 0, 0, 0.8)",
-            color: "white",
-            p: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box>
-            <Typography variant="h6" sx={{ mb: 0.5 }}>
-              {integration.name || "Integração"}
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.8 }}>
-              {images[activeStep].title || `Foto ${activeStep + 1}`}
-            </Typography>
-          </Box>
 
-          {maxSteps > 1 && (
-            <MobileStepper
-              steps={maxSteps}
-              position="static"
-              activeStep={activeStep}
-              sx={{
-                bgcolor: "transparent",
-                "& .MuiMobileStepper-dot": {
-                  bgcolor: "rgba(255, 255, 255, 0.5)",
-                },
-                "& .MuiMobileStepper-dotActive": {
-                  bgcolor: "white",
-                },
-              }}
-              nextButton={null}
-              backButton={null}
-            />
-          )}
-        </Paper>
+        {!isMobile && (
+          <Paper
+            square
+            elevation={0}
+            sx={{
+              bgcolor: "rgba(0, 0, 0, 0.8)",
+              color: "white",
+              p: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              {title && (
+                <Typography variant="h6" sx={{ mb: 0.5 }}>
+                  {title}
+                </Typography>
+              )}
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                {images[activeStep].title || `Foto ${activeStep + 1} de ${maxSteps}`}
+              </Typography>
+            </Box>
+
+            {maxSteps > 1 && (
+              <MobileStepper
+                steps={maxSteps}
+                position="static"
+                activeStep={activeStep}
+                sx={{
+                  bgcolor: "transparent",
+                  "& .MuiMobileStepper-dot": {
+                    bgcolor: "rgba(255, 255, 255, 0.5)",
+                  },
+                  "& .MuiMobileStepper-dotActive": {
+                    bgcolor: "white",
+                  },
+                }}
+                nextButton={null}
+                backButton={null}
+              />
+            )}
+          </Paper>
+        )}
       </DialogContent>
     </Dialog>
   );

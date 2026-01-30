@@ -107,6 +107,7 @@ export type CompleteProfile = {
   role?: string;
   personalData?: PersonalData;
   preferences?: UserPreferences;
+  image?: ProfileImage | null;
 };
 
 export type CompleteProfileListItem = CompleteProfile & {

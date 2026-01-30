@@ -604,7 +604,8 @@ export default function IntegrationManager() {
       <ImageCarouselDialog
         open={!!viewingImages}
         onClose={() => setViewingImages(null)}
-        integration={viewingImages?.integration || null}
+        images={viewingImages?.integration.images || []}
+        title={viewingImages?.integration.name}
         startIndex={viewingImages?.startIndex || 0}
       />
 

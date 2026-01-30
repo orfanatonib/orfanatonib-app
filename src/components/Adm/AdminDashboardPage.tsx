@@ -41,6 +41,7 @@ import {
   CalendarMonth,
   Favorite,
   EventAvailable,
+  Handshake,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -59,18 +60,19 @@ interface CardData {
 }
 
 const cardData: CardData[] = [
-  
+
   { title: "Usuários", description: "Gerencie contas de acesso ao sistema.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "pessoas" },
   { title: "Perfis", description: "Conheça melhor as pessoas do ministério.", icon: <Favorite fontSize="large" color="primary" />, path: "/adm/perfis", section: "pessoas" },
   { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
   { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
   { title: "Acolhidos", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/acolhidos", section: "pessoas" },
-  { title: "Integrações FM", description: "Gerencie integrações de pessoas na Feira de Ministério.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/integracoes", section: "pessoas" },
+  { title: "Acolhidos", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/acolhidos", section: "pessoas" },
 
   { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
   { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
   { title: "Presenças", description: "Gerencie a frequência das equipes e membros.", icon: <EventAvailable fontSize="large" color="primary" />, path: "/adm/presenca", section: "abrigos" },
+  { title: "Integrações FM", description: "Gerencie integrações de pessoas na Feira de Ministério.", icon: <Handshake fontSize="large" color="primary" />, path: "/adm/integracoes", section: "abrigos" },
 
   { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
   { title: "Meditações", description: "Crie e edite meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudo" },

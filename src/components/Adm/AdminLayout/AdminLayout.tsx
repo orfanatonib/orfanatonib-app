@@ -41,6 +41,7 @@ import {
   CalendarMonth,
   Favorite,
   EventAvailable,
+  Handshake,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -99,6 +100,7 @@ function AdminLayout() {
           { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
           { label: "Pagelas", to: "/adm/pagelas", icon: <Description /> },
           { label: "Agendamentos", to: "/adm/agendamentos", icon: <CalendarMonth /> },
+          { label: "Integrações FM", to: "/adm/integracoes", icon: <Handshake /> },
           { label: "Presenças", to: "/adm/presenca", icon: <EventAvailable /> },
         ],
       },
@@ -151,6 +153,7 @@ function AdminLayout() {
     "/adm/pagelas",
     "/adm/agendamentos",
     "/adm/presenca",
+    "/adm/integracoes",
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
@@ -170,7 +173,7 @@ function AdminLayout() {
   }, [allSections, isAdmin, isLeader]);
 
   const sectionOfPath = (path: string): SectionId => {
-    
+
     if (
       path.startsWith("/adm/usuarios") ||
       path.startsWith("/adm/perfis") ||
@@ -180,16 +183,17 @@ function AdminLayout() {
     ) {
       return "pessoas";
     }
-    
+
     if (
       path.startsWith("/adm/abrigos") ||
       path.startsWith("/adm/pagelas") ||
       path.startsWith("/adm/agendamentos") ||
-      path.startsWith("/adm/presenca")
+      path.startsWith("/adm/presenca") ||
+      path.startsWith("/adm/integracoes")
     ) {
       return "abrigos";
     }
-    
+
     if (
       path.startsWith("/adm/criar-pagina") ||
       path.startsWith("/adm/meditacoes") ||
@@ -198,7 +202,7 @@ function AdminLayout() {
     ) {
       return "conteudo";
     }
-    
+
     if (
       path.startsWith("/adm/paginas-fotos") ||
       path.startsWith("/adm/fotos-abrigos") ||
@@ -206,7 +210,7 @@ function AdminLayout() {
     ) {
       return "midias";
     }
-    
+
     if (
       path.startsWith("/adm/paginas-materiais-visita") ||
       path.startsWith("/adm/paginas-ideias") ||
@@ -214,7 +218,7 @@ function AdminLayout() {
     ) {
       return "materiais";
     }
-    
+
     return "interacoes";
   };
 
