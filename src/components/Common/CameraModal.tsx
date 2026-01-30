@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Button, Portal } from '@mui/material';
-import { Cameraswitch as CameraswitchIcon } from '@mui/icons-material';
+import { Box, Portal } from '@mui/material';
+import { Cameraswitch as CameraswitchIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface CameraModalProps {
     open: boolean;
@@ -24,25 +24,22 @@ const CameraModal: React.FC<CameraModalProps> = ({
     const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
     const [isMobileDevice, setIsMobileDevice] = useState(false);
 
-    // Detect device type when modal opens
     useEffect(() => {
         if (open) {
             const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
             const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
             const isAndroid = /android/i.test(userAgent);
-            const isSmallScreen = window.innerWidth <= 768; // Treat small screens as mobile for testing
+            const isSmallScreen = window.innerWidth <= 768;
             setIsMobileDevice(isIOS || isAndroid || isSmallScreen);
         }
     }, [open]);
 
-    // Initialize Camera when open
     useEffect(() => {
         if (open) {
             startCamera();
         } else {
             stopCamera();
         }
-        // Cleanup on unmount
         return () => {
             stopCamera();
         };
@@ -65,11 +62,11 @@ const CameraModal: React.FC<CameraModalProps> = ({
         }
 
         try {
-            // Generic High Quality Constraints (Avoids strict aspect ratio cropping/zoom)
             const videoConstraints: MediaTrackConstraints = {
                 facingMode: isMobileDevice ? { ideal: cameraFacingMode } : { ideal: 'user' },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 4096, min: 1280 },
+                height: { ideal: 2160, min: 720 },
+                aspectRatio: { ideal: isMobileDevice ? 9 / 16 : 16 / 9 },
             };
 
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -107,27 +104,27 @@ const CameraModal: React.FC<CameraModalProps> = ({
         const video = videoRef.current;
         const canvas = canvasRef.current;
 
-        // Set canvas dimensions to match video resolution
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // High quality JPEG
             canvas.toBlob(
                 (blob) => {
                     if (blob) {
                         const file = new File([blob], `camera-capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
                         onCapture(file);
-                        onClose(); // Close after capture
+                        onClose();
                     } else {
                         onError('Erro ao processar a imagem.');
                     }
                 },
                 'image/jpeg',
-                0.95
+                1.0
             );
         }
     };
@@ -156,7 +153,6 @@ const CameraModal: React.FC<CameraModalProps> = ({
                     p: 2,
                 }}
             >
-                {/* Video Wrapper */}
                 <Box
                     sx={{
                         position: 'relative',
@@ -180,7 +176,58 @@ const CameraModal: React.FC<CameraModalProps> = ({
                         }}
                     />
 
-                    {/* Profile Mask Overlay */}
+                    {isMobileDevice && (
+                        <Box
+                            onClick={handleSwitchCamera}
+                            sx={{
+                                position: 'absolute',
+                                top: 16,
+                                left: 16,
+                                width: 44,
+                                height: 44,
+                                borderRadius: '50%',
+                                bgcolor: 'rgba(0,0,0,0.5)',
+                                backdropFilter: 'blur(8px)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: 'white',
+                                transition: 'all 0.2s',
+                                zIndex: 10,
+                                '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                                '&:active': { transform: 'scale(0.95)' },
+                            }}
+                        >
+                            <CameraswitchIcon sx={{ fontSize: 22 }} />
+                        </Box>
+                    )}
+
+                    <Box
+                        onClick={onClose}
+                        sx={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            width: 44,
+                            height: 44,
+                            borderRadius: '50%',
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            backdropFilter: 'blur(8px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: 'white',
+                            transition: 'all 0.2s',
+                            zIndex: 10,
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                            '&:active': { transform: 'scale(0.95)' },
+                        }}
+                    >
+                        <CloseIcon sx={{ fontSize: 24 }} />
+                    </Box>
+
                     {variant === 'profile' && (
                         <Box
                             sx={{
@@ -197,10 +244,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
                                 preserveAspectRatio="xMidYMid slice"
                                 aria-hidden="true"
                             >
-                                {/* Overlay with slight opacity */}
                                 <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.28)" />
-
-                                {/* Head circle */}
                                 <circle
                                     cx="50"
                                     cy="32"
@@ -210,8 +254,6 @@ const CameraModal: React.FC<CameraModalProps> = ({
                                     strokeWidth="1.6"
                                     vectorEffect="non-scaling-stroke"
                                 />
-
-                                {/* Shoulders arc */}
                                 <path
                                     d="M22 86 C26 66 38 58 50 58 C62 58 74 66 78 86"
                                     fill="transparent"
@@ -221,8 +263,6 @@ const CameraModal: React.FC<CameraModalProps> = ({
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                 />
-
-                                {/* Baseline */}
                                 <path
                                     d="M20 92 H80"
                                     stroke="rgba(255,255,255,0.25)"
@@ -233,92 +273,34 @@ const CameraModal: React.FC<CameraModalProps> = ({
                             </svg>
                         </Box>
                     )}
-
                 </Box>
 
-                {/* Bottom Controls - Outside video wrapper */}
                 <Box
+                    onClick={() => videoReady && handleCapture()}
                     sx={{
+                        mt: 3,
+                        width: 72,
+                        height: 72,
+                        borderRadius: '50%',
+                        border: '4px solid white',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 4,
-                        mt: 3,
+                        cursor: videoReady ? 'pointer' : 'not-allowed',
+                        transition: 'transform 0.1s',
+                        '&:active': { transform: 'scale(0.95)' },
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                     }}
                 >
-                    {/* Cancel Button */}
-                    <Button
-                        onClick={onClose}
-                        sx={{
-                            color: 'white',
-                            textTransform: 'none',
-                            fontSize: '1rem',
-                            fontWeight: 500,
-                            minWidth: 100,
-                            py: 1.5,
-                            px: 3,
-                            borderRadius: 3,
-                            bgcolor: 'rgba(255,255,255,0.15)',
-                            backdropFilter: 'blur(4px)',
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-                            '&:active': { transform: 'scale(0.97)' },
-                            transition: 'all 0.2s',
-                        }}
-                    >
-                        Cancelar
-                    </Button>
-
-                    {/* Shutter Button */}
                     <Box
-                        onClick={() => videoReady && handleCapture()}
                         sx={{
-                            width: 72,
-                            height: 72,
+                            width: 60,
+                            height: 60,
                             borderRadius: '50%',
-                            border: '4px solid white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: videoReady ? 'pointer' : 'not-allowed',
-                            transition: 'transform 0.1s',
-                            '&:active': { transform: 'scale(0.95)' },
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                            bgcolor: 'white',
+                            opacity: videoReady ? 1 : 0.8,
                         }}
-                    >
-                        <Box
-                            sx={{
-                                width: 60,
-                                height: 60,
-                                borderRadius: '50%',
-                                bgcolor: 'white',
-                                opacity: videoReady ? 1 : 0.8,
-                            }}
-                        />
-                    </Box>
-
-                    {/* Switch Camera Button (Mobile Only) */}
-                    {isMobileDevice && (
-                        <Box
-                            onClick={handleSwitchCamera}
-                            sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: '50%',
-                                bgcolor: 'rgba(255,255,255,0.15)',
-                                backdropFilter: 'blur(4px)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                color: 'white',
-                                transition: 'all 0.2s',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-                                '&:active': { transform: 'scale(0.95)' },
-                            }}
-                        >
-                            <CameraswitchIcon sx={{ fontSize: 24 }} />
-                        </Box>
-                    )}
+                    />
                 </Box>
 
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
