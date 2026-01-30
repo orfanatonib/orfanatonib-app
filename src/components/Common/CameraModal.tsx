@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Button, Typography, Portal } from '@mui/material';
+import { Box, Button, Portal } from '@mui/material';
+import { Cameraswitch as CameraswitchIcon } from '@mui/icons-material';
 
 interface CameraModalProps {
     open: boolean;
@@ -23,13 +24,16 @@ const CameraModal: React.FC<CameraModalProps> = ({
     const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
     const [isMobileDevice, setIsMobileDevice] = useState(false);
 
-    // Detect device type on mount
+    // Detect device type when modal opens
     useEffect(() => {
-        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-        const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-        const isAndroid = /android/i.test(userAgent);
-        setIsMobileDevice(isIOS || isAndroid);
-    }, []);
+        if (open) {
+            const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+            const isAndroid = /android/i.test(userAgent);
+            const isSmallScreen = window.innerWidth <= 768; // Treat small screens as mobile for testing
+            setIsMobileDevice(isIOS || isAndroid || isSmallScreen);
+        }
+    }, [open]);
 
     // Initialize Camera when open
     useEffect(() => {
@@ -61,17 +65,12 @@ const CameraModal: React.FC<CameraModalProps> = ({
         }
 
         try {
-            // Full HD Constraints
-            const videoConstraints: MediaTrackConstraints = isMobileDevice
-                ? {
-                    facingMode: { ideal: cameraFacingMode },
-                    width: { ideal: 1080 },
-                    height: { ideal: 1920 },
-                }
-                : {
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                };
+            // Generic High Quality Constraints (Avoids strict aspect ratio cropping/zoom)
+            const videoConstraints: MediaTrackConstraints = {
+                facingMode: isMobileDevice ? { ideal: cameraFacingMode } : { ideal: 'user' },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            };
 
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: videoConstraints,
@@ -167,7 +166,6 @@ const CameraModal: React.FC<CameraModalProps> = ({
                         overflow: 'hidden',
                         bgcolor: 'black',
                         boxShadow: '0 18px 60px rgba(0,0,0,0.55)',
-                        mb: 3,
                     }}
                 >
                     <video
@@ -181,37 +179,6 @@ const CameraModal: React.FC<CameraModalProps> = ({
                             objectFit: 'cover',
                         }}
                     />
-
-                    {/* Switch Camera Button (Mobile Only) */}
-                    {isMobileDevice && (
-                        <Box
-                            component="button"
-                            onClick={handleSwitchCamera}
-                            sx={{
-                                position: 'absolute',
-                                top: 16,
-                                right: 16,
-                                width: 48,
-                                height: 48,
-                                borderRadius: '50%',
-                                bgcolor: 'rgba(0,0,0,0.5)',
-                                border: '1px solid white',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                zIndex: 10,
-                            }}
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M7 7h4V3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M7 7a8 8 0 0 1 13 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M17 17h-4v4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M17 17a8 8 0 0 1-13-3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </Box>
-                    )}
 
                     {/* Profile Mask Overlay */}
                     {variant === 'profile' && (
@@ -266,43 +233,92 @@ const CameraModal: React.FC<CameraModalProps> = ({
                             </svg>
                         </Box>
                     )}
+
                 </Box>
 
-                {/* Controls */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {/* Bottom Controls - Outside video wrapper */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                        mt: 3,
+                    }}
+                >
+                    {/* Cancel Button */}
                     <Button
-                        variant="contained"
-                        onClick={handleCapture}
-                        disabled={!videoReady}
-                        sx={{
-                            py: isMobileDevice ? 1.5 : 1,
-                            px: 4,
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            borderRadius: 2,
-                            minWidth: 140,
-                        }}
-                    >
-                        Capturar Foto
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="inherit"
                         onClick={onClose}
                         sx={{
-                            py: isMobileDevice ? 1.5 : 1,
-                            px: 4,
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            borderRadius: 2,
-                            minWidth: 140,
-                            bgcolor: '#666',
                             color: 'white',
-                            '&:hover': { bgcolor: '#555' },
+                            textTransform: 'none',
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                            minWidth: 100,
+                            py: 1.5,
+                            px: 3,
+                            borderRadius: 3,
+                            bgcolor: 'rgba(255,255,255,0.15)',
+                            backdropFilter: 'blur(4px)',
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+                            '&:active': { transform: 'scale(0.97)' },
+                            transition: 'all 0.2s',
                         }}
                     >
                         Cancelar
                     </Button>
+
+                    {/* Shutter Button */}
+                    <Box
+                        onClick={() => videoReady && handleCapture()}
+                        sx={{
+                            width: 72,
+                            height: 72,
+                            borderRadius: '50%',
+                            border: '4px solid white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: videoReady ? 'pointer' : 'not-allowed',
+                            transition: 'transform 0.1s',
+                            '&:active': { transform: 'scale(0.95)' },
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: '50%',
+                                bgcolor: 'white',
+                                opacity: videoReady ? 1 : 0.8,
+                            }}
+                        />
+                    </Box>
+
+                    {/* Switch Camera Button (Mobile Only) */}
+                    {isMobileDevice && (
+                        <Box
+                            onClick={handleSwitchCamera}
+                            sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
+                                bgcolor: 'rgba(255,255,255,0.15)',
+                                backdropFilter: 'blur(4px)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: 'white',
+                                transition: 'all 0.2s',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+                                '&:active': { transform: 'scale(0.95)' },
+                            }}
+                        >
+                            <CameraswitchIcon sx={{ fontSize: 24 }} />
+                        </Box>
+                    )}
                 </Box>
 
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
