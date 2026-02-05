@@ -26,8 +26,11 @@ import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/pt-br";
 
-import { useMyTeams } from "../hooks";
-import { ShelterScheduleResponseDto, CreateShelterScheduleDto } from "../types";
+import {
+  ShelterScheduleResponseDto,
+  CreateShelterScheduleDto,
+  MyTeamResponseDto
+} from "../types";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 dayjs.locale("pt-br");
@@ -39,6 +42,9 @@ interface ShelterScheduleFormModalProps {
   initialData?: ShelterScheduleResponseDto | null;
   loading?: boolean;
   hideInfoBanner?: boolean;
+  teams: MyTeamResponseDto[];
+  teamsLoading?: boolean;
+  teamsError?: string | null;
 }
 
 export default function ShelterScheduleFormModal({
@@ -48,11 +54,13 @@ export default function ShelterScheduleFormModal({
   initialData,
   loading = false,
   hideInfoBanner = false,
+  teams,
+  teamsLoading = false,
+  teamsError = null,
 }: ShelterScheduleFormModalProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   const [teamId, setTeamId] = useState("");

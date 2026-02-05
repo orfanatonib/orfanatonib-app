@@ -54,7 +54,7 @@ export default function ShelterScheduleManager() {
     deleteSchedule,
   } = useShelterSchedules();
 
-  const { teams, loading: teamsLoading } = useMyTeams();
+  const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ShelterScheduleResponseDto | null>(null);
@@ -324,6 +324,9 @@ export default function ShelterScheduleManager() {
         initialData={editingSchedule}
         loading={submitting}
         hideInfoBanner={isAdmin}
+        teams={teams}
+        teamsLoading={teamsLoading}
+        teamsError={teamsError}
       />
 
       <ShelterScheduleDeleteDialog

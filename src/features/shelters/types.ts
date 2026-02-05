@@ -13,14 +13,14 @@ export type UserPublicDto = {
   mediaItem?: MediaItemDto | null;
 };
 
-export type LeaderMiniDto = { 
-  id: string; 
+export type LeaderMiniDto = {
+  id: string;
   active: boolean;
   user: UserPublicDto;
 };
 
-export type MemberMiniDto = { 
-  id: string; 
+export type MemberMiniDto = {
+  id: string;
   active: boolean;
   user: UserPublicDto;
 };
@@ -81,7 +81,7 @@ export type ShelterResponseDto = {
 
 export type SimpleShelterResponseDto = {
   id: string,
-  detalhe: string,
+  name: string,
   leader: boolean
 };
 

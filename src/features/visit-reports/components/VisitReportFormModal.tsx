@@ -22,7 +22,7 @@ import { CreateVisitReportDto, VisitReport } from "../types";
 import { apiFetchSheltersList } from "../../shelters/api";
 import { apiGetTeamsByShelter } from "../../teams/api";
 import { apiListShelterSchedules, apiListMyTeams } from "../../shelter-schedule/api";
-import { ShelterListResponseDto } from "../../shelters/types";
+import { SimpleShelterResponseDto } from "../../shelters/types";
 import { TeamResponseDto } from "../../teams/types";
 import { ShelterScheduleResponseDto, MyTeamResponseDto } from "../../shelter-schedule/types";
 
@@ -30,7 +30,7 @@ interface VisitReportFormModalProps {
     open: boolean;
     onClose: () => void;
     onSubmit: (data: CreateVisitReportDto | any) => Promise<void>;
-    initialData?: VisitReport | null; 
+    initialData?: VisitReport | null;
     loading?: boolean;
 }
 
@@ -60,7 +60,7 @@ export default function VisitReportFormModal({
     const [selectedShelterId, setSelectedShelterId] = useState("");
     const [selectedTeamId, setSelectedTeamId] = useState("");
 
-    const [shelters, setShelters] = useState<ShelterListResponseDto[]>([]);
+    const [shelters, setShelters] = useState<SimpleShelterResponseDto[]>([]);
     const [teams, setTeams] = useState<TeamResponseDto[]>([]);
     const [myTeams, setMyTeams] = useState<MyTeamResponseDto[]>([]);
     const [schedules, setSchedules] = useState<ShelterScheduleResponseDto[]>([]);
@@ -188,11 +188,14 @@ export default function VisitReportFormModal({
                                             {loadingShelters ? (
                                                 <MenuItem disabled><CircularProgress size={20} /></MenuItem>
                                             ) : (
-                                                shelters.map((s) => (
-                                                    <MenuItem key={s.id} value={s.id}>
-                                                        {s.name}
-                                                    </MenuItem>
-                                                ))
+                                                shelters.map((s) => {
+                                                    console.log('Rendering shelter option:', s);
+                                                    return (
+                                                        <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
+                                                            {s.name || "Abrigo sem nome"}
+                                                        </MenuItem>
+                                                    );
+                                                })
                                             )}
                                         </TextField>
                                     </Grid>
@@ -218,7 +221,7 @@ export default function VisitReportFormModal({
                                                     : `Equipe ${t.numberTeam} - ${t.shelter.name}`;
 
                                                 return (
-                                                    <MenuItem key={t.id} value={t.id}>
+                                                    <MenuItem key={t.id} value={t.id} sx={{ color: 'text.primary' }}>
                                                         {label}
                                                     </MenuItem>
                                                 );
@@ -243,7 +246,7 @@ export default function VisitReportFormModal({
                                             <MenuItem disabled>Nenhum agendamento disponível</MenuItem>
                                         ) : (
                                             schedules.map((s) => (
-                                                <MenuItem key={s.id} value={s.id}>
+                                                <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
                                                     {s.visitNumber}ª Visita - {s.visitDate ? new Date(s.visitDate).toLocaleDateString('pt-BR') : "Data indefinida"}
                                                 </MenuItem>
                                             ))

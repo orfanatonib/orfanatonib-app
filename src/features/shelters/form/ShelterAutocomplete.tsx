@@ -8,7 +8,7 @@ import { ShelterResponseDto } from "@/features/shelters/types";
 
 export type SimpleShelterResponseDto = {
   id: string;
-  detalhe: string;
+  name: string;
   leader: boolean;
 };
 
@@ -53,10 +53,10 @@ export default function ShelterAutocomplete({
       const items = await apiFetchSheltersList();
       const safe: SimpleShelterResponseDto[] = Array.isArray(items)
         ? items.map(item => ({
-            id: item.id,
-            detalhe: item.name,
-            leader: item.leaders?.length > 0,
-          }))
+          id: item.id,
+          name: item.name,
+          leader: item.leader,
+        }))
         : [];
       setOptions(safe);
 
@@ -84,7 +84,7 @@ export default function ShelterAutocomplete({
         onOpen={load}
         onChange={(_, opt) => onChange(opt ? opt.id : null, opt ?? null)}
         isOptionEqualToValue={(o, v) => o.id === v.id}
-        getOptionLabel={(o) => o?.detalhe ?? ""}
+        getOptionLabel={(o) => o?.name ?? ""}
         clearOnEscape
         disableClearable={false}
         fullWidth={fullWidth}

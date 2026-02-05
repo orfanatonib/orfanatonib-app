@@ -137,11 +137,31 @@ export default function VisitCard({
           {schedule.lessonContent}
         </Typography>
 
-        <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-          <EventIcon sx={{ fontSize: 12, color: schedule.category === 'visit' ? "success.main" : "info.main" }} />
-          <Typography variant="caption" color="text.secondary">
-            {dayjs(schedule.date).format("DD/MM")} {schedule.category === 'meeting' ? '(Reunião)' : ''}
-          </Typography>
+        <Box mt={1} display="flex" flexDirection="row" flexWrap="wrap" gap={1.5}>
+          {schedule.visitDate && (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <EventIcon sx={{ fontSize: 12, color: "success.main" }} />
+              <Typography variant="caption" color="text.secondary">
+                {dayjs(schedule.visitDate).format("DD/MM")} (Visita)
+              </Typography>
+            </Box>
+          )}
+          {schedule.meetingDate && (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <EventIcon sx={{ fontSize: 12, color: "info.main" }} />
+              <Typography variant="caption" color="text.secondary">
+                {dayjs(schedule.meetingDate).format("DD/MM")} (Reunião)
+              </Typography>
+            </Box>
+          )}
+          {!schedule.visitDate && !schedule.meetingDate && (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <EventIcon sx={{ fontSize: 12, color: "text.disabled" }} />
+              <Typography variant="caption" color="text.secondary">
+                Data a definir
+              </Typography>
+            </Box>
+          )}
         </Box>
       </CardContent>
     </Card>

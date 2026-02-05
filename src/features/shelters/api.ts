@@ -3,7 +3,7 @@ import {
   ShelterResponseDto, CreateShelterForm, EditShelterForm,
   LeaderMiniDto, MemberOption, UserPublicDto,
   ShelterFilters, ShelterSort,
-  LeaderOption, ShelterSimpleResponseDto, ShelterListResponseDto
+  LeaderOption, SimpleShelterResponseDto, ShelterListResponseDto, ShelterSimpleResponseDto
 } from "./types";
 import { LeaderProfile } from "../leaders/types";
 import { MemberProfile } from "../members/types";
@@ -50,27 +50,27 @@ export async function apiFetchShelters(args: {
   } else if (nameSearchString) {
     params.shelterName = nameSearchString;
   }
-  
+
   if (staffFilters) {
     params.staffFilters = staffFilters;
   }
-  
+
   if (addressFilter) {
     params.addressFilter = addressFilter;
   }
-  
+
   if (teamId) {
     params.teamId = teamId;
   }
-  
+
   if (teamName) {
     params.teamName = teamName;
   }
-  
+
   if (leaderId) {
     params.leaderId = leaderId;
   }
-  
+
   if (searchString && !shelterName && !nameSearchString) {
     params.searchString = searchString;
   }
@@ -87,7 +87,7 @@ export async function apiFetchSheltersSimple() {
 }
 
 export async function apiFetchSheltersList() {
-  const { data } = await api.get<ShelterListResponseDto[]>("/shelters/list");
+  const { data } = await api.get<SimpleShelterResponseDto[]>("/shelters/list");
   return data;
 }
 
@@ -105,10 +105,10 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
     });
     return data;
   }
-  
+
   if (payload.file) {
     const formData = new FormData();
-    
+
     const shelterData: any = {
       name: payload.name,
       description: payload.description,
@@ -122,14 +122,14 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
         description: payload.mediaItem.description || "Imagem do abrigo",
       } : undefined,
     };
-    
+
     if ((payload as any).teams && Array.isArray((payload as any).teams) && (payload as any).teams.length > 0) {
       shelterData.teams = (payload as any).teams;
     }
-    
+
     formData.append("shelterData", JSON.stringify(shelterData));
     formData.append("image", payload.file);
-    
+
     const { data } = await api.post<ShelterResponseDto>("/shelters", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -138,7 +138,7 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
     return data;
   } else {
     const { file, ...rest } = payload;
-    
+
     if (rest.mediaItem && rest.mediaItem.url) {
       (rest as any).mediaItem = {
         uploadType: "link",
@@ -150,11 +150,11 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
     } else if (rest.mediaItem && !rest.mediaItem.url) {
       delete rest.mediaItem;
     }
-    
+
     if (rest.teams && Array.isArray(rest.teams) && rest.teams.length === 0) {
       delete rest.teams;
     }
-    
+
     const { data } = await api.post<ShelterResponseDto>("/shelters", rest);
     return data;
   }
@@ -169,10 +169,10 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
     });
     return data;
   }
-  
+
   if (payload.file) {
     const formData = new FormData();
-    
+
     const shelterData: any = {
       name: payload.name,
       description: payload.description,
@@ -185,14 +185,14 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
         url: payload.mediaItem.url,
       } : undefined,
     };
-    
+
     if ((payload as any).teams) {
       shelterData.teams = (payload as any).teams;
     }
-    
+
     formData.append("shelterData", JSON.stringify(shelterData));
     formData.append("image", payload.file);
-    
+
     const { data } = await api.put<ShelterResponseDto>(`/shelters/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -207,11 +207,11 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
       teamsQuantity: rest.teamsQuantity,
       address: rest.address,
     };
-    
+
     if ((rest as any).teams) {
       payloadJson.teams = (rest as any).teams;
     }
-    
+
     if (rest.mediaItem && rest.mediaItem.uploadType === "link" && rest.mediaItem.url) {
       payloadJson.mediaItem = {
         title: rest.mediaItem.title || "Foto do Abrigo",
@@ -220,7 +220,7 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
         url: rest.mediaItem.url,
       };
     }
-    
+
     const { data } = await api.put<ShelterResponseDto>(`/shelters/${id}`, payloadJson);
     return data;
   }
@@ -240,16 +240,16 @@ export async function apiUpdateShelterMedia(
 ) {
   if (payload.file) {
     const formData = new FormData();
-    
+
     const mediaData = {
       title: payload.mediaItem?.title || "Foto do Abrigo",
       description: payload.mediaItem?.description || "Imagem do abrigo",
       uploadType: "UPLOAD",
     };
-    
+
     formData.append("mediaData", JSON.stringify(mediaData));
     formData.append("image", payload.file);
-    
+
     const { data } = await api.patch<ShelterResponseDto>(`/shelters/${id}/media`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -297,10 +297,10 @@ export async function apiLoadLeaderOptions() {
   let allLeaders: any[] = [];
   let page = 1;
   let hasMore = true;
-  
+
   while (hasMore) {
     const { data } = await api.get(`/leader-profiles?page=${page}&limit=50`);
-    
+
     if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
       allLeaders.push(...data.items);
       hasMore = data.items.length === 50;
@@ -309,7 +309,7 @@ export async function apiLoadLeaderOptions() {
       hasMore = false;
     }
   }
-  
+
   return allLeaders.map((c) => ({
     leaderProfileId: c.id,
     name: c.user?.name || c.user?.email || c.id,
@@ -318,7 +318,7 @@ export async function apiLoadLeaderOptions() {
 
 export async function apiLoadMemberOptions() {
   const members = await apiListMembersSimple();
-  
+
   return members.map((t) => ({
     memberProfileId: t.memberProfileId,
     name: t.name,
@@ -336,10 +336,10 @@ export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
   let allLeaders: any[] = [];
   let page = 1;
   let hasMore = true;
-  
+
   while (hasMore) {
     const { data } = await api.get(`/leader-profiles?page=${page}&limit=50`);
-    
+
     if (data?.items && data.items.length > 0) {
       allLeaders.push(...data.items);
       hasMore = data.items.length === 50;
@@ -348,12 +348,12 @@ export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
       hasMore = false;
     }
   }
-  
+
   const mapped = allLeaders.map((l: any) => ({
     leaderProfileId: l.id,
     name: l.user?.name || l.user?.email || l.id,
     vinculado: !!l.team,
   }));
-  
+
   return mapped;
 }
