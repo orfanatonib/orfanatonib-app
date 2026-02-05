@@ -9,6 +9,7 @@ import {
   Paper,
   Stack,
   Typography,
+  Button,
 } from '@mui/material';
 import BusinessIcon from '@mui/icons-material/Business';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -23,6 +24,10 @@ import TeamMemberAttendance from './TeamMemberAttendance';
 import AttendanceModeSelector from './AttendanceModeSelector';
 import ListSheets from './ListSheets';
 import BackHeader from '@/components/common/header/BackHeader';
+import NoTeamLinked from '@/components/Common/NoTeamLinked';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/slices';
+import { useAuthRole } from '@/utils/useAuthRole';
 
 import type {
   SheltersTeamsMembersResponse,
@@ -35,6 +40,9 @@ import type {
 } from '../types';
 
 const DrillDownAttendance = memo(() => {
+  const { isLeader } = useAuthRole();
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const [mode, setMode] = useState<AttendanceMode>(null);
   const [hierarchyData, setHierarchyData] = useState<SheltersTeamsMembersResponse>([]);
   const [loading, setLoading] = useState(true);
@@ -170,6 +178,11 @@ const DrillDownAttendance = memo(() => {
       loadHierarchyData();
     }
   }, [mode, loadHierarchyData]);
+
+  // Check if leader has no teams - show IMMEDIATELY before any mode selection
+  if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
+    return <NoTeamLinked showBackButton={false} />;
+  }
 
   if (mode === null) {
     return <AttendanceModeSelector onModeSelect={handleModeSelect} />;

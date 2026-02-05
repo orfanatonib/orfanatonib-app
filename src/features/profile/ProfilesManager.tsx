@@ -40,6 +40,9 @@ import BirthdaySection from './components/BirthdaySection';
 import { ProfileCard, ProfileCardSkeleton } from './components/ProfileCard';
 import ProfileDetailModal from './components/ProfileDetailModal';
 import BackHeader from '@/components/common/header/BackHeader';
+import NoTeamLinked from '@/components/Common/NoTeamLinked';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/slices';
 
 const ProfilesManager: React.FC = () => {
   const [profiles, setProfiles] = useState<CompleteProfileListItem[]>([]);
@@ -47,6 +50,7 @@ const ProfilesManager: React.FC = () => {
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<CompleteProfileListItem | null>(null);
   const { isLeader } = useAuthRole();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const [loading, setLoading] = useState(true);
   const [loadingBirthdays, setLoadingBirthdays] = useState(true);
@@ -178,6 +182,11 @@ const ProfilesManager: React.FC = () => {
         </Grid>
       </Box>
     );
+  }
+
+  // Check if leader has no teams linked - show message instead of content
+  if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
+    return <NoTeamLinked showBackButton={false} />;
   }
 
   return (

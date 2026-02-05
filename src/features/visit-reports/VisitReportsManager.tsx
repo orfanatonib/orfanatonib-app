@@ -28,6 +28,7 @@ import ReportGridView from "./components/ReportGridView";
 import ReportTableView from "./components/ReportTableView";
 import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
 import BackHeader from "@/components/common/header/BackHeader";
+import NoTeamLinked from "@/components/Common/NoTeamLinked";
 
 interface TeamGroup {
     id: string;
@@ -192,6 +193,11 @@ export default function VisitReportsManager() {
         );
     }
 
+    // Check if leader has no teams - show only NoTeamLinked
+    if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
+        return <NoTeamLinked showBackButton={false} />;
+    }
+
     return (
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
             <BackHeader title="Relatórios das Visitas" />
@@ -229,30 +235,21 @@ export default function VisitReportsManager() {
                 </Alert>
             )}
 
+
             {
-                groupedReports.length === 0 && !loading ? (
+                groupedReports.length === 0 && !loading && (
                     <Paper sx={{ p: 6, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
-                        {isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0) ? (
-                            <>
-                                <Typography variant="h6" color="textPrimary" gutterBottom>
-                                    Você não possui relatórios vinculados.
-                                </Typography>
-                                <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-                                    Você não parece estar vinculado a nenhuma equipe. Contate a liderança para liberar seu acesso e vincular você a uma equipe.
-                                </Typography>
-                            </>
-                        ) : (
-                            <>
-                                <Typography variant="h6" color="textSecondary">
-                                    Nenhum relatório encontrado.
-                                </Typography>
-                                <Button variant="outlined" sx={{ mt: 2 }} onClick={openCreate}>
-                                    Criar Primeiro Relatório
-                                </Button>
-                            </>
-                        )}
+                        <Typography variant="h6" color="textSecondary">
+                            Nenhum relatório encontrado.
+                        </Typography>
+                        <Button variant="outlined" sx={{ mt: 2 }} onClick={openCreate}>
+                            Criar Primeiro Relatório
+                        </Button>
                     </Paper>
-                ) : (
+                )
+            }
+            {
+                groupedReports.length > 0 && (
                     <>
                         {viewMode === 'grid' ? (
                             <ReportGridView

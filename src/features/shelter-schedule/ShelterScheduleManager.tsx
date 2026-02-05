@@ -12,10 +12,10 @@ import ShelterScheduleDeleteDialog from "./components/ShelterScheduleDeleteDialo
 import LeaderInfoBanner from "./components/LeaderInfoBanner";
 import ScheduleHeader from "./components/ScheduleHeader";
 import EmptyState from "./components/EmptyState";
-import NoTeamsState from "./components/NoTeamsState";
 import ShelterCard from "./components/ShelterCard";
 import ScheduleDetailsModal from "./components/ScheduleDetailsModal";
 import BackHeader from "@/components/common/header/BackHeader";
+import NoTeamLinked from "@/components/Common/NoTeamLinked";
 
 interface TeamGroup {
   teamId: string;
@@ -227,6 +227,11 @@ export default function ShelterScheduleManager() {
     );
   }
 
+  // Check if leader has no teams - show only NoTeamLinked
+  if (!isAdmin && teams.length === 0) {
+    return <NoTeamLinked showBackButton={false} />;
+  }
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
       {isLeader && !isAdmin && <LeaderInfoBanner />}
@@ -244,13 +249,9 @@ export default function ShelterScheduleManager() {
         </Button>
       </Box>
 
-      {schedules.length === 0 && (
-        teams.length === 0 && !isAdmin ? (
-          <NoTeamsState />
-        ) : (
-          <EmptyState onCreateClick={handleOpenCreate} />
-        )
-      )}
+
+      {schedules.length === 0 && <EmptyState onCreateClick={handleOpenCreate} />}
+
 
       {schedules.length > 0 && (
         <>

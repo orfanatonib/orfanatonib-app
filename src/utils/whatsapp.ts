@@ -2,6 +2,13 @@ export function justDigits(phone?: string | number | null) {
   return phone ? String(phone).replace(/\D/g, "") : "";
 }
 
+export const SUPPORT_CONTACTS = {
+  PHONE_1: '5561982549780',
+  PHONE_2: '5592981553139',
+  FORMATTED_1: '(61) 98254-9780',
+  FORMATTED_2: '(92) 98155-3139',
+} as const;
+
 function buildWaMessage(userName?: string, adminName?: string) {
   const name = userName?.trim() || "usuário";
   const admin = adminName?.trim() || "administrador";
@@ -28,6 +35,10 @@ Gostaria de conversar mais sobre isso com você.
 `;
 }
 
+function buildTeamLinkingMessage() {
+  return `Olá! Sou líder no Orfanatos NIB e preciso ser vinculado a um abrigo para acessar as funcionalidades. Pode me ajudar?`;
+}
+
 export function buildWhatsappLink(userName?: string, adminName?: string, phone?: string) {
   const digits = justDigits(phone);
   if (!digits) return null;
@@ -40,5 +51,10 @@ export function buildIdeasWhatsappLink(userName?: string, ideaTitle?: string, ph
   if (!digits) return null;
   const text = encodeURIComponent(buildIdeasWaMessage(userName, ideaTitle));
   return `https://wa.me/${digits}?text=${text}`;
+}
+
+export function buildTeamLinkingWhatsappLink(phone: string) {
+  const text = encodeURIComponent(buildTeamLinkingMessage());
+  return `https://wa.me/${phone}?text=${text}`;
 }
 

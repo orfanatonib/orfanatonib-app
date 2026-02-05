@@ -18,6 +18,7 @@ import {
   FormControl,
   InputLabel,
   Skeleton,
+  Link,
 } from "@mui/material";
 import {
   PlaceOutlined,
@@ -30,6 +31,7 @@ import {
   Image as ImageIcon,
   InfoOutlined,
   HomeOutlined,
+  WhatsApp,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import BackHeader from "@/components/common/header/BackHeader";
@@ -39,6 +41,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { fmtDate } from "@/utils/dates";
 import ChipsListWithExpand from "./components/ChipsListWithExpand";
+import { SUPPORT_CONTACTS, buildTeamLinkingWhatsappLink } from "@/utils/whatsapp";
 
 type ShelterOption = {
   id: string;
@@ -66,7 +69,7 @@ export default function ShelterDetailsPage() {
         setError("");
 
         const shelters = await apiGetMyShelters();
-        
+
         if (!shelters || shelters.length === 0) {
           setNoSheltersLinked(true);
           setLoading(false);
@@ -86,8 +89,8 @@ export default function ShelterDetailsPage() {
       } catch (err: any) {
         setError(
           err?.response?.data?.message ||
-            err?.message ||
-            "Erro ao carregar abrigos"
+          err?.message ||
+          "Erro ao carregar abrigos"
         );
       } finally {
         setLoading(false);
@@ -99,7 +102,7 @@ export default function ShelterDetailsPage() {
 
   const address = useMemo(() => shelter?.address, [shelter]);
   const teams = useMemo(() => shelter?.teams || [], [shelter]);
-  
+
   const allLeaders = useMemo(() => {
     if (teams.length === 0) return [];
     const leadersMap = new Map<string, any>();
@@ -253,6 +256,82 @@ export default function ShelterDetailsPage() {
                   <br />
                   Entre em contato com o administrador do sistema para solicitar a vinculação a um abrigo. Após a vinculação, você poderá visualizar e gerenciar as informações do abrigo aqui.
                 </Typography>
+
+                <Box sx={{ mt: 2.5, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 2 }}>
+                    Contatos para suporte:
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                      gap: 2
+                    }}
+                  >
+                    <Link
+                      href={buildTeamLinkingWhatsappLink(SUPPORT_CONTACTS.PHONE_1)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      underline="none"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: 2,
+                        bgcolor: 'rgba(37, 211, 102, 0.08)',
+                        border: '1px solid rgba(37, 211, 102, 0.3)',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: 'rgba(37, 211, 102, 0.15)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)'
+                        }
+                      }}
+                    >
+                      <WhatsApp sx={{ fontSize: 28, color: '#25D366', flexShrink: 0 }} />
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={600} color="text.primary" noWrap>
+                          {SUPPORT_CONTACTS.FORMATTED_1}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
+                          Clique para enviar mensagem
+                        </Typography>
+                      </Box>
+                    </Link>
+                    <Link
+                      href={buildTeamLinkingWhatsappLink(SUPPORT_CONTACTS.PHONE_2)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      underline="none"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: 2,
+                        bgcolor: 'rgba(37, 211, 102, 0.08)',
+                        border: '1px solid rgba(37, 211, 102, 0.3)',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: 'rgba(37, 211, 102, 0.15)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)'
+                        }
+                      }}
+                    >
+                      <WhatsApp sx={{ fontSize: 28, color: '#25D366', flexShrink: 0 }} />
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={600} color="text.primary" noWrap>
+                          {SUPPORT_CONTACTS.FORMATTED_2}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
+                          Clique para enviar mensagem
+                        </Typography>
+                      </Box>
+                    </Link>
+                  </Box>
+                </Box>
               </Alert>
             </Paper>
           </motion.div>
@@ -350,9 +429,9 @@ export default function ShelterDetailsPage() {
                   height: "100%",
                 }}
               >
-                <Box sx={{ 
-                  display: "flex", 
-                  alignItems: "flex-start", 
+                <Box sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
                   gap: { xs: 2, md: 3 },
                   flexDirection: { xs: "column", sm: "row" }
                 }}>
@@ -371,11 +450,11 @@ export default function ShelterDetailsPage() {
                     </Avatar>
                   )}
                   <Box sx={{ flex: 1, width: "100%" }}>
-                    <Typography 
-                      variant="h4" 
-                      fontWeight={700} 
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
                       gutterBottom
-                      sx={{ 
+                      sx={{
                         fontSize: { xs: "1.5rem", md: "2.125rem" },
                         textAlign: { xs: "center", sm: "left" }
                       }}
@@ -386,7 +465,7 @@ export default function ShelterDetailsPage() {
                       <Typography
                         variant="body1"
                         color="text.secondary"
-                        sx={{ 
+                        sx={{
                           mt: 1,
                           textAlign: { xs: "center", sm: "left" }
                         }}
@@ -394,10 +473,10 @@ export default function ShelterDetailsPage() {
                         {shelter.description}
                       </Typography>
                     )}
-                    <Box sx={{ 
-                      mt: 2, 
-                      display: "flex", 
-                      gap: 1, 
+                    <Box sx={{
+                      mt: 2,
+                      display: "flex",
+                      gap: 1,
                       flexWrap: "wrap",
                       justifyContent: { xs: "center", sm: "flex-start" }
                     }}>
@@ -532,9 +611,9 @@ export default function ShelterDetailsPage() {
                               variant="subtitle1"
                               fontWeight={700}
                               gutterBottom
-                              sx={{ 
-                                display: "flex", 
-                                alignItems: "center", 
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
                                 gap: 1,
                                 flexWrap: "wrap"
                               }}
@@ -632,9 +711,9 @@ export default function ShelterDetailsPage() {
                               variant="subtitle1"
                               fontWeight={700}
                               gutterBottom
-                              sx={{ 
-                                display: "flex", 
-                                alignItems: "center", 
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
                                 gap: 1,
                                 flexWrap: "wrap"
                               }}

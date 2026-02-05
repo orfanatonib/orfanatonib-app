@@ -13,6 +13,10 @@ import MemberEditDialog from "./components/MemberEditDialog";
 import { useSheltersIndex, useMemberMutations, useMemberProfiles } from "./hooks";
 import { MemberProfile } from "./types";
 import BackHeader from "@/components/common/header/BackHeader";
+import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import { useAuthRole } from "@/utils/useAuthRole";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/slices";
 
 export type MemberFilters = {
   memberSearchString?: string;
@@ -26,6 +30,8 @@ export type MemberFilters = {
 export default function MemberProfilesManager() {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isLeader } = useAuthRole();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const [pageSize, setPageSize] = React.useState<number>(12);
   const [pageIndex, setPageIndex] = React.useState<number>(0);
@@ -88,6 +94,11 @@ export default function MemberProfilesManager() {
   React.useEffect(() => {
     refreshShelters();
   }, [refreshShelters]);
+
+  // Check if leader has no teams linked
+  if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
+    return <NoTeamLinked showBackButton={false} />;
+  }
 
   return (
     <Box
@@ -175,53 +186,53 @@ export default function MemberProfilesManager() {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             {isXs ? (
-        <MemberCards
-          rows={rows}
-          total={total}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          setPageIndex={setPageIndex}
-          setPageSize={setPageSize}
-          sorting={sorting as any}
-          setSorting={setSorting as any}
-          onView={(t) => setViewing(t)}
-          onEdit={handleEditTeam}
-        />
-      ) : (
-        <MemberTable
-          rows={rows}
-          total={total}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          setPageIndex={setPageIndex}
-          setPageSize={setPageSize}
-          sorting={sorting as any}
-          setSorting={setSorting as any}
-          onView={(t) => setViewing(t)}
-          onEdit={handleEditTeam}
-            />
+              <MemberCards
+                rows={rows}
+                total={total}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                setPageIndex={setPageIndex}
+                setPageSize={setPageSize}
+                sorting={sorting as any}
+                setSorting={setSorting as any}
+                onView={(t) => setViewing(t)}
+                onEdit={handleEditTeam}
+              />
+            ) : (
+              <MemberTable
+                rows={rows}
+                total={total}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                setPageIndex={setPageIndex}
+                setPageSize={setPageSize}
+                sorting={sorting as any}
+                setSorting={setSorting as any}
+                onView={(t) => setViewing(t)}
+                onEdit={handleEditTeam}
+              />
             )}
           </motion.div>
         )}
 
         <MemberViewDialog
-        open={!!viewing}
-        member={viewing}
-        onClose={() => setViewing(null)}
-      />
+          open={!!viewing}
+          member={viewing}
+          onClose={() => setViewing(null)}
+        />
 
-      <MemberEditDialog
-        open={!!editingTeam}
-        member={editingTeam}
-        onClose={() => setEditingTeam(null)}
-        onSuccess={async () => {
-          await fetchPage();
-          if (editingTeam) {
-            await refreshOne(editingTeam.id);
-          }
-          setEditingTeam(null);
-        }}
-      />
+        <MemberEditDialog
+          open={!!editingTeam}
+          member={editingTeam}
+          onClose={() => setEditingTeam(null)}
+          onSuccess={async () => {
+            await fetchPage();
+            if (editingTeam) {
+              await refreshOne(editingTeam.id);
+            }
+            setEditingTeam(null);
+          }}
+        />
       </Container>
     </Box>
   );
