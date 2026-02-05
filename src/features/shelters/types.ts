@@ -11,6 +11,7 @@ export type UserPublicDto = {
   completed: boolean;
   commonUser: boolean;
   mediaItem?: MediaItemDto | null;
+  imageProfile?: MediaItemDto | null;
 };
 
 export type LeaderMiniDto = {

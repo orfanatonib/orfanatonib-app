@@ -29,6 +29,7 @@ type Props = {
   onChange: (updater: (prev: MemberFilters) => MemberFilters) => void;
   onRefreshClick: () => void;
   isXs?: boolean;
+  isLeader?: boolean;
 };
 
 export default function MemberToolbar({
@@ -36,6 +37,7 @@ export default function MemberToolbar({
   onChange,
   onRefreshClick,
   isXs,
+  isLeader,
 }: Props) {
   const handleChange = <K extends keyof MemberFilters>(
     key: K,
@@ -76,7 +78,7 @@ export default function MemberToolbar({
       </Typography>
 
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="flex-end">
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={isLeader ? 8 : 6} md={isLeader ? 8 : 4}>
           <TextField
             fullWidth
             size="small"
@@ -117,75 +119,79 @@ export default function MemberToolbar({
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Busca por Abrigo"
-            value={filters.shelterSearchString ?? ""}
-            onChange={(e) => handleChange("shelterSearchString", e.target.value || undefined)}
-            placeholder="Todos os campos do abrigo"
-            inputProps={{ "aria-label": "Campo de busca por abrigo" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.shelterSearchString && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleChange("shelterSearchString", undefined)}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
+        {!isLeader && (
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Busca por Abrigo"
+              value={filters.shelterSearchString ?? ""}
+              onChange={(e) => handleChange("shelterSearchString", e.target.value || undefined)}
+              placeholder="Todos os campos do abrigo"
+              inputProps={{ "aria-label": "Campo de busca por abrigo" }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: filters.shelterSearchString && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleChange("shelterSearchString", undefined)}
+                      edge="end"
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
                   },
                 },
-              },
-            }}
-          />
-        </Grid>
+              }}
+            />
+          </Grid>
+        )}
 
-        <Grid item xs={12} sm={6} md={2}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Vínculo"
-            value={
-              filters.hasShelter === undefined ? "" : filters.hasShelter ? "true" : "false"
-            }
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === "") {
-                handleChange("hasShelter", undefined);
-              } else {
-                handleChange("hasShelter", value === "true");
+        {!isLeader && (
+          <Grid item xs={12} sm={6} md={2}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Vínculo"
+              value={
+                filters.hasShelter === undefined ? "" : filters.hasShelter ? "true" : "false"
               }
-            }}
-            sx={{
-              borderRadius: 2,
-            }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="true">Com abrigo</MenuItem>
-            <MenuItem value="false">Sem abrigo</MenuItem>
-          </TextField>
-        </Grid>
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  handleChange("hasShelter", undefined);
+                } else {
+                  handleChange("hasShelter", value === "true");
+                }
+              }}
+              sx={{
+                borderRadius: 2,
+              }}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="true">Com abrigo</MenuItem>
+              <MenuItem value="false">Sem abrigo</MenuItem>
+            </TextField>
+          </Grid>
+        )}
 
-        <Grid item xs={12} sm={6} md={2}>
+        <Grid item xs={12} sm={isLeader ? 4 : 6} md={isLeader ? 4 : 2}>
           {isXs ? (
             <Box sx={{ height: 40 }} />
           ) : (

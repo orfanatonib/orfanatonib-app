@@ -7,7 +7,7 @@ import {
 } from "./types";
 import { LeaderProfile } from "../leaders/types";
 import { MemberProfile } from "../members/types";
-import { apiListMembersSimple } from "../members/api";
+import { apiListMembersSimple, apiListMembers } from "../members/api";
 
 export type PaginatedResponse<T> = {
   items: T[];
@@ -299,12 +299,19 @@ export async function apiLoadLeaderOptions() {
   let hasMore = true;
 
   while (hasMore) {
-    const { data } = await api.get(`/leader-profiles?page=${page}&limit=50`);
+    const { data } = await api.get(`/leader-profiles?page=${page}&limit=100`);
 
     if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
       allLeaders.push(...data.items);
-      hasMore = data.items.length === 50;
-      page++;
+      const limit = data.limit || 100;
+      const total = data.total || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      if (page >= totalPages) {
+        hasMore = false;
+      } else {
+        page++;
+      }
     } else {
       hasMore = false;
     }
@@ -317,12 +324,33 @@ export async function apiLoadLeaderOptions() {
 }
 
 export async function apiLoadMemberOptions() {
-  const members = await apiListMembersSimple();
+  let allMembers: any[] = [];
+  let page = 1;
+  let hasMore = true;
 
-  return members.map((t) => ({
-    memberProfileId: t.memberProfileId,
-    name: t.name,
-    vinculado: t.vinculado,
+  while (hasMore) {
+    const data = await apiListMembers({ page, limit: 100 });
+
+    if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+      allMembers.push(...data.items);
+      const limit = data.limit || 100;
+      const total = data.total || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      if (page >= totalPages) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allMembers.map((t) => ({
+    memberProfileId: t.id,
+    name: t.user?.name || t.user?.email || "Sem nome",
+    vinculado: !!t.shelter,
   })) as MemberOption[];
 }
 
@@ -338,12 +366,19 @@ export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
   let hasMore = true;
 
   while (hasMore) {
-    const { data } = await api.get(`/leader-profiles?page=${page}&limit=50`);
+    const { data } = await api.get(`/leader-profiles?page=${page}&limit=100`);
 
     if (data?.items && data.items.length > 0) {
       allLeaders.push(...data.items);
-      hasMore = data.items.length === 50;
-      page++;
+      const limit = data.limit || 100;
+      const total = data.total || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      if (page >= totalPages) {
+        hasMore = false;
+      } else {
+        page++;
+      }
     } else {
       hasMore = false;
     }

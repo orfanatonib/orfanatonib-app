@@ -10,11 +10,14 @@ import {
     ToggleButtonGroup,
     useMediaQuery,
     useTheme,
+    TextField,
+    InputAdornment,
 } from "@mui/material";
 import {
     Add as AddIcon,
     GridView as GridViewIcon,
     ViewList as ListViewIcon,
+    Search as SearchIcon,
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
@@ -71,6 +74,7 @@ export default function VisitReportsManager() {
     const [editingReport, setEditingReport] = useState<VisitReport | null>(null);
     const [viewingReport, setViewingReport] = useState<VisitReport | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const groupedReports = useMemo<ShelterGroup[]>(() => {
         if (!user || !reports) return [];
@@ -116,6 +120,29 @@ export default function VisitReportsManager() {
             .sort((a, b) => a.title.localeCompare(b.title));
 
     }, [reports, user]);
+
+    const filteredReports = useMemo(() => {
+        if (!searchTerm.trim()) return groupedReports;
+
+        const term = searchTerm.toLowerCase();
+        return groupedReports
+            .map(shelter => ({
+                ...shelter,
+                teams: shelter.teams
+                    .map(team => ({
+                        ...team,
+                        reports: team.reports.filter(report =>
+                            shelter.title.toLowerCase().includes(term) ||
+                            team.name.toLowerCase().includes(term) ||
+                            report.observation?.toLowerCase().includes(term) ||
+                            report.schedule?.lessonContent?.toLowerCase().includes(term) ||
+                            report.schedule?.visitNumber?.toString().includes(term)
+                        )
+                    }))
+                    .filter(team => team.reports.length > 0)
+            }))
+            .filter(shelter => shelter.teams.length > 0);
+    }, [groupedReports, searchTerm]);
 
     const handleCreate = async (data: any) => {
         setSubmitting(true);
@@ -235,6 +262,23 @@ export default function VisitReportsManager() {
                 </Alert>
             )}
 
+            {isAdmin && groupedReports.length > 0 && (
+                <TextField
+                    fullWidth
+                    placeholder="Buscar por abrigo, equipe, conteúdo do relatório..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    size="small"
+                    sx={{ mb: 3 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+            )}
 
             {
                 groupedReports.length === 0 && !loading && (
@@ -251,16 +295,22 @@ export default function VisitReportsManager() {
             {
                 groupedReports.length > 0 && (
                     <>
-                        {viewMode === 'grid' ? (
+                        {filteredReports.length === 0 ? (
+                            <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
+                                <Typography variant="body1" color="textSecondary">
+                                    Nenhum resultado encontrado para "{searchTerm}"
+                                </Typography>
+                            </Paper>
+                        ) : viewMode === 'grid' ? (
                             <ReportGridView
-                                shelterGroups={groupedReports}
+                                shelterGroups={filteredReports}
                                 onView={openDetails}
                                 onEdit={openEdit}
                                 onDelete={handleDeleteClick}
                             />
                         ) : (
                             <ReportTableView
-                                shelterGroups={groupedReports}
+                                shelterGroups={filteredReports}
                                 onView={openDetails}
                                 onEdit={openEdit}
                                 onDelete={handleDeleteClick}

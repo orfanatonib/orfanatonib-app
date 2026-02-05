@@ -13,8 +13,8 @@ import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
 import CameraModal from '../../../components/Common/CameraModal';
+import ImagePreviewDialog from '../../../components/Common/ImagePreviewDialog';
 import { apiUpdateProfileImage } from '../api';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import type { AppDispatch } from '@/store/slices';
@@ -36,6 +36,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,6 +120,10 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Avatar
             src={preview || currentImageUrl}
+            onClick={() => {
+              const imageUrl = preview || currentImageUrl;
+              if (imageUrl) setPreviewImage(imageUrl);
+            }}
             sx={{
               width: { xs: 120, sm: 150, md: 180 },
               height: { xs: 120, sm: 150, md: 180 },
@@ -128,6 +133,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
               mx: 'auto',
               mb: 2,
+              cursor: (preview || currentImageUrl) ? 'pointer' : 'default',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': (preview || currentImageUrl) ? {
+                transform: 'scale(1.02)',
+                boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+              } : {},
             }}
           >
             {!preview && !currentImageUrl && 'U'}
@@ -257,6 +268,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           onCapture={handleCameraCapture}
           onError={onError}
           variant="profile"
+        />
+
+        <ImagePreviewDialog
+          imageUrl={previewImage}
+          onClose={() => setPreviewImage(null)}
+          alt="Foto de Perfil"
         />
       </Box>
     </motion.div>

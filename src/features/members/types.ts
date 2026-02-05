@@ -2,8 +2,8 @@ export const TZ = "America/Manaus";
 
 export type MinimalUser = { id: string; name?: string; email?: string; phone?: string };
 
-export type ShelterSimple = { 
-  id: string; 
+export type ShelterSimple = {
+  id: string;
   name: string;
   address?: {
     id: string;
@@ -42,6 +42,15 @@ export type MemberProfile = {
     active: boolean;
     completed: boolean;
     commonUser: boolean;
+    imageProfile?: {
+      id: string;
+      url: string;
+      title: string;
+      description?: string;
+      uploadType: string;
+      mediaType: string;
+      isLocalFile: boolean;
+    };
   };
   shelter?: {
     id: string;
@@ -85,12 +94,12 @@ export type MemberQuery = {
   hasTeam?: boolean;
   page?: number;
   limit?: number;
-  sort?: "updatedAt" | "createdAt" | "name"; 
-  order?: "asc" | "desc"; 
+  sort?: "updatedAt" | "createdAt" | "name";
+  order?: "asc" | "desc";
 };
 
 export type MemberSimpleListDto = {
-  memberProfileId: string;  
-  name: string;              
-  vinculado: boolean;        
+  memberProfileId: string;
+  name: string;
+  vinculado: boolean;
 };

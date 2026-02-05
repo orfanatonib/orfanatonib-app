@@ -127,6 +127,7 @@ export default function MemberProfilesManager() {
             onChange={handleFiltersChange}
             onRefreshClick={doRefresh}
             isXs={isXs}
+            isLeader={isLeader}
           />
         </motion.div>
 

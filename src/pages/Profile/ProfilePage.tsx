@@ -1,39 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Paper,
   Typography,
-  Avatar,
   CircularProgress,
   Alert,
-  useTheme,
-  useMediaQuery,
-  Chip,
   Stack,
-  Grid,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Divider,
   Container,
-  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import {
-  Person as PersonIcon,
-  Lock as LockIcon,
-  PhotoCamera as PhotoCameraIcon,
-  HomeOutlined as HomeOutlinedIcon,
-  GroupsOutlined as GroupsOutlinedIcon,
-  PlaceOutlined as PlaceOutlinedIcon,
-  Badge as BadgeIcon,
-  Favorite as FavoriteIcon,
-} from '@mui/icons-material';
 import { RootState, AppDispatch } from '@/store/slices';
-import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import ProfileEditForm from '@/features/profile/components/ProfileEditForm';
 import PasswordChangeForm from '@/features/profile/components/PasswordChangeForm';
@@ -41,20 +19,11 @@ import ProfileImageUpload from '@/features/profile/components/ProfileImageUpload
 import PersonalDataForm from '@/features/profile/components/PersonalDataForm';
 import PreferencesForm from '@/features/profile/components/PreferencesForm';
 import { PROFILE_ERROR_MESSAGES } from '@/constants/errors';
-
-const menuItems = [
-  { icon: <PersonIcon />, label: 'Informações da Conta', shortLabel: 'Conta' },
-  { icon: <BadgeIcon />, label: 'Dados Pessoais', shortLabel: 'Pessoais' },
-  { icon: <FavoriteIcon />, label: 'Minhas Preferências', shortLabel: 'Preferências' },
-  { icon: <LockIcon />, label: 'Alterar Senha', shortLabel: 'Senha' },
-  { icon: <PhotoCameraIcon />, label: 'Foto de Perfil', shortLabel: 'Foto' },
-];
+import ProfileSidebar, { menuItems } from './components/ProfileSidebar';
+import ImagePreviewDialog from '@/components/Common/ImagePreviewDialog';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, initialized, user, loadingUser } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
@@ -69,6 +38,7 @@ const ProfilePage: React.FC = () => {
     return 0;
   }, []);
   const [selectedMenu, setSelectedMenu] = useState(initialTab);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -93,7 +63,6 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && !user) {
-
       dispatch(fetchCurrentUser());
     }
   }, [isAuthenticated, user, dispatch]);
@@ -248,271 +217,13 @@ const ProfilePage: React.FC = () => {
           width: '100%',
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ display: 'flex', flexDirection: 'column' }}
-        >
-          <Paper
-            elevation={3}
-            sx={{
-              width: { xs: '100%', md: 240, lg: 260 },
-              borderRadius: 3,
-              overflow: 'hidden',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 255, 0.98) 100%)',
-              border: '1px solid rgba(25, 118, 210, 0.1)',
-              flexShrink: 0,
-            }}
-          >
-            <Box
-              sx={{
-                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                p: { xs: 1.5, sm: 2 },
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <Avatar
-                src={profile?.image?.url}
-                sx={{
-                  width: { xs: 60, sm: 70, md: 80 },
-                  height: { xs: 60, sm: 70, md: 80 },
-                  fontSize: { xs: '1.5rem', md: '2rem' },
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  border: '3px solid rgba(255,255,255,0.8)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                }}
-              >
-                {profile?.name?.charAt(0).toUpperCase() || 'U'}
-              </Avatar>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={700}
-                  sx={{
-                    color: 'white',
-                    fontSize: { xs: '0.9rem', sm: '0.95rem' },
-                    textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {profile?.name || 'Carregando...'}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: 'rgba(255,255,255,0.85)',
-                    fontSize: '0.7rem',
-                    display: 'block',
-                    wordBreak: 'break-all',
-                  }}
-                >
-                  {profile?.email}
-                </Typography>
-              </Box>
-            </Box>
-
-            {profile?.role === 'member' && user?.memberProfile?.team?.shelter && (
-              <Tooltip
-                title={
-                  user.memberProfile.team.shelter.address ? (
-                    <Box>
-                      <Typography variant="caption" fontWeight={600} sx={{ display: 'block' }}>
-                        {user.memberProfile.team.shelter.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-                        {user.memberProfile.team.shelter.address.street}, {user.memberProfile.team.shelter.address.number}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: 'block' }}>
-                        {user.memberProfile.team.shelter.address.district} - {user.memberProfile.team.shelter.address.city}/{user.memberProfile.team.shelter.address.state}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: 'block' }}>
-                        CEP: {user.memberProfile.team.shelter.address.postalCode}
-                      </Typography>
-                    </Box>
-                  ) : user.memberProfile.team.shelter.name
-                }
-                arrow
-                placement={isMobile ? 'bottom' : 'right'}
-                enterTouchDelay={0}
-                leaveTouchDelay={3000}
-                componentsProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: 'white',
-                      color: 'text.primary',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                      border: '1px solid rgba(25, 118, 210, 0.2)',
-                      p: 1.5,
-                      maxWidth: { xs: 280, sm: 320 },
-                      '& .MuiTooltip-arrow': {
-                        color: 'white',
-                        '&::before': {
-                          border: '1px solid rgba(25, 118, 210, 0.2)',
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                <Box sx={{ px: 1.5, py: 1.5, bgcolor: 'rgba(25, 118, 210, 0.05)', cursor: 'pointer' }}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
-                      <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1.3 }} noWrap>
-                        {user.memberProfile.team.shelter.name}
-                      </Typography>
-                    </Stack>
-                    <Chip
-                      icon={<GroupsOutlinedIcon />}
-                      label={`Equipe ${user.memberProfile.team.numberTeam}`}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                      sx={{ fontWeight: 700, height: 24, '& .MuiChip-label': { px: 1 }, alignSelf: 'flex-start' }}
-                    />
-                  </Stack>
-                </Box>
-              </Tooltip>
-            )}
-
-            {profile?.role === 'leader' && user?.leaderProfile?.teams && user.leaderProfile.teams.length > 0 && (
-              <Box sx={{ px: 1.5, py: 1.5, bgcolor: 'rgba(25, 118, 210, 0.05)', maxHeight: { xs: 150, sm: 200 }, overflowY: 'auto' }}>
-                <Typography variant="caption" fontWeight={700} color="primary" sx={{ display: 'block', mb: 1 }}>
-                  Minhas Equipes ({user.leaderProfile.teams.length})
-                </Typography>
-                <Stack spacing={1}>
-                  {user.leaderProfile.teams.map((team) => (
-                    <Tooltip
-                      key={team.id}
-                      title={
-                        team.shelter?.address ? (
-                          <Box>
-                            <Typography variant="caption" fontWeight={600} sx={{ display: 'block' }}>
-                              {team.shelter.name}
-                            </Typography>
-                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-                              {team.shelter.address.street}, {team.shelter.address.number}
-                            </Typography>
-                            <Typography variant="caption" sx={{ display: 'block' }}>
-                              {team.shelter.address.district} - {team.shelter.address.city}/{team.shelter.address.state}
-                            </Typography>
-                            <Typography variant="caption" sx={{ display: 'block' }}>
-                              CEP: {team.shelter.address.postalCode}
-                            </Typography>
-                          </Box>
-                        ) : team.shelter?.name || ''
-                      }
-                      arrow
-                      placement={isMobile ? 'bottom' : 'right'}
-                      enterTouchDelay={0}
-                      leaveTouchDelay={3000}
-                      componentsProps={{
-                        tooltip: {
-                          sx: {
-                            bgcolor: 'white',
-                            color: 'text.primary',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                            border: '1px solid rgba(25, 118, 210, 0.2)',
-                            p: 1.5,
-                            maxWidth: { xs: 280, sm: 320 },
-                            '& .MuiTooltip-arrow': {
-                              color: 'white',
-                              '&::before': {
-                                border: '1px solid rgba(25, 118, 210, 0.2)',
-                              },
-                            },
-                          },
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: 1,
-                          bgcolor: 'white',
-                          border: '1px solid rgba(25, 118, 210, 0.15)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: 'primary.main',
-                            boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-                          },
-                        }}
-                      >
-                        <Stack spacing={0.5}>
-                          <Stack direction="row" spacing={0.5} alignItems="center">
-                            <HomeOutlinedIcon sx={{ fontSize: 14 }} color="primary" />
-                            <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.7rem', lineHeight: 1.2 }} noWrap>
-                              {team.shelter?.name}
-                            </Typography>
-                          </Stack>
-                          <Chip
-                            icon={<GroupsOutlinedIcon sx={{ fontSize: '14px !important' }} />}
-                            label={`Equipe ${team.numberTeam}`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                            sx={{ fontWeight: 600, height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, alignSelf: 'flex-start' }}
-                          />
-                        </Stack>
-                      </Box>
-                    </Tooltip>
-                  ))}
-                </Stack>
-              </Box>
-            )}
-
-            <Divider />
-
-            <List sx={{ p: 0.5 }} dense>
-              {menuItems.map((item, index) => (
-                <ListItemButton
-                  key={index}
-                  selected={selectedMenu === index}
-                  onClick={() => handleMenuClick(index)}
-                  sx={{
-                    borderRadius: 1.5,
-                    mb: 0.25,
-                    py: 0.75,
-                    '&.Mui-selected': {
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      '&:hover': {
-                        bgcolor: 'primary.dark',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'white',
-                      },
-                    },
-                    '&:hover': {
-                      bgcolor: 'rgba(25, 118, 210, 0.08)',
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 32,
-                      color: selectedMenu === index ? 'white' : 'primary.main',
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={isSmall ? item.shortLabel : item.label}
-                    primaryTypographyProps={{
-                      fontWeight: selectedMenu === index ? 700 : 500,
-                      fontSize: '0.8rem',
-                    }}
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-          </Paper>
-        </motion.div>
+        <ProfileSidebar
+          profile={profile}
+          user={user}
+          selectedMenu={selectedMenu}
+          onMenuClick={handleMenuClick}
+          onImageClick={(url) => setPreviewImage(url)}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -562,6 +273,12 @@ const ProfilePage: React.FC = () => {
           </Paper>
         </motion.div>
       </Box>
+
+      <ImagePreviewDialog
+        imageUrl={previewImage}
+        onClose={() => setPreviewImage(null)}
+        alt="Foto de Perfil"
+      />
     </Box>
   );
 };

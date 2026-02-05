@@ -255,21 +255,23 @@ export default function ShelterScheduleManager() {
 
       {schedules.length > 0 && (
         <>
-          <TextField
-            fullWidth
-            placeholder="Buscar por nome do abrigo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            size="small"
-            sx={{ mb: 3 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          {isAdmin && (
+            <TextField
+              fullWidth
+              placeholder="Buscar por nome do abrigo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
+              sx={{ mb: 3 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
 
           <Box
             sx={{
