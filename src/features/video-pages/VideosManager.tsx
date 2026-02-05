@@ -22,7 +22,7 @@ import { setVideoData, VideoPageData } from 'store/slices/video/videoSlice';
 import { useVideoPages } from './hooks';
 import VideoPageToolbar from './components/VideoPageToolbar';
 import VideoPageCard from './components/VideoPageCard';
-import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
 import VideoPageDetailsModal from './components/VideoPageDetailsModal';
 import BackHeader from '@/components/common/header/BackHeader';
 
@@ -203,9 +203,9 @@ export default function VideosManager() {
           </>
         )}
 
-        <DeleteConfirmDialog
+        <DeleteConfirmationModal
           open={!!pageToDelete}
-          title={pageToDelete?.title}
+          description={`Você está prestes a excluir permanentemente: ${pageToDelete?.title ?? "esta página"}.`}
           onClose={() => setPageToDelete(null)}
           onConfirm={handleDelete}
         />

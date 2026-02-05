@@ -10,6 +10,7 @@ import {
   useTheme,
   alpha,
   Button,
+  useMediaQuery,
 } from '@mui/material';
 import ListIcon from '@mui/icons-material/List';
 import AddTaskIcon from '@mui/icons-material/AddTask';
@@ -28,6 +29,7 @@ interface AttendanceModeSelectorProps {
 const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorProps) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Box
@@ -43,22 +45,24 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
       }}
     >
       <Box sx={{ maxWidth: 1000, width: '100%' }}>
-        <Box sx={{ mb: 3 }}>
-          <IconButton
-            onClick={() => navigate('/adm')}
-            aria-label="Voltar para dashboard"
-            sx={{
-              bgcolor: 'action.hover',
-              '&:hover': {
-                bgcolor: 'action.selected',
-                transform: 'translateX(-4px)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
+        {isMobile && (
+          <Box sx={{ mb: 3 }}>
+            <IconButton
+              onClick={() => navigate('/adm')}
+              aria-label="Voltar para dashboard"
+              sx={{
+                bgcolor: 'action.hover',
+                '&:hover': {
+                  bgcolor: 'action.selected',
+                  transform: 'translateX(-4px)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          </Box>
+        )}
 
         <Stack spacing={{ xs: 1.5, md: 2 }} alignItems="center" sx={{ mb: { xs: 4, md: 6 } }}>
           <Typography

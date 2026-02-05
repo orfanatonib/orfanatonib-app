@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from '@/store/slices';
 import api from '@/config/axiosConfig';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
 import { AddImageModal } from './AddImageModal';
-import { ConfirmDialog } from './ConfirmModal';
+import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
 import { Notification } from './NotificationModal';
 import { LoadingSpinner } from './LoadingSpinner';
 import {
@@ -265,32 +265,32 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
           </Typography>
         </Box>
 
-      <LoadingSpinner open={isSaving} />
+        <LoadingSpinner open={isSaving} />
 
-      <ConfirmDialog
-        open={confirmModalOpen}
-        title="Confirmação"
-        message={confirmMessage}
-        onConfirm={() => {
-          onConfirmAction();
-          setConfirmModalOpen(false);
-        }}
-        onCancel={() => setConfirmModalOpen(false)}
-      />
+        <DeleteConfirmationModal
+          open={confirmModalOpen}
+          description={confirmMessage}
+          onConfirm={() => {
+            onConfirmAction();
+            setConfirmModalOpen(false);
+          }}
+          onClose={() => setConfirmModalOpen(false)}
+          loading={false}
+        />
 
-      <Notification
-        open={successSnackbarOpen}
-        message="Página salva com sucesso!"
-        severity="success"
-        onClose={() => setSuccessSnackbarOpen(false)}
-      />
+        <Notification
+          open={successSnackbarOpen}
+          message="Página salva com sucesso!"
+          severity="success"
+          onClose={() => setSuccessSnackbarOpen(false)}
+        />
 
-      <Notification
-        open={errorSnackbarOpen}
-        message={errorMessage}
-        severity="error"
-        onClose={() => setErrorSnackbarOpen(false)}
-      />
+        <Notification
+          open={errorSnackbarOpen}
+          message={errorMessage}
+          severity="error"
+          onClose={() => setErrorSnackbarOpen(false)}
+        />
 
         <Paper
           elevation={2}
@@ -388,21 +388,21 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
           </Grid>
         </Paper>
 
-      {sections.map((section, index) => (
-        <ImageSection
-          key={index}
-          mediaItems={section.mediaItems}
-          caption={section.caption}
-          description={section.description}
-          isPublic={section.public}
-          onCaptionChange={(val) => updateCaption(index, val)}
-          onDescriptionChange={(val) => updateDescription(index, val)}
-          onPublicChange={(val) => updatePublicFlag(index, val)}
-          onRemoveMedia={(mediaIndex) => removeMediaFromSection(index, mediaIndex)}
-          onOpenModal={() => openModal(index)}
-          onRemoveSection={() => removeSection(index)}
-        />
-      ))}
+        {sections.map((section, index) => (
+          <ImageSection
+            key={index}
+            mediaItems={section.mediaItems}
+            caption={section.caption}
+            description={section.description}
+            isPublic={section.public}
+            onCaptionChange={(val) => updateCaption(index, val)}
+            onDescriptionChange={(val) => updateDescription(index, val)}
+            onPublicChange={(val) => updatePublicFlag(index, val)}
+            onRemoveMedia={(mediaIndex) => removeMediaFromSection(index, mediaIndex)}
+            onOpenModal={() => openModal(index)}
+            onRemoveSection={() => removeSection(index)}
+          />
+        ))}
 
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
           <Button

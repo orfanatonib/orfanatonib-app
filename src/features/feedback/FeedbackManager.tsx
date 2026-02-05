@@ -17,7 +17,7 @@ import { Search, Clear, RateReview } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import FeedbackCard from "./components/FeedbackCard";
 import FeedbackDetailsModal from "./components/FeedbackDetailsModal";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
+import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
 import { useFeedbackList, useFeedbackMutations, useFeedbackSearch } from "./hooks";
 import { FeedbackData } from "@/store/slices/feedback/feedbackSlice";
 import BackHeader from "@/components/common/header/BackHeader";
@@ -253,9 +253,9 @@ const FeedbackManager: React.FC = () => {
           }}
         />
 
-        <DeleteConfirmDialog
+        <DeleteConfirmationModal
           open={!!toDelete}
-          title={toDelete?.name || ""}
+          description={`Você está prestes a excluir o feedback de: ${toDelete?.name ?? "este usuário"}.`}
           onClose={() => setToDelete(null)}
           onConfirm={handleDelete}
         />

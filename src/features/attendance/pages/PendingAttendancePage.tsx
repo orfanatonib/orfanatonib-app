@@ -31,6 +31,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
 import { getAllPendings } from '../api';
 import { EventCategory } from '../types';
+import BackHeader from '@/components/common/header/BackHeader';
 import type { TeamPendingsDto, PendingForLeaderDto, PendingForMemberDto, TeamScheduleDto, TeamVisitReportPendingsDto } from '../types';
 import RegisterAttendance from '../components/RegisterAttendance';
 
@@ -184,7 +185,8 @@ const PendingAttendancePage = () => {
 
   return (
     <Box sx={{ p: { xs: 1, md: 3 } }}>
-      <Breadcrumbs sx={{ mb: 3 }}>
+      <BackHeader title="Central de Pendências" />
+      <Breadcrumbs sx={{ mb: 3, display: { xs: 'none', md: 'flex' } }}>
         <Link underline="hover" sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} color="inherit" onClick={() => navigate('/adm')}>
           <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
           Admin
@@ -198,7 +200,7 @@ const PendingAttendancePage = () => {
         </Typography>
       </Breadcrumbs>
 
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3, display: { xs: 'none', md: 'flex' } }}>
         <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
           Central de Pendências
         </Typography>

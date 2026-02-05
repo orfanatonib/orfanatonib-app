@@ -39,6 +39,7 @@ import { useAuthRole } from '../../utils/useAuthRole';
 import BirthdaySection from './components/BirthdaySection';
 import { ProfileCard, ProfileCardSkeleton } from './components/ProfileCard';
 import ProfileDetailModal from './components/ProfileDetailModal';
+import BackHeader from '@/components/common/header/BackHeader';
 
 const ProfilesManager: React.FC = () => {
   const [profiles, setProfiles] = useState<CompleteProfileListItem[]>([]);
@@ -181,26 +182,7 @@ const ProfilesManager: React.FC = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <Box sx={{ mb: 2, textAlign: 'center' }}>
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 0.5,
-            }}
-          >
-            Nossa Família ❤️
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Conheça cada pessoa especial do nosso ministério
-          </Typography>
-        </Box>
-      </motion.div>
+      <BackHeader title="Nossa Família ❤️" />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>

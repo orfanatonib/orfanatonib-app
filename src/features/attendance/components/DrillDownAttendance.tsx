@@ -22,6 +22,7 @@ import TeamSelection from './TeamSelection';
 import TeamMemberAttendance from './TeamMemberAttendance';
 import AttendanceModeSelector from './AttendanceModeSelector';
 import ListSheets from './ListSheets';
+import BackHeader from '@/components/common/header/BackHeader';
 
 import type {
   SheltersTeamsMembersResponse,
@@ -219,14 +220,7 @@ const DrillDownAttendance = memo(() => {
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ flex: 1, width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4 }, py: { xs: 2, md: 3 } }}>
-        <Box sx={{ mb: { xs: 3, md: 4 } }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Controle de Frequência
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gerencie a presença das equipes em seus abrigos de forma organizada e eficiente.
-          </Typography>
-        </Box>
+        <BackHeader title="Controle de Frequência" />
 
         {drillDownState.viewMode === 'shelters' && !loading && hierarchyData.length > 0 && (
           <Grid container spacing={2} sx={{ mb: 4 }}>

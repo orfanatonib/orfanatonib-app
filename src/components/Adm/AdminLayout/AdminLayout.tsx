@@ -18,6 +18,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
+  Tooltip,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -42,6 +43,14 @@ import {
   Favorite,
   EventAvailable,
   Handshake,
+  People,
+  HomeWork,
+  Article,
+  PermMedia,
+  Build,
+  Chat,
+  ChevronLeft,
+  ChevronRight,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -53,7 +62,7 @@ const drawerWidth = 240;
 
 type NavItem = { label: string; to: string; icon: ReactNode };
 type SectionId = "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
-type Section = { id: SectionId; title: string; items: NavItem[] };
+type Section = { id: SectionId; title: string; items: NavItem[]; icon: ReactNode };
 type MobileTab = "tudo" | SectionId;
 
 function AdminLayout() {
@@ -71,7 +80,15 @@ function AdminLayout() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("tudo");
+
+  // Desktop Drawer State
+  const [desktopOpen, setDesktopOpen] = useState(true);
+
   const toggleDrawer = () => setMobileOpen((v) => !v);
+  const toggleDesktop = () => setDesktopOpen((v) => !v);
+
+  const miniDrawerWidth = 72;
+  const currentDrawerWidth = isMobile ? drawerWidth : (desktopOpen ? drawerWidth : miniDrawerWidth);
 
   const HEADER_H = 64;
   const FOOTER_H = 88;
@@ -85,6 +102,7 @@ function AdminLayout() {
       {
         id: "pessoas",
         title: "Pessoas",
+        icon: <People />,
         items: [
           { label: "Usuários", to: "/adm/usuarios", icon: <Group /> },
           { label: "Perfis", to: "/adm/perfis", icon: <Favorite /> },
@@ -96,6 +114,7 @@ function AdminLayout() {
       {
         id: "abrigos",
         title: "Abrigos",
+        icon: <HomeWork />,
         items: [
           { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
           { label: "Pagelas", to: "/adm/pagelas", icon: <Description /> },
@@ -108,6 +127,7 @@ function AdminLayout() {
       {
         id: "conteudo",
         title: "Conteúdo",
+        icon: <Article />,
         items: [
           { label: "Criar Página", to: "/adm/criar-pagina", icon: <NoteAdd /> },
           { label: "Meditações", to: "/adm/meditacoes", icon: <MenuBook /> },
@@ -118,6 +138,7 @@ function AdminLayout() {
       {
         id: "midias",
         title: "Mídias",
+        icon: <PermMedia />,
         items: [
           { label: "Galerias de Fotos", to: "/adm/paginas-fotos", icon: <PhotoLibrary /> },
           { label: "Fotos dos Abrigos", to: "/adm/fotos-abrigos", icon: <Collections /> },
@@ -127,6 +148,7 @@ function AdminLayout() {
       {
         id: "materiais",
         title: "Materiais",
+        icon: <Build />,
         items: [
           { label: "Materiais de Visita", to: "/adm/paginas-materiais-visita", icon: <EventNote /> },
           { label: "Páginas de Ideias", to: "/adm/paginas-ideias", icon: <Lightbulb /> },
@@ -136,6 +158,7 @@ function AdminLayout() {
       {
         id: "interacoes",
         title: "Interações",
+        icon: <Chat />,
         items: [
           { label: "Comentários", to: "/adm/comentarios", icon: <Comment /> },
           { label: "Contatos", to: "/adm/contatos", icon: <ContactMail /> },
@@ -256,11 +279,36 @@ function AdminLayout() {
 
   const drawerContent = (
     <>
-      <Toolbar />
-      <Box sx={{ pb: 2, pt: 1, px: 2 }}>
-        <Typography variant="subtitle1" fontWeight="bold">
-          Painel Admin
-        </Typography>
+
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: desktopOpen ? 'space-between' : 'center',
+        pl: desktopOpen ? 2 : 0,
+        pr: 1,
+        pb: 1,
+        pt: 1
+      }}>
+        {desktopOpen && (
+          <Typography variant="subtitle1" fontWeight="bold" noWrap>
+            Painel Admin
+          </Typography>
+        )}
+
+        {!isMobile && (
+          <IconButton
+            onClick={toggleDesktop}
+            size="small"
+            sx={{
+              bgcolor: 'action.hover',
+              '&:hover': { bgcolor: 'action.selected' },
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            {desktopOpen ? <ChevronLeft fontSize="small" /> : <ChevronRight fontSize="small" />}
+          </IconButton>
+        )}
       </Box>
       <Divider />
 
@@ -312,52 +360,88 @@ function AdminLayout() {
           }}
         >
           <AccordionSummary
-            expandIcon={<ExpandMore />}
+            expandIcon={(!isMobile && !desktopOpen) ? null : <ExpandMore />}
             sx={{
-              px: 2,
+              px: (!isMobile && !desktopOpen) ? 1 : 2,
               py: 1,
-              "& .MuiAccordionSummary-content": { alignItems: "center", my: 0.25 },
+              justifyContent: (!isMobile && !desktopOpen) ? 'center' : 'flex-start',
+              "& .MuiAccordionSummary-content": {
+                alignItems: "center",
+                my: 0.25,
+                flexGrow: (!isMobile && !desktopOpen) ? 0 : 1,
+                justifyContent: (!isMobile && !desktopOpen) ? 'center' : 'flex-start'
+              },
               "&:hover": { bgcolor: "action.hover" },
             }}
           >
-            <Typography
-              variant="caption"
-              fontWeight="bold"
-              color="text.secondary"
-              sx={{ fontSize: isMobile ? 11 : undefined }}
-            >
-              {sec.title}
-            </Typography>
+            {(!isMobile && !desktopOpen) ? (
+              <Tooltip title={sec.title} placement="right" arrow>
+                <Box display="flex" alignItems="center" justifyContent="center">
+                  {sec.icon}
+                </Box>
+              </Tooltip>
+            ) : (
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                color="text.secondary"
+                sx={{ fontSize: isMobile ? 11 : undefined }}
+              >
+                {sec.title}
+              </Typography>
+            )}
+
           </AccordionSummary>
 
-          <AccordionDetails sx={{ p: 0 }}>
+          <AccordionDetails sx={{
+            p: 0,
+            display: (!isMobile && !desktopOpen && expanded !== sec.id) ? 'none' : 'block',
+            bgcolor: !isMobile ? 'rgba(0, 0, 0, 0.06)' : 'transparent',
+            borderLeft: !isMobile ? '3px solid' : 'none',
+            borderColor: 'primary.main'
+          }}>
             <List dense disablePadding>
               {sec.items.map((item) => {
                 const selected =
                   location.pathname === item.to ||
                   location.pathname.startsWith(item.to + "/");
-                return (
+
+                const buttonContent = (
                   <ListItemButton
                     key={item.to}
                     selected={selected}
                     onClick={() => handleNavigate(item.to)}
                     sx={{
                       py: 1,
-                      px: 2,
+                      px: (!isMobile && !desktopOpen) ? 1 : 2,
+                      justifyContent: (!isMobile && !desktopOpen) ? 'center' : 'flex-start',
                       "& .MuiListItemText-primary": { fontSize: isMobile ? 13 : undefined },
                       "& .MuiListItemIcon-root, & .MuiSvgIcon-root": {
                         fontSize: isMobile ? "1.1rem" : undefined,
                       },
                       "&.Mui-selected": {
                         bgcolor: "action.selected",
+                        border: '1px solid',
+                        borderColor: 'primary.main',
+                        borderRadius: 1,
                         "&:hover": { bgcolor: "action.selected" },
                       },
                     }}
                   >
-                    <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.label} />
+                    <ListItemIcon sx={{ minWidth: (!isMobile && !desktopOpen) ? 0 : 36, justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+                    {(isMobile || desktopOpen) && <ListItemText primary={item.label} />}
                   </ListItemButton>
                 );
+
+                if (!isMobile && !desktopOpen) {
+                  return (
+                    <Tooltip key={item.to} title={item.label} placement="right" arrow>
+                      {buttonContent}
+                    </Tooltip>
+                  )
+                }
+
+                return buttonContent;
               })}
             </List>
           </AccordionDetails>
@@ -399,10 +483,19 @@ function AdminLayout() {
         onClose={toggleDrawer}
         ModalProps={{ keepMounted: true }}
         sx={{
-          width: drawerWidth,
+          width: currentDrawerWidth,
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: drawerWidth,
+            width: currentDrawerWidth,
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: 'hidden',
             boxSizing: "border-box",
             mt: isMobile ? 0 : `${HEADER_H}px`,
             height: isMobile

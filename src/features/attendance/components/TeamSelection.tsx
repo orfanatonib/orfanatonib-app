@@ -14,6 +14,8 @@ import {
   Skeleton,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -233,7 +235,8 @@ const TeamCard = memo(({
 });
 
 const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }: TeamSelectionProps) => {
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -253,26 +256,10 @@ const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }:
 
   const header = (
     <Stack spacing={1} sx={{ mb: { xs: 2, md: 3 } }}>
-      <Stack direction="row" alignItems="center" spacing={2}>
-        {onBack && (
-          <IconButton
-            onClick={onBack}
-            aria-label="Voltar"
-            sx={{
-              bgcolor: 'action.hover',
-              '&:hover': {
-                bgcolor: 'action.selected',
-              },
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        )}
-        <Typography variant="h5" fontWeight="bold">
-          Selecione uma Equipe
-        </Typography>
-      </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ ml: onBack ? 7 : 0 }}>
+      <Typography variant="h5" fontWeight="bold">
+        Selecione uma Equipe
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
         Escolha o abrigo e depois a equipe para visualizar os membros e gerenciar presenças.
       </Typography>
     </Stack>

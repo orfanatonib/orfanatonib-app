@@ -27,7 +27,7 @@ import { fetchRoutes } from 'store/slices/route/routeSlice';
 import { clearIdeasData, IdeasSection } from 'store/slices/ideas/ideasSlice';
 import api from '@/config/axiosConfig';
 import { MediaUploadType } from 'store/slices/types';
-import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
+import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
 import { IdeasMaterialSection } from './IdeasMaterialSection';
 
 interface PageCreatorProps {
@@ -420,10 +420,12 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
         </Box>
       </Container>
 
-      <ConfirmDeleteDialog
+      <DeleteConfirmationModal
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={confirmDeleteSection}
+        loading={false}
+        description="Tem certeza que deseja excluir esta seção? Esta ação não pode ser desfeita."
       />
 
       <Snackbar

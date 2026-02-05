@@ -15,6 +15,7 @@ import EmptyState from "./components/EmptyState";
 import NoTeamsState from "./components/NoTeamsState";
 import ShelterCard from "./components/ShelterCard";
 import ScheduleDetailsModal from "./components/ScheduleDetailsModal";
+import BackHeader from "@/components/common/header/BackHeader";
 
 interface TeamGroup {
   teamId: string;
@@ -230,11 +231,18 @@ export default function ShelterScheduleManager() {
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
       {isLeader && !isAdmin && <LeaderInfoBanner />}
 
-      <ScheduleHeader
-        schedulesCount={schedules.length}
-        sheltersCount={groupedData.length}
-        onCreateClick={handleOpenCreate}
-      />
+      <BackHeader title="Agendamentos de Visitas" />
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenCreate}
+          sx={{ borderRadius: 2 }}
+        >
+          Novo Agendamento
+        </Button>
+      </Box>
 
       {schedules.length === 0 && (
         teams.length === 0 && !isAdmin ? (

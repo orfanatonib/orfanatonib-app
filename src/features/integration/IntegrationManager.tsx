@@ -166,6 +166,8 @@ export default function IntegrationManager() {
     >
 
       <Container maxWidth="xl" sx={{ pt: 2 }}>
+        <BackHeader title="Integrações da Feira de Ministério" />
+
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -200,7 +202,7 @@ export default function IntegrationManager() {
               justifyContent: "space-between",
             }}
           >
-            <Box>
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Integrações da Feira de Ministério
               </Typography>

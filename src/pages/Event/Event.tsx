@@ -18,7 +18,7 @@ import LoadingState from './components/LoadingState';
 import EventsHeader from './components/EventsHeader';
 import EmptyState from './components/EmptyState';
 import EventList from './components/EventList';
-import DeleteEventDialog from './components/DeleteEventDialog';
+import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
 import { Fab, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -237,10 +237,12 @@ const Eventos: React.FC = () => {
           initialData={currentEditEvent}
         />
 
-        <DeleteEventDialog
+        <DeleteConfirmationModal
           open={dialogDeleteOpen}
           onClose={handleCloseDelete}
           onConfirm={handleConfirmDelete}
+          loading={false}
+          description="Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita."
         />
       </Box>
     </Fragment>

@@ -26,7 +26,8 @@ import VisitReportFormModal from "./components/VisitReportFormModal";
 import VisitReportDetailsModal from "./components/VisitReportDetailsModal";
 import ReportGridView from "./components/ReportGridView";
 import ReportTableView from "./components/ReportTableView";
-import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
+import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
+import BackHeader from "@/components/common/header/BackHeader";
 
 interface TeamGroup {
     id: string;
@@ -193,37 +194,33 @@ export default function VisitReportsManager() {
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: "bold", color: "primary.main", fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
-                    Relatórios das Visitas
-                </Typography>
+            <BackHeader title="Relatórios das Visitas" />
 
-                <Box display="flex" gap={2} alignItems="center">
-                    <ToggleButtonGroup
-                        value={viewMode}
-                        exclusive
-                        onChange={handleViewChange}
-                        aria-label="modo de visualização"
-                        size="small"
-                        sx={{ display: { xs: 'none', md: 'flex' } }}
-                    >
-                        <ToggleButton value="grid" aria-label="visualização em grade">
-                            <GridViewIcon fontSize="small" />
-                        </ToggleButton>
-                        <ToggleButton value="table" aria-label="visualização em lista">
-                            <ListViewIcon fontSize="small" />
-                        </ToggleButton>
-                    </ToggleButtonGroup>
+            <Box display="flex" justifyContent={{ xs: "center", md: "flex-end" }} alignItems="center" mb={3} flexWrap="wrap" gap={2}>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewChange}
+                    aria-label="modo de visualização"
+                    size="small"
+                    sx={{ display: { xs: 'none', md: 'flex' } }}
+                >
+                    <ToggleButton value="grid" aria-label="visualização em grade">
+                        <GridViewIcon fontSize="small" />
+                    </ToggleButton>
+                    <ToggleButton value="table" aria-label="visualização em lista">
+                        <ListViewIcon fontSize="small" />
+                    </ToggleButton>
+                </ToggleButtonGroup>
 
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={openCreate}
-                        sx={{ borderRadius: 2 }}
-                    >
-                        Novo Relatório
-                    </Button>
-                </Box>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={openCreate}
+                    sx={{ borderRadius: 2 }}
+                >
+                    Novo Relatório
+                </Button>
             </Box>
 
             {error && (
@@ -232,72 +229,77 @@ export default function VisitReportsManager() {
                 </Alert>
             )}
 
-            {groupedReports.length === 0 && !loading ? (
-                <Paper sx={{ p: 6, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
-                    {isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0) ? (
-                        <>
-                            <Typography variant="h6" color="textPrimary" gutterBottom>
-                                Você não possui relatórios vinculados.
-                            </Typography>
-                            <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-                                Você não parece estar vinculado a nenhuma equipe. Contate a liderança para liberar seu acesso e vincular você a uma equipe.
-                            </Typography>
-                        </>
-                    ) : (
-                        <>
-                            <Typography variant="h6" color="textSecondary">
-                                Nenhum relatório encontrado.
-                            </Typography>
-                            <Button variant="outlined" sx={{ mt: 2 }} onClick={openCreate}>
-                                Criar Primeiro Relatório
-                            </Button>
-                        </>
-                    )}
-                </Paper>
-            ) : (
-                <>
-                    {viewMode === 'grid' ? (
-                        <ReportGridView
-                            shelterGroups={groupedReports}
-                            onView={openDetails}
-                            onEdit={openEdit}
-                            onDelete={handleDeleteClick}
-                        />
-                    ) : (
-                        <ReportTableView
-                            shelterGroups={groupedReports}
-                            onView={openDetails}
-                            onEdit={openEdit}
-                            onDelete={handleDeleteClick}
-                        />
-                    )}
-                </>
-            )}
+            {
+                groupedReports.length === 0 && !loading ? (
+                    <Paper sx={{ p: 6, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
+                        {isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0) ? (
+                            <>
+                                <Typography variant="h6" color="textPrimary" gutterBottom>
+                                    Você não possui relatórios vinculados.
+                                </Typography>
+                                <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
+                                    Você não parece estar vinculado a nenhuma equipe. Contate a liderança para liberar seu acesso e vincular você a uma equipe.
+                                </Typography>
+                            </>
+                        ) : (
+                            <>
+                                <Typography variant="h6" color="textSecondary">
+                                    Nenhum relatório encontrado.
+                                </Typography>
+                                <Button variant="outlined" sx={{ mt: 2 }} onClick={openCreate}>
+                                    Criar Primeiro Relatório
+                                </Button>
+                            </>
+                        )}
+                    </Paper>
+                ) : (
+                    <>
+                        {viewMode === 'grid' ? (
+                            <ReportGridView
+                                shelterGroups={groupedReports}
+                                onView={openDetails}
+                                onEdit={openEdit}
+                                onDelete={handleDeleteClick}
+                            />
+                        ) : (
+                            <ReportTableView
+                                shelterGroups={groupedReports}
+                                onView={openDetails}
+                                onEdit={openEdit}
+                                onDelete={handleDeleteClick}
+                            />
+                        )}
+                    </>
+                )
+            }
 
-            {formOpen && (
-                <VisitReportFormModal
-                    open={formOpen}
-                    onClose={() => setFormOpen(false)}
-                    onSubmit={editingReport ? handleUpdate : handleCreate}
-                    initialData={editingReport}
-                    loading={submitting}
-                />
-            )}
+            {
+                formOpen && (
+                    <VisitReportFormModal
+                        open={formOpen}
+                        onClose={() => setFormOpen(false)}
+                        onSubmit={editingReport ? handleUpdate : handleCreate}
+                        initialData={editingReport}
+                        loading={submitting}
+                    />
+                )
+            }
 
-            {detailsOpen && (
-                <VisitReportDetailsModal
-                    open={detailsOpen}
-                    onClose={() => setDetailsOpen(false)}
-                    report={viewingReport}
-                />
-            )}
+            {
+                detailsOpen && (
+                    <VisitReportDetailsModal
+                        open={detailsOpen}
+                        onClose={() => setDetailsOpen(false)}
+                        report={viewingReport}
+                    />
+                )
+            }
 
             <DeleteConfirmationModal
                 open={deleteOpen}
                 onClose={() => setDeleteOpen(false)}
                 onConfirm={confirmDelete}
                 loading={deleting}
-                title="Excluir Relatório"
                 description="Tem certeza que deseja excluir este relatório de visita? Esta ação não pode ser desfeita."
             />
         </Box>
