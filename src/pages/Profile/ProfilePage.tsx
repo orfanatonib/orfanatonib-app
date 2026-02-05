@@ -19,6 +19,7 @@ import {
   ListItemText,
   Divider,
   Container,
+  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
@@ -315,22 +316,152 @@ const ProfilePage: React.FC = () => {
             </Box>
 
             {profile?.role === 'member' && user?.memberProfile?.team?.shelter && (
-              <Box sx={{ px: 1.5, py: 1, bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
-                <Stack spacing={0.5}>
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
-                    <Typography variant="caption" fontWeight={700} noWrap>
-                      {user.memberProfile.team.shelter.name}
-                    </Typography>
+              <Tooltip
+                title={
+                  user.memberProfile.team.shelter.address ? (
+                    <Box>
+                      <Typography variant="caption" fontWeight={600} sx={{ display: 'block' }}>
+                        {user.memberProfile.team.shelter.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                        {user.memberProfile.team.shelter.address.street}, {user.memberProfile.team.shelter.address.number}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block' }}>
+                        {user.memberProfile.team.shelter.address.district} - {user.memberProfile.team.shelter.address.city}/{user.memberProfile.team.shelter.address.state}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block' }}>
+                        CEP: {user.memberProfile.team.shelter.address.postalCode}
+                      </Typography>
+                    </Box>
+                  ) : user.memberProfile.team.shelter.name
+                }
+                arrow
+                placement={isMobile ? 'bottom' : 'right'}
+                enterTouchDelay={0}
+                leaveTouchDelay={3000}
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      bgcolor: 'white',
+                      color: 'text.primary',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      border: '1px solid rgba(25, 118, 210, 0.2)',
+                      p: 1.5,
+                      maxWidth: { xs: 280, sm: 320 },
+                      '& .MuiTooltip-arrow': {
+                        color: 'white',
+                        '&::before': {
+                          border: '1px solid rgba(25, 118, 210, 0.2)',
+                        },
+                      },
+                    },
+                  },
+                }}
+              >
+                <Box sx={{ px: 1.5, py: 1.5, bgcolor: 'rgba(25, 118, 210, 0.05)', cursor: 'pointer' }}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <HomeOutlinedIcon sx={{ fontSize: 16 }} color="primary" />
+                      <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1.3 }} noWrap>
+                        {user.memberProfile.team.shelter.name}
+                      </Typography>
+                    </Stack>
+                    <Chip
+                      icon={<GroupsOutlinedIcon />}
+                      label={`Equipe ${user.memberProfile.team.numberTeam}`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ fontWeight: 700, height: 24, '& .MuiChip-label': { px: 1 }, alignSelf: 'flex-start' }}
+                    />
                   </Stack>
-                  <Chip
-                    icon={<GroupsOutlinedIcon />}
-                    label={`Equipe ${user.memberProfile.team.numberTeam}`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                    sx={{ fontWeight: 700, height: 24, '& .MuiChip-label': { px: 1 } }}
-                  />
+                </Box>
+              </Tooltip>
+            )}
+
+            {profile?.role === 'leader' && user?.leaderProfile?.teams && user.leaderProfile.teams.length > 0 && (
+              <Box sx={{ px: 1.5, py: 1.5, bgcolor: 'rgba(25, 118, 210, 0.05)', maxHeight: { xs: 150, sm: 200 }, overflowY: 'auto' }}>
+                <Typography variant="caption" fontWeight={700} color="primary" sx={{ display: 'block', mb: 1 }}>
+                  Minhas Equipes ({user.leaderProfile.teams.length})
+                </Typography>
+                <Stack spacing={1}>
+                  {user.leaderProfile.teams.map((team) => (
+                    <Tooltip
+                      key={team.id}
+                      title={
+                        team.shelter?.address ? (
+                          <Box>
+                            <Typography variant="caption" fontWeight={600} sx={{ display: 'block' }}>
+                              {team.shelter.name}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                              {team.shelter.address.street}, {team.shelter.address.number}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                              {team.shelter.address.district} - {team.shelter.address.city}/{team.shelter.address.state}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                              CEP: {team.shelter.address.postalCode}
+                            </Typography>
+                          </Box>
+                        ) : team.shelter?.name || ''
+                      }
+                      arrow
+                      placement={isMobile ? 'bottom' : 'right'}
+                      enterTouchDelay={0}
+                      leaveTouchDelay={3000}
+                      componentsProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'white',
+                            color: 'text.primary',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                            border: '1px solid rgba(25, 118, 210, 0.2)',
+                            p: 1.5,
+                            maxWidth: { xs: 280, sm: 320 },
+                            '& .MuiTooltip-arrow': {
+                              color: 'white',
+                              '&::before': {
+                                border: '1px solid rgba(25, 118, 210, 0.2)',
+                              },
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: 'white',
+                          border: '1px solid rgba(25, 118, 210, 0.15)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
+                          },
+                        }}
+                      >
+                        <Stack spacing={0.5}>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <HomeOutlinedIcon sx={{ fontSize: 14 }} color="primary" />
+                            <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.7rem', lineHeight: 1.2 }} noWrap>
+                              {team.shelter?.name}
+                            </Typography>
+                          </Stack>
+                          <Chip
+                            icon={<GroupsOutlinedIcon sx={{ fontSize: '14px !important' }} />}
+                            label={`Equipe ${team.numberTeam}`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={{ fontWeight: 600, height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, alignSelf: 'flex-start' }}
+                          />
+                        </Stack>
+                      </Box>
+                    </Tooltip>
+                  ))}
                 </Stack>
               </Box>
             )}

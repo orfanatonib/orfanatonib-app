@@ -115,9 +115,30 @@ export interface PendingForMemberDto {
   shelterName: string;
 }
 
+export interface VisitReportPendingDto {
+  scheduleId: string;
+  visitNumber: number;
+  visitDate: string;
+  lessonContent: string;
+  observation?: string;
+  teamId: string;
+  teamNumber: number;
+  teamName: string;
+  shelterName: string;
+  shelterAddress?: string;
+}
+
+export interface TeamVisitReportPendingsDto {
+  teamId: string;
+  teamName: string;
+  shelterName: string;
+  pendings: VisitReportPendingDto[];
+}
+
 export interface AllPendingsResponseDto {
   leaderPendings: TeamPendingsDto[];
   memberPendings: PendingForMemberDto[];
+  visitReportPendings: TeamVisitReportPendingsDto[];
 }
 
 export interface LeaderTeamDto {

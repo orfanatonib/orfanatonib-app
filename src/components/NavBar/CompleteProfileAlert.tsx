@@ -28,6 +28,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DescriptionIcon from '@mui/icons-material/Description';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
@@ -35,7 +36,7 @@ import Chip from '@mui/material/Chip';
 import { useNavigate } from 'react-router-dom';
 import { registerAttendance } from '@/features/attendance/api';
 import { AttendanceType, EventCategory } from '@/features/attendance/types';
-import type { PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto, TeamPendingsDto } from '@/features/attendance/types';
+import type { PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto, TeamPendingsDto, TeamVisitReportPendingsDto } from '@/features/attendance/types';
 import type { RootState as RootStateType } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { ATTENDANCE_ERROR_MESSAGES, ATTENDANCE_SUCCESS_MESSAGES } from '@/constants/errors';
@@ -49,8 +50,10 @@ export interface ProfileAlert {
 export interface AttendancePendingsProps {
   memberPendings: PendingForMemberDto[];
   leaderPendings: TeamPendingsDto[];
+  visitReportPendings: TeamVisitReportPendingsDto[];
   leaderPendingsCount: number;
   memberPendingsCount: number;
+  visitReportPendingsCount: number;
   loading: boolean;
   refetch: () => Promise<void>;
 }
@@ -86,9 +89,10 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
   const memberPendings = attendancePendings?.memberPendings || [];
   const leaderPendingsCount = attendancePendings?.leaderPendingsCount || 0;
   const memberPendingsCount = attendancePendings?.memberPendingsCount || 0;
+  const visitReportPendingsCount = attendancePendings?.visitReportPendingsCount || 0;
   const loading = attendancePendings?.loading || false;
 
-  const pendingCount = isMember ? memberPendingsCount : leaderPendingsCount;
+  const pendingCount = isMember ? memberPendingsCount : (leaderPendingsCount + visitReportPendingsCount);
   const badgeCount = alerts.length + pendingCount;
   const hasAnyAlert = badgeCount > 0;
 
@@ -561,7 +565,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
             </MenuItem>
           )}
 
-          {isLeaderOrAdmin && pendingCount > 0 && (
+          {leaderPendingsCount > 0 && (
             <MenuItem
               onClick={() => {
                 handleClose();
@@ -570,6 +574,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
               sx={{
                 px: 2,
                 py: 1.5,
+                mb: 1, // Add separation
                 color: '#FFD600',
                 borderLeft: '3px solid transparent',
                 whiteSpace: 'normal',
@@ -587,51 +592,58 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
               </Box>
               <ListItemText
                 primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', width: '100%' }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#FFD600',
-                        fontWeight: 600,
-                        fontSize: '0.875rem',
-                        wordBreak: 'break-word',
-                        overflowWrap: 'break-word',
-                        whiteSpace: 'normal',
-                        flex: '1 1 auto',
-                        minWidth: 0,
-                      }}
-                    >
-                      Pendências de pagela
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Typography variant="body2" sx={{ color: '#FFD600', fontWeight: 600, fontSize: '0.875rem' }}>
+                      Pendências de presença
                     </Typography>
-                    <Chip
-                      label={pendingCount}
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: '0.7rem',
-                        bgcolor: 'error.main',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        flexShrink: 0,
-                      }}
-                    />
+                    <Chip label={leaderPendingsCount} size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'error.main', color: 'white', fontWeight: 'bold' }} />
                   </Box>
                 }
                 secondary={
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'rgba(255, 255, 0, 0.7)',
-                      fontSize: '0.75rem',
-                      mt: 0.5,
-                      display: 'block',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      width: '100%',
-                    }}
-                  >
-                    {`${pendingCount} evento${pendingCount !== 1 ? 's' : ''} aguardando lançamento de pagela`}
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 0, 0.7)', fontSize: '0.75rem', mt: 0.5, display: 'block' }}>
+                    Clique para visualizar
+                  </Typography>
+                }
+              />
+            </MenuItem>
+          )}
+
+          {visitReportPendingsCount > 0 && (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                navigate('/adm/relatorios/pendencias');
+              }}
+              sx={{
+                px: 2,
+                py: 1.5,
+                color: '#FFD600',
+                borderLeft: '3px solid transparent',
+                whiteSpace: 'normal',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+                maxWidth: '100%',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 0, 0.1)',
+                  borderLeftColor: '#FFD600',
+                },
+              }}
+            >
+              <Box sx={{ mr: 1.5, color: '#FFD600' }}>
+                <DescriptionIcon fontSize="small" />
+              </Box>
+              <ListItemText
+                primary={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Typography variant="body2" sx={{ color: '#FFD600', fontWeight: 600, fontSize: '0.875rem' }}>
+                      Relatórios pendentes
+                    </Typography>
+                    <Chip label={visitReportPendingsCount} size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'warning.main', color: 'black', fontWeight: 'bold' }} />
+                  </Box>
+                }
+                secondary={
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 0, 0.7)', fontSize: '0.75rem', mt: 0.5, display: 'block' }}>
+                    Clique para visualizar
                   </Typography>
                 }
               />

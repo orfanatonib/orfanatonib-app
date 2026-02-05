@@ -6,8 +6,9 @@ import {
   MyTeamResponseDto,
 } from "./types";
 
-export async function apiListShelterSchedules(): Promise<ShelterScheduleResponseDto[]> {
-  const { data } = await api.get<ShelterScheduleResponseDto[]>("/shelter-schedules");
+export async function apiListShelterSchedules(teamId?: string): Promise<ShelterScheduleResponseDto[]> {
+  const params = teamId ? { teamId } : {};
+  const { data } = await api.get<ShelterScheduleResponseDto[]>("/shelter-schedules", { params });
   return data;
 }
 

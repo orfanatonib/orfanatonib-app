@@ -9,10 +9,23 @@ export enum UserRole {
   MEMBER = 'member',
 }
 
+interface AddressLite {
+  id: string;
+  street: string;
+  number: string;
+  district: string;
+  city: string;
+  state: string;
+  postalCode: string;
+}
+
 interface ShelterLite {
   id: string;
   name: string;
   number?: number;
+  description?: string;
+  teamsQuantity?: number;
+  address?: AddressLite | null;
 }
 
 interface TeamLite {

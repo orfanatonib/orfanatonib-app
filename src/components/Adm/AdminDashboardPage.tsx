@@ -72,6 +72,7 @@ const cardData: CardData[] = [
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
   { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
   { title: "Presenças", description: "Gerencie a frequência das equipes e membros.", icon: <EventAvailable fontSize="large" color="primary" />, path: "/adm/presenca", section: "abrigos" },
+  { title: "Relatórios das Visitas", description: "Gerencie Relatórios das Visitass realizadas.", icon: <Description fontSize="large" color="primary" />, path: "/adm/relatorios-visita", section: "abrigos" },
   { title: "Integrações FM", description: "Gerencie integrações de pessoas na Feira de Ministério.", icon: <Handshake fontSize="large" color="primary" />, path: "/adm/integracoes", section: "abrigos" },
 
   { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
@@ -139,6 +140,7 @@ export default function AdminDashboardPage() {
     "/adm/agendamentos",
     "/adm/presenca",
     "/adm/integracoes",
+    "/adm/relatorios-visita",
   ]);
 
   const canSeeCard = (card: CardData): boolean => {

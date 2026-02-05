@@ -1,4 +1,5 @@
 import { AttendanceDashboard, PendingAttendancePage } from './features/attendance/pages';
+import PendingVisitReportsPage from './features/visit-reports/pages/PendingVisitReportsPage';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -76,6 +77,7 @@ import ShelterScheduleManager from './features/shelter-schedule/ShelterScheduleM
 import ProfilesManager from './features/profile/ProfilesManager';
 import IntegrationManager from './features/integration/IntegrationManager';
 import IntegrationShelteredPage from './features/integration/IntegrationShelteredPage';
+import VisitReportsManager from './features/visit-reports/VisitReportsManager';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -253,6 +255,9 @@ function App() {
                     <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
                     <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
                     <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
+
+                    <Route path="relatorios-visita" element={<VisitReportsManager />} />
+                    <Route path="relatorios/pendencias" element={<PendingVisitReportsPage />} />
                   </Route>
                 </Route>
 

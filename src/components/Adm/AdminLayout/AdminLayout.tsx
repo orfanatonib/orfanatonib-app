@@ -100,6 +100,7 @@ function AdminLayout() {
           { label: "Abrigos", to: "/adm/abrigos", icon: <Groups /> },
           { label: "Pagelas", to: "/adm/pagelas", icon: <Description /> },
           { label: "Agendamentos", to: "/adm/agendamentos", icon: <CalendarMonth /> },
+          { label: "Relatórios das Visitas", to: "/adm/relatorios-visita", icon: <Description /> },
           { label: "Integrações FM", to: "/adm/integracoes", icon: <Handshake /> },
           { label: "Presenças", to: "/adm/presenca", icon: <EventAvailable /> },
         ],
@@ -154,6 +155,7 @@ function AdminLayout() {
     "/adm/agendamentos",
     "/adm/presenca",
     "/adm/integracoes",
+    "/adm/relatorios-visita",
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
@@ -188,6 +190,7 @@ function AdminLayout() {
       path.startsWith("/adm/abrigos") ||
       path.startsWith("/adm/pagelas") ||
       path.startsWith("/adm/agendamentos") ||
+      path.startsWith("/adm/relatorios-visita") ||
       path.startsWith("/adm/presenca") ||
       path.startsWith("/adm/integracoes")
     ) {
