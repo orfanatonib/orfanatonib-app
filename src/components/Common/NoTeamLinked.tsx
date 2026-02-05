@@ -6,6 +6,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsApp from '@mui/icons-material/WhatsApp';
 import { motion } from 'framer-motion';
 import { SUPPORT_CONTACTS, buildTeamLinkingWhatsappLink } from '@/utils/whatsapp';
+import BackHeader from '@/components/common/header/BackHeader';
 
 interface NoTeamLinkedProps {
     title?: string;
@@ -27,6 +28,7 @@ const NoTeamLinked: React.FC<NoTeamLinkedProps> = ({
                 py: 4,
             }}
         >
+            <BackHeader title="Painel Admin" />
             <Container maxWidth="md">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

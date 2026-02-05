@@ -194,6 +194,7 @@ export default function ShelterDetailsPage() {
           py: 4,
         }}
       >
+        <BackHeader title="Painel Admin" />
         <Container maxWidth="md">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
