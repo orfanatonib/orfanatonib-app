@@ -24,6 +24,7 @@ import EmailVerificationInstructions from './pages/EmailVerification/EmailVerifi
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
 import ForgotPassword from './pages/PasswordReset/ForgotPassword';
 import ResetPassword from './pages/PasswordReset/ResetPassword';
+import MinistryInstructions from './pages/MinistryInstructions/MinistryInstructions';
 
 import MeditationPageCreator from './components/Adm/PageCreator/Templates/MeditationPageCreator/MeditationPageCreator';
 import ImagePageCreator from './components/Adm/PageCreator/Templates/ImagePageCreator/ImagePageCreator';
@@ -179,6 +180,7 @@ function App() {
 
                 <Route element={<ProtectedRoute />}>
                   <Route path="/area-do-membro" element={<MemberArea />} />
+                  <Route path="/manual-membro" element={<MinistryInstructions />} />
                   <Route path="/perfil" element={<ProfilePage />} />
                   <Route path="/presenca" element={<AttendanceDashboard />} />
                   <Route path="/imagens-abrigo" element={<ImageSectionPage />} />

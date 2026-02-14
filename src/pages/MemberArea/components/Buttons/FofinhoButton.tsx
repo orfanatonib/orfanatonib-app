@@ -190,6 +190,12 @@ const buttonMap: Record<string, FofinhoButtonProps> = {
     icon: GroupsIcon,
     color: 'secondary',
   },
+  training: {
+    to: '/manual-membro',
+    label: 'Manual do Membro',
+    icon: MenuBookIcon,
+    color: 'warning',
+  },
 };
 
 interface ButtonSectionProps {
