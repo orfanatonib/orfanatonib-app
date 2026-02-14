@@ -23,9 +23,9 @@ const WhyEvangelizeData: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Box sx={{
                         p: 3,
-                        bgcolor: '#f8fafc',
+                        bgcolor: '#ffffff',
                         borderRadius: 4,
-                        border: '1px solid #f1f5f9'
+                        border: '1px solid #e2e8f0'
                     }}>
                         <Typography variant="h6" fontWeight="800" gutterBottom sx={{ color: '#1e293b' }}>
                             ✅ Por que é urgente?
@@ -38,7 +38,7 @@ const WhyEvangelizeData: React.FC = () => {
                                 "Crianças são os melhores evangelistas para outras crianças"
                             ].map((text, i) => (
                                 <ListItem key={i} sx={{ px: 0 }}>
-                                    <Typography variant="body1" sx={{ color: '#475569' }}>→ {text}</Typography>
+                                    <Typography variant="body1" sx={{ color: '#475569', fontSize: '1rem' }}>→ {text}</Typography>
                                 </ListItem>
                             ))}
                         </List>
@@ -47,9 +47,9 @@ const WhyEvangelizeData: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Box sx={{
                         p: 4,
-                        bgcolor: '#ecfeff',
+                        bgcolor: '#ffffff',
                         borderRadius: 4,
-                        border: '1px solid #cffafe',
+                        border: '1px solid #e2e8f0',
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',

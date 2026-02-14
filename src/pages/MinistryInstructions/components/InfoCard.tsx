@@ -105,7 +105,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, subtitle, sections, color, d
                             elevation={0}
                             sx={{
                                 mb: 2,
-                                bgcolor: '#f8fafc',
+                                bgcolor: '#ffffff',
                                 border: '1px solid #e2e8f0',
                                 '&:before': { display: 'none' },
                                 borderRadius: '20px !important',

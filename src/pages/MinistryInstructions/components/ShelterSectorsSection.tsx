@@ -180,7 +180,7 @@ const ShelterSectorsSection: React.FC = () => {
                                     </Typography>
                                 </ListItem>
                             </List>
-                            <Box sx={{ mt: 3, p: 3, bgcolor: '#f8fafc', borderRadius: 4, border: '2px dashed #0891b2' }}>
+                            <Box sx={{ mt: 3, p: 3, bgcolor: '#ffffff', borderRadius: 4, border: '2px dashed #0891b2' }}>
                                 <Typography variant="body2" sx={{ color: '#0891b2', fontWeight: 600, textAlign: 'center' }}>
                                     💡 Cada membro será alocado em um setor conforme necessidade e habilidades do grupo.
                                 </Typography>
