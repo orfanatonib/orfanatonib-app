@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, Grid, Box, Divider } from '@mui/material';
+import {  Typography, Grid, Box } from '@mui/material';
 import { Assignment as AssignmentIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import IconBadge from './IconBadge';

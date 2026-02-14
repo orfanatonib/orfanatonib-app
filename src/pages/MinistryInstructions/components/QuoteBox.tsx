@@ -10,8 +10,8 @@ interface QuoteBoxProps {
     variant?: 'dark' | 'light';
 }
 
-const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1', variant = 'dark' }) => {
-    const isLight = variant === 'light';
+const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1', variant = 'light' }) => {
+    const isLight = variant === 'light' || variant === 'dark'; // We are making everything striking light now as requested
 
     return (
         <motion.div
@@ -32,21 +32,18 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                     borderRadius: { xs: 8, md: 10 },
                     position: 'relative',
                     overflow: 'hidden',
-                    background: isLight ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
-                    backdropFilter: isLight ? 'none' : 'blur(20px) saturate(180%)',
-                    border: isLight ? '1px solid #e2e8f0' : '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: isLight ? '0 30px 60px rgba(0,0,0,0.06)' : '0 40px 100px rgba(0,0,0,0.4)',
+                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                    border: `1px solid ${color}22`,
+                    boxShadow: `0 40px 100px -20px ${color}15, 0 20px 40px -15px rgba(0,0,0,0.05)`,
                     '&::before': {
                         content: '""',
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         bottom: 0,
-                        width: '8px',
-                        background: isLight
-                            ? `linear-gradient(180deg, ${color} 0%, ${color}44 100%)`
-                            : `linear-gradient(180deg, ${color} 0%, #000 100%)`,
-                        boxShadow: isLight ? 'none' : `0 0 40px ${color}44`,
+                        width: '12px',
+                        background: `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
+                        boxShadow: `4px 0 20px ${color}22`,
                     },
                     '&::after': {
                         content: '""',
@@ -55,9 +52,7 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: isLight
-                            ? `radial-gradient(circle at top left, ${color}08 0%, transparent 60%)`
-                            : `radial-gradient(circle at top left, ${color}15 0%, transparent 60%)`,
+                        background: `radial-gradient(circle at top left, ${color}12 0%, transparent 60%)`,
                         pointerEvents: 'none'
                     }
                 }}
@@ -82,7 +77,7 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                     <QuoteIcon
                         sx={{
                             fontSize: { xs: 180, md: 280 },
-                            color: isLight ? `${color}05` : 'rgba(255, 255, 255, 0.03)',
+                            color: `${color}08`,
                             transform: 'rotate(180deg)',
                         }}
                     />
@@ -93,14 +88,14 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                         variant="h4"
                         sx={{
                             fontStyle: 'normal',
-                            color: isLight ? '#0f172a' : 'white',
+                            color: '#1e293b',
                             mb: 6,
-                            lineHeight: 1.4,
-                            fontWeight: 300,
-                            fontSize: { xs: '1.6rem', md: '2.5rem' },
-                            letterSpacing: '-0.02em',
+                            lineHeight: 1.3,
+                            fontWeight: 700,
+                            fontSize: { xs: '1.8rem', md: '2.8rem' },
+                            letterSpacing: '-0.03em',
                             maxWidth: 1000,
-                            textShadow: isLight ? 'none' : '0 4px 20px rgba(0,0,0,0.3)',
+                            textShadow: '0 2px 10px rgba(0,0,0,0.02)',
                             fontFamily: '"Outfit", sans-serif'
                         }}
                     >
@@ -117,13 +112,13 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                         }} />
                         <Typography
                             sx={{
-                                color: isLight ? '#475569' : 'white',
-                                fontWeight: 800,
+                                color: color,
+                                fontWeight: 900,
                                 textTransform: 'uppercase',
-                                letterSpacing: '0.2em',
-                                fontSize: { xs: '0.85rem', md: '1rem' },
-                                opacity: isLight ? 1 : 0.9,
-                                textShadow: isLight ? 'none' : `0 0 15px ${color}88`
+                                letterSpacing: '0.25em',
+                                fontSize: { xs: '0.9rem', md: '1.1rem' },
+                                opacity: 1,
+                                textShadow: `0 2px 10px ${color}22`
                             }}
                         >
                             {reference}
