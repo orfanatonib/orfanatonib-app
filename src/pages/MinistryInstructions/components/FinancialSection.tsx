@@ -64,8 +64,8 @@ const FinancialSection: React.FC = () => {
                             height: '100%',
                             textAlign: 'center',
                             border: '1px solid #e2e8f0',
-                            bgcolor: '#f1f5f9',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            bgcolor: '#ffffff',
+                            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                             '&:hover': {
                                 transform: 'translateY(-8px)',
                                 boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)',

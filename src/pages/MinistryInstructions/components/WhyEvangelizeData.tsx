@@ -1,5 +1,5 @@
-import React from 'react';
 import { Paper, Typography, Grid, Box, List, ListItem } from '@mui/material';
+import { motion } from 'framer-motion';
 
 const WhyEvangelizeData: React.FC = () => {
     return (
@@ -21,47 +21,67 @@ const WhyEvangelizeData: React.FC = () => {
             </Typography>
             <Grid container spacing={3} sx={{ mt: 1 }}>
                 <Grid item xs={12} md={6}>
-                    <Box sx={{
-                        p: 3,
-                        bgcolor: '#ffffff',
-                        borderRadius: 4,
-                        border: '1px solid #e2e8f0'
-                    }}>
-                        <Typography variant="h6" fontWeight="800" gutterBottom sx={{ color: '#1e293b' }}>
-                            ✅ Por que é urgente?
-                        </Typography>
-                        <List dense>
-                            {[
-                                "Para que conheçam ao Senhor desde cedo",
-                                "O inimigo bombardeia crianças com conteúdos destrutivos",
-                                "Frutificarão por muito mais tempo se conhecerem Jesus cedo",
-                                "Crianças são os melhores evangelistas para outras crianças"
-                            ].map((text, i) => (
-                                <ListItem key={i} sx={{ px: 0 }}>
-                                    <Typography variant="body1" sx={{ color: '#475569', fontSize: '1rem' }}>→ {text}</Typography>
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Box>
+                    <motion.div
+                        initial={{ opacity: 0, x: -30 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: false }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        whileHover={{ y: -5 }}
+                    >
+                        <Box sx={{
+                            p: 3,
+                            bgcolor: '#ffffff',
+                            borderRadius: 4,
+                            border: '1px solid #e2e8f0',
+                            height: '100%'
+                        }}>
+                            <Typography variant="h6" fontWeight="800" gutterBottom sx={{ color: '#1e293b' }}>
+                                ✅ Por que é urgente?
+                            </Typography>
+                            <List dense>
+                                {[
+                                    "Para que conheçam ao Senhor desde cedo",
+                                    "O inimigo bombardeia crianças com conteúdos destrutivos",
+                                    "Frutificarão por muito mais tempo se conhecerem Jesus cedo",
+                                    "Crianças são os melhores evangelistas para outras crianças"
+                                ].map((text, i) => (
+                                    <ListItem key={i} sx={{ px: 0 }}>
+                                        <Typography variant="body1" sx={{ color: '#475569', fontSize: '1rem' }}>→ {text}</Typography>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    </motion.div>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <Box sx={{
-                        p: 4,
-                        bgcolor: '#ffffff',
-                        borderRadius: 4,
-                        border: '1px solid #e2e8f0',
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center'
-                    }}>
-                        <Typography variant="h6" fontWeight="800" gutterBottom sx={{ color: '#0891b2' }}>
-                            💡 Reflexão
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: '#155e75', fontStyle: 'italic', lineHeight: 1.6, fontSize: '1.1rem' }}>
-                            "85% das conversões acontecem entre 4 e 14 anos. Esta é a janela de oportunidade mais importante para alcançar vidas para Cristo!"
-                        </Typography>
-                    </Box>
+                    <motion.div
+                        initial={{ opacity: 0, x: 30 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: false }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        whileHover={{
+                            y: -5,
+                            boxShadow: '0 20px 40px rgba(8, 145, 178, 0.1)'
+                        }}
+                    >
+                        <Box sx={{
+                            p: 4,
+                            bgcolor: '#ffffff',
+                            borderRadius: 4,
+                            border: '1px solid #e2e8f0',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center'
+                        }}>
+                            <Typography variant="h6" fontWeight="800" gutterBottom sx={{ color: '#0891b2' }}>
+                                💡 Reflexão
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#155e75', fontStyle: 'italic', lineHeight: 1.6, fontSize: '1.1rem' }}>
+                                "85% das conversões acontecem entre 4 e 14 anos. Esta é a janela de oportunidade mais importante para alcançar vidas para Cristo!"
+                            </Typography>
+                        </Box>
+                    </motion.div>
                 </Grid>
             </Grid>
         </Box>

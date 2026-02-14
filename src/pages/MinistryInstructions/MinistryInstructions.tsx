@@ -1,9 +1,7 @@
-// Component Imports
 import React from 'react';
 import { Box, Container, GlobalStyles, Typography } from '@mui/material';
 import { useScroll, useTransform, motion } from 'framer-motion';
 
-// Component Imports
 import ScrollToTop from './components/ScrollToTop';
 import HeroSection from './components/HeroSection';
 import SectionContainer from './components/SectionContainer';
@@ -23,7 +21,6 @@ import ShelterSectorsSection from './components/ShelterSectorsSection';
 import VisitTimeline from './components/VisitTimeline';
 import ChecklistSection from './components/ChecklistSection';
 import QuoteBox from './components/QuoteBox';
-import DressCodeIntro from './components/DressCodeIntro';
 import DressCodeSection from './components/DressCodeSection';
 
 // Design Tokens for a Professional Look
@@ -35,7 +32,7 @@ const DESIGN_THEME = {
         primary: '#4f46e5', // Rich Indigo
         secondary: '#e11d48', // Deep Rose
         accent: '#0891b2', // Deep Cyan
-        background: '#f1f5f9', // Slate 100 for a more premium off-white
+        background: '#ffffff', // Pure white as requested
         textDark: '#0f172a', // Slate 900
         textMuted: '#475569', // Slate 600
         glass: 'rgba(255, 255, 255, 0.65)',
@@ -92,19 +89,26 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 2. WHY EVANGELIZE CHILDREN - White */}
-            <Box id="why-evangelize" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 19 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Por que Evangelizar Crianças?
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
-                            Dados da APEC (Aliança Pró Evangelização de Crianças)
-                        </Typography>
-                    </Box>
-                    <WhyEvangelizeSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="why-evangelize" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 19 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Por que Evangelizar Crianças?
+                            </Typography>
+                            <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
+                                Dados da APEC (Aliança Pró Evangelização de Crianças)
+                            </Typography>
+                        </Box>
+                        <WhyEvangelizeSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 3. DRESS CODE - Gradient */}
             <SectionContainer
@@ -121,19 +125,26 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 4. COMMITMENT & SPIRITUAL LIFE - White */}
-            <Box id="commitment" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 17 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Compromisso e Vida Espiritual
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
-                            Nossa eficácia externa depende da nossa vida interna com Deus.
-                        </Typography>
-                    </Box>
-                    <CommitmentSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+            >
+                <Box id="commitment" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 17 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Compromisso e Vida Espiritual
+                            </Typography>
+                            <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
+                                Nossa eficácia externa depende da nossa vida interna com Deus.
+                            </Typography>
+                        </Box>
+                        <CommitmentSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 5. FREQUENCY & ORGANIZATION - Gradient */}
             <SectionContainer
@@ -150,19 +161,26 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 6. SAFETY RULES - White */}
-            <Box id="safety" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 15 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Segurança e Conduta
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
-                            Regras INEGOCIÁVEIS para proteção de todos.
-                        </Typography>
-                    </Box>
-                    <SafetySection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="safety" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 15 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Segurança e Conduta
+                            </Typography>
+                            <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
+                                Regras INEGOCIÁVEIS para proteção de todos.
+                            </Typography>
+                        </Box>
+                        <SafetySection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 7. MINISTRY LIMITS - Gradient */}
             <SectionContainer
@@ -179,19 +197,26 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 8. FINANCIAL ORGANIZATION - White */}
-            <Box id="financial" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 13 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Organização Financeira
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
-                            Transparência e cuidado com os recursos.
-                        </Typography>
-                    </Box>
-                    <FinancialSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="financial" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 13 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Organização Financeira
+                            </Typography>
+                            <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
+                                Transparência e cuidado com os recursos.
+                            </Typography>
+                        </Box>
+                        <FinancialSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 9. COMMUNICATION - Gradient */}
             <SectionContainer
@@ -208,16 +233,23 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 10. ADMINISTRATIVE - White */}
-            <Box id="administrative" sx={{ py: 15, bgcolor: '#ffffff', position: 'relative', zIndex: 11 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Administrativo e Segurança
-                        </Typography>
-                    </Box>
-                    <AdministrativeSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="administrative" sx={{ py: 15, bgcolor: '#ffffff', position: 'relative', zIndex: 11 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Administrativo e Segurança
+                            </Typography>
+                        </Box>
+                        <AdministrativeSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 11. PRIORITIES - Gradient */}
             <SectionContainer
@@ -230,20 +262,32 @@ const MinistryInstructions: React.FC = () => {
                 bottomDividerColor="#f43f5e"
                 zIndex={10}
             >
-                <PrioritiesSection />
+                <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <PrioritiesSection />
+                </motion.div>
             </SectionContainer>
 
             {/* 12. PLANNING MEETINGS - White */}
-            <Box id="planning-meetings" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 9 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Encontros de Planejamento
-                        </Typography>
-                    </Box>
-                    <PlanningMeetingsSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="planning-meetings" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 9 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Encontros de Planejamento
+                            </Typography>
+                        </Box>
+                        <PlanningMeetingsSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 13. VISIT DAY - Gradient */}
             <SectionContainer
@@ -260,16 +304,23 @@ const MinistryInstructions: React.FC = () => {
             </SectionContainer>
 
             {/* 14. SHELTER SECTORS - White */}
-            <Box id="shelter-sectors" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 7 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
-                            Setores do Abrigo
-                        </Typography>
-                    </Box>
-                    <ShelterSectorsSection />
-                </Container>
-            </Box>
+            <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Box id="shelter-sectors" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 7 }}>
+                    <Container maxWidth="lg">
+                        <Box sx={{ textAlign: 'center', mb: 10 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                                Setores do Abrigo
+                            </Typography>
+                        </Box>
+                        <ShelterSectorsSection />
+                    </Container>
+                </Box>
+            </motion.div>
 
             {/* 15. VISIT STRUCTURE - Gradient */}
             <SectionContainer
@@ -298,7 +349,7 @@ const MinistryInstructions: React.FC = () => {
             </Box>
 
             {/* Final Quote */}
-            <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.03)', py: 10 }}>
+            <Box sx={{ bgcolor: '#ffffff', py: 10 }}>
                 <Container maxWidth="md">
                     <QuoteBox
                         quote="Se tiver que optar, escolha sempre o Culto. O Ministério exige organização, não é 'quando der'."

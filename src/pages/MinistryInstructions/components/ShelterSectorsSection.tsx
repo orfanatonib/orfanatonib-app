@@ -34,34 +34,34 @@ const ShelterSectorsSection: React.FC = () => {
                     🏠 Realidades Diferentes
                 </Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Box sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" fontWeight="700" color="#1e293b">
-                                Pessoas com atraso intelectual
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Box sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" fontWeight="700" color="#1e293b">
-                                Mulheres mães de família
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Box sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" fontWeight="700" color="#1e293b">
-                                Bebês de colo
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Box sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" fontWeight="700" color="#1e293b">
-                                Diferentes faixas etárias
-                            </Typography>
-                        </Box>
-                    </Grid>
+                    {[
+                        'Pessoas com atraso intelectual',
+                        'Mulheres mães de família',
+                        'Bebês de colo',
+                        'Diferentes faixas etárias'
+                    ].map((text, index) => (
+                        <Grid item xs={12} sm={6} md={3} key={index}>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.4, delay: index * 0.1 }}
+                                whileHover={{ y: -5, borderColor: '#4f46e5' }}
+                            >
+                                <Box sx={{
+                                    p: 2,
+                                    bgcolor: '#ffffff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: 2,
+                                    textAlign: 'center',
+                                    transition: 'all 0.3s ease'
+                                }}>
+                                    <Typography variant="body2" fontWeight="700" color="#1e293b">
+                                        {text}
+                                    </Typography>
+                                </Box>
+                            </motion.div>
+                        </Grid>
+                    ))}
                 </Grid>
                 <Typography variant="body2" sx={{ mt: 3, fontStyle: 'italic', color: '#64748b' }}>
                     💡 Mesmo com realidades diferentes, a visita segue um padrão estabelecido.

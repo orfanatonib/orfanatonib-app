@@ -17,8 +17,13 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
         <motion.div
             initial={{ scale: 0.98, opacity: 0, y: 20 }}
             whileInView={{ scale: 1, opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.01, y: -5 }}
             viewport={{ once: false }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{
+                duration: 0.8,
+                ease: [0.16, 1, 0.3, 1],
+                y: { type: 'spring', stiffness: 300, damping: 20 }
+            }}
         >
             <Paper
                 elevation={0}
@@ -57,19 +62,31 @@ const QuoteBox: React.FC<QuoteBoxProps> = ({ quote, reference, color = '#6366f1'
                     }
                 }}
             >
-                {/* Decorative Background Quote Icon */}
-                <QuoteIcon
-                    sx={{
+                <motion.div
+                    animate={{
+                        y: [0, -20, 0],
+                    }}
+                    transition={{
+                        duration: 6,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                    style={{
                         position: 'absolute',
                         top: -50,
                         right: -30,
-                        fontSize: { xs: 180, md: 280 },
-                        color: isLight ? `${color}05` : 'rgba(255, 255, 255, 0.03)',
-                        transform: 'rotate(180deg)',
                         pointerEvents: 'none',
                         zIndex: 0
                     }}
-                />
+                >
+                    <QuoteIcon
+                        sx={{
+                            fontSize: { xs: 180, md: 280 },
+                            color: isLight ? `${color}05` : 'rgba(255, 255, 255, 0.03)',
+                            transform: 'rotate(180deg)',
+                        }}
+                    />
+                </motion.div>
 
                 <Box sx={{ position: 'relative', zIndex: 1 }}>
                     <Typography

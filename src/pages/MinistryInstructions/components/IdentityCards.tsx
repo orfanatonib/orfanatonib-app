@@ -16,8 +16,9 @@ const IdentityCards: React.FC = () => {
                 <motion.div
                     initial={{ y: 50, opacity: 0 }}
                     whileInView={{ y: 0, opacity: 1 }}
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                     viewport={{ once: false }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <Box sx={{
                         p: 4,
@@ -55,8 +56,9 @@ const IdentityCards: React.FC = () => {
                 <motion.div
                     initial={{ y: 50, opacity: 0 }}
                     whileInView={{ y: 0, opacity: 1 }}
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                     viewport={{ once: false }}
-                    transition={{ duration: 0.6, delay: 0.15 }}
+                    transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <Box sx={{
                         p: 4,
@@ -98,8 +100,9 @@ const IdentityCards: React.FC = () => {
                 <motion.div
                     initial={{ y: 50, opacity: 0 }}
                     whileInView={{ y: 0, opacity: 1 }}
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                     viewport={{ once: false }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
+                    transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <Box sx={{
                         p: 4,
