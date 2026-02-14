@@ -98,7 +98,7 @@ const DressCodeSection: React.FC = () => {
                                             <Typography variant="h6" fontWeight="900" sx={{ color: '#166534' }}>Permitido</Typography>
                                         </Box>
                                         <List dense disablePadding>
-                                            {['Camisa do Ministério', 'Calça Jeans Folgada', 'Tênis ou Sapato Fechado', 'Higiene Impecável'].map((item, i) => (
+                                            {['Camisa do Ministério', 'Calça Tactel Folgada (Cor preta)', 'Tênis ou Sapato Fechado'].map((item, i) => (
                                                 <ListItem key={i} sx={{ pl: 0, py: 1 }}>
                                                     <Box component="span" sx={{ color: '#0f172a', fontWeight: 600, mr: 1 }}>•</Box>
                                                     <Typography variant="body1" sx={{ color: '#334155', fontWeight: 500 }}>{item}</Typography>
@@ -126,10 +126,8 @@ const DressCodeSection: React.FC = () => {
                                             {[
                                                 'Calças Coladas / Transparentes',
                                                 'Decotes ou Roupas Curtas',
-                                                'Cordões / Pulseiras Caras',
-                                                'Adereços Espalhafatosos',
-                                                'Chapéus / Acessórios de Cabeça',
-                                                'Cuidado com Pinturas Exageradas'
+                                                'Cordões / Pulseiras',
+                                                'Chapéus',
                                             ].map((item, i) => (
                                                 <ListItem key={i} sx={{ pl: 0, py: 1 }}>
                                                     <Box component="span" sx={{ color: '#0f172a', fontWeight: 600, mr: 1 }}>•</Box>
