@@ -98,7 +98,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="why-evangelize" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 19 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Por que Evangelizar Crianças?
                             </Typography>
                             <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
@@ -134,7 +134,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="commitment" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 17 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Compromisso e Vida Espiritual
                             </Typography>
                             <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
@@ -170,7 +170,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="safety" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 15 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Segurança e Conduta
                             </Typography>
                             <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
@@ -206,7 +206,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="financial" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 13 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Organização Financeira
                             </Typography>
                             <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 300, maxWidth: 800, mx: 'auto' }}>
@@ -242,7 +242,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="administrative" sx={{ py: 15, bgcolor: '#ffffff', position: 'relative', zIndex: 11 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3.2rem' } }}>
                                 Administrativo e Segurança
                             </Typography>
                         </Box>
@@ -280,7 +280,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="planning-meetings" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 9 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Encontros de Planejamento
                             </Typography>
                         </Box>
@@ -313,7 +313,7 @@ const MinistryInstructions: React.FC = () => {
                 <Box id="shelter-sectors" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 7 }}>
                     <Container maxWidth="lg">
                         <Box sx={{ textAlign: 'center', mb: 10 }}>
-                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                            <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                                 Setores do Abrigo
                             </Typography>
                         </Box>
@@ -340,7 +340,7 @@ const MinistryInstructions: React.FC = () => {
             <Box id="checklist" sx={{ py: 20, bgcolor: '#ffffff', position: 'relative', zIndex: 5 }}>
                 <Container maxWidth="lg">
                     <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2 }}>
+                        <Typography variant="h2" fontWeight="900" sx={{ color: '#1e293b', letterSpacing: '-0.04em', mb: 2, fontSize: { xs: '1.5rem', sm: '2.2rem', md: '3.75rem' } }}>
                             Checklist do Membro
                         </Typography>
                     </Box>

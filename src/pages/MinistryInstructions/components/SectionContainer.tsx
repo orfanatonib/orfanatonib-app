@@ -100,7 +100,8 @@ const SectionContainer: React.FC<SectionContainerProps & { zIndex?: number }> = 
             ref={ref}
             sx={{
                 position: 'relative',
-                py: { xs: 12, md: 24 },
+                pb: { xs: 22, md: 15 },
+                pt: { xs: 5, md: 5 },
                 background: gradient,
                 width: '100%',
                 zIndex: zIndex,
@@ -132,10 +133,10 @@ const SectionContainer: React.FC<SectionContainerProps & { zIndex?: number }> = 
                             color: 'white',
                             mb: subtitle ? 3 : 8,
                             textAlign: 'center',
-                            textShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                            fontSize: { xs: '2.8rem', md: '5.2rem' },
+                            textShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                            fontSize: { xs: '1.5rem', sm: '2.5rem', md: '4rem', lg: '5.2rem' },
                             letterSpacing: '-0.04em',
-                            lineHeight: 1,
+                            lineHeight: 1.1,
                             fontFamily: '"Outfit", sans-serif'
                         }}
                     >
@@ -151,7 +152,7 @@ const SectionContainer: React.FC<SectionContainerProps & { zIndex?: number }> = 
                                 fontWeight: 300,
                                 maxWidth: 900,
                                 mx: 'auto',
-                                fontSize: { xs: '1.2rem', md: '1.6rem' },
+                                fontSize: { xs: '0.85rem', sm: '1rem', md: '1.4rem', lg: '1.6rem' },
                                 letterSpacing: '0.02em',
                                 lineHeight: 1.4,
                                 textShadow: '0 4px 20px rgba(0,0,0,0.2)'

@@ -94,7 +94,7 @@ const HeroSection: React.FC = () => {
                         variant="h1"
                         component="h1"
                         sx={{
-                            fontSize: { xs: '3.5rem', sm: '5rem', md: '7rem', lg: '8.5rem' },
+                            fontSize: { xs: '2.2rem', sm: '4rem', md: '7rem', lg: '8.5rem' },
                             fontWeight: 800,
                             background: 'linear-gradient(135deg, #fff 30%, #ffd700 100%)',
                             backgroundClip: 'text',
@@ -120,7 +120,7 @@ const HeroSection: React.FC = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' },
+                            fontSize: { xs: '1rem', sm: '1.5rem', md: '1.8rem', lg: '2rem' },
                             color: '#FFFFFF',
                             textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                             mb: { xs: 6, md: 8 },
