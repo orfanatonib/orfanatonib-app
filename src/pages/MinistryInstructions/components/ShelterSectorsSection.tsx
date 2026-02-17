@@ -14,60 +14,6 @@ import { motion } from 'framer-motion';
 const ShelterSectorsSection: React.FC = () => {
     return (
         <>
-            <Paper
-                elevation={0}
-                sx={{
-                    p: 6,
-                    bgcolor: '#ffffff',
-                    borderRadius: 8,
-                    mb: 4,
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 20px 40px rgba(15, 23, 42, 0.05)',
-                    transition: 'all 0.4s ease',
-                    '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: '0 30px 60px rgba(15, 23, 42, 0.08)'
-                    }
-                }}
-            >
-                <Typography variant="h6" fontWeight="900" gutterBottom sx={{ color: '#4f46e5', letterSpacing: '-0.02em' }}>
-                    🏠 Realidades Diferentes
-                </Typography>
-                <Grid container spacing={2}>
-                    {[
-                        'Pessoas com atraso intelectual',
-                        'Mulheres mães de família',
-                        'Bebês de colo',
-                        'Diferentes faixas etárias'
-                    ].map((text, index) => (
-                        <Grid item xs={12} sm={6} md={3} key={index}>
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.4, delay: index * 0.1 }}
-                                whileHover={{ y: -5, borderColor: '#4f46e5' }}
-                            >
-                                <Box sx={{
-                                    p: 2,
-                                    bgcolor: '#ffffff',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: 2,
-                                    textAlign: 'center',
-                                    transition: 'all 0.3s ease'
-                                }}>
-                                    <Typography variant="body2" fontWeight="700" color="#1e293b">
-                                        {text}
-                                    </Typography>
-                                </Box>
-                            </motion.div>
-                        </Grid>
-                    ))}
-                </Grid>
-                <Typography variant="body2" sx={{ mt: 3, fontStyle: 'italic', color: '#64748b' }}>
-                    💡 Mesmo com realidades diferentes, a visita segue um padrão estabelecido.
-                </Typography>
-            </Paper>
-
             <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                     <motion.div
@@ -101,31 +47,25 @@ const ShelterSectorsSection: React.FC = () => {
                                 <ListItem sx={{ px: 0 }}>
                                     <ChildIcon sx={{ mr: 2, color: '#4f46e5' }} />
                                     <Typography variant="body1" sx={{ color: '#475569' }}>
-                                        <strong style={{ color: '#0f172a' }}>Baby:</strong> Crianças pequenas
+                                        <strong style={{ color: '#0f172a' }}>Berçário:</strong>
                                     </Typography>
                                 </ListItem>
                                 <ListItem sx={{ px: 0 }}>
                                     <ChildIcon sx={{ mr: 2, color: '#4f46e5' }} />
                                     <Typography variant="body1" sx={{ color: '#475569' }}>
-                                        <strong style={{ color: '#0f172a' }}>Infantil:</strong> Crianças
+                                        <strong style={{ color: '#0f172a' }}>Infantil:</strong>
                                     </Typography>
                                 </ListItem>
                                 <ListItem sx={{ px: 0 }}>
                                     <GroupIcon sx={{ mr: 2, color: '#4f46e5' }} />
                                     <Typography variant="body1" sx={{ color: '#475569' }}>
-                                        <strong style={{ color: '#0f172a' }}>Kids:</strong> Crianças maiores
+                                        <strong style={{ color: '#0f172a' }}>Adolecentes:</strong>
                                     </Typography>
                                 </ListItem>
                                 <ListItem sx={{ px: 0 }}>
                                     <TeenIcon sx={{ mr: 2, color: '#4f46e5' }} />
                                     <Typography variant="body1" sx={{ color: '#475569' }}>
-                                        <strong style={{ color: '#0f172a' }}>Adolescentes:</strong> Separados por gênero
-                                    </Typography>
-                                </ListItem>
-                                <ListItem sx={{ px: 0 }}>
-                                    <AdultIcon sx={{ mr: 2, color: '#4f46e5' }} />
-                                    <Typography variant="body1" sx={{ color: '#475569' }}>
-                                        <strong style={{ color: '#0f172a' }}>Adultos:</strong> E cuidadores
+                                        <strong style={{ color: '#0f172a' }}>Adultos:</strong>
                                     </Typography>
                                 </ListItem>
                             </List>
