@@ -58,15 +58,15 @@ export default function MediaDocumentPreviewModal({ open, onClose, media, title 
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          bgcolor: '#81d742',
-          color: 'white',
+          bgcolor: '#000000',
+          color: '#FFFF00',
           borderTopLeftRadius: 12,
           borderTopRightRadius: 12,
           pr: 2,
         }}
       >
         {title || media.title}
-        <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
+        <IconButton onClick={onClose} size="small" sx={{ color: '#FFFF00' }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -88,10 +88,12 @@ export default function MediaDocumentPreviewModal({ open, onClose, media, title 
           p: 2,
           display: 'flex',
           justifyContent: 'flex-end',
-          borderTop: '1px solid #ccc',
+          bgcolor: '#000000',
+          color: '#FFFF00',
+          borderTop: '1px solid #333',
         }}
       >
-        <Button variant="contained" color="primary" onClick={onClose}>
+        <Button variant="outlined" onClick={onClose} sx={{ color: '#FFFF00', borderColor: '#FFFF00' }}>
           Fechar
         </Button>
       </Box>

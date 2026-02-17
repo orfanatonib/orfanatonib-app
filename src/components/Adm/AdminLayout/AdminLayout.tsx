@@ -51,6 +51,7 @@ import {
   Chat,
   ChevronLeft,
   ChevronRight,
+  Badge,
 } from "@mui/icons-material";
 
 import { useSelector } from "react-redux";
@@ -81,7 +82,6 @@ function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("tudo");
 
-  // Desktop Drawer State
   const [desktopOpen, setDesktopOpen] = useState(true);
 
   const toggleDrawer = () => setMobileOpen((v) => !v);
@@ -109,6 +109,7 @@ function AdminLayout() {
           { label: "Membros", to: "/adm/membros", icon: <School /> },
           { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
           { label: "Acolhidos", to: "/adm/acolhidos", icon: <Group /> },
+          { label: "Antecedentes Criminais", to: "/adm/atendentes", icon: <Badge /> },
         ],
       },
       {
@@ -204,7 +205,8 @@ function AdminLayout() {
       path.startsWith("/adm/perfis") ||
       path.startsWith("/adm/membros") ||
       path.startsWith("/adm/lideres") ||
-      path.startsWith("/adm/acolhidos")
+      path.startsWith("/adm/acolhidos") ||
+      path.startsWith("/adm/atendentes")
     ) {
       return "pessoas";
     }

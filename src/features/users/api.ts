@@ -38,6 +38,13 @@ export async function apiListUsers(params: {
   return data;
 }
 
+export type UserSimpleDto = { id: string; name: string; email: string };
+
+export async function apiListUsersSimple(): Promise<UserSimpleDto[]> {
+  const { data } = await api.get<UserSimpleDto[]>("/users/simple");
+  return data;
+}
+
 export async function apiCreateUser(
   payload: Omit<CreateUserForm, "confirmPassword">
 ): Promise<UserRow> {

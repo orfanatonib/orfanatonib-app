@@ -11,6 +11,7 @@ import './styles/Global.css';
 import Navbar from './components/NavBar/Navbar';
 import Footer from './components/Footer/Footer';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import RequireAdmin from './components/RequireAdmin/RequireAdmin';
 import PageRenderer from './components/PageRenderer/PageRenderer';
 import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 import GlobalNotification from './components/GlobalNotification/GlobalNotification';
@@ -79,6 +80,7 @@ import ProfilesManager from './features/profile/ProfilesManager';
 import IntegrationManager from './features/integration/IntegrationManager';
 import IntegrationShelteredPage from './features/integration/IntegrationShelteredPage';
 import VisitReportsManager from './features/visit-reports/VisitReportsManager';
+import AtendentesManager from './features/atendentes/AtendentesManager';
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
@@ -249,6 +251,7 @@ function App() {
                     />
                     <Route path="agendamentos" element={<ShelterScheduleManager />} />
                     <Route path="integracoes" element={<IntegrationManager />} />
+                    <Route path="atendentes" element={<RequireAdmin><AtendentesManager /></RequireAdmin>} />
 
                     <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                     <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
