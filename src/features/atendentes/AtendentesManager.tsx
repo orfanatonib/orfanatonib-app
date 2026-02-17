@@ -55,7 +55,7 @@ function pdfToMediaItem(pdf: AtendentePdf): MediaItem {
     id: pdf.id,
     title: pdf.title,
     description: pdf.description ?? "",
-    url: pdf.url,
+    url: pdf.url ?? "",
     mediaType: (pdf.mediaType as MediaType) || MediaType.DOCUMENT,
     uploadType: (pdf.uploadType as MediaUploadType) || MediaUploadType.UPLOAD,
     isLocalFile: pdf.isLocalFile ?? true,
