@@ -1,4 +1,4 @@
-export const MOTIVATION_TEXT = '💬 Que tal aproveitar esta semana para compartilhar o amor de Jesus com as crianças da sua comunidade?';
+export const MOTIVATION_TEXT = '💬 Que tal aproveitar esta semana para compartilhar o amor de Jesus com as pessoas da sua comunidade?';
 
 export const SECTION_DATA = [
   {
@@ -31,7 +31,7 @@ export const SECTION_DATA = [
       '⏰ Prepare sua aula com antecedência para maior segurança',
       '🎭 Use criatividade para ensinar valores bíblicos de forma divertida',
       '🏠 Crie um ambiente acolhedor e seguro para as crianças',
-      '🙏 Ore sempre antes e depois de cada encontro com as crianças',
+      '🙏 Ore sempre antes e depois de cada encontro com as pessoas',
     ],
   },
 ];

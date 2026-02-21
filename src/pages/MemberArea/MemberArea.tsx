@@ -12,15 +12,14 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
 import {
   InformativeBanner,
-  FofinhoButton,
+  MemberQuickActions,
   SpecialFamilyCallout,
   IdeasSharingBanner,
   BannerSection,
-  MotivationSection,
   MemberContent,
 } from './components';
 import { useMemberArea } from './hooks';
-import { MOTIVATION_TEXT, CONTAINER_STYLES } from './constants';
+import { CONTAINER_STYLES } from './constants';
 import { useAuthRole } from '@/utils/useAuthRole';
 
 const MemberArea: React.FC = () => {
@@ -63,7 +62,7 @@ const MemberArea: React.FC = () => {
         />
 
         <Box sx={{ mb: { xs: 4, md: 5 } }}>
-          <FofinhoButton
+          <MemberQuickActions
             references={[
               'materials',
               'shelteredrenArea',
@@ -75,10 +74,6 @@ const MemberArea: React.FC = () => {
               ...(isAdminOrLeader ? ['integrations'] : [])
             ]}
           />
-        </Box>
-
-        <Box sx={{ mb: { xs: 4, md: 6 } }}>
-          <MotivationSection motivationText={MOTIVATION_TEXT} />
         </Box>
 
         <Paper
@@ -105,7 +100,7 @@ const MemberArea: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                mb: 4,
+                mb: { xs: 2, md: 4 },
                 flexWrap: 'wrap',
                 gap: 2,
               }}
@@ -115,13 +110,14 @@ const MemberArea: React.FC = () => {
                   variant="h3"
                   fontWeight={900}
                   sx={{
-                    fontSize: { xs: '1.8rem', md: '2.5rem' },
+                    fontSize: { xs: '1.35rem', sm: '1.6rem', md: '2.5rem' },
+                    lineHeight: { xs: 1.25, md: 1.3 },
                     background: 'linear-gradient(135deg, #2196f3 0%, #4caf50 50%, #ff9800 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     letterSpacing: '-0.5px',
-                    mb: 0.5,
+                    mb: { xs: 0.25, md: 0.5 },
                   }}
                 >
                   🎓 Área do Membro
@@ -130,8 +126,9 @@ const MemberArea: React.FC = () => {
                   variant="body2"
                   color="text.secondary"
                   sx={{
-                    fontSize: { xs: '0.85rem', md: '1rem' },
-                    mt: 0.5,
+                    fontSize: { xs: '0.8rem', sm: '0.85rem', md: '1rem' },
+                    lineHeight: { xs: 1.35, md: 1.5 },
+                    mt: { xs: 0.25, md: 0.5 },
                     fontWeight: 500,
                   }}
                 >

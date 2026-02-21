@@ -295,7 +295,7 @@ export default function ImageSectionPage() {
                 initialMediaItems={sectionData?.mediaItems || []}
                 onChange={handleChange}
                 captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
-                descriptionPlaceholder="EX: Descreva as atividades realizadas no seu Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos, momentos especiais com as crianças e como elas reagiram às atividades."
+                descriptionPlaceholder="EX: Descreva as atividades realizadas no seu Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos, momentos especiais com as pessoas e como elas reagiram às atividades."
               />
             </motion.div>
 

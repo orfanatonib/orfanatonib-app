@@ -1,45 +1,13 @@
 import React from 'react';
 import { Button, Box, Grid, useMediaQuery, useTheme } from '@mui/material';
 import { Link } from 'react-router-dom';
-import {
-  MenuBook as MenuBookIcon,
-  PhotoCamera as PhotoCameraIcon,
-  StarRate as StarRateIcon,
-  Favorite as FavoriteIcon,
-  LibraryBooks as LibraryBooksIcon,
-  Celebration as CelebrationIcon,
-  Schedule as ScheduleIcon,
-  PeopleAlt as PeopleAltIcon,
-  HelpOutline as HelpOutlineIcon,
-  EventAvailable as EventAvailableIcon,
-  Badge as BadgeIcon,
-  ChildCare as ShelteredCareIcon,
-  Groups as GroupsIcon,
-} from '@mui/icons-material';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
-
-type MUIButtonColor =
-  | 'primary'
-  | 'secondary'
-  | 'error'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'inherit';
-
-type IconType = React.ElementType;
-
-interface FofinhoButtonProps {
-  to: string;
-  label: string;
-  icon: IconType;
-  color: MUIButtonColor;
-}
+import { memberActionMap, type MemberActionConfig, type MUIButtonColor } from './memberActions';
 
 type PaletteKey = Exclude<MUIButtonColor, 'inherit'>;
 const toPaletteKey = (c: MUIButtonColor): PaletteKey => (c === 'inherit' ? 'primary' : c);
 
-const FofinhoButton: React.FC<FofinhoButtonProps & { fullWidth?: boolean }> = ({
+const FofinhoButton: React.FC<MemberActionConfig & { fullWidth?: boolean }> = ({
   to,
   label,
   icon: IconCmp,
@@ -111,93 +79,6 @@ const FofinhoButton: React.FC<FofinhoButtonProps & { fullWidth?: boolean }> = ({
   );
 };
 
-const buttonMap: Record<string, FofinhoButtonProps> = {
-  materials: {
-    to: '/lista-materias-visita',
-    label: 'Materiais de visita',
-    icon: MenuBookIcon,
-    color: 'primary',
-  },
-  photos: {
-    to: '/imagens-abrigo',
-    label: 'Envie fotos do seu Abrigo',
-    icon: PhotoCameraIcon,
-    color: 'success',
-  },
-  rate: {
-    to: '/avaliar-site',
-    label: 'Avalie nosso Site',
-    icon: StarRateIcon,
-    color: 'success',
-  },
-  love: {
-    to: '/amor',
-    label: 'Espalhe Amor',
-    icon: FavoriteIcon,
-    color: 'error',
-  },
-  teaching: {
-    to: '/ensino',
-    label: 'Plano de Aula',
-    icon: LibraryBooksIcon,
-    color: 'info',
-  },
-  fun: {
-    to: '/diversao',
-    label: 'Diversão Garantida',
-    icon: CelebrationIcon,
-    color: 'warning',
-  },
-  schedule: {
-    to: '/horarios',
-    label: 'Horários',
-    icon: ScheduleIcon,
-    color: 'secondary',
-  },
-  team: {
-    to: '/equipe',
-    label: 'Equipe',
-    icon: PeopleAltIcon,
-    color: 'primary',
-  },
-  help: {
-    to: '/contato',
-    label: 'Precisa de Ajuda?',
-    icon: HelpOutlineIcon,
-    color: 'error',
-  },
-  events: {
-    to: '/eventos',
-    label: 'Eventos do Mês',
-    icon: EventAvailableIcon,
-    color: 'info',
-  },
-  memberArea: {
-    to: '/area-do-membro',
-    label: 'Área do Membro',
-    icon: BadgeIcon,
-    color: 'primary',
-  },
-  shelteredrenArea: {
-    to: '/area-dos-acolhidos',
-    label: 'Área dos Acolhidos',
-    icon: ShelteredCareIcon,
-    color: 'primary',
-  },
-  integrations: {
-    to: '/adm/integracoes',
-    label: 'Integrações FM',
-    icon: GroupsIcon,
-    color: 'secondary',
-  },
-  training: {
-    to: '/manual-membro',
-    label: 'Manual do Membro',
-    icon: MenuBookIcon,
-    color: 'warning',
-  },
-};
-
 interface ButtonSectionProps {
   references: string[];
 }
@@ -210,8 +91,8 @@ const ButtonSection: React.FC<ButtonSectionProps> = ({ references }) => {
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
   const buttonsToRender = references
-    .map((ref) => buttonMap[ref])
-    .filter((btn): btn is FofinhoButtonProps => {
+    .map((ref) => memberActionMap[ref])
+    .filter((btn): btn is MemberActionConfig => {
       if (!btn) return false;
       if (btn.to === '/area-dos-acolhidos' && !isPagelasEnabled) return false;
       return true;

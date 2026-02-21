@@ -6,7 +6,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { MemberContentProps } from '../../types';
-import { SECTION_DATA } from '../../constants';
+import { SECTION_DATA, MOTIVATION_TEXT } from '../../constants';
 import { DocumentsSection, IdeasGallerySection, TrainingVideosSection, CommentsSection } from './';
 
 const MemberContent: React.FC<MemberContentProps> = ({ userName }) => {
@@ -28,116 +28,193 @@ const MemberContent: React.FC<MemberContentProps> = ({ userName }) => {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <Box
-          textAlign="center"
-          mb={{ xs: 3, md: 5 }}
-          sx={{
-            p: { xs: 2, sm: 3, md: 5 },
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 248, 255, 0.9) 100%)',
-            backdropFilter: 'blur(10px)',
-            border: '2px solid rgba(33, 150, 243, 0.2)',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(33, 150, 243, 0.1)',
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -30,
-              right: -30,
-              width: 150,
-              height: 150,
-              background: 'radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%)',
-              borderRadius: '50%',
-              zIndex: 0,
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -20,
-              left: -20,
-              width: 120,
-              height: 120,
-              background: 'radial-gradient(circle, rgba(76, 175, 80, 0.08) 0%, transparent 70%)',
-              borderRadius: '50%',
-              zIndex: 0,
-            }}
-          />
-
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+        <Grid container spacing={2} sx={{ mb: { xs: 3, md: 5 } }}>
+          <Grid item xs={12} md={6}>
+            <Box
+              textAlign="center"
+              sx={{
+                p: { xs: 2, sm: 2.5, md: 3 },
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 248, 255, 0.9) 100%)',
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(33, 150, 243, 0.2)',
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(33, 150, 243, 0.1)',
+              }}
             >
-              <Typography
-                variant="h3"
-                fontWeight={900}
-                gutterBottom
+              <Box
                 sx={{
-                  fontSize: { xs: '1.3rem', sm: '1.5rem', md: '2.2rem' },
-                  background: 'linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  letterSpacing: '-0.5px',
-                  mb: { xs: 1.5, md: 2.5 },
+                  position: 'absolute',
+                  top: -30,
+                  right: -30,
+                  width: 150,
+                  height: 150,
+                  background: 'radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  zIndex: 0,
                 }}
-              >
-                Olá, {userName || 'Membro'}!
-              </Typography>
-            </motion.div>
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -20,
+                  left: -20,
+                  width: 120,
+                  height: 120,
+                  background: 'radial-gradient(circle, rgba(76, 175, 80, 0.08) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  zIndex: 0,
+                }}
+              />
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Typography
-                variant="h6"
-                color="text.primary"
-                sx={{
-                  maxWidth: '900px',
-                  mx: 'auto',
-                  fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.4rem' },
-                  lineHeight: { xs: 1.5, md: 1.8 },
-                  fontWeight: 600,
-                  letterSpacing: '0.2px',
-                  mb: { xs: 1.5, md: 2 },
-                }}
-              >
-                Bem-vindo ao site do Abrigo onde consegue encontrar materiais, ideias e recursos para enriquecer suas aulas!
-              </Typography>
-            </motion.div>
+              <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <Typography
+                    variant="h3"
+                    fontWeight={900}
+                    gutterBottom
+                    sx={{
+                      fontSize: { xs: '1.3rem', sm: '1.5rem', md: '1.75rem' },
+                      background: 'linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      letterSpacing: '-0.5px',
+                      mb: { xs: 1.5, md: 2 },
+                    }}
+                  >
+                    Olá, {userName || 'Membro'}!
+                  </Typography>
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <Typography
+                    variant="h6"
+                    color="text.primary"
+                    sx={{
+                      maxWidth: '900px',
+                      mx: 'auto',
+                      fontSize: { xs: '0.95rem', sm: '1rem', md: '1.15rem' },
+                      lineHeight: { xs: 1.5, md: 1.7 },
+                      fontWeight: 600,
+                      letterSpacing: '0.2px',
+                      mb: { xs: 1.5, md: 1.5 },
+                    }}
+                  >
+                    Bem-vindo ao site do Orfanatos NIB onde consegue encontrar materiais, ideias e recursos para enriquecer suas aulas!
+                  </Typography>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{
+                      maxWidth: '800px',
+                      mx: 'auto',
+                      fontSize: { xs: '0.9rem', sm: '0.95rem', md: '1rem' },
+                      lineHeight: { xs: 1.5, md: 1.6 },
+                      fontWeight: 500,
+                      letterSpacing: '0.1px',
+                    }}
+                  >
+                    Tudo atualizado semanalmente e alinhado ao calendário bíblico para sua missão evangelística!
+                  </Typography>
+                </motion.div>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box
+              textAlign="center"
+              sx={{
+                p: { xs: 1.5, sm: 2.5, md: 3 },
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(33, 150, 243, 0.25)',
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(33, 150, 243, 0.12)',
+              }}
             >
-              <Typography
-                variant="body1"
-                color="text.secondary"
+              <Box
                 sx={{
-                  maxWidth: '800px',
-                  mx: 'auto',
-                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.15rem' },
-                  lineHeight: { xs: 1.5, md: 1.7 },
-                  fontWeight: 500,
-                  letterSpacing: '0.1px',
+                  position: 'absolute',
+                  top: -20,
+                  right: -20,
+                  width: 100,
+                  height: 100,
+                  background: 'rgba(33, 150, 243, 0.05)',
+                  borderRadius: '50%',
+                  zIndex: 0,
                 }}
-              >
-                Tudo atualizado semanalmente e alinhado ao calendário bíblico para sua missão evangelística!
-              </Typography>
-            </motion.div>
-          </Box>
-        </Box>
+              />
+              <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: { md: 220 } }}>
+                <Typography
+                  variant="h4"
+                  fontWeight={900}
+                  sx={{
+                    fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.35rem' },
+                    lineHeight: { xs: 1.25, md: 1.3 },
+                    mb: { xs: 1, md: 2 },
+                    background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  ✨ Motivação para Evangelizar
+                </Typography>
+                <Typography
+                  variant="body1"
+                  color="text.primary"
+                  sx={{
+                    fontSize: { xs: '0.825rem', sm: '0.9rem', md: '1.05rem' },
+                    lineHeight: { xs: 1.45, md: 1.7 },
+                    fontWeight: 600,
+                    letterSpacing: '0.2px',
+                  }}
+                >
+                  {MOTIVATION_TEXT}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: { xs: 1, md: 1.5 },
+                    fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
+                    lineHeight: { xs: 1.4, md: 1.5 },
+                    fontStyle: 'italic',
+                    fontWeight: 600,
+                    color: 'primary.dark',
+                  }}
+                >
+                  Lembre-se: uma palavra de fé pode transformar uma vida! 🙌
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
       </motion.div>
 
       <motion.div

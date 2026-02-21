@@ -45,7 +45,7 @@ export default function ImageSectionEditor({
   initialMediaItems,
   onChange,
   captionPlaceholder = 'Abrigo 90: Gincana de Páscoa',
-  descriptionPlaceholder = 'Descreva o que aconteceu, como uma gincana, culto especial ou passeio com as crianças.',
+  descriptionPlaceholder = 'Descreva o que aconteceu, como uma gincana, culto especial ou passeio com as pessoas.',
 }: ImageSectionEditorProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
