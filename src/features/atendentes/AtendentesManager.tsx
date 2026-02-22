@@ -41,6 +41,7 @@ import type {
   AtendenteResponseDto,
   CreateAtendenteDto,
   UpdateAtendenteDto,
+  AtendenteFiles,
 } from "./types";
 import type { AtendentePdf } from "./types";
 import BackHeader from "@/components/common/header/BackHeader";
@@ -50,17 +51,22 @@ import MediaDocumentPreviewModal from "@/utils/MediaDocumentPreviewModal";
 import type { MediaItem } from "@/store/slices/types";
 import { MediaType, MediaUploadType } from "@/store/slices/types";
 
-function pdfToMediaItem(pdf: AtendentePdf): MediaItem {
+function pdfToMediaItem(
+  pdf: AtendentePdf,
+  label?: "estadual" | "federal" | null
+): MediaItem {
+  const displayName =
+    label === "estadual" ? "Estadual.pdf" : label === "federal" ? "Federal.pdf" : pdf.originalName ?? pdf.title;
   return {
     id: pdf.id,
-    title: pdf.title,
+    title: displayName,
     description: pdf.description ?? "",
     url: pdf.url ?? "",
     mediaType: (pdf.mediaType as MediaType) || MediaType.DOCUMENT,
     uploadType: (pdf.uploadType as MediaUploadType) || MediaUploadType.UPLOAD,
     isLocalFile: pdf.isLocalFile ?? true,
     platformType: pdf.platformType as MediaItem["platformType"],
-    originalName: pdf.originalName,
+    originalName: displayName,
     size: pdf.size,
   };
 }
@@ -146,34 +152,33 @@ export default function AtendentesManager() {
   const handleConfirmDelete = React.useCallback(async () => {
     if (!deleting) return;
     try {
-      await handleDelete(deleting.id, () => {
-        showSnack("Antecedente criminal excluído com sucesso!", "success");
-        setDeleting(null);
-      });
+      await handleDelete(deleting.id, () => {});
+      showSnack("Antecedente criminal excluído com sucesso!", "success");
+      setDeleting(null);
+      await doRefresh();
     } catch {
-      showSnack("Erro ao excluir atendente criminal", "error");
+      showSnack("Erro ao excluir antecedente criminal", "error");
     }
-  }, [deleting, handleDelete, showSnack]);
+  }, [deleting, handleDelete, showSnack, doRefresh]);
 
   const handleFormSubmit = React.useCallback(
     async (
       data: CreateAtendenteDto | UpdateAtendenteDto,
-      file?: File
+      files: AtendenteFiles,
+      options?: { updateId?: string }
     ) => {
-      if (editing) {
-        await handleUpdate(editing.id, data as UpdateAtendenteDto, file, () => {
+      if (options?.updateId) {
+        await handleUpdate(options.updateId, data as UpdateAtendenteDto, files, () => {
           showSnack("Antecedente criminal atualizado com sucesso!", "success");
-          setEditing(null);
         });
       } else {
-        if (!file) return;
-        await handleCreate(data as CreateAtendenteDto, file, () => {
+        await handleCreate(data as CreateAtendenteDto, files, () => {
           showSnack("Antecedente criminal criado com sucesso!", "success");
-          setCreating(false);
         });
       }
+      await doRefresh();
     },
-    [editing, handleCreate, handleUpdate, showSnack]
+    [handleCreate, handleUpdate, showSnack, doRefresh]
   );
 
   const handleCloseDialogs = React.useCallback(() => {
@@ -365,13 +370,13 @@ export default function AtendentesManager() {
               sx={{ p: 3, borderRadius: 3, backgroundColor: "#ffffff" }}
             >
               <Typography variant="h6" gutterBottom>
-                Lista de Antecedentes Criminais ({total})
+                Lista de Antecedentes Criminais ({rows.length})
               </Typography>
 
               {rows.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 6 }}>
                   <Typography variant="body1" color="text.secondary" gutterBottom>
-                    Nenhum atendente criminal encontrado
+                    Nenhum antecedente criminal encontrado
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Clique em "Novo Antecedente Criminal" para começar
@@ -380,98 +385,138 @@ export default function AtendentesManager() {
               ) : (
                 <Box sx={{ mt: 2 }}>
                   <Grid container spacing={1.5}>
-                    {rows.map((atendente) => (
-                      <Grid item xs={12} sm={6} md={4} key={atendente.id}>
-                        <Box
-                          sx={{
-                            p: 1.5,
-                            border: 1,
-                            borderColor: "divider",
-                            borderRadius: 2,
-                            minHeight: 100,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            "&:hover": {
-                              bgcolor: "action.hover",
-                              borderColor: "primary.light",
-                            },
-                            transition: "all 0.2s ease-in-out",
-                          }}
-                        >
-                          <Box>
-                            <Typography
-                              variant="subtitle1"
-                              fontWeight="bold"
-                              sx={{ mb: 0.5, fontSize: "1rem" }}
-                            >
-                              {displayName(atendente)}
-                            </Typography>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.5,
-                                flexWrap: "wrap",
-                              }}
-                            >
+                    {rows.map((atendente) => {
+                      const name = displayName(atendente);
+                      return (
+                        <Grid item xs={12} sm={6} md={4} key={atendente.id}>
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              border: 1,
+                              borderColor: "divider",
+                              borderRadius: 2,
+                              minHeight: 100,
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              "&:hover": {
+                                bgcolor: "action.hover",
+                                borderColor: "primary.light",
+                              },
+                              transition: "all 0.2s ease-in-out",
+                            }}
+                          >
+                            <Box>
                               <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ fontSize: "0.8rem" }}
+                                variant="subtitle1"
+                                fontWeight="bold"
+                                sx={{ mb: 0.5, fontSize: "1rem" }}
                               >
-                                {atendente.pdf?.originalName ?? "PDF anexado"}
+                                {name}
                               </Typography>
-                              {atendente.pdf?.url && (
-                                <Tooltip title="Visualizar PDF">
-                                  <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setPdfPreviewMedia(pdfToMediaItem(atendente.pdf!));
+                              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                                {atendente.pdfEstadual?.url && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                      flexWrap: "wrap",
                                     }}
-                                    sx={{ p: 0.25 }}
-                                    aria-label="Visualizar PDF"
                                   >
-                                    <VisibilityIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ fontSize: "0.8rem" }}
+                                    >
+                                      Estadual.pdf
+                                    </Typography>
+                                    <Tooltip title="Visualizar PDF">
+                                      <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setPdfPreviewMedia(
+                                            pdfToMediaItem(atendente.pdfEstadual!, "estadual")
+                                          );
+                                        }}
+                                        sx={{ p: 0.25 }}
+                                        aria-label="Visualizar PDF"
+                                      >
+                                        <VisibilityIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                )}
+                                {atendente.pdfFederal?.url && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ fontSize: "0.8rem" }}
+                                    >
+                                      Federal.pdf
+                                    </Typography>
+                                    <Tooltip title="Visualizar PDF">
+                                      <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setPdfPreviewMedia(
+                                            pdfToMediaItem(atendente.pdfFederal!, "federal")
+                                          );
+                                        }}
+                                        sx={{ p: 0.25 }}
+                                        aria-label="Visualizar PDF"
+                                      >
+                                        <VisibilityIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                )}
+                              </Box>
+                            </Box>
+                            <Box sx={{ display: "flex", gap: 0.3, mt: 1 }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => handleView(atendente)}
+                                sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
+                              >
+                                Ver
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => handleEdit(atendente)}
+                                sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                fullWidth
+                                onClick={() => handleDeleteClick(atendente)}
+                                sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
+                              >
+                                Deletar
+                              </Button>
                             </Box>
                           </Box>
-                          <Box sx={{ display: "flex", gap: 0.3, mt: 1 }}>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              fullWidth
-                              onClick={() => handleView(atendente)}
-                              sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
-                            >
-                              Ver
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              fullWidth
-                              onClick={() => handleEdit(atendente)}
-                              sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="error"
-                              fullWidth
-                              onClick={() => handleDeleteClick(atendente)}
-                              sx={{ flex: 1, fontSize: "0.75rem", py: 0.5 }}
-                            >
-                              Deletar
-                            </Button>
-                          </Box>
-                        </Box>
-                      </Grid>
-                    ))}
+                        </Grid>
+                      );
+                    })}
                   </Grid>
                 </Box>
               )}
@@ -590,10 +635,8 @@ export default function AtendentesManager() {
         open={!!viewing}
         onClose={handleCloseDialogs}
         atendente={viewing}
-        onPreviewPdf={
-          viewing?.pdf?.url
-            ? () => setPdfPreviewMedia(pdfToMediaItem(viewing.pdf!))
-            : undefined
+        onPreviewPdf={(pdf, label) =>
+          setPdfPreviewMedia(pdfToMediaItem(pdf, label))
         }
       />
 
@@ -619,15 +662,13 @@ export default function AtendentesManager() {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Tem certeza que deseja excluir o atendente criminal{" "}
+            Tem certeza que deseja excluir o antecedente criminal de{" "}
             <strong>
               {deleting
-                ? (deleting.name ||
-                    deleting.attendableDisplayName ||
-                    deleting.id)
+                ? deleting.name || deleting.attendableDisplayName || deleting.id
                 : ""}
             </strong>
-            ? Esta ação não pode ser desfeita.
+            ? Esta ação não pode ser desfeita (os dois PDFs serão removidos).
           </DialogContentText>
         </DialogContent>
         <DialogActions>

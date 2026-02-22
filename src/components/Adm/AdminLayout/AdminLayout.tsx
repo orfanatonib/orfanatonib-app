@@ -109,7 +109,7 @@ function AdminLayout() {
           { label: "Membros", to: "/adm/membros", icon: <School /> },
           { label: "Líderes", to: "/adm/lideres", icon: <SupervisorAccount /> },
           { label: "Acolhidos", to: "/adm/acolhidos", icon: <Group /> },
-          { label: "Antecedentes Criminais", to: "/adm/atendentes", icon: <Badge /> },
+          { label: "Antecedentes Criminais", to: "/adm/antecedentes", icon: <Badge /> },
         ],
       },
       {
@@ -180,6 +180,7 @@ function AdminLayout() {
     "/adm/presenca",
     "/adm/integracoes",
     "/adm/relatorios-visita",
+    "/adm/antecedentes",
   ]);
 
   const canSeeItem = (item: NavItem): boolean => {
@@ -206,7 +207,7 @@ function AdminLayout() {
       path.startsWith("/adm/membros") ||
       path.startsWith("/adm/lideres") ||
       path.startsWith("/adm/acolhidos") ||
-      path.startsWith("/adm/atendentes")
+      path.startsWith("/adm/antecedentes")
     ) {
       return "pessoas";
     }

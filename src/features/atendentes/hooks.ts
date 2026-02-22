@@ -11,6 +11,7 @@ import type {
   AtendenteFilters,
   CreateAtendenteDto,
   UpdateAtendenteDto,
+  AtendenteFiles,
 } from "./types";
 import type { SortingState } from "@tanstack/react-table";
 
@@ -90,13 +91,13 @@ export function useAtendenteMutations(
   const handleCreate = useCallback(
     async (
       data: CreateAtendenteDto,
-      file: File,
+      files: AtendenteFiles,
       onSuccess?: () => void
     ) => {
       setDialogLoading(true);
       setDialogError("");
       try {
-        await apiCreateAtendente(data, file);
+        await apiCreateAtendente(data, files);
         await refreshPage();
         onSuccess?.();
       } catch (err: unknown) {
@@ -121,13 +122,13 @@ export function useAtendenteMutations(
     async (
       id: string,
       data: UpdateAtendenteDto,
-      file?: File,
+      files?: AtendenteFiles,
       onSuccess?: () => void
     ) => {
       setDialogLoading(true);
       setDialogError("");
       try {
-        await apiUpdateAtendente(id, data, file);
+        await apiUpdateAtendente(id, data, files);
         await refreshOne(id);
         onSuccess?.();
       } catch (err: unknown) {

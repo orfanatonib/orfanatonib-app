@@ -19,7 +19,8 @@ export type AtendenteResponseDto = {
   attendableType?: AttendableType | null;
   attendableId?: string | null;
   attendableDisplayName?: string;
-  pdf?: AtendentePdf;
+  pdfEstadual?: AtendentePdf;
+  pdfFederal?: AtendentePdf;
   createdAt: string;
   updatedAt: string;
 };
@@ -37,13 +38,23 @@ export type QueryAtendenteDto = {
   limit?: number;
   search?: string;
   attendableType?: AttendableType;
+  attendableId?: string;
 };
 
 export type CreateAtendenteDto = {
   name?: string;
   attendableType?: AttendableType | null;
   attendableId?: string | null;
-  pdf: {
+  pdfEstadual?: {
+    title?: string;
+    description?: string;
+    uploadType: string;
+    mediaType: string;
+    isLocalFile: boolean;
+    url?: string;
+    fieldKey?: string;
+  };
+  pdfFederal?: {
     title?: string;
     description?: string;
     uploadType: string;
@@ -58,7 +69,7 @@ export type UpdateAtendenteDto = {
   name?: string;
   attendableType?: AttendableType | null;
   attendableId?: string | null;
-  pdf?: {
+  pdfEstadual?: {
     title?: string;
     description?: string;
     uploadType?: string;
@@ -67,9 +78,25 @@ export type UpdateAtendenteDto = {
     url?: string;
     fieldKey?: string;
   };
+  pdfFederal?: {
+    title?: string;
+    description?: string;
+    uploadType?: string;
+    mediaType?: string;
+    isLocalFile?: boolean;
+    url?: string;
+    fieldKey?: string;
+  };
+  removePdfEstadual?: boolean;
+  removePdfFederal?: boolean;
 };
 
 export type AtendenteFilters = {
   search?: string;
   attendableType?: AttendableType;
+};
+
+export type AtendenteFiles = {
+  estadual?: File;
+  federal?: File;
 };

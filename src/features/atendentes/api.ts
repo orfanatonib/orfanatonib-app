@@ -6,6 +6,7 @@ import type {
   CreateAtendenteDto,
   UpdateAtendenteDto,
 } from "./types";
+import type { AtendenteFiles } from "./types";
 import { apiListIntegrationsSimple } from "@/features/integration/api";
 import { apiListUsersSimple } from "@/features/users/api";
 
@@ -28,29 +29,28 @@ export async function apiGetAtendente(id: string): Promise<AtendenteResponseDto>
 
 export async function apiCreateAtendente(
   payload: CreateAtendenteDto,
-  file: File
+  files: AtendenteFiles
 ): Promise<AtendenteResponseDto> {
   const formData = new FormData();
   formData.append("atendenteData", JSON.stringify(payload));
-  formData.append("pdf", file);
-  const { data } = await api.post<AtendenteResponseDto>("/antecedentes-criminais", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  if (files.estadual) formData.append("estadual", files.estadual);
+  if (files.federal) formData.append("federal", files.federal);
+  const { data } = await api.post<AtendenteResponseDto>("/antecedentes-criminais", formData);
   return data;
 }
 
 export async function apiUpdateAtendente(
   id: string,
   payload: UpdateAtendenteDto,
-  file?: File
+  files?: AtendenteFiles
 ): Promise<AtendenteResponseDto> {
   const formData = new FormData();
   formData.append("atendenteData", JSON.stringify(payload));
-  if (file) formData.append("pdf", file);
+  if (files?.estadual) formData.append("estadual", files.estadual);
+  if (files?.federal) formData.append("federal", files.federal);
   const { data } = await api.put<AtendenteResponseDto>(
     `/antecedentes-criminais/${id}`,
-    formData,
-    { headers: { "Content-Type": "multipart/form-data" } }
+    formData
   );
   return data;
 }

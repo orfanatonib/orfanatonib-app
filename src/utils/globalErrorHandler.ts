@@ -43,14 +43,6 @@ class GlobalErrorHandler {
     this.setupPerformanceObserver();
 
     this.isInitialized = true;
-
-    logger.info('Global error handler initialized', {
-      feature: 'global-error-handler',
-      action: 'initialize',
-      metadata: {
-        config: this.config,
-      },
-    });
   }
 
   private shouldReportError(errorKey: string): boolean {

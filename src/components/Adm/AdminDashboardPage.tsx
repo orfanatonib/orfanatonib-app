@@ -67,7 +67,7 @@ const cardData: CardData[] = [
   { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
   { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
   { title: "Acolhidos", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/acolhidos", section: "pessoas" },
-  { title: "Antecedentes Criminais", description: "Gerencie antecedentes criminais e documentos PDF vinculados a integração ou usuário.", icon: <Badge fontSize="large" color="primary" />, path: "/adm/atendentes", section: "pessoas" },
+  { title: "Antecedentes Criminais", description: "Gerencie antecedentes criminais e documentos PDF vinculados a integração ou usuário.", icon: <Badge fontSize="large" color="primary" />, path: "/adm/antecedentes", section: "pessoas" },
 
   { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
   { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
@@ -142,6 +142,7 @@ export default function AdminDashboardPage() {
     "/adm/presenca",
     "/adm/integracoes",
     "/adm/relatorios-visita",
+    "/adm/antecedentes",
   ]);
 
   const canSeeCard = (card: CardData): boolean => {

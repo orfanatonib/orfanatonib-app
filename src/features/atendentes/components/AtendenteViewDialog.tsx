@@ -12,13 +12,57 @@ import {
   Tooltip,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import type { AtendenteResponseDto } from "../types";
+import type { AtendenteResponseDto, AtendentePdf } from "../types";
 
 interface AtendenteViewDialogProps {
   open: boolean;
   onClose: () => void;
+  /** Um único antecedente com pdfEstadual e pdfFederal. */
   atendente: AtendenteResponseDto | null;
-  onPreviewPdf?: () => void;
+  onPreviewPdf?: (pdf: AtendentePdf, label: "estadual" | "federal") => void;
+}
+
+function PdfRow({
+  label,
+  pdf,
+  onPreviewPdf,
+}: {
+  label: "estadual" | "federal";
+  pdf: AtendentePdf | undefined;
+  onPreviewPdf?: (pdf: AtendentePdf, label: "estadual" | "federal") => void;
+}) {
+  if (!pdf?.url) return null;
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        flexWrap: "wrap",
+        mb: 0.5,
+      }}
+    >
+      <Link
+        href={pdf.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+      >
+        {label === "estadual" ? "Estadual.pdf" : "Federal.pdf"}
+      </Link>
+      {onPreviewPdf && (
+        <Tooltip title="Visualizar PDF">
+          <IconButton
+            size="small"
+            onClick={() => onPreviewPdf(pdf, label)}
+            aria-label="Visualizar PDF"
+          >
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Box>
+  );
 }
 
 export default function AtendenteViewDialog({
@@ -60,34 +104,21 @@ export default function AtendenteViewDialog({
             </Typography>
           </Box>
         )}
-        {atendente.pdf && (
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              Documento PDF
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-              <Link
-                href={atendente.pdf.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                underline="hover"
-              >
-                {atendente.pdf.originalName ?? atendente.pdf.title ?? "Abrir PDF"}
-              </Link>
-              {onPreviewPdf && (
-                <Tooltip title="Visualizar PDF">
-                  <IconButton
-                    size="small"
-                    onClick={onPreviewPdf}
-                    aria-label="Visualizar PDF"
-                  >
-                    <VisibilityIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-          </Box>
-        )}
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            Documento(s) PDF
+          </Typography>
+          <PdfRow
+            label="estadual"
+            pdf={atendente.pdfEstadual}
+            onPreviewPdf={onPreviewPdf}
+          />
+          <PdfRow
+            label="federal"
+            pdf={atendente.pdfFederal}
+            onPreviewPdf={onPreviewPdf}
+          />
+        </Box>
         <Box>
           <Typography variant="subtitle2" color="text.secondary">
             Atualizado em

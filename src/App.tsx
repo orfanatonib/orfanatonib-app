@@ -251,7 +251,7 @@ function App() {
                     />
                     <Route path="agendamentos" element={<ShelterScheduleManager />} />
                     <Route path="integracoes" element={<IntegrationManager />} />
-                    <Route path="atendentes" element={<RequireAdmin><AtendentesManager /></RequireAdmin>} />
+                    <Route path="antecedentes" element={<AtendentesManager />} />
 
                     <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                     <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />

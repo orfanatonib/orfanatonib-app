@@ -5,7 +5,6 @@ export const initSentry = () => {
   const environment = import.meta.env.VITE_ENVIRONMENT || 'development';
 
   if (!dsn || import.meta.env.DEV) {
-    console.warn('Sentry DSN not provided or in development mode - error tracking disabled');
     return;
   }
 
