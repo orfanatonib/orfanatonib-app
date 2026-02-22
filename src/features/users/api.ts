@@ -45,6 +45,11 @@ export async function apiListUsersSimple(): Promise<UserSimpleDto[]> {
   return data;
 }
 
+export async function apiListUsersSimpleForSelect(): Promise<UserSimpleDto[]> {
+  const { data } = await api.get<UserSimpleDto[]>("/users/simple-for-select");
+  return data;
+}
+
 export async function apiCreateUser(
   payload: Omit<CreateUserForm, "confirmPassword">
 ): Promise<UserRow> {

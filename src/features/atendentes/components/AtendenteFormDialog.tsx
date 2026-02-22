@@ -32,7 +32,7 @@ import type {
   AtendenteFiles,
 } from "../types";
 import { apiListIntegrationsSimple } from "@/features/integration/api";
-import { apiListUsersSimple } from "@/features/users/api";
+import { apiListUsersSimpleForSelect } from "@/features/users/api";
 import type { IntegrationResponseDto } from "@/features/integration/types";
 import type { UserSimpleDto } from "@/features/users/api";
 import MediaDocumentPreviewModal from "@/utils/MediaDocumentPreviewModal";
@@ -130,7 +130,7 @@ export default function AtendenteFormDialog({
     if (!open) return;
     let cancelled = false;
     setLoadingOptions(true);
-    Promise.all([apiListIntegrationsSimple(), apiListUsersSimple()])
+    Promise.all([apiListIntegrationsSimple(), apiListUsersSimpleForSelect()])
       .then(([intData, userData]) => {
         if (!cancelled) {
           setIntegrations(intData ?? []);

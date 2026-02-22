@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import type { AtendenteFiles } from "./types";
 import { apiListIntegrationsSimple } from "@/features/integration/api";
-import { apiListUsersSimple } from "@/features/users/api";
+import { apiListUsersSimpleForSelect } from "@/features/users/api";
 
 export type ListAtendentesParams = QueryAtendenteDto;
 
@@ -60,4 +60,4 @@ export async function apiDeleteAtendente(id: string): Promise<void> {
 }
 
 export { apiListIntegrationsSimple } from "@/features/integration/api";
-export { apiListUsersSimple } from "@/features/users/api";
+export { apiListUsersSimpleForSelect } from "@/features/users/api";
