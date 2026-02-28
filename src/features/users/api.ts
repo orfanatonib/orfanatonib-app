@@ -1,5 +1,12 @@
 import api from "@/config/axiosConfig";
-import { CreateUserForm, UsersPage, UserRow, UpadateUserForm } from "./types";
+import {
+  CreateUserForm,
+  UsersPage,
+  UserRow,
+  UpadateUserForm,
+  ActiveFilter,
+  CompletedFilter,
+} from "./types";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
 export async function apiListUsers(params: {
@@ -7,8 +14,8 @@ export async function apiListUsers(params: {
   limit: number;
   q?: string;
   role?: string;
-  active?: boolean;
-  completed?: boolean;
+  active?: ActiveFilter;
+  completed?: CompletedFilter;
   sort?: string;
   order?: "ASC" | "DESC";
 }): Promise<UsersPage> {
@@ -29,8 +36,8 @@ export async function apiListUsers(params: {
       limit,
       q: q || undefined,
       role: role && role !== "all" ? role : undefined,
-      active: active ? "true" : undefined,
-      completed: completed ? "true" : undefined,
+      active: active && active !== "all" ? active : undefined,
+      completed: completed && completed !== "all" ? completed : undefined,
       sort,
       order,
     },

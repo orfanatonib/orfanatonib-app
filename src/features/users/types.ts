@@ -41,11 +41,14 @@ export type UsersPage = {
   meta?: { total?: number };
 };
 
+export type ActiveFilter = "all" | "active" | "inactive";
+export type CompletedFilter = "all" | "completed" | "incomplete";
+
 export type UserFilters = {
   q: string;
   role: "all" | UserRole | string;
-  onlyActive: boolean;
-  onlyCompleted: boolean;
+  activeFilter: ActiveFilter;
+  completedFilter: CompletedFilter;
 };
 
 export type SortParam = { id: string; desc: boolean } | null;

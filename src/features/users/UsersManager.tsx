@@ -35,8 +35,8 @@ export default function UsersManager() {
   const [filters, setFilters] = React.useState<UserFilters>({
     q: "",
     role: "all",
-    onlyActive: false,
-    onlyCompleted: false,
+    activeFilter: "all",
+    completedFilter: "all",
   });
 
   const { rows, total, loading, error, setError, fetchPage } =

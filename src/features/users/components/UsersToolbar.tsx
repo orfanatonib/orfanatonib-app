@@ -10,16 +10,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Switch,
-  FormControlLabel,
-  FormGroup,
   Paper,
   Fab,
   Typography,
   InputAdornment,
 } from "@mui/material";
 import { Add, Refresh, Search as SearchIcon, Clear, CleaningServices } from "@mui/icons-material";
-import { UserFilters } from "../types";
+import { UserFilters, ActiveFilter, CompletedFilter } from "../types";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
 type Props = {
@@ -45,14 +42,19 @@ export default function UsersToolbar({
 }: Props) {
   const roleOptions = ["all", UserRole.LEADER, UserRole.MEMBER] as const;
 
-  const hasFilters = Boolean(filters.q || filters.role !== "all" || filters.onlyActive || filters.onlyCompleted);
+  const hasFilters = Boolean(
+    filters.q ||
+      filters.role !== "all" ||
+      filters.activeFilter !== "all" ||
+      filters.completedFilter !== "all"
+  );
 
   const handleClear = () => {
     onChange(() => ({
       q: "",
       role: "all",
-      onlyActive: false,
-      onlyCompleted: false,
+      activeFilter: "all" as ActiveFilter,
+      completedFilter: "all" as CompletedFilter,
     }));
   };
 
@@ -144,48 +146,50 @@ export default function UsersToolbar({
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} md={5}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: { xs: 1.5, sm: 2 },
-              alignItems: { xs: "flex-start", sm: "center" },
-              flexWrap: "wrap",
-            }}
-          >
-            <Tooltip title="Exibe apenas usuários que estão ativos no sistema">
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={filters.onlyActive}
-                    onChange={(e) =>
-                      onChange((p) => ({ ...p, onlyActive: e.target.checked }))
-                    }
-                    size="small"
-                  />
+        <Grid item xs={12} md={2}>
+          <Tooltip title="Filtrar por status ativo/inativo no sistema">
+            <FormControl size="small" fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={filters.activeFilter}
+                label="Status"
+                onChange={(e) =>
+                  onChange((p) => ({
+                    ...p,
+                    activeFilter: e.target.value as ActiveFilter,
+                  }))
                 }
-                label="Apenas ativos"
-                sx={{ m: 0 }}
-              />
-            </Tooltip>
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all">Todos</MenuItem>
+                <MenuItem value="active">Ativos</MenuItem>
+                <MenuItem value="inactive">Inativos</MenuItem>
+              </Select>
+            </FormControl>
+          </Tooltip>
+        </Grid>
 
-            <Tooltip title="Exibe apenas usuários que concluíram o cadastro">
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={filters.onlyCompleted}
-                    onChange={(e) =>
-                      onChange((p) => ({ ...p, onlyCompleted: e.target.checked }))
-                    }
-                    size="small"
-                  />
+        <Grid item xs={12} md={2}>
+          <Tooltip title="Filtrar por cadastro completo ou incompleto">
+            <FormControl size="small" fullWidth>
+              <InputLabel>Cadastro</InputLabel>
+              <Select
+                value={filters.completedFilter}
+                label="Cadastro"
+                onChange={(e) =>
+                  onChange((p) => ({
+                    ...p,
+                    completedFilter: e.target.value as CompletedFilter,
+                  }))
                 }
-                label="Apenas completos"
-                sx={{ m: 0 }}
-              />
-            </Tooltip>
-          </Box>
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all">Todos</MenuItem>
+                <MenuItem value="completed">Completos</MenuItem>
+                <MenuItem value="incomplete">Incompletos</MenuItem>
+              </Select>
+            </FormControl>
+          </Tooltip>
         </Grid>
         
         <Grid item xs={12}>
