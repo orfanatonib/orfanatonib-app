@@ -2,12 +2,13 @@ import React from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid,
   TextField, Alert, Box, FormControl, InputLabel, Select, MenuItem,
-  FormControlLabel, Switch
+  FormControlLabel, Switch, Typography
 } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { UpadateUserForm } from "../types";
 import { maskPhoneBR } from "@/utils/masks";
+import { normalizeName } from "@/utils/textUtils";
 
 type Props = {
   open: boolean;
@@ -38,6 +39,8 @@ export default function UserEditDialog({
     (!!value.password || !!value.confirmPassword) &&
     value.password !== value.confirmPassword;
 
+  const isMember = value.role === UserRole.MEMBER;
+
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Editar Usuário</DialogTitle>
@@ -51,6 +54,7 @@ export default function UserEditDialog({
               label="Nome"
               value={value.name}
               onChange={(e) => onChange({ ...value, name: e.target.value })}
+              onBlur={() => onChange({ ...value, name: normalizeName(value.name || "") })}
             />
           </Grid>
 
@@ -125,6 +129,31 @@ export default function UserEditDialog({
               label="Editar senha?"
             />
           </Grid>
+
+          {isMember && (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.default",
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                  Equipe do membro
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  {value.memberTeamLabel ||
+                    "Nenhuma (ainda não vinculado a uma equipe)."}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Equipe que o usuário informou no cadastro ou que foi atribuída pela coordenação (apenas visualização).
+                </Typography>
+              </Box>
+            </Grid>
+          )}
 
           {editingPassword && (
             <>

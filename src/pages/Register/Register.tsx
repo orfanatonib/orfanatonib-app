@@ -23,6 +23,7 @@ import api from '@/config/axiosConfig';
 import { RootState } from '@/store/slices';
 import { digitsOnly, maskPhoneBR } from '@/utils/masks';
 import { isValidEmail, normalizeEmail } from '@/utils/validators';
+import { normalizeName } from '@/utils/textUtils';
 import {
   REGISTER_ERROR_MESSAGES,
   REGISTER_SUCCESS_MESSAGES,
@@ -44,6 +45,15 @@ interface FormData {
   password?: string;
   confirmPassword?: string;
   role: RoleChoice;
+  teamId?: string;
+}
+
+interface ShelterTeamOption {
+  id: string;
+  shelterId: string;
+  label: string;
+  teamNumber: number;
+  shelterName: string;
 }
 
 interface GoogleUserCache {
@@ -149,6 +159,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isValid },
   } = useForm<FormData>({
     resolver: yupResolver(getSchema(commonUser)) as any,
@@ -162,8 +173,50 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       password: '',
       confirmPassword: '',
       role: '',
+      teamId: '',
     },
   });
+
+  const watchRole = watch('role');
+  const isMemberSelected = watchRole === 'member';
+
+  const [teams, setTeams] = useState<ShelterTeamOption[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const [teamsLoaded, setTeamsLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchTeams = async () => {
+      try {
+        if (cancelled) return;
+        setLoadingTeams(true);
+        const response = await api.get<ShelterTeamOption[]>('/shelters/list-teams', {
+          params: {},
+        });
+        if (!cancelled) {
+          setTeams(response.data || []);
+        }
+      } catch {
+        if (!cancelled) {
+          setTeams([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingTeams(false);
+          setTeamsLoaded(true);
+        }
+      }
+    };
+
+    if (isMemberSelected && !teamsLoaded) {
+      fetchTeams();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isMemberSelected, teamsLoaded]);
 
   useEffect(() => {
     if (!commonUser) {
@@ -198,11 +251,12 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
 
     try {
       const response = await api.post(endpoint, {
-        name: data.name,
+        name: normalizeName(data.name),
         email: normalizeEmail(data.email),
         phone: digitsOnly(data.phone),
         password: commonUser ? data.password : undefined,
         role: data.role || undefined,
+        teamId: isMemberSelected && data.role === 'member' ? data.teamId || undefined : undefined,
       });
 
       if (response.data?.emailVerification?.verificationEmailSent) {
@@ -320,6 +374,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             margin="normal"
             error={!!errors.name}
             helperText={errors.name?.message}
+            onBlur={() => { field.onBlur(); setValue('name', normalizeName(field.value || '')); }}
           />
         )}
       />
@@ -403,6 +458,32 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
           </TextField>
         )}
       />
+
+      {isMemberSelected && (
+        <Controller
+          name="teamId"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              select
+              label="Equipe (opcional)"
+              fullWidth
+              margin="normal"
+              helperText="Você pode escolher uma equipe agora ou deixar para o time definir depois. Se não encontrar sua equipe na lista, não tem problema: a coordenação vai te vincular à equipe correta mais pra frente."
+            >
+              <MenuItem value="">
+                <em>Nenhuma (decidir depois)</em>
+              </MenuItem>
+              {teams.map((team) => (
+                <MenuItem key={team.id} value={team.id}>
+                  {team.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
+      )}
 
       {commonUser && (
         <Fragment>

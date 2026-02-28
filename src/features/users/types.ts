@@ -31,6 +31,9 @@ export type UpadateUserForm = {
   commonUser: boolean;
   password: string;
   confirmPassword?: string;
+  memberTeamId?: string | null;
+  initialMemberTeamId?: string | null;
+  memberTeamLabel?: string | null;
 };
 
 export type UsersPage = {

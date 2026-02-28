@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -37,6 +37,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { roleChipColor, anchorProps, isCoreOrSensitive } from "@/utils/textUtils";
 import { initials, CopyButton } from "@/utils/components";
 import { RootState } from "@/store/slices";
+import { apiGetUserProfile } from "../api";
 
 type Props = { open: boolean; user: UserRow | null; onClose: () => void };
 
@@ -77,6 +78,38 @@ export default function UserViewDialog({ open, user, onClose }: Props) {
 const { user: loggedUser } = useSelector((state: RootState) => state.auth);
 const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.name, user.phone) ?? undefined : undefined), [user, loggedUser?.name]);
   const telLink = user?.phone ? `tel:${user.phone}` : undefined;
+
+  const [teamLabel, setTeamLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProfile = async () => {
+      if (!open || !user || user.role !== UserRole.MEMBER) {
+        if (!cancelled) setTeamLabel(null);
+        return;
+      }
+      try {
+        const profile = await apiGetUserProfile(user.id);
+        const team = profile.memberProfile?.team;
+        if (cancelled) return;
+        if (team) {
+          const label = `Equipe ${team.numberTeam} - ${team.shelter?.name ?? "—"}`;
+          setTeamLabel(label);
+        } else {
+          setTeamLabel(null);
+        }
+      } catch {
+        if (!cancelled) setTeamLabel(null);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, user?.id, user?.role]);
 
   return (
     <Dialog
@@ -212,6 +245,17 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
                 />
               </Stack>
             </Paper>
+
+            {user.role === UserRole.MEMBER && (
+              <LineCard icon={<Badge fontSize="small" />} title="Equipe informada">
+                <Typography variant="body2">
+                  {teamLabel || "Nenhuma (ainda não vinculado a uma equipe)."}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Esta é a equipe que o membro informou no cadastro ou que foi atribuída pela coordenação.
+                </Typography>
+              </LineCard>
+            )}
 
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>

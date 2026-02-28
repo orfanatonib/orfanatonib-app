@@ -1,5 +1,6 @@
 import api from "@/config/axiosConfig";
 import { CreateUserForm, UsersPage, UserRow, UpadateUserForm } from "./types";
+import { UserRole } from "@/store/slices/auth/authSlice";
 
 export async function apiListUsers(params: {
   page: number;
@@ -47,6 +48,38 @@ export async function apiListUsersSimple(): Promise<UserSimpleDto[]> {
 
 export async function apiListUsersSimpleForSelect(): Promise<UserSimpleDto[]> {
   const { data } = await api.get<UserSimpleDto[]>("/users/simple-for-select");
+  return data;
+}
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  role: UserRole;
+  active: boolean;
+  completed: boolean;
+  commonUser: boolean;
+  createdAt: string;
+  updatedAt: string;
+  memberProfile?: {
+    id: string;
+    active: boolean;
+    team?: {
+      id: string;
+      numberTeam: number;
+      description?: string;
+      shelter?: {
+        id: string;
+        name: string;
+        description?: string;
+      } | null;
+    } | null;
+  } | null;
+};
+
+export async function apiGetUserProfile(id: string): Promise<UserProfile> {
+  const { data } = await api.get<UserProfile>(`/users/${id}/profile`);
   return data;
 }
 

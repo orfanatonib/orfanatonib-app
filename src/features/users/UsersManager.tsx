@@ -20,6 +20,8 @@ import {
 
 import { useUserMutations, useUsers } from "./hooks";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { apiGetUserProfile } from "./api";
+import { normalizeName } from "@/utils/textUtils";
 import BackHeader from "@/components/common/header/BackHeader";
 import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 
@@ -60,7 +62,7 @@ export default function UsersManager() {
       setDialogError("As senhas não coincidem.");
       return;
     }
-    await createUser(creating);
+    await createUser({ ...creating, name: normalizeName(creating.name || "") });
     setCreating(null);
   };
 
@@ -82,13 +84,16 @@ export default function UsersManager() {
 
     const { id, confirmPassword, editPassword, ...payload } = editing;
 
+    if (payload.name != null) {
+      (payload as any).name = normalizeName((payload as any).name || "");
+    }
     if (!wantsPassword) {
       delete (payload as any).password;
     } else if (!payload.password) {
       delete (payload as any).password;
     }
 
-    await updateUser(id, payload);
+    await updateUser(id, payload as any);
     setEditing(null);
   };
 
@@ -200,7 +205,7 @@ export default function UsersManager() {
         sorting={sorting ? ([sorting] as any) : []}
         setSorting={(s) => setSorting(Array.isArray(s) ? s[0] ?? null : (s as any))}
         onView={(user) => setViewing(user)}
-        onEdit={(user) =>
+        onEdit={(user) => {
           setEditing({
             id: user.id,
             name: user.name,
@@ -212,8 +217,33 @@ export default function UsersManager() {
             password: "",
             confirmPassword: "",
             editPassword: false,
-          })
-        }
+          } as any);
+
+          if (user.role === UserRole.MEMBER) {
+            (async () => {
+              try {
+                const profile = await apiGetUserProfile(user.id);
+                const team = profile.memberProfile?.team;
+                const label = team
+                  ? `Equipe ${team.numberTeam} - ${team.shelter?.name ?? "—"}`
+                  : null;
+
+                setEditing((prev) =>
+                  prev && (prev as any).id === user.id
+                    ? ({
+                      ...(prev as any),
+                      memberTeamId: team?.id ?? null,
+                      initialMemberTeamId: team?.id ?? null,
+                      memberTeamLabel: label,
+                    } as any)
+                    : prev
+                );
+              } catch {
+                // falha em carregar equipe não deve impedir edição do usuário
+              }
+            })();
+          }
+        }}
         onDelete={(user) => setConfirmDelete(user)}
             />
           </motion.div>

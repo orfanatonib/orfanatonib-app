@@ -7,6 +7,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { CreateUserForm } from "../types";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { maskPhoneBR } from "@/utils/masks";
+import { normalizeName } from "@/utils/textUtils";
 
 type Props = {
   open: boolean;
@@ -44,6 +45,7 @@ export default function UserCreateDialog({
               label="Nome"
               value={value.name}
               onChange={(e) => onChange({ ...value, name: e.target.value })}
+              onBlur={() => onChange({ ...value, name: normalizeName(value.name || "") })}
             />
           </Grid>
 

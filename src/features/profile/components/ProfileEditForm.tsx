@@ -13,6 +13,7 @@ import { Profile, UpdateProfileDto } from '../types';
 import { apiUpdateProfile } from '../api';
 import { digitsOnly, maskPhoneBR } from '@/utils/masks';
 import { isValidEmail, normalizeEmail } from '@/utils/validators';
+import { normalizeName } from '@/utils/textUtils';
 
 interface ProfileEditFormProps {
   profile: Profile | null;
@@ -87,7 +88,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     try {
       const payload: UpdateProfileDto = {};
       if (formData.name && formData.name.trim() !== profile?.name) {
-        payload.name = formData.name.trim();
+        payload.name = normalizeName(formData.name.trim());
       }
       if (formData.email && formData.email.trim() !== profile?.email) {
         payload.email = normalizeEmail(formData.email);
@@ -153,6 +154,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
                   const v = formData.name || '';
                   if (!v.trim()) setErrors({ ...errors, name: 'Nome é obrigatório' });
                   else if (v.trim().length < 2) setErrors({ ...errors, name: 'O nome deve ter pelo menos 2 caracteres' });
+                  else setFormData((prev) => ({ ...prev, name: normalizeName(prev.name || '') }));
                 }}
                 error={!!errors.name}
                 helperText={errors.name}

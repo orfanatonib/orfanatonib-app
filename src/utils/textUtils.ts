@@ -1,3 +1,17 @@
+/**
+ * Formata o nome com apenas a primeira letra de cada palavra em maiúscula.
+ * Evita que o usuário salve o nome todo em CAIXA ALTA.
+ */
+export function normalizeName(s?: string | null): string {
+  if (s == null || typeof s !== "string") return "";
+  return s
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function normalize(s?: string | null) {
   return (s ?? "")
     .toLowerCase()
