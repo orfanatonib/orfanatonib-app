@@ -49,6 +49,8 @@ const SENSITIVE_KEYS = new Set([
   "password",
   "refreshToken",
   "commonUser",
+  "active",
+  "completed",
   "createdAt",
   "updatedAt",
 ]);
