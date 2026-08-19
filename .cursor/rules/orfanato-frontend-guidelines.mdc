@@ -1,0 +1,10 @@
+---
+description: Mandatory Orfanato NIB frontend architecture and quality rules
+alwaysApply: true
+---
+
+# Orfanato NIB Frontend Rules
+
+Before editing, read [`AGENTS.md`](../../AGENTS.md) and [`docs/ORFANATO_FRONTEND_BEST_PRACTICES.md`](../../docs/ORFANATO_FRONTEND_BEST_PRACTICES.md).
+
+Use the shared Axios client, feature-driven separation, strict typed DTOs without `any`, Material UI and the project theme, existing guards, mobile-first accessible UI, privacy-safe logging, and Vitest coverage for behavior changes. Never duplicate token refresh or backend authorization logic. Keep the diff scoped.
