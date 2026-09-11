@@ -2,11 +2,13 @@
 
 These instructions apply to all suggestions and edits in this repository.
 
-Read and follow [`AGENTS.md`](../AGENTS.md) and [`docs/ORFANATO_FRONTEND_BEST_PRACTICES.md`](../docs/ORFANATO_FRONTEND_BEST_PRACTICES.md).
+Read and follow [`AGENTS.md`](../AGENTS.md), [`docs/ORFANATO_FRONTEND_BEST_PRACTICES.md`](../docs/ORFANATO_FRONTEND_BEST_PRACTICES.md), and the applicable domain documentation.
 
-- Follow the existing React 19, Vite, strict TypeScript, Material UI, Redux Toolkit, and Axios architecture.
+- Follow the React 19, Vite, strict TypeScript, Material UI, Redux Toolkit, and Axios architecture.
 - Keep HTTP calls in feature API modules and use `src/config/axiosConfig.ts`.
-- Keep domain orchestration in hooks and rendering in components/pages.
-- Do not introduce `any`, duplicate session logic, arbitrary design tokens, inaccessible controls, or sensitive logging.
-- Include loading, empty, success, error, mobile, permission, and test coverage for changed behavior.
+- Assign each state value to one owner.
+- Always define explicit input DTOs and output DTOs for all API calls and operations.
+- ALWAYS create dedicated files for `types` and `constants`, ALWAYS use domain enums for finite sets (no magic strings), and ALWAYS create dedicated `utils` files for pure functions/logic.
+- NEVER introduce `any` under any circumstances; use strict explicit typing and narrow `unknown` at boundaries. Do not duplicate session logic, inaccessible UI, or sensitive logging.
+- Include loading, empty, success, error, mobile, role/shelter permission, and test coverage.
 - Keep changes focused and preserve unrelated work.
