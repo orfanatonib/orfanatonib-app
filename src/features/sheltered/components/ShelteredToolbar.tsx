@@ -1,196 +1,95 @@
 import React from "react";
 import {
-  Paper, Grid, TextField, Stack, Button, Tooltip, IconButton,
-  InputAdornment, Popover, ToggleButtonGroup, ToggleButton, Box, Typography, Fab,
-  FormControl, InputLabel, Select, MenuItem
+  Box,
+  Button,
+  Fab,
+  FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { CleaningServices, Refresh, Add, Event, Close, Search as SearchIcon, Clear } from "@mui/icons-material";
-import { ShelteredFilters } from "../types";
+import { Add, CleaningServices, Clear, Refresh, Search } from "@mui/icons-material";
+import {
+  MIN_TOUCH_TARGET_PX,
+  GENDER_LABELS,
+  SHELTERED_FILTERS_EMPTY,
+  SHELTERED_TESTID,
+} from "../constants";
+import { ShelteredGender } from "../enums";
+import { hasActiveFilters } from "../utils";
+import type { ShelteredFilters } from "../types";
+import DateRangeFilter from "./DateRangeFilter";
 
 type Props = {
   filters: ShelteredFilters;
-  onChange: (updater: (prev: ShelteredFilters) => ShelteredFilters) => void;
+  onChange: (updater: (previous: ShelteredFilters) => ShelteredFilters) => void;
   onCreateClick: () => void;
   onRefreshClick: () => void;
   isXs?: boolean;
 };
 
-const fmtBR = (d: string) =>
-  d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "";
+type TextFilterKey = Extract<
+  keyof ShelteredFilters,
+  "searchString" | "shelterSearchingString" | "addressFilter"
+>;
 
-function summaryLabel(from?: string, to?: string) {
-  const f = from || "";
-  const t = to || "";
-  if (!f && !t) return "";
-  if (f && t && f === t) return fmtBR(f);
-  if (f && t) return `${fmtBR(f)} — ${fmtBR(t)}`;
-  if (f && !t) return `${fmtBR(f)} — `;
-  if (!f && t) return `— ${fmtBR(t)}`;
-  return "";
-}
-
-function DateFilterInput(props: {
+const TEXT_FILTERS: ReadonlyArray<{
+  key: TextFilterKey;
   label: string;
-  from?: string;
-  to?: string;
-  onChange: (from: string, to: string) => void;
-  disabled?: boolean;
-}) {
-  const { label, from = "", to = "", onChange, disabled } = props;
-  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  placeholder: string;
+  testId: string;
+  columns: number;
+}> = [
+  {
+    key: "searchString",
+    label: "Busca Geral",
+    placeholder: "Nome do acolhido, responsável ou telefone",
+    testId: "sheltered-filter-search",
+    columns: 4,
+  },
+  {
+    key: "shelterSearchingString",
+    label: "Busca por Abrigo",
+    placeholder: "Nome, cidade ou estado do abrigo",
+    testId: "sheltered-filter-shelter",
+    columns: 2,
+  },
+  {
+    key: "addressFilter",
+    label: "Endereço",
+    placeholder: "Rua, bairro, cidade",
+    testId: "sheltered-filter-address",
+    columns: 3,
+  },
+];
 
-  const [mode, setMode] = React.useState<"single" | "range">(
-    from && to && from !== to ? "range" : "single"
-  );
-  const [tmpFrom, setTmpFrom] = React.useState(from);
-  const [tmpTo, setTmpTo] = React.useState(to || from);
+export default function ShelteredToolbar({
+  filters,
+  onChange,
+  onCreateClick,
+  onRefreshClick,
+  isXs,
+}: Props) {
+  const setFilter = <TKey extends keyof ShelteredFilters>(
+    key: TKey,
+    value: ShelteredFilters[TKey],
+  ) => onChange((previous) => ({ ...previous, [key]: value }));
 
-  const open = Boolean(anchorEl);
-  const handleOpen = (e: React.MouseEvent<HTMLElement>) => {
-    setTmpFrom(from);
-    setTmpTo(to || from);
-    setMode(from && to && from !== to ? "range" : "single");
-    setAnchorEl(e.currentTarget);
-  };
-  const handleClose = () => setAnchorEl(null);
+  const clearFilters = () => onChange(() => ({ ...SHELTERED_FILTERS_EMPTY }));
 
-  const handleApply = () => {
-    if (mode === "single") {
-      if (tmpFrom) onChange(tmpFrom, tmpFrom);
-      else onChange("", "");
-    } else {
-      const f = tmpFrom || "";
-      const t = tmpTo || tmpFrom || "";
-      if (!f && !t) onChange("", "");
-      else onChange(f, t || f);
-    }
-    handleClose();
-  };
-  const handleClear = (e?: React.MouseEvent) => {
-    e?.stopPropagation?.();
-    onChange("", "");
-  };
-
-  return (
-    <>
-      <TextField
-        fullWidth
-        size="small"
-        label={label}
-        value={summaryLabel(from, to)}
-        onClick={handleOpen}
-        InputProps={{
-          readOnly: true,
-          startAdornment: (
-            <InputAdornment position="start">
-              <Event fontSize="small" />
-            </InputAdornment>
-          ),
-          endAdornment: (from || to) ? (
-            <InputAdornment position="end">
-              <IconButton size="small" edge="end" onClick={handleClear} aria-label="Limpar">
-                <Close fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ) : undefined,
-        }}
-        placeholder="Selecionar…"
-        disabled={disabled}
-      />
-
-      <Popover
-        open={open}
-        onClose={handleClose}
-        anchorEl={anchorEl}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        PaperProps={{ sx: { p: 1.5, width: 320 } }}
-      >
-        <Stack spacing={1.25}>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={mode}
-            onChange={(_, v) => v && setMode(v)}
-            aria-label="Tipo de filtro"
-          >
-            <ToggleButton value="single" aria-label="Data única">Data única</ToggleButton>
-            <ToggleButton value="range" aria-label="Período">Período</ToggleButton>
-          </ToggleButtonGroup>
-
-          {mode === "single" ? (
-            <TextField
-              fullWidth
-              label="Data"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={tmpFrom || ""}
-              onChange={(e) => setTmpFrom(e.target.value)}
-            />
-          ) : (
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
-              <TextField
-                fullWidth
-                label="De"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={tmpFrom || ""}
-                onChange={(e) => setTmpFrom(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Até"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={tmpTo || ""}
-                onChange={(e) => setTmpTo(e.target.value)}
-              />
-            </Box>
-          )}
-
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button onClick={() => handleClear()} color="secondary">Limpar</Button>
-            <Button variant="contained" onClick={handleApply}>Aplicar</Button>
-          </Stack>
-
-          <Typography variant="caption" color="text.secondary">
-            Dica: se escolher uma única data, enviaremos <strong>from</strong> e <strong>to</strong> iguais.
-          </Typography>
-        </Stack>
-      </Popover>
-    </>
-  );
-}
-
-export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, onRefreshClick, isXs }: Props) {
-  const set = <K extends keyof ShelteredFilters>(k: K, v: ShelteredFilters[K]) =>
-    onChange(prev => ({ ...prev, [k]: v }));
-
-  const clear = () =>
-    onChange(() => ({
-      shelteredSearchingString: "",
-      shelterSearchingString: "",
-      addressFilter: "",
-      gender: undefined,
-      birthDateFrom: "",
-      birthDateTo: "",
-      joinedFrom: "",
-      joinedTo: "",
-    }));
-
-  const hasFilters = Boolean(
-    filters.shelteredSearchingString ||
-    filters.shelterSearchingString ||
-    filters.addressFilter ||
-    filters.gender ||
-    filters.birthDateFrom ||
-    filters.birthDateTo ||
-    filters.joinedFrom ||
-    filters.joinedTo
-  );
+  const showClear = hasActiveFilters(filters);
 
   return (
     <Paper
+      data-testid={SHELTERED_TESTID.TOOLBAR}
       sx={{
         p: { xs: 2, md: 3 },
         mb: 3,
@@ -208,159 +107,123 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
       </Typography>
 
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="center">
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Busca Geral"
-            value={filters.shelteredSearchingString ?? ""}
-            onChange={e => set("shelteredSearchingString", e.target.value)}
-            placeholder="Nome do acolhido, responsável ou telefone"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.shelteredSearchingString && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => set("shelteredSearchingString", "")}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
+        {TEXT_FILTERS.map(({ key, label, placeholder, testId, columns }) => {
+          const value = filters[key] ?? "";
+          return (
+            <Grid item xs={12} md={columns} key={key}>
+              <TextField
+                fullWidth
+                size="small"
+                label={label}
+                placeholder={placeholder}
+                value={value}
+                onChange={(event) => setFilter(key, event.target.value)}
+                data-testid={testId}
+                inputProps={{ "aria-label": label }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search fontSize="small" color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: value ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        onClick={() => setFilter(key, "")}
+                        aria-label={`Limpar ${label}`}
+                        data-testid={`${testId}-clear`}
+                        sx={{
+                          minWidth: MIN_TOUCH_TARGET_PX,
+                          minHeight: MIN_TOUCH_TARGET_PX,
+                        }}
+                      >
+                        <Clear fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : undefined,
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    transition: "all 0.2s ease",
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
                   },
-                },
-              },
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={2}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Busca por Abrigo"
-            value={filters.shelterSearchingString ?? ""}
-            onChange={e => set("shelterSearchingString", e.target.value)}
-            placeholder="Nome, endereço, cidade, estado"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.shelterSearchingString && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => set("shelterSearchingString", "")}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Endereço"
-            value={filters.addressFilter ?? ""}
-            onChange={e => set("addressFilter", e.target.value)}
-            placeholder="Rua, bairro, cidade"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.addressFilter && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => set("addressFilter", "")}
-                    edge="end"
-                  >
-                    <Clear fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "primary.main",
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
+                }}
+              />
+            </Grid>
+          );
+        })}
 
         <Grid item xs={12} md={3}>
           <FormControl fullWidth size="small">
-            <InputLabel>Gênero</InputLabel>
+            <InputLabel id="sheltered-filter-gender-label">Gênero</InputLabel>
             <Select
+              labelId="sheltered-filter-gender-label"
               label="Gênero"
               value={filters.gender ?? ""}
-              onChange={e => {
-                const value = e.target.value;
-                set("gender", value === "M" || value === "F" ? value : undefined);
+              onChange={(event) => {
+                const { value } = event.target;
+                setFilter(
+                  "gender",
+                  value === ShelteredGender.MALE || value === ShelteredGender.FEMALE
+                    ? value
+                    : undefined,
+                );
               }}
+              data-testid="sheltered-filter-gender"
             >
-              <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="M">Masculino</MenuItem>
-              <MenuItem value="F">Feminino</MenuItem>
+              <MenuItem value="" data-testid="sheltered-filter-gender-all">
+                Todos
+              </MenuItem>
+              <MenuItem
+                value={ShelteredGender.MALE}
+                data-testid="sheltered-filter-gender-male"
+              >
+                {GENDER_LABELS[ShelteredGender.MALE]}
+              </MenuItem>
+              <MenuItem
+                value={ShelteredGender.FEMALE}
+                data-testid="sheltered-filter-gender-female"
+              >
+                {GENDER_LABELS[ShelteredGender.FEMALE]}
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <DateFilterInput
+          <DateRangeFilter
             label="Nascimento"
+            testId="sheltered-filter-birth-date"
             from={filters.birthDateFrom}
             to={filters.birthDateTo}
-            onChange={(from, to) => onChange(prev => ({ ...prev, birthDateFrom: from, birthDateTo: to }))}
+            onChange={(from, to) =>
+              onChange((previous) => ({
+                ...previous,
+                birthDateFrom: from,
+                birthDateTo: to,
+              }))
+            }
           />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <DateFilterInput
+          <DateRangeFilter
             label="No Abrigo"
+            testId="sheltered-filter-joined-at"
             from={filters.joinedFrom}
             to={filters.joinedTo}
-            onChange={(from, to) => onChange(prev => ({ ...prev, joinedFrom: from, joinedTo: to }))}
+            onChange={(from, to) =>
+              onChange((previous) => ({
+                ...previous,
+                joinedFrom: from,
+                joinedTo: to,
+              }))
+            }
           />
         </Grid>
 
@@ -373,7 +236,7 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                   position: "fixed",
                   bottom: 16,
                   right: 16,
-                  zIndex: 9999,
+                  zIndex: (theme) => theme.zIndex.speedDial,
                   display: { xs: "block", md: "none" },
                 }}
               >
@@ -383,7 +246,8 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                       size="small"
                       color="secondary"
                       aria-label="Limpar filtros"
-                      onClick={clear}
+                      onClick={clearFilters}
+                      data-testid="sheltered-clear-filters-fab"
                     >
                       <CleaningServices fontSize="small" />
                     </Fab>
@@ -392,18 +256,20 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                   <Tooltip title="Recarregar">
                     <Fab
                       size="small"
-                      aria-label="Recarregar"
+                      aria-label="Recarregar lista"
                       onClick={onRefreshClick}
+                      data-testid="sheltered-refresh-fab"
                     >
                       <Refresh fontSize="small" />
                     </Fab>
                   </Tooltip>
 
-                  <Tooltip title="Nova Acolhido">
+                  <Tooltip title="Criar acolhido">
                     <Fab
                       color="primary"
-                      aria-label="Nova Acolhido"
+                      aria-label="Criar acolhido"
                       onClick={onCreateClick}
+                      data-testid="sheltered-create-fab"
                     >
                       <Add />
                     </Fab>
@@ -412,18 +278,26 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
               </Box>
             </>
           ) : (
-            <Stack direction="row" spacing={1.5} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-              {hasFilters && (
+            <Stack
+              direction="row"
+              spacing={1.5}
+              justifyContent="flex-end"
+              flexWrap="wrap"
+              useFlexGap
+            >
+              {showClear && (
                 <Button
                   variant="outlined"
                   color="secondary"
                   startIcon={<CleaningServices />}
-                  onClick={clear}
+                  onClick={clearFilters}
+                  data-testid="sheltered-clear-filters"
                   sx={{
                     borderRadius: 2,
                     textTransform: "none",
                     fontWeight: 600,
                     px: 2,
+                    minHeight: MIN_TOUCH_TARGET_PX,
                   }}
                 >
                   Limpar
@@ -432,11 +306,13 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
               <Tooltip title="Recarregar">
                 <IconButton
                   onClick={onRefreshClick}
+                  aria-label="Recarregar lista"
+                  data-testid="sheltered-refresh"
                   sx={{
                     borderRadius: 2,
-                    "&:hover": {
-                      bgcolor: "action.hover",
-                    },
+                    minWidth: MIN_TOUCH_TARGET_PX,
+                    minHeight: MIN_TOUCH_TARGET_PX,
+                    "&:hover": { bgcolor: "action.hover" },
                   }}
                 >
                   <Refresh />
@@ -447,15 +323,15 @@ export default function ShelteredrenToolbar({ filters, onChange, onCreateClick, 
                 color="primary"
                 startIcon={<Add />}
                 onClick={onCreateClick}
+                data-testid="sheltered-create"
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 600,
                   px: 3,
                   boxShadow: 2,
-                  "&:hover": {
-                    boxShadow: 4,
-                  },
+                  minHeight: MIN_TOUCH_TARGET_PX,
+                  "&:hover": { boxShadow: 4 },
                 }}
               >
                 Criar Acolhido

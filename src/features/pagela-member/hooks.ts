@@ -12,6 +12,24 @@ import {
 } from "./api";
 import { apiFetchShelteredSimple, apiUpdateShelteredStatus } from "../sheltered/api";
 import type { ShelteredSimpleResponseDto } from "../sheltered/types";
+import { AcceptedJesusFilter, ShelteredActiveFilter } from "../sheltered/enums";
+
+/** Maps this page's local filter values onto the sheltered domain enums. */
+const ACCEPTED_JESUS_BY_VALUE: Readonly<
+  Record<"all" | "accepted" | "not_accepted", AcceptedJesusFilter>
+> = {
+  all: AcceptedJesusFilter.ALL,
+  accepted: AcceptedJesusFilter.ACCEPTED,
+  not_accepted: AcceptedJesusFilter.NOT_ACCEPTED,
+};
+
+const ACTIVE_BY_VALUE: Readonly<
+  Record<"all" | "active" | "inactive", ShelteredActiveFilter>
+> = {
+  all: ShelteredActiveFilter.ALL,
+  active: ShelteredActiveFilter.ACTIVE,
+  inactive: ShelteredActiveFilter.INACTIVE,
+};
 
 export type Tri = "any" | "yes" | "no";
 const triToBoolString = (t: Tri): "true" | "false" | undefined =>
@@ -58,8 +76,8 @@ export function useShelteredBrowser() {
         page: pageNum,
         limit,
         searchString: searchTerm || undefined,
-        acceptedJesus: acceptedJesusFilter,
-        active: activeFilter,
+        acceptedJesus: ACCEPTED_JESUS_BY_VALUE[acceptedJesusFilter],
+        active: ACTIVE_BY_VALUE[activeFilter],
       });
       setItems(response.data || []);
       setTotalItems(response.meta?.totalItems || 0);

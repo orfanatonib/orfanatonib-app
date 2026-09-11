@@ -79,7 +79,7 @@ export default function ShelteredPagelasPage() {
             guardianPhone: data.guardianPhone || null,
             shelterId: data.shelter?.id || null,
             active: data.active,
-            acceptedChrists: data.acceptedChrists || [],
+            acceptedChrists: [],
           });
         })
         .catch((err: any) => {

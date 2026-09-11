@@ -1,145 +1,212 @@
 import React, { useMemo } from "react";
 import {
-  Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TableSortLabel, Divider, Typography, Box, Chip, useTheme, useMediaQuery, TablePagination
+  Box,
+  Chip,
+  Divider,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
+import { formatDate, gLabel } from "@/utils/dateUtils";
 import {
-  ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel,
-  SortingState, useReactTable
-} from "@tanstack/react-table";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import { ShelteredResponseDto } from "../types";
+  MIN_TOUCH_TARGET_PX,
+  SHELTERED_MESSAGES,
+  SHELTERED_PAGE_SIZE_DEFAULT,
+  SHELTERED_PAGE_SIZE_OPTIONS,
+  SHELTERED_TESTID,
+} from "../constants";
+import { ShelteredOrderBy, SortOrder } from "../enums";
+import { toTestIdSuffix } from "../utils";
+import type { ShelteredResponseDto, ShelteredSort } from "../types";
 import ShelteredCards from "./ShelteredCards";
 
-type Props = {
+export type ShelteredListProps = {
   rows: ShelteredResponseDto[];
   total: number;
   pageIndex: number;
   pageSize: number;
-  setPageIndex: (n: number) => void;
-  setPageSize: (n: number) => void;
-  sorting: SortingState;
-  setSorting: (s: SortingState) => void;
+  setPageIndex: (page: number) => void;
+  setPageSize: (size: number) => void;
+  sorting: ShelteredSort | null;
+  setSorting: (sorting: ShelteredSort) => void;
   onOpenView: (row: ShelteredResponseDto) => void;
   onStartEdit: (row: ShelteredResponseDto) => void;
   onAskDelete: (row: ShelteredResponseDto) => void;
 };
 
-import { formatDate, gLabel } from "@/utils/dateUtils";
+type Column = {
+  id: ShelteredOrderBy | "gender" | "guardianName" | "guardianPhone" | "shelter" | "actions";
+  header: string;
+  width: number;
+  sortable: boolean;
+  render: (row: ShelteredResponseDto) => React.ReactNode;
+};
 
-export default function ShelteredTable(props: Props) {
+/** Table on desktop, cards on phones — same props, same behaviour. */
+export default function ShelteredTable(props: ShelteredListProps) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"), { noSsr: true });
 
   return isXs ? <ShelteredCards {...props} /> : <ShelteredTableDesktop {...props} />;
 }
 
-function ShelteredTableDesktop(props: Props) {
-  const {
-    rows, total, pageIndex, pageSize, setPageIndex, setPageSize,
-    sorting, setSorting, onOpenView, onStartEdit, onAskDelete,
-  } = props;
-  
+function ShelteredTableDesktop({
+  rows,
+  total,
+  pageIndex,
+  pageSize,
+  setPageIndex,
+  setPageSize,
+  sorting,
+  setSorting,
+  onOpenView,
+  onStartEdit,
+  onAskDelete,
+}: ShelteredListProps) {
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
+  const isCompact = useMediaQuery(theme.breakpoints.down("md"));
 
-  const columns = useMemo<ColumnDef<ShelteredResponseDto>[]>(() => ([
-    {
-      accessorKey: "name",
-      header: "Nome do Acolhido",
-      cell: ({ getValue }) => <Typography fontWeight={700}>{String(getValue())}</Typography>,
-      meta: { width: 220 },
-    },
-    {
-      accessorKey: "gender",
-      header: "Gênero",
-      cell: ({ getValue }) => <Typography>{gLabel(getValue() as any)}</Typography>,
-      meta: { width: 110 },
-    },
-    {
-      accessorKey: "guardianName",
-      header: "Nome do Responsável",
-      cell: ({ getValue }) => <Typography noWrap>{String(getValue() ?? "—")}</Typography>,
-      meta: { width: 220 },
-    },
-    {
-      id: "guardianPhone",
-      header: "Telefone do Responsável",
-      cell: ({ row }) => row.original.guardianPhone ?? "—",
-      meta: { width: 140 },
-    },
-    {
-      id: "shelterNumber",
-      header: "Abrigo",
-      cell: ({ row }) => row.original.shelter?.name ?? <Chip size="small" label="—" />,
-      meta: { width: 100 },
-    },
-    {
-      accessorKey: "birthDate",
-      header: "Nascimento",
-      cell: ({ getValue }) => formatDate(getValue() as any),
-      meta: { width: 140 },
-    },
-    {
-      accessorKey: "joinedAt",
-      header: "No abrigo desde",
-      cell: ({ getValue }) => formatDate(getValue() as any),
-      meta: { width: 160 },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Criado em",
-      cell: ({ getValue }) => formatDate(getValue() as any, true),
-      meta: { width: 180 },
-    },
-    {
-      accessorKey: "updatedAt",
-      header: "Atualizado em",
-      cell: ({ getValue }) => formatDate(getValue() as any, true),
-      meta: { width: 180 },
-    },
-    {
-      id: "actions",
-      header: "Ações",
-      enableSorting: false,
-      cell: ({ row }) => (
-        <Box sx={{ display: "flex", gap: 0.5 }}>
-          <Tooltip title="Detalhes"><IconButton onClick={() => onOpenView(row.original)}><Visibility /></IconButton></Tooltip>
-          <Tooltip title="Editar"><IconButton onClick={() => onStartEdit(row.original)}><Edit /></IconButton></Tooltip>
-          <Tooltip title="Excluir"><IconButton color="error" onClick={() => onAskDelete(row.original)}><Delete /></IconButton></Tooltip>
-        </Box>
-      ),
-      meta: { width: 150 },
-    },
-  ]), [onAskDelete, onOpenView, onStartEdit]);
+  const columns = useMemo<Column[]>(
+    () => [
+      {
+        id: ShelteredOrderBy.NAME,
+        header: "Nome do Acolhido",
+        width: 220,
+        sortable: true,
+        render: (row) => <Typography fontWeight={700}>{row.name}</Typography>,
+      },
+      {
+        id: "gender",
+        header: "Gênero",
+        width: 110,
+        sortable: false,
+        render: (row) => <Typography>{gLabel(row.gender)}</Typography>,
+      },
+      {
+        id: "guardianName",
+        header: "Nome do Responsável",
+        width: 220,
+        sortable: false,
+        render: (row) => <Typography noWrap>{row.guardianName ?? "—"}</Typography>,
+      },
+      {
+        id: "guardianPhone",
+        header: "Telefone do Responsável",
+        width: 160,
+        sortable: false,
+        render: (row) => <Typography>{row.guardianPhone ?? "—"}</Typography>,
+      },
+      {
+        id: "shelter",
+        header: "Abrigo",
+        width: 140,
+        sortable: false,
+        render: (row) =>
+          row.shelter ? (
+            <Typography noWrap>{row.shelter.name}</Typography>
+          ) : (
+            <Chip size="small" label={SHELTERED_MESSAGES.NO_SHELTER} />
+          ),
+      },
+      {
+        id: ShelteredOrderBy.BIRTH_DATE,
+        header: "Nascimento",
+        width: 140,
+        sortable: true,
+        render: (row) => <Typography>{formatDate(row.birthDate)}</Typography>,
+      },
+      {
+        id: ShelteredOrderBy.JOINED_AT,
+        header: "No abrigo desde",
+        width: 160,
+        sortable: true,
+        render: (row) => <Typography>{formatDate(row.joinedAt)}</Typography>,
+      },
+      {
+        id: ShelteredOrderBy.CREATED_AT,
+        header: "Criado em",
+        width: 180,
+        sortable: true,
+        render: (row) => <Typography>{formatDate(row.createdAt, true)}</Typography>,
+      },
+      {
+        id: ShelteredOrderBy.UPDATED_AT,
+        header: "Atualizado em",
+        width: 180,
+        sortable: true,
+        render: (row) => <Typography>{formatDate(row.updatedAt, true)}</Typography>,
+      },
+      {
+        id: "actions",
+        header: "Ações",
+        width: 150,
+        sortable: false,
+        render: (row) => {
+          const suffix = toTestIdSuffix(row.id);
+          return (
+            <Box sx={{ display: "flex", gap: 0.5 }}>
+              <Tooltip title="Detalhes">
+                <IconButton
+                  onClick={() => onOpenView(row)}
+                  aria-label={`Ver detalhes de ${row.name}`}
+                  data-testid={`sheltered-row-view-${suffix}`}
+                  sx={{ minWidth: MIN_TOUCH_TARGET_PX, minHeight: MIN_TOUCH_TARGET_PX }}
+                >
+                  <Visibility />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Editar">
+                <IconButton
+                  onClick={() => onStartEdit(row)}
+                  aria-label={`Editar ${row.name}`}
+                  data-testid={`sheltered-row-edit-${suffix}`}
+                  sx={{ minWidth: MIN_TOUCH_TARGET_PX, minHeight: MIN_TOUCH_TARGET_PX }}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Excluir">
+                <IconButton
+                  color="error"
+                  onClick={() => onAskDelete(row)}
+                  aria-label={`Excluir ${row.name}`}
+                  data-testid={`sheltered-row-delete-${suffix}`}
+                  sx={{ minWidth: MIN_TOUCH_TARGET_PX, minHeight: MIN_TOUCH_TARGET_PX }}
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          );
+        },
+      },
+    ],
+    [onAskDelete, onOpenView, onStartEdit],
+  );
 
-  const table = useReactTable({
-    data: rows,
-    columns,
-    state: { sorting, pagination: { pageIndex, pageSize } },
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: true,
-    manualSorting: true,
-    onSortingChange: (u) => {
-      const next = typeof u === "function" ? u(sorting) : u;
-      setSorting(next);
-      setPageIndex(0);
-    },
-    onPaginationChange: (u) => {
-      const next = typeof u === "function" ? u({ pageIndex, pageSize }) : u;
-      setPageIndex(next.pageIndex ?? 0);
-      setPageSize(next.pageSize ?? 12);
-    },
-    getRowId: (r) => r.id,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
-  });
+  const handleSort = (columnId: ShelteredOrderBy) => {
+    const isActive = sorting?.id === columnId;
+    setSorting({ id: columnId, desc: isActive ? !sorting.desc : false });
+    setPageIndex(0);
+  };
+
+  const sortDirection = sorting?.desc ? SortOrder.DESC : SortOrder.ASC;
 
   return (
     <Paper
+      data-testid={SHELTERED_TESTID.TABLE}
       sx={{
         borderRadius: 2,
         boxShadow: 2,
@@ -147,84 +214,80 @@ function ShelteredTableDesktop(props: Props) {
         bgcolor: "background.paper",
       }}
     >
-      <TableContainer>
-        <Table size={isXs ? "small" : "medium"} stickyHeader>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table size={isCompact ? "small" : "medium"} stickyHeader>
           <TableHead>
-            {table.getHeaderGroups().map(hg => (
-              <TableRow key={hg.id}>
-                {hg.headers.map(h => {
-                  const sorted = h.column.getIsSorted();
-                  const width = (h.column.columnDef.meta as any)?.width;
-                  const isActions = h.column.id === "actions";
-                  return (
-                    <TableCell
-                      key={h.id}
-                      sx={{
-                        width,
-                        bgcolor: "background.default",
-                        fontWeight: 600,
-                        fontSize: "0.875rem",
-                        color: "text.primary",
-                        borderBottom: "2px solid",
-                        borderColor: "divider",
-                      }}
-                    >
-                      {!isActions ? (
-                        <TableSortLabel
-                          active={!!sorted}
-                          direction={sorted === "asc" ? "asc" : sorted === "desc" ? "desc" : "asc"}
-                          onClick={h.column.getToggleSortingHandler()}
-                          sx={{
-                            "&.Mui-active": {
-                              color: "primary.main",
-                            },
-                            "& .MuiTableSortLabel-icon": {
-                              color: "primary.main !important",
-                            },
-                          }}
-                        >
-                          {flexRender(h.column.columnDef.header, h.getContext())}
-                        </TableSortLabel>
-                      ) : (
-                        flexRender(h.column.columnDef.header, h.getContext())
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            <TableRow>
+              {columns.map((column) => {
+                const isSorted = sorting?.id === column.id;
+                return (
+                  <TableCell
+                    key={column.id}
+                    sx={{
+                      width: column.width,
+                      bgcolor: "background.default",
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      color: "text.primary",
+                      borderBottom: "2px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    {column.sortable ? (
+                      <TableSortLabel
+                        active={isSorted}
+                        direction={
+                          isSorted && sortDirection === SortOrder.DESC ? "desc" : "asc"
+                        }
+                        onClick={() => handleSort(column.id as ShelteredOrderBy)}
+                        data-testid={`sheltered-sort-${column.id}`}
+                        sx={{
+                          "&.Mui-active": { color: "primary.main" },
+                          "& .MuiTableSortLabel-icon": { color: "primary.main !important" },
+                        }}
+                      >
+                        {column.header}
+                      </TableSortLabel>
+                    ) : (
+                      column.header
+                    )}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
           </TableHead>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
+            {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
-                  <Typography variant="body2" color="text.secondary">Nenhum acolhido encontrado.</Typography>
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  sx={{ py: 6 }}
+                  data-testid="sheltered-table-empty"
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {SHELTERED_MESSAGES.EMPTY_TITLE}.
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map(r => (
+              rows.map((row) => (
                 <TableRow
-                  key={r.id}
+                  key={row.id}
                   hover
+                  data-testid={`sheltered-row-${toTestIdSuffix(row.id)}`}
                   sx={{
-                    "&:hover": {
-                      bgcolor: "action.hover",
-                    },
-                    "&:last-child td": {
-                      borderBottom: 0,
-                    },
+                    "&:hover": { bgcolor: "action.hover" },
+                    "&:last-child td": { borderBottom: 0 },
                     transition: "background-color 0.2s ease",
                   }}
                 >
-                  {r.getVisibleCells().map(c => (
+                  {columns.map((column) => (
                     <TableCell
-                      key={c.id}
-                      sx={{
-                        borderBottom: "1px solid",
-                        borderColor: "divider",
-                      }}
+                      key={column.id}
+                      sx={{ borderBottom: "1px solid", borderColor: "divider" }}
                     >
-                      {flexRender(c.column.columnDef.cell, c.getContext())}
+                      {column.render(row)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -238,16 +301,16 @@ function ShelteredTableDesktop(props: Props) {
         component="div"
         count={total}
         page={pageIndex}
-        onPageChange={(_, p) => props.setPageIndex(p)}
+        onPageChange={(_event, page) => setPageIndex(page)}
         rowsPerPage={pageSize}
-        onRowsPerPageChange={(e) => { props.setPageSize(parseInt(e.target.value, 10)); props.setPageIndex(0); }}
-        rowsPerPageOptions={[12, 24, 50]}
-        labelRowsPerPage="Linhas por página"
-        sx={{
-          "& .MuiTablePagination-toolbar": {
-            px: 2,
-          },
+        onRowsPerPageChange={(event) => {
+          setPageSize(Number.parseInt(event.target.value, 10) || SHELTERED_PAGE_SIZE_DEFAULT);
+          setPageIndex(0);
         }}
+        rowsPerPageOptions={[...SHELTERED_PAGE_SIZE_OPTIONS]}
+        labelRowsPerPage="Linhas por página"
+        data-testid="sheltered-table-pagination"
+        sx={{ "& .MuiTablePagination-toolbar": { px: 2 } }}
       />
     </Paper>
   );

@@ -1,75 +1,72 @@
 import React, { useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Chip,
-  Grid,
-  Stack,
-  Tooltip,
-  IconButton,
   Alert,
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Grid,
+  IconButton,
   Link,
   Paper,
+  Skeleton,
+  Stack,
+  Tooltip,
+  Typography,
   useMediaQuery,
   useTheme,
-  Avatar,
-  Skeleton,
 } from "@mui/material";
 import {
-  WhatsApp,
-  PhoneIphone,
-  ContentCopy,
-  Phone as PhoneIcon,
-  Map,
   Cake,
   Group,
   Home,
+  Map,
   MenuBook,
+  PhoneIphone,
+  Update,
+  WhatsApp,
 } from "@mui/icons-material";
-import { ShelteredResponseDto } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
+import { CopyButton, initials } from "@/utils/components";
+import { ageFrom, formatDate, gLabel } from "@/utils/dateUtils";
+import {
+  MIN_TOUCH_TARGET_PX,
+  SHELTERED_MESSAGES,
+  SHELTERED_TESTID,
+} from "../constants";
+import { buildMapsUrl, isFemale } from "../utils";
+import type { ShelteredResponseDto } from "../types";
 
-const calcAge = (iso?: string) => {
-  if (!iso) return undefined;
-  const b = new Date(iso);
-  if (Number.isNaN(b.getTime())) return undefined;
-  const today = new Date();
-  let age = today.getFullYear() - b.getFullYear();
-  const m = today.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
-  return age;
+type Props = {
+  open: boolean;
+  loading: boolean;
+  sheltered: ShelteredResponseDto | null;
+  onClose: () => void;
+  onEdit?: (sheltered: ShelteredResponseDto) => void;
 };
 
-const initials = (name?: string) =>
-  (name || "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(s => s[0]?.toUpperCase())
-    .join("") || "C";
-
-function CopyButton({ value, title = "Copiar" }: { value?: string; title?: string }) {
-  const copyToClipboard = (text?: string) => {
-    if (!text) return;
-    navigator.clipboard?.writeText(String(text)).catch(() => {});
-  };
+function InfoCard({
+  icon,
+  title,
+  testId,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  testId: string;
+  children: React.ReactNode;
+}) {
   return (
-    <Tooltip title={title}>
-      <IconButton size="small" onClick={() => copyToClipboard(value)}>
-        <ContentCopy fontSize="inherit" />
-      </IconButton>
-    </Tooltip>
-  );
-}
-
-function LineCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
-  return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2, height: "100%" }}>
+    <Paper
+      variant="outlined"
+      data-testid={testId}
+      sx={{ p: 1.25, borderRadius: 2, height: "100%" }}
+    >
       <Stack spacing={0.5} sx={{ height: "100%" }}>
         <Stack direction="row" spacing={0.75} alignItems="center">
           {icon}
@@ -83,33 +80,32 @@ function LineCard({ icon, title, children }: { icon: React.ReactNode; title: str
   );
 }
 
-type Props = { open: boolean; loading: boolean; sheltered: ShelteredResponseDto | null; onClose: () => void; onEdit?: (id: string) => void };
-
-export default function ShelteredViewDialog({ open, loading, sheltered, onClose, onEdit }: Props) {
+export default function ShelteredViewDialog({
+  open,
+  loading,
+  sheltered,
+  onClose,
+  onEdit,
+}: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  const age = useMemo(() => calcAge(sheltered?.birthDate || undefined), [sheltered?.birthDate]);
+  const age = useMemo(() => ageFrom(sheltered?.birthDate), [sheltered?.birthDate]);
 
-  const waLink = useMemo(() => {
-    if (!sheltered?.guardianPhone) return null;
-    return buildWhatsappLink({ id: sheltered.id, name: sheltered.name, phone: sheltered.guardianPhone } as any);
-  }, [sheltered?.guardianPhone, sheltered?.name, sheltered?.id]);
+  const whatsappLink = useMemo(
+    () =>
+      sheltered
+        ? buildWhatsappLink(
+            sheltered.name,
+            user?.name,
+            sheltered.guardianPhone ?? undefined,
+          )
+        : null,
+    [sheltered, user?.name],
+  );
 
-  const mapsHref = sheltered?.address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        [
-          sheltered.address.street,
-          sheltered.address.number,
-          sheltered.address.district,
-          sheltered.address.city,
-          sheltered.address.state,
-          sheltered.address.postalCode,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      )}`
-    : undefined;
+  const mapsUrl = buildMapsUrl(sheltered?.address);
 
   return (
     <Dialog
@@ -117,12 +113,16 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
       onClose={onClose}
       fullWidth
       maxWidth="lg"
-      PaperProps={{
-        sx: {
-          width: { xs: "98%", sm: "44rem" },
-          m: 0,
-          borderRadius: { xs: 2, sm: 3 },
-          overflow: "hidden",
+      data-testid={SHELTERED_TESTID.VIEW_DIALOG}
+      aria-labelledby="sheltered-view-dialog-title"
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: "98%", sm: "44rem" },
+            m: 0,
+            borderRadius: { xs: 2, sm: 3 },
+            overflow: "hidden",
+          },
         },
       }}
     >
@@ -131,109 +131,183 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
           px: { xs: 2, sm: 3 },
           pt: { xs: 2, sm: 3 },
           pb: { xs: 1.25, sm: 1.5 },
-          background: "linear-gradient(135deg, rgba(3,155,229,.08) 0%, rgba(156,39,176,.08) 100%)",
+          bgcolor: "action.hover",
           borderBottom: 1,
           borderColor: "divider",
         }}
       >
         {!sheltered ? (
-          <Typography variant="h6">Detalhes do Acolhido</Typography>
+          <Typography variant="h6" id="sheltered-view-dialog-title">
+            Detalhes do Acolhido
+          </Typography>
         ) : (
-          <Stack spacing={1.25}>
-            <Stack direction="row" spacing={1.25} alignItems="center">
-              <Avatar
-                sx={{
-                  width: 48,
-                  height: 48,
-                  bgcolor: sheltered.gender === "F" ? "secondary.main" : "primary.main",
-                  color: "white",
-                  fontWeight: 700,
-                }}
-              >
-                {initials(sheltered.name)}
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-                  <Typography variant="h6" fontWeight={800} noWrap={!isXs} title={sheltered.name}>
-                    {sheltered.name || "—"}
-                  </Typography>
-                  <Chip size="small" label={sheltered.gender === "F" ? "Feminino" : "Masculino"} color="default" />
-                  {typeof age === "number" && <Chip size="small" label={`${age} anos`} color="default" />}
-                  {sheltered.shelter ? (
-                    <Chip size="small" label={`Abrigo ${sheltered.shelter.name}`} color="primary" variant="outlined" />
-                  ) : (
-                    <Chip size="small" label="Sem abrigo" variant="outlined" />
-                  )}
-                </Stack>
-              </Box>
-            </Stack>
+          <Stack direction="row" spacing={1.25} alignItems="center">
+            <Avatar
+              aria-hidden
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: isFemale(sheltered) ? "secondary.main" : "primary.main",
+                color: "common.white",
+                fontWeight: 700,
+              }}
+            >
+              {initials(sheltered.name)}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                <Typography
+                  variant="h6"
+                  fontWeight={800}
+                  noWrap={!isXs}
+                  title={sheltered.name}
+                  id="sheltered-view-dialog-title"
+                  data-testid="sheltered-view-name"
+                >
+                  {sheltered.name}
+                </Typography>
+                <Chip size="small" label={gLabel(sheltered.gender)} />
+                {typeof age === "number" && <Chip size="small" label={`${age} anos`} />}
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color={sheltered.shelter ? "primary" : "default"}
+                  label={
+                    sheltered.shelter
+                      ? `Abrigo ${sheltered.shelter.name}`
+                      : SHELTERED_MESSAGES.NO_SHELTER
+                  }
+                  data-testid="sheltered-view-shelter"
+                />
+              </Stack>
+            </Box>
           </Stack>
         )}
       </Box>
 
       <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
         {loading ? (
-          <Skeleton height={200} />
+          <Skeleton height={200} data-testid="sheltered-view-loading" />
         ) : !sheltered ? (
-          <Alert severity="info">Nenhum acolhido selecionado.</Alert>
+          <Alert severity="info" data-testid="sheltered-view-empty">
+            Nenhum acolhido selecionado.
+          </Alert>
         ) : (
           <Stack spacing={2}>
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<PhoneIphone fontSize="small" />} title="Telefone do Responsável">
-                  <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-                    {sheltered.guardianPhone ? (
-                      <>
-                        <Link href={waLink || undefined} target="_blank" underline="hover" sx={{ fontSize: ".95rem" }}>
+                <InfoCard
+                  icon={<PhoneIphone fontSize="small" aria-hidden />}
+                  title="Telefone do Responsável"
+                  testId="sheltered-view-guardian-phone"
+                >
+                  {sheltered.guardianPhone ? (
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      alignItems="center"
+                      flexWrap="wrap"
+                    >
+                      {whatsappLink ? (
+                        <Link
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          underline="hover"
+                          sx={{ fontSize: ".95rem" }}
+                        >
                           {sheltered.guardianPhone}
                         </Link>
-                        <Tooltip title={waLink ? "Abrir WhatsApp" : "Sem número"}>
-                          <span>
-                            <IconButton size="small" color="success" component="a" href={waLink || undefined} target="_blank" disabled={!waLink}>
-                              <WhatsApp fontSize="small" />
-                            </IconButton>
-                          </span>
+                      ) : (
+                        <Typography sx={{ fontSize: ".95rem" }}>
+                          {sheltered.guardianPhone}
+                        </Typography>
+                      )}
+                      {whatsappLink && (
+                        <Tooltip title="Abrir WhatsApp">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            component="a"
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Abrir WhatsApp do responsável"
+                            data-testid="sheltered-view-whatsapp"
+                            sx={{
+                              minWidth: MIN_TOUCH_TARGET_PX,
+                              minHeight: MIN_TOUCH_TARGET_PX,
+                            }}
+                          >
+                            <WhatsApp fontSize="small" />
+                          </IconButton>
                         </Tooltip>
-                        <CopyButton value={sheltered.guardianPhone} title="Copiar telefone" />
-                      </>
-                    ) : (
-                      <Typography variant="body2">—</Typography>
-                    )}
-                  </Stack>
-                </LineCard>
+                      )}
+                      <CopyButton
+                        value={sheltered.guardianPhone}
+                        title="Copiar telefone"
+                      />
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2">—</Typography>
+                  )}
+                </InfoCard>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<Group fontSize="small" />} title="Responsável">
-                  <Typography>{sheltered.guardianName}</Typography>
-                </LineCard>
+                <InfoCard
+                  icon={<Group fontSize="small" aria-hidden />}
+                  title="Responsável"
+                  testId="sheltered-view-guardian-name"
+                >
+                  <Typography>
+                    {sheltered.guardianName || SHELTERED_MESSAGES.NO_GUARDIAN}
+                  </Typography>
+                </InfoCard>
               </Grid>
             </Grid>
 
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<Cake fontSize="small" />} title="Nascimento">
+                <InfoCard
+                  icon={<Cake fontSize="small" aria-hidden />}
+                  title="Nascimento"
+                  testId="sheltered-view-birth-date"
+                >
                   <Typography>
-                    {fmtDate(sheltered.birthDate || undefined)} {typeof age === "number" && `(${age} anos)`}
+                    {formatDate(sheltered.birthDate)}
+                    {typeof age === "number" ? ` (${age} anos)` : ""}
                   </Typography>
-                </LineCard>
+                </InfoCard>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<PhoneIcon fontSize="small" />} title="No Abrigo desde">
-                  <Typography>{fmtDate(sheltered.joinedAt || undefined)}</Typography>
-                </LineCard>
+                <InfoCard
+                  icon={<Home fontSize="small" aria-hidden />}
+                  title="No abrigo desde"
+                  testId="sheltered-view-joined-at"
+                >
+                  <Typography>{formatDate(sheltered.joinedAt)}</Typography>
+                </InfoCard>
               </Grid>
             </Grid>
 
-            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+            <Paper
+              variant="outlined"
+              sx={{ p: 1.25, borderRadius: 2 }}
+              data-testid="sheltered-view-address"
+            >
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Home fontSize="small" />
-                <Typography variant="caption" color="text.secondary">Endereço</Typography>
+                <Home fontSize="small" aria-hidden />
+                <Typography variant="caption" color="text.secondary">
+                  Endereço
+                </Typography>
               </Stack>
               {sheltered.address ? (
                 <Grid container spacing={1.25}>
                   {(sheltered.address.street || sheltered.address.number) && (
                     <Grid item xs={12} sm={8}>
-                      <Typography>{sheltered.address.street || ""} {sheltered.address.number || ""}</Typography>
+                      <Typography>
+                        {sheltered.address.street ?? ""} {sheltered.address.number ?? ""}
+                      </Typography>
                     </Grid>
                   )}
                   {sheltered.address.district && (
@@ -242,7 +316,9 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
                     </Grid>
                   )}
                   <Grid item xs={12} sm={6}>
-                    <Typography>{sheltered.address.city}/{sheltered.address.state}</Typography>
+                    <Typography>
+                      {sheltered.address.city}/{sheltered.address.state}
+                    </Typography>
                   </Grid>
                   {sheltered.address.postalCode && (
                     <Grid item xs={12} sm={6}>
@@ -254,32 +330,49 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
                       <Typography>{sheltered.address.complement}</Typography>
                     </Grid>
                   )}
-                  <Grid item xs={12}>
-                    <Stack direction="row" spacing={1}>
-                      {mapsHref && (
-                        <Button size="small" component="a" href={mapsHref} target="_blank" startIcon={<Map fontSize="small" />}>
+                  {mapsUrl && (
+                    <Grid item xs={12}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Button
+                          size="small"
+                          component="a"
+                          href={mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          startIcon={<Map fontSize="small" />}
+                          data-testid="sheltered-view-maps"
+                          sx={{ minHeight: MIN_TOUCH_TARGET_PX }}
+                        >
                           Abrir no Maps
                         </Button>
-                      )}
-                      <CopyButton value={mapsHref} title="Copiar endereço" />
-                    </Stack>
-                  </Grid>
+                        <CopyButton value={mapsUrl} title="Copiar endereço" />
+                      </Stack>
+                    </Grid>
+                  )}
                 </Grid>
               ) : (
-                <Typography variant="body2">Nenhum endereço cadastrado.</Typography>
+                <Typography variant="body2">{SHELTERED_MESSAGES.NO_ADDRESS}</Typography>
               )}
             </Paper>
 
             <Grid container spacing={1.25}>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<MenuBook fontSize="small" />} title="Criado em">
-                  <Typography>{fmtDate(sheltered.createdAt)}</Typography>
-                </LineCard>
+                <InfoCard
+                  icon={<MenuBook fontSize="small" aria-hidden />}
+                  title="Criado em"
+                  testId="sheltered-view-created-at"
+                >
+                  <Typography>{formatDate(sheltered.createdAt, true)}</Typography>
+                </InfoCard>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <LineCard icon={<MenuBook fontSize="small" />} title="Atualizado em">
-                  <Typography>{fmtDate(sheltered.updatedAt)}</Typography>
-                </LineCard>
+                <InfoCard
+                  icon={<Update fontSize="small" aria-hidden />}
+                  title="Atualizado em"
+                  testId="sheltered-view-updated-at"
+                >
+                  <Typography>{formatDate(sheltered.updatedAt, true)}</Typography>
+                </InfoCard>
               </Grid>
             </Grid>
           </Stack>
@@ -294,12 +387,25 @@ export default function ShelteredViewDialog({ open, loading, sheltered, onClose,
           justifyContent: "space-between",
         }}
       >
-        {sheltered && (
-          <Button fullWidth={isXs} onClick={() => onEdit?.(sheltered.id)} variant="outlined" color="primary">
+        {sheltered && onEdit && (
+          <Button
+            fullWidth={isXs}
+            onClick={() => onEdit(sheltered)}
+            variant="outlined"
+            color="primary"
+            data-testid="sheltered-view-edit"
+            sx={{ minHeight: MIN_TOUCH_TARGET_PX }}
+          >
             Editar
           </Button>
         )}
-        <Button fullWidth={isXs} onClick={onClose} variant="contained">
+        <Button
+          fullWidth={isXs}
+          onClick={onClose}
+          variant="contained"
+          data-testid="sheltered-view-close"
+          sx={{ minHeight: MIN_TOUCH_TARGET_PX }}
+        >
           Fechar
         </Button>
       </DialogActions>

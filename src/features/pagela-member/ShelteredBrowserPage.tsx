@@ -14,6 +14,7 @@ import { selectIsAdmin, selectIsLeader, selectIsMember } from "@/store/selectors
 import { useShelteredBrowser } from "./hooks";
 import ShelteredCard from "./components/ShelteredCard";
 import { CreateShelteredForm, EditShelteredForm, ShelteredResponseDto } from "../sheltered/types";
+import { ShelteredFormMode, ShelteredGender } from "../sheltered/enums";
 import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
@@ -223,59 +224,48 @@ export default function ShelteredBrowserPage() {
   const openCreate = () =>
     setCreating({
       name: "",
-      gender: "M",
+      gender: ShelteredGender.MALE,
       guardianName: "",
       guardianPhone: "",
       birthDate: "",
       joinedAt: null,
       shelterId: null,
-      address: { street: "", district: "", city: "", state: "", postalCode: "" } as any,
+      address: { street: "", district: "", city: "", state: "", postalCode: "" },
     });
 
   const submitCreate = async () => {
     if (!creating) return;
-    const payload = { ...creating };
-    if (!payload.joinedAt) payload.joinedAt = null;
-    if (!payload.shelterId) payload.shelterId = null as any;
-
-    try {
-      await createSheltered(payload, 1, 12);
-      setCreating(null);
-      setDialogError("");
-    } catch (error: any) {
-      console.error('Erro ao criar acolhido:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao criar acolhido. Tente novamente.");
-    }
+    const created = await createSheltered({
+      ...creating,
+      joinedAt: creating.joinedAt || null,
+      shelterId: creating.shelterId || null,
+    });
+    if (created) setCreating(null);
   };
 
   const openEdit = async (shelteredId: string) => {
     try {
       const full: ShelteredResponseDto = await apiFetchSheltered(shelteredId);
-      const isoToBr = (raw?: string | null) => {
-        if (!raw) return raw ?? "";
-        const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
-      };
       setEditing({
         id: full.id,
-        name: full.name ?? "",
-        gender: (full.gender as any) ?? "M",
+        name: full.name,
+        gender: full.gender,
         guardianName: full.guardianName ?? "",
         guardianPhone: full.guardianPhone ?? "",
-        birthDate: isoToBr(full.birthDate ?? ""),
-        joinedAt: (isoToBr((full as any).joinedAt) as any) || null,
-        shelterId: (full as any)?.shelter?.id ?? null,
+        birthDate: full.birthDate,
+        joinedAt: full.joinedAt,
+        shelterId: full.shelter?.id ?? null,
         address: full.address
           ? {
             street: full.address.street ?? "",
-            number: (full.address as any).number ?? "",
+            number: full.address.number ?? "",
             district: full.address.district ?? "",
-            city: full.address.city ?? "",
-            state: full.address.state ?? "",
+            city: full.address.city,
+            state: full.address.state,
             postalCode: full.address.postalCode ?? "",
-            complement: (full.address as any).complement ?? "",
+            complement: full.address.complement ?? "",
           }
-          : { street: "", number: "", district: "", city: "", state: "", postalCode: "", complement: "" } as any,
+          : { street: "", number: "", district: "", city: "", state: "", postalCode: "", complement: "" },
       });
       setDialogError("");
     } catch (e: any) {
@@ -286,14 +276,7 @@ export default function ShelteredBrowserPage() {
   const submitEdit = async () => {
     if (!editing) return;
     const { id, ...rest } = editing;
-    try {
-      await updateSheltered(id, rest, 1, 12);
-      setEditing(null);
-      setDialogError("");
-    } catch (error: any) {
-      console.error('Erro ao atualizar acolhido:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao atualizar acolhido. Tente novamente.");
-    }
+    if (await updateSheltered(id, rest)) setEditing(null);
   };
 
   React.useEffect(() => {
@@ -665,7 +648,7 @@ export default function ShelteredBrowserPage() {
       )}
 
       <ShelteredFormDialog
-        mode="create"
+        mode={ShelteredFormMode.CREATE}
         open={!!creating}
         value={creating}
         onChange={(v) => setCreating(v as CreateShelteredForm)}
@@ -679,7 +662,7 @@ export default function ShelteredBrowserPage() {
       />
 
       <ShelteredFormDialog
-        mode="edit"
+        mode={ShelteredFormMode.EDIT}
         open={!!editing}
         value={editing}
         onChange={(v) => setEditing(v as EditShelteredForm)}

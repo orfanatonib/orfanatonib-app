@@ -22,6 +22,7 @@ import Contact from './pages/Contact/Contact';
 import Login from './pages/Login/Login';
 import MemberArea from './pages/MemberArea/MemberArea';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
+import ConfirmEmail from '@/pages/EmailVerification/ConfirmEmail';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
 import ForgotPassword from './pages/PasswordReset/ForgotPassword';
 import ResetPassword from './pages/PasswordReset/ResetPassword';
@@ -39,7 +40,11 @@ import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
 import { fetchRoutes } from './store/slices/route/routeSlice';
 import { UserRole, initAuth, logout } from './store/slices/auth/authSlice';
 import { fetchFeatureFlags } from './store/slices/feature-flags/featureFlagsSlice';
-import { FeatureFlagRoute, FeatureFlagKeys } from './features/feature-flags';
+import {
+  FeatureFlagKeys,
+  FeatureFlagRoute,
+  FeatureFlagsPage,
+} from './features/feature-flags';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -101,10 +106,10 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(fetchFeatureFlags());
+    if (initialized) {
+      void dispatch(fetchFeatureFlags());
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, initialized, isAuthenticated, user?.id, user?.role]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -114,6 +119,7 @@ function App() {
   if (!forceReady && (!initialized || loadingUser)) {
     return (
       <Box
+        data-testid="app-auth-loading"
         sx={{
           height: '100vh',
           width: '100vw',
@@ -132,6 +138,7 @@ function App() {
           Verificando autenticação...
         </Typography>
         <Button
+          data-testid="app-auth-loading-logout"
           variant="outlined"
           color="error"
           onClick={handleLogout}
@@ -141,7 +148,7 @@ function App() {
             '&:hover': {
               borderWidth: 2,
               bgcolor: 'rgba(211, 47, 47, 0.04)',
-            }
+            },
           }}
         >
           Sair
@@ -152,7 +159,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Box sx={{
+      <Box data-testid="app-root" sx={{
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -173,6 +180,7 @@ function App() {
                 <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
+                <Route path="/verificar-email/:token" element={<ConfirmEmail />} />
                 <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
                 <Route path="/cadastrar" element={<Register commonUser />} />
                 <Route path="/cadastrar" element={<Register commonUser />} />
@@ -252,6 +260,14 @@ function App() {
                     <Route path="agendamentos" element={<ShelterScheduleManager />} />
                     <Route path="integracoes" element={<IntegrationManager />} />
                     <Route path="antecedentes" element={<AtendentesManager />} />
+                    <Route
+                      path="feature-flags"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagsPage />
+                        </RequireAdmin>
+                      }
+                    />
 
                     <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
                     <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />

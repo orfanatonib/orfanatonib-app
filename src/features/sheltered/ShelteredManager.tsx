@@ -3,71 +3,96 @@ import {
   Alert,
   Box,
   CircularProgress,
-  useTheme,
-  useMediaQuery,
   Container,
   Paper,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import SearchIcon from "@mui/icons-material/Search";
+import BackHeader from "@/components/common/header/BackHeader";
+import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 import ShelteredToolbar from "./components/ShelteredToolbar";
 import ShelteredTable from "./components/ShelteredTable";
 import ShelteredViewDialog from "./components/ShelteredViewDialog";
 import ShelteredFormDialog from "./components/ShelteredFormDialog";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
-import { useShelteredDetails, useShelteredMutations, useSheltered } from "./hooks";
+import { useSheltered, useShelteredDetails, useShelteredMutations } from "./hooks";
 import {
+  SHELTERED_FILTERS_EMPTY,
+  SHELTERED_MESSAGES,
+  SHELTERED_PAGE_SIZE_DEFAULT,
+  SHELTERED_SORT_DEFAULT,
+  SHELTERED_TESTID,
+} from "./constants";
+import { ShelteredFormMode, ShelteredGender } from "./enums";
+import type {
+  CreateShelteredForm,
+  EditShelteredForm,
   ShelteredFilters,
   ShelteredResponseDto,
   ShelteredSort,
-  CreateShelteredForm,
-  EditShelteredForm,
 } from "./types";
-import BackHeader from "@/components/common/header/BackHeader";
+
+const emptyCreateForm = (): CreateShelteredForm => ({
+  name: "",
+  gender: ShelteredGender.MALE,
+  guardianName: "",
+  guardianPhone: "",
+  birthDate: "",
+  joinedAt: null,
+  shelterId: null,
+  address: { street: "", district: "", city: "", state: "", postalCode: "" },
+});
+
+const toEditForm = (sheltered: ShelteredResponseDto): EditShelteredForm => ({
+  id: sheltered.id,
+  name: sheltered.name,
+  gender: sheltered.gender,
+  guardianName: sheltered.guardianName ?? "",
+  guardianPhone: sheltered.guardianPhone ?? "",
+  // Mantém ISO: `isoToDayjs` só interpreta esse formato sem ambiguidade.
+  // Uma data em DD/MM/AAAA seria lida como MM/DD/AAAA e trocaria dia por mês.
+  birthDate: sheltered.birthDate,
+  joinedAt: sheltered.joinedAt,
+  shelterId: sheltered.shelter?.id ?? null,
+  address: sheltered.address
+    ? {
+        street: sheltered.address.street,
+        number: sheltered.address.number,
+        district: sheltered.address.district,
+        city: sheltered.address.city,
+        state: sheltered.address.state,
+        postalCode: sheltered.address.postalCode,
+        complement: sheltered.address.complement,
+      }
+    : null,
+});
 
 export default function ShelteredManager() {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [filters, setFilters] = useState<ShelteredFilters>({
-    shelteredSearchingString: "",
-    shelterSearchingString: "",
-    addressFilter: "",
-    gender: undefined,
-    birthDateFrom: "",
-    birthDateTo: "",
-    joinedFrom: "",
-    joinedTo: "",
+    ...SHELTERED_FILTERS_EMPTY,
   });
-
-  const [pageSize, setPageSize] = useState<number>(12);
-  const [pageIndex, setPageIndex] = useState<number>(0);
-  const [sorting, setSorting] = useState<ShelteredSort>({
-    id: "updatedAt",
-    desc: true,
-  });
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(SHELTERED_PAGE_SIZE_DEFAULT);
+  const [sorting, setSorting] = useState<ShelteredSort>(SHELTERED_SORT_DEFAULT);
 
   const { rows, total, loading, error, setError, fetchPage } = useSheltered(
     pageIndex,
     pageSize,
     sorting,
-    filters
+    filters,
   );
-  const doRefresh = useCallback(() => {
-    fetchPage();
+
+  const refetch = useCallback(async () => {
+    await fetchPage();
   }, [fetchPage]);
 
-  const {
-    viewing,
-    setViewing,
-    loading: viewingLoading,
-    fetchSheltered,
-  } = useShelteredDetails();
-  const handleOpenView = (row: ShelteredResponseDto) => {
-    setViewing(row);
-    fetchSheltered(row.id);
-  };
+  const { viewing, setViewing, loading: viewingLoading, fetchSheltered } =
+    useShelteredDetails();
 
   const {
     dialogLoading,
@@ -76,92 +101,55 @@ export default function ShelteredManager() {
     createSheltered,
     updateSheltered,
     deleteSheltered,
-  } = useShelteredMutations(async () => {
-    await fetchPage();
-  });
+  } = useShelteredMutations(refetch);
 
   const [creating, setCreating] = useState<CreateShelteredForm | null>(null);
-  const openCreate = () =>
-    setCreating({
-      name: "",
-      gender: "M",
-      guardianName: "",
-      guardianPhone: "",
-      birthDate: "",
-      joinedAt: null,
-      shelterId: null,
-      address: {
-        street: "",
-        district: "",
-        city: "",
-        state: "",
-        postalCode: "",
-      } as any,
-    });
+  const [editing, setEditing] = useState<EditShelteredForm | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(null);
+
+  const handleOpenView = (row: ShelteredResponseDto) => {
+    setViewing(row);
+    void fetchSheltered(row.id);
+  };
+
+  const handleStartEdit = (row: ShelteredResponseDto) => {
+    setViewing(null);
+    setDialogError("");
+    setEditing(toEditForm(row));
+  };
+
+  const handleFiltersChange = (
+    updater: (previous: ShelteredFilters) => ShelteredFilters,
+  ) => {
+    setFilters(updater);
+    setPageIndex(0);
+  };
+
+  const handleSortingChange = (next: ShelteredSort) => {
+    setSorting(next);
+    setPageIndex(0);
+  };
+
   const submitCreate = async () => {
     if (!creating) return;
-    const payload = { ...creating };
-    if (!payload.joinedAt) payload.joinedAt = null;
-    if (!payload.shelterId) payload.shelterId = null as any;
-    const success = await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
-    
-    if (success) {
-      setCreating(null);
-    }
+    if (await createSheltered(creating)) setCreating(null);
   };
 
-  const [editing, setEditing] = useState<EditShelteredForm | null>(null);
-  const startEdit = (c: ShelteredResponseDto) => {
-    const isoToBr = (raw?: string | null) => {
-      if (!raw) return raw ?? "";
-      const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
-    };
-    setEditing({
-      id: c.id,
-      name: c.name,
-      gender: c.gender,
-      guardianName: c.guardianName,
-      guardianPhone: c.guardianPhone,
-      birthDate: isoToBr(c.birthDate),
-      joinedAt: (isoToBr(c.joinedAt) as any) || null,
-      shelterId: c.shelter?.id ?? null,
-      address: c.address ? ({ ...c.address } as any) : undefined,
-    });
-  };
   const submitEdit = async () => {
     if (!editing) return;
-    const { id, ...rest } = editing;
-    const success = await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
-    
-    if (success) {
-      setEditing(null);
-    }
+    const { id, ...payload } = editing;
+    if (await updateSheltered(id, payload)) setEditing(null);
   };
 
-  const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(
-    null
-  );
-  const askDelete = (row: ShelteredResponseDto) => setConfirmDelete(row);
   const submitDelete = async () => {
     if (!confirmDelete) return;
-    await deleteSheltered(
-      confirmDelete.id,
-      pageIndex + 1,
-      pageSize,
-      filters,
-      sorting
-    );
-    setConfirmDelete(null);
+    if (await deleteSheltered(confirmDelete.id)) setConfirmDelete(null);
   };
 
   return (
     <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        pb: 4,
-      }}
+      data-testid={SHELTERED_TESTID.MANAGER}
+      sx={{ minHeight: "100vh", bgcolor: "background.default", pb: 4 }}
     >
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
         <motion.div
@@ -179,18 +167,19 @@ export default function ShelteredManager() {
         >
           <ShelteredToolbar
             filters={filters}
-            onChange={(updater) => {
-              setFilters(updater);
-              setPageIndex(0);
+            onChange={handleFiltersChange}
+            onCreateClick={() => {
+              setDialogError("");
+              setCreating(emptyCreateForm());
             }}
-            onCreateClick={openCreate}
-            onRefreshClick={doRefresh}
+            onRefreshClick={() => void fetchPage()}
             isXs={isXs}
           />
         </motion.div>
 
-        {loading && !rows.length && (
+        {loading && rows.length === 0 && (
           <Box
+            data-testid={SHELTERED_TESTID.LOADING}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -201,7 +190,7 @@ export default function ShelteredManager() {
           >
             <CircularProgress size={48} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando acolhidos...
+              {SHELTERED_MESSAGES.LOADING}
             </Typography>
           </Box>
         )}
@@ -211,6 +200,7 @@ export default function ShelteredManager() {
             severity="error"
             sx={{ mb: 2, borderRadius: 2 }}
             onClose={() => setError("")}
+            data-testid={SHELTERED_TESTID.ERROR}
           >
             {error}
           </Alert>
@@ -218,6 +208,7 @@ export default function ShelteredManager() {
 
         {!loading && !error && rows.length === 0 && (
           <Paper
+            data-testid={SHELTERED_TESTID.EMPTY}
             sx={{
               p: 6,
               textAlign: "center",
@@ -225,12 +216,15 @@ export default function ShelteredManager() {
               bgcolor: "background.paper",
             }}
           >
-            <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
+            <SearchIcon
+              aria-hidden
+              sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
+            />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum acolhido encontrado
+              {SHELTERED_MESSAGES.EMPTY_TITLE}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tente ajustar os filtros de busca ou criar um novo acolhido.
+              {SHELTERED_MESSAGES.EMPTY_HINT}
             </Typography>
           </Paper>
         )}
@@ -242,65 +236,68 @@ export default function ShelteredManager() {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <ShelteredTable
-        rows={rows}
-        total={total}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-        sorting={sorting ? ([sorting] as any) : []}
-        setSorting={(s) => setSorting(Array.isArray(s) ? s[0] ?? null : (s as any))}
-        onOpenView={handleOpenView}
-        onStartEdit={startEdit}
-        onAskDelete={askDelete}
+              rows={rows}
+              total={total}
+              pageIndex={pageIndex}
+              pageSize={pageSize}
+              setPageIndex={setPageIndex}
+              setPageSize={setPageSize}
+              sorting={sorting}
+              setSorting={handleSortingChange}
+              onOpenView={handleOpenView}
+              onStartEdit={handleStartEdit}
+              onAskDelete={setConfirmDelete}
             />
           </motion.div>
         )}
 
-      <ShelteredViewDialog
-        open={!!viewing}
-        loading={viewingLoading}
-        sheltered={viewing}
-        onClose={() => setViewing(null)}
-      />
+        <ShelteredViewDialog
+          open={Boolean(viewing)}
+          loading={viewingLoading}
+          sheltered={viewing}
+          onClose={() => setViewing(null)}
+          onEdit={handleStartEdit}
+        />
 
-      <ShelteredFormDialog
-        mode="create"
-        open={!!creating}
-        value={creating}
-        onChange={(v) => setCreating(v as CreateShelteredForm)}
-        onCancel={() => {
-          setCreating(null);
-          setDialogError("");
-        }}
-        onSubmit={submitCreate}
-        error={dialogError}
-        loading={dialogLoading}
-      />
+        <ShelteredFormDialog
+          mode={ShelteredFormMode.CREATE}
+          open={Boolean(creating)}
+          value={creating}
+          onChange={(next) => setCreating(next as CreateShelteredForm)}
+          onCancel={() => {
+            setCreating(null);
+            setDialogError("");
+          }}
+          onSubmit={() => void submitCreate()}
+          error={dialogError}
+          loading={dialogLoading}
+        />
 
-      <ShelteredFormDialog
-        mode="edit"
-        open={!!editing}
-        value={editing}
-        onChange={(v) => setEditing(v as EditShelteredForm)}
-        onCancel={() => {
-          setEditing(null);
-          setDialogError("");
-        }}
-        onSubmit={submitEdit}
-        error={dialogError}
-        loading={dialogLoading}
-      />
+        <ShelteredFormDialog
+          mode={ShelteredFormMode.EDIT}
+          open={Boolean(editing)}
+          value={editing}
+          onChange={(next) => setEditing(next as EditShelteredForm)}
+          onCancel={() => {
+            setEditing(null);
+            setDialogError("");
+          }}
+          onSubmit={() => void submitEdit()}
+          error={dialogError}
+          loading={dialogLoading}
+        />
 
-      <DeleteConfirmDialog
-        open={!!confirmDelete}
-        title={confirmDelete?.name || ""}
-        onClose={() => {
-          setConfirmDelete(null);
-          setDialogError("");
-        }}
-        onConfirm={submitDelete}
-      />
+        <DeleteConfirmDialog
+          open={Boolean(confirmDelete)}
+          title={confirmDelete?.name ?? ""}
+          loading={dialogLoading}
+          testId={SHELTERED_TESTID.DELETE_DIALOG}
+          onClose={() => {
+            setConfirmDelete(null);
+            setDialogError("");
+          }}
+          onConfirm={submitDelete}
+        />
       </Container>
     </Box>
   );

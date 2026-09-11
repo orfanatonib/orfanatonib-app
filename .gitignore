@@ -111,3 +111,9 @@ storybook-static
 *.pem
 .vscode-test
 
+# Playwright
+e2e/.output/
+e2e/.output-live/
+e2e/.report/
+playwright-report/
+test-results/

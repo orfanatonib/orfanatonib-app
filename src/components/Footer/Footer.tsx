@@ -11,14 +11,24 @@ import {
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import { Link as RouterLink } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+import type { RootState } from "@/store/slices";
+import { UserRole } from "@/store/slices/auth/authSlice";
 
 const Footer: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isAdmin = useSelector(
+    (state: RootState) => state.auth.user?.role === UserRole.ADMIN,
+  );
 
   return (
     <Box
       component="footer"
+      data-testid="app-footer"
       sx={{
         position: "relative",
         zIndex: 1220,
@@ -68,6 +78,25 @@ const Footer: React.FC = () => {
               Diego Seven System
             </Link>
           </Typography>
+          {isAdmin ? (
+            <Link
+              component={RouterLink}
+              to="/adm/feature-flags"
+              color="inherit"
+              underline="hover"
+              data-testid="footer-feature-flags-link"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
+                minHeight: 44,
+                fontSize: "0.75rem",
+              }}
+            >
+              <FlagOutlinedIcon sx={{ fontSize: "0.9rem" }} />
+              Feature flags
+            </Link>
+          ) : null}
         </Stack>
       </Stack>
     </Box>

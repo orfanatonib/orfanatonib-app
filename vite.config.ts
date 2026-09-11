@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import svgr from "vite-plugin-svgr";
@@ -51,5 +52,12 @@ export default defineConfig(() => ({
       common: "/src/common"
     }
   },
-  define: { "process.env": {} }
+  define: { "process.env": {} },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/setupTests.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    css: false
+  }
 }));

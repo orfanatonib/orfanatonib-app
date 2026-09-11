@@ -20,6 +20,8 @@ interface DeleteConfirmationModalProps {
     loading?: boolean;
     title?: string;
     description?: React.ReactNode;
+    /** Root testid for the dialog; the actions derive their own from it. */
+    testId?: string;
 }
 
 export default function DeleteConfirmationModal({
@@ -29,6 +31,7 @@ export default function DeleteConfirmationModal({
     loading = false,
     title = "Atenção! Ação Irreversível",
     description = "Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.",
+    testId = "delete-confirmation-modal",
 }: DeleteConfirmationModalProps) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -44,6 +47,7 @@ export default function DeleteConfirmationModal({
             onClose={loading ? undefined : onClose}
             maxWidth="xs"
             fullWidth
+            data-testid={testId}
             PaperProps={{
                 sx: {
                     borderRadius: 3,
@@ -97,6 +101,7 @@ export default function DeleteConfirmationModal({
                             disabled={loading}
                             fullWidth
                             size="large"
+                            data-testid={`${testId}-confirm`}
                             sx={{ fontWeight: 800, fontSize: fs.btn, py: 1.1 }}
                         >
                             {loading ? "Excluindo..." : "Excluir"}
@@ -107,6 +112,7 @@ export default function DeleteConfirmationModal({
                             fullWidth
                             size="large"
                             variant="outlined"
+                            data-testid={`${testId}-cancel`}
                             sx={{ fontSize: fs.btn, py: 1.1 }}
                         >
                             Cancelar
@@ -117,6 +123,7 @@ export default function DeleteConfirmationModal({
                         <Button
                             onClick={onClose}
                             disabled={loading}
+                            data-testid={`${testId}-cancel`}
                             sx={{ fontSize: fs.btn }}
                         >
                             Cancelar
@@ -127,6 +134,7 @@ export default function DeleteConfirmationModal({
                             variant="contained"
                             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon fontSize="small" />}
                             disabled={loading}
+                            data-testid={`${testId}-confirm`}
                             sx={{ fontWeight: 700, fontSize: fs.btn }}
                         >
                             {loading ? "Excluindo..." : "Excluir"}

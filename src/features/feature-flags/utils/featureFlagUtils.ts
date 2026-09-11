@@ -1,70 +1,148 @@
-import { store } from '@/store/slices';
-import type { FeatureFlag } from '@/store/slices/feature-flags/featureFlagsSlice';
+import { FEATURE_FLAG_AUDIENCE_OPTIONS } from '../constants';
+import type {
+  CreateFeatureFlagRequest,
+  FeatureFlagAudience,
+  FeatureFlagFormErrors,
+  FeatureFlagFormValues,
+  FeatureFlagResponse,
+  FeatureFlagSortField,
+  FeatureFlagSortOrder,
+  UpdateFeatureFlagRequest,
+} from '../types';
+import { FeatureFlagKeys, FeatureFlagTargetRole } from '../types';
 
-export class FeatureFlagUtils {
+export const AUDIENCE_ROLES: Record<
+  FeatureFlagAudience,
+  FeatureFlagTargetRole[]
+> = {
+  EVERYONE: [],
+  ADMIN: [FeatureFlagTargetRole.ADMIN],
+  LEADER: [FeatureFlagTargetRole.LEADER],
+  MEMBER: [FeatureFlagTargetRole.MEMBER],
+  ADMIN_LEADER: [FeatureFlagTargetRole.ADMIN, FeatureFlagTargetRole.LEADER],
+  ADMIN_MEMBER: [FeatureFlagTargetRole.ADMIN, FeatureFlagTargetRole.MEMBER],
+  LEADER_MEMBER: [FeatureFlagTargetRole.LEADER, FeatureFlagTargetRole.MEMBER],
+  ALL_ROLES: [
+    FeatureFlagTargetRole.ADMIN,
+    FeatureFlagTargetRole.LEADER,
+    FeatureFlagTargetRole.MEMBER,
+  ],
+};
 
-    static isEnabled(key: string): boolean {
-        const state = store.getState();
-        const flag = state.featureFlags.flags.find(f => f.key === key);
-        return flag?.enabled ?? false;
-    }
-
-    static getFlag(key: string): FeatureFlag | undefined {
-        const state = store.getState();
-        return state.featureFlags.flags.find(f => f.key === key);
-    }
-
-    static getEnabledFlags(): FeatureFlag[] {
-        const state = store.getState();
-        return state.featureFlags.flags.filter(f => f.enabled);
-    }
-
-    static getAllFlags(): FeatureFlag[] {
-        const state = store.getState();
-        return state.featureFlags.flags;
-    }
-
-    static getFlagsByEnvironment(environment: string): FeatureFlag[] {
-        const state = store.getState();
-        return state.featureFlags.flags.filter(f => f.environment === environment);
-    }
-
-    static getMetadata(key: string): Record<string, any> | null {
-        const flag = this.getFlag(key);
-        return flag?.metadata ?? null;
-    }
-
-    static isLoading(): boolean {
-        const state = store.getState();
-        return state.featureFlags.loading;
-    }
-
-    static getError(): string | null {
-        const state = store.getState();
-        return state.featureFlags.error;
-    }
-
-    static hasFetched(): boolean {
-        const state = store.getState();
-        return state.featureFlags.lastFetched !== null;
-    }
-
-    static getLastFetchedTime(): number | null {
-        const state = store.getState();
-        return state.featureFlags.lastFetched;
-    }
-
-    static needsRefresh(ttlMs: number = 5 * 60 * 1000): boolean {
-        const lastFetched = this.getLastFetchedTime();
-        if (!lastFetched) return true;
-        return Date.now() - lastFetched > ttlMs;
-    }
+export function rolesOfAudience(
+  audience: FeatureFlagAudience,
+): FeatureFlagTargetRole[] {
+  return [...AUDIENCE_ROLES[audience]];
 }
 
-export const isFeatureEnabled = (key: string): boolean => {
-    return FeatureFlagUtils.isEnabled(key);
-};
+export function audienceInfo(audience: FeatureFlagAudience) {
+  return (
+    FEATURE_FLAG_AUDIENCE_OPTIONS.find((option) => option.value === audience) ??
+    FEATURE_FLAG_AUDIENCE_OPTIONS[0]
+  );
+}
 
-export const getFeatureFlag = (key: string): FeatureFlag | undefined => {
-    return FeatureFlagUtils.getFlag(key);
-};
+export function formatFeatureFlagDate(value?: string | null): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('pt-BR');
+}
+
+export function featureFlagInitials(key: string): string {
+  const parts = key.trim().split(/[_\-\s]+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function isMetadata(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isValidMetadataJson(value: string): boolean {
+  if (!value.trim()) return true;
+  try {
+    return isMetadata(JSON.parse(value) as unknown);
+  } catch {
+    return false;
+  }
+}
+
+export function parseMetadataJson(
+  value: string,
+): Record<string, unknown> | undefined {
+  if (!value.trim()) return undefined;
+  const parsed: unknown = JSON.parse(value);
+  return isMetadata(parsed) ? parsed : undefined;
+}
+
+export function toFeatureFlagFormValues(
+  flag: FeatureFlagResponse | null,
+): FeatureFlagFormValues {
+  return {
+    key: flag?.key ?? '',
+    name: flag?.name ?? '',
+    description: flag?.description ?? '',
+    enabled: flag?.enabled ?? false,
+    audience: flag?.audience ?? 'EVERYONE',
+    metadataJson: flag?.metadata ? JSON.stringify(flag.metadata, null, 2) : '',
+  };
+}
+
+export function validateFeatureFlagForm(
+  values: FeatureFlagFormValues,
+): FeatureFlagFormErrors {
+  return {
+    key: !/^[a-z0-9][a-z0-9_-]*$/.test(values.key.trim()),
+    name: !values.name.trim(),
+    metadataJson: !isValidMetadataJson(values.metadataJson),
+  };
+}
+
+export function hasFeatureFlagFormErrors(
+  errors: FeatureFlagFormErrors,
+): boolean {
+  return errors.key || errors.name || errors.metadataJson;
+}
+
+export function toCreateFeatureFlagRequest(
+  values: FeatureFlagFormValues,
+): CreateFeatureFlagRequest {
+  return {
+    key: values.key.trim().toLowerCase(),
+    name: values.name.trim(),
+    description: values.description.trim() || undefined,
+    enabled: values.enabled,
+    targetRoles: rolesOfAudience(values.audience),
+    metadata: parseMetadataJson(values.metadataJson),
+  };
+}
+
+export function toUpdateFeatureFlagRequest(
+  values: FeatureFlagFormValues,
+): UpdateFeatureFlagRequest {
+  return {
+    key: values.key.trim().toLowerCase(),
+    name: values.name.trim(),
+    description: values.description.trim(),
+    enabled: values.enabled,
+    targetRoles: rolesOfAudience(values.audience),
+    metadata: parseMetadataJson(values.metadataJson) ?? null,
+  };
+}
+
+export function isFeatureFlagKeyUsedByApp(key: string): boolean {
+  return (Object.values(FeatureFlagKeys) as string[]).includes(key.trim());
+}
+
+export function parseFeatureFlagSort(value: string): {
+  sort: FeatureFlagSortField;
+  order: FeatureFlagSortOrder;
+} {
+  const [sort, order] = value.split(':');
+  const field: FeatureFlagSortField =
+    sort === 'key' || sort === 'createdAt' || sort === 'updatedAt'
+      ? sort
+      : 'name';
+  return { sort: field, order: order === 'DESC' ? 'DESC' : 'ASC' };
+}

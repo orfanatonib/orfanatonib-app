@@ -1,82 +1,75 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+
 import apiAxios from '@/config/axiosConfig';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
-
-export interface FeatureFlag {
-    id: string;
-    key: string;
-    name: string;
-    description: string;
-    enabled: boolean;
-    environment: string;
-    metadata: Record<string, any> | null;
-    createdAt: string;
-    updatedAt: string;
-}
+import { DEFAULT_FEATURE_FLAGS_MAP } from '@/features/feature-flags/constants';
+import type { FeatureFlagsMap } from '@/features/feature-flags/types';
+import { extractErrorMessage } from '@/utils/errorHandler';
 
 interface FeatureFlagsState {
-    flags: FeatureFlag[];
-    loading: boolean;
-    error: string | null;
-    lastFetched: number | null;
+  flags: FeatureFlagsMap;
+  loading: boolean;
+  error: string | null;
+  lastFetched: number | null;
 }
 
 const initialState: FeatureFlagsState = {
-    flags: [],
-    loading: false,
-    error: null,
-    lastFetched: null,
+  flags: DEFAULT_FEATURE_FLAGS_MAP,
+  loading: false,
+  error: null,
+  lastFetched: null,
 };
 
 export const fetchFeatureFlags = createAsyncThunk<
-    FeatureFlag[],
-    void,
-    { rejectValue: string }
->(
-    'featureFlags/fetchFeatureFlags',
-    async (_, { rejectWithValue }) => {
-        try {
-            const response = await apiAxios.get<FeatureFlag[]>('/feature-flags');
-            return response.data;
-        } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS;
-            return rejectWithValue(errorMessage);
-        }
-    }
-);
+  FeatureFlagsMap,
+  void,
+  { rejectValue: string }
+>('featureFlags/fetchFeatureFlags', async (_, { rejectWithValue }) => {
+  try {
+    const response = await apiAxios.get<FeatureFlagsMap>('/feature-flags/map');
+    return { ...DEFAULT_FEATURE_FLAGS_MAP, ...response.data };
+  } catch (error: unknown) {
+    return rejectWithValue(
+      extractErrorMessage(error) || API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS,
+    );
+  }
+});
 
 const featureFlagsSlice = createSlice({
-    name: 'featureFlags',
-    initialState,
-    reducers: {
-
-        clearError: (state) => {
-            state.error = null;
-        },
-
-        resetFeatureFlags: (state) => {
-            state.flags = [];
-            state.error = null;
-            state.lastFetched = null;
-        },
+  name: 'featureFlags',
+  initialState,
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchFeatureFlags.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchFeatureFlags.fulfilled, (state, action: PayloadAction<FeatureFlag[]>) => {
-                state.loading = false;
-                state.flags = action.payload;
-                state.error = null;
-                state.lastFetched = Date.now();
-            })
-            .addCase(fetchFeatureFlags.rejected, (state, action) => {
-                state.loading = false;
-                state.error = (action.payload as string) || 'Unknown error';
-            });
+    resetFeatureFlags: (state) => {
+      state.flags = DEFAULT_FEATURE_FLAGS_MAP;
+      state.error = null;
+      state.lastFetched = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchFeatureFlags.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchFeatureFlags.fulfilled,
+        (state, action: PayloadAction<FeatureFlagsMap>) => {
+          state.loading = false;
+          state.flags = action.payload;
+          state.error = null;
+          state.lastFetched = Date.now();
+        },
+      )
+      .addCase(fetchFeatureFlags.rejected, (state, action) => {
+        state.loading = false;
+        state.flags = DEFAULT_FEATURE_FLAGS_MAP;
+        state.error = action.payload ?? API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS;
+        state.lastFetched = Date.now();
+      });
+  },
 });
 
 export const { clearError, resetFeatureFlags } = featureFlagsSlice.actions;
