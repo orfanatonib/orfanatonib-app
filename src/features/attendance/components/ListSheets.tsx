@@ -36,6 +36,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import { getHierarchicalSheets } from '../api';
 import type { HierarchicalSheetsResponse, ShelterWithTeamsSheetsDto, TeamWithSchedulesDto, ScheduleWithAttendanceDto } from '../types';
 import { formatDateBR } from '../utils';
+import { attendanceErrorMessage } from '../errors';
 
 interface ListSheetsProps {
   onBack: () => void;
@@ -65,8 +66,8 @@ const ListSheets = memo(({ onBack }: ListSheetsProps) => {
           setExpandedTeamId(data[0].teams[0].teamId);
         }
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao carregar listas de frequência.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao carregar listas de frequência.');
       setError(message);
       setSheets([]);
     } finally {

@@ -38,6 +38,7 @@ import type {
   PaginatedResponseDto,
   AttendanceMode,
 } from '../types';
+import { attendanceErrorMessage } from '../errors';
 
 const DrillDownAttendance = memo(() => {
   const { isLeader } = useAuthRole();
@@ -58,19 +59,24 @@ const DrillDownAttendance = memo(() => {
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const loadHierarchyData = useCallback(async () => {
+  /**
+   * `silent` recarrega sem trocar a tela pelo spinner. Depois de um
+   * lançamento, ligar o `loading` desmontava a tela da equipe e levava junto a
+   * mensagem de sucesso, que o usuário nunca chegava a ler.
+   */
+  const loadHierarchyData = useCallback(async (silent = false) => {
     if (mode !== 'register') return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const data = await getSheltersTeamsMembers();
       setHierarchyData(data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao carregar dados das equipes.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao carregar dados das equipes.');
       setError(message);
-      setHierarchyData([]);
+      if (!silent) setHierarchyData([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [mode]);
 
@@ -78,15 +84,16 @@ const DrillDownAttendance = memo(() => {
     try {
       setLoadingSchedules(true);
 
-      const response = await getTeamSchedules(teamId, {
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      });
-      const schedules = response || [];
+      // Sem ordenação: o endpoint só aceita período e já devolve por data
+      // decrescente. Enviar `sortBy` aqui dava 400 — e o `catch` mudo
+      // transformava isso em "nenhum evento disponível", travando o
+      // lançamento.
+      const response = await getTeamSchedules(teamId);
 
-      setTeamSchedules(schedules);
-    } catch {
+      setTeamSchedules(response || []);
+    } catch (err: unknown) {
       setTeamSchedules([]);
+      setError(attendanceErrorMessage(err, 'Erro ao carregar os encontros da equipe.'));
     } finally {
       setLoadingSchedules(false);
     }
@@ -145,7 +152,7 @@ const DrillDownAttendance = memo(() => {
   }, []);
 
   const handleAttendanceRegistered = useCallback(() => {
-    loadHierarchyData();
+    void loadHierarchyData(true);
   }, [loadHierarchyData]);
 
   const stats = useMemo(() => {
@@ -194,7 +201,10 @@ const DrillDownAttendance = memo(() => {
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        data-testid="attendance-loading"
+        sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
         <Stack spacing={3} alignItems="center">
           <CircularProgress size={40} />
           <Typography variant="body1" color="text.secondary">
@@ -207,7 +217,10 @@ const DrillDownAttendance = memo(() => {
 
   if (error) {
     return (
-      <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}>
+      <Box
+        data-testid="attendance-error"
+        sx={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}
+      >
         <Box sx={{ maxWidth: 600, width: '100%' }}>
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -220,7 +233,7 @@ const DrillDownAttendance = memo(() => {
               variant="body2"
               color="text.secondary"
               sx={{ cursor: 'pointer', textDecoration: 'underline', mt: 2 }}
-              onClick={loadHierarchyData}
+              onClick={() => void loadHierarchyData()}
             >
               Tentar novamente
             </Typography>
@@ -231,7 +244,10 @@ const DrillDownAttendance = memo(() => {
   }
 
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="attendance-page"
+      sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}
+    >
       <Box sx={{ flex: 1, width: '100%', px: { xs: 2, sm: 3, md: 4, lg: 4 }, py: { xs: 2, md: 3 } }}>
         <BackHeader title="Controle de Frequência" />
 
@@ -361,6 +377,7 @@ const DrillDownAttendance = memo(() => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               size="small"
+              inputProps={{ 'data-testid': 'attendance-search' }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

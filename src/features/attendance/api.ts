@@ -1,163 +1,104 @@
 import api from '@/config/axiosConfig';
-import {
+
+import type {
+  AllPendingsResponseDto,
+  AttendanceFiltersQuery,
+  AttendanceResponseDto,
+  HierarchicalSheetsResponse,
+  PaginatedResponseDto,
+  PeriodQuery,
   RegisterAttendanceDto,
   RegisterTeamAttendanceDto,
-  AttendanceResponseDto,
-  AllPendingsResponseDto,
-  LeaderTeamDto,
+  SheltersTeamsMembersResponse,
   TeamMembersResponse,
   TeamScheduleDto,
-  SheltersTeamsMembersResponse,
-  TeamAttendanceOverviewDto,
-  PaginatedResponseDto,
-  AttendanceStatsDto,
-  AttendanceFiltersDto,
-  HierarchicalSheetsResponse,
 } from './types';
 
-export async function registerAttendance(data: RegisterAttendanceDto): Promise<AttendanceResponseDto> {
-  const res = await api.post<AttendanceResponseDto>('/attendance/register', data);
-  return res.data;
+/**
+ * Chamadas HTTP do módulo de frequência.
+ *
+ * Os parâmetros vão pelo `params` do axios, não por `URLSearchParams` montado
+ * à mão: três funções repetiam esse bloco, e cada uma esquecia um campo
+ * diferente — `getTeamSchedules` ignorava `page` e `limit`, por exemplo.
+ */
+
+export async function registerAttendance(
+  data: RegisterAttendanceDto,
+): Promise<AttendanceResponseDto> {
+  const response = await api.post<AttendanceResponseDto>(
+    '/attendance/register',
+    data,
+  );
+  return response.data;
 }
 
-export async function registerTeamAttendance(data: RegisterTeamAttendanceDto): Promise<AttendanceResponseDto[]> {
-  const res = await api.post<AttendanceResponseDto[]>('/attendance/register/team', data);
-  return res.data;
+export async function registerTeamAttendance(
+  data: RegisterTeamAttendanceDto,
+): Promise<AttendanceResponseDto[]> {
+  const response = await api.post<AttendanceResponseDto[]>(
+    '/attendance/register/team',
+    data,
+  );
+  return response.data;
 }
 
 export async function getAllPendings(): Promise<AllPendingsResponseDto> {
-  const res = await api.get<AllPendingsResponseDto>('/attendance/pending/all');
-  return res.data;
+  const response = await api.get<AllPendingsResponseDto>(
+    '/attendance/pending/all',
+  );
+  return response.data;
 }
 
-export async function getTeamMembers(teamId: string): Promise<TeamMembersResponse> {
-  const res = await api.get<TeamMembersResponse>(`/attendance/team/${teamId}/members`);
-  return res.data;
+export async function getTeamMembers(
+  teamId: string,
+): Promise<TeamMembersResponse> {
+  const response = await api.get<TeamMembersResponse>(
+    `/attendance/team/${teamId}/members`,
+  );
+  return response.data;
 }
 
 export async function getTeamSchedules(
   teamId: string,
-  filters?: {
-    page?: number;
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-    sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
-    sortOrder?: 'asc' | 'desc';
-  }
+  query: PeriodQuery = {},
 ): Promise<TeamScheduleDto[]> {
-  const params = new URLSearchParams();
-  if (filters?.startDate) params.append('startDate', filters.startDate);
-  if (filters?.endDate) params.append('endDate', filters.endDate);
-  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
-  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
-
-  const queryString = params.toString();
-  const url = `/attendance/team/${teamId}/schedules${queryString ? `?${queryString}` : ''}`;
-  const res = await api.get<TeamScheduleDto[]>(url);
-  return res.data;
+  const response = await api.get<TeamScheduleDto[]>(
+    `/attendance/team/${teamId}/schedules`,
+    { params: query },
+  );
+  return response.data;
 }
 
-export async function listTeams(): Promise<LeaderTeamDto[]> {
-  const res = await api.get<LeaderTeamDto[]>('/attendance/leader/teams');
-  return res.data;
-}
-
+/**
+ * Hierarquia abrigo → equipe → membros.
+ *
+ * O agrupamento acontecia aqui, no cliente, a partir da lista plana de
+ * `/leader/teams` — enquanto o endpoint que já devolve a árvore pronta ficava
+ * sem uso.
+ */
 export async function getSheltersTeamsMembers(): Promise<SheltersTeamsMembersResponse> {
-  const res = await api.get<LeaderTeamDto[]>('/attendance/leader/teams');
-  const teams = res.data;
-
-  // Transform flat array to hierarchical structure grouped by shelter
-  const shelterMap = new Map<string, SheltersTeamsMembersResponse[0]>();
-
-  teams.forEach(team => {
-    if (!shelterMap.has(team.shelterId)) {
-      shelterMap.set(team.shelterId, {
-        shelterId: team.shelterId,
-        shelterName: team.shelterName,
-        teams: [],
-      });
-    }
-
-    const shelter = shelterMap.get(team.shelterId)!;
-    shelter.teams.push({
-      teamId: team.teamId,
-      teamNumber: team.teamNumber,
-      description: team.description,
-      memberCount: team.memberCount,
-      members: [], // Members will be loaded separately when team is selected
-    });
-  });
-
-  return Array.from(shelterMap.values());
-}
-
-export async function getLeaderTeamsMembers(): Promise<SheltersTeamsMembersResponse> {
-  const res = await api.get<SheltersTeamsMembersResponse>('/attendance/leader/teams/members');
-  return res.data;
-}
-
-export async function getTeamAttendanceOverview(teamId: string): Promise<TeamAttendanceOverviewDto> {
-  const res = await api.get<TeamAttendanceOverviewDto>(`/attendance/team/${teamId}/overview`);
-  return res.data;
-}
-
-export async function listShelterSchedules(): Promise<TeamScheduleDto[]> {
-  const res = await api.get<TeamScheduleDto[]>('/shelter-schedules');
-  return res.data;
+  const response = await api.get<SheltersTeamsMembersResponse>(
+    '/attendance/leader/teams/members',
+  );
+  return response.data;
 }
 
 export async function getHierarchicalSheets(
-  filters?: {
-    startDate?: string;
-    endDate?: string;
-  }
+  query: PeriodQuery = {},
 ): Promise<HierarchicalSheetsResponse> {
-  const params = new URLSearchParams();
-  if (filters?.startDate) params.append('startDate', filters.startDate);
-  if (filters?.endDate) params.append('endDate', filters.endDate);
-
-  const queryString = params.toString();
-  const url = `/attendance/sheets/hierarchical${queryString ? `?${queryString}` : ''}`;
-  const res = await api.get<HierarchicalSheetsResponse>(url);
-  return res.data;
+  const response = await api.get<HierarchicalSheetsResponse>(
+    '/attendance/sheets/hierarchical',
+    { params: query },
+  );
+  return response.data;
 }
 
 export async function getAttendanceRecords(
-  filters?: {
-    page?: number;
-    limit?: number;
-    scheduleId?: string;
-    teamId?: string;
-    memberId?: string;
-    memberName?: string;
-    type?: 'present' | 'absent';
-    category?: 'visit' | 'meeting';
-    startDate?: string;
-    endDate?: string;
-    sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
-    sortOrder?: 'asc' | 'desc';
-  }
+  query: AttendanceFiltersQuery = {},
 ): Promise<PaginatedResponseDto<AttendanceResponseDto>> {
-  const params = new URLSearchParams();
-
-  if (filters?.page) params.append('page', filters.page.toString());
-  if (filters?.limit) params.append('limit', filters.limit.toString());
-
-  if (filters?.scheduleId) params.append('scheduleId', filters.scheduleId);
-  if (filters?.teamId) params.append('teamId', filters.teamId);
-  if (filters?.memberId) params.append('memberId', filters.memberId);
-  if (filters?.memberName) params.append('memberName', filters.memberName);
-  if (filters?.type) params.append('type', filters.type);
-  if (filters?.category) params.append('category', filters.category);
-  if (filters?.startDate) params.append('startDate', filters.startDate);
-  if (filters?.endDate) params.append('endDate', filters.endDate);
-
-  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
-  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
-
-  const queryString = params.toString();
-  const url = `/attendance/records${queryString ? `?${queryString}` : ''}`;
-  const res = await api.get<PaginatedResponseDto<AttendanceResponseDto>>(url);
-  return res.data;
+  const response = await api.get<PaginatedResponseDto<AttendanceResponseDto>>(
+    '/attendance/records',
+    { params: query },
+  );
+  return response.data;
 }

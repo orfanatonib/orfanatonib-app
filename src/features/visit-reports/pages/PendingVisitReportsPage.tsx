@@ -26,6 +26,7 @@ import { RootState } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { LeaderPendingView } from '../components/LeaderPendingView';
 import { AdminPendingView } from '../components/AdminPendingView';
+import { attendanceErrorMessage } from '@/features/attendance/errors';
 
 const PendingVisitReportsPage = () => {
     const navigate = useNavigate();
@@ -42,14 +43,14 @@ const PendingVisitReportsPage = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+            <Box data-testid="visit-reports-pendings-loading" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
                 <CircularProgress />
             </Box>
         );
     }
 
     return (
-        <Container maxWidth="xl" sx={{ p: { xs: 2, md: 4 } }}>
+        <Container data-testid="visit-reports-pendings-page" maxWidth="xl" sx={{ p: { xs: 2, md: 4 } }}>
             {/* Header Section */}
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Button
@@ -99,14 +100,14 @@ const PendingVisitReportsPage = () => {
                 )}
             </Stack>
 
-            {error && (
+            {Boolean(error) && (
                 <Alert severity="error" sx={{ mb: 3 }}>
-                    {error?.message || 'Erro ao carregar pendências.'}
+                    {attendanceErrorMessage(error, 'Erro ao carregar pendências.')}
                 </Alert>
             )}
 
             {visitReportPendingsCount === 0 ? (
-                <Paper variant="outlined" sx={{ textAlign: 'center', py: 8, borderRadius: 4, borderStyle: 'dashed', bgcolor: 'background.default' }}>
+                <Paper data-testid="visit-reports-pendings-empty" variant="outlined" sx={{ textAlign: 'center', py: 8, borderRadius: 4, borderStyle: 'dashed', bgcolor: 'background.default' }}>
                     <DescriptionIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
                     <Typography variant="h6" color="text.secondary" gutterBottom>
                         Tudo em dia!
@@ -116,7 +117,7 @@ const PendingVisitReportsPage = () => {
                     </Typography>
                 </Paper>
             ) : (
-                <Box>
+                <Box data-testid="visit-reports-pendings-list">
                     {isLeader && <LeaderPendingView pendings={visitReportPendings} onNavigate={handleNavigateToCreateReport} />}
                     {isAdmin && <AdminPendingView pendings={visitReportPendings} onNavigate={handleNavigateToCreateReport} />}
                 </Box>

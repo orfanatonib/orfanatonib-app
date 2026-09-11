@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import { VisitReport } from "../types";
 import { Tooltip, Zoom } from "@mui/material";
+import { formatDayBR } from 'utils/dates';
 
 interface TeamGroup {
     id: string;
@@ -92,7 +93,7 @@ export default function ReportTableView({ shelterGroups, onView, onEdit, onDelet
                                                     <Chip label={`#${report.schedule?.visitNumber}`} size="small" variant="outlined" />
                                                 </TableCell>
                                                 <TableCell width="25%">
-                                                    {report.schedule?.visitDate ? new Date(report.schedule.visitDate).toLocaleDateString('pt-BR') : "-"}
+                                                    {formatDayBR(report.schedule?.visitDate, "-")}
                                                 </TableCell>
                                                 <TableCell align="center" width="20%">{report.teamMembersPresent}</TableCell>
                                                 <TableCell align="center" width="20%">

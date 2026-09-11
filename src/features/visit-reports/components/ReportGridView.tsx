@@ -17,6 +17,7 @@ import {
     LocationCity as ShelterIcon,
 } from "@mui/icons-material";
 import { VisitReport } from "../types";
+import { formatDayBR } from 'utils/dates';
 
 interface TeamGroup {
     id: string;
@@ -87,7 +88,7 @@ export default function ReportGridView({ shelterGroups, onView, onEdit, onDelete
                                                         />
                                                         <Typography variant="body2" fontWeight="bold" component="span">
                                                             {report.schedule?.visitDate
-                                                                ? new Date(report.schedule.visitDate).toLocaleDateString('pt-BR')
+                                                                ? formatDayBR(report.schedule.visitDate)
                                                                 : "Sem data"}
                                                         </Typography>
                                                     </Box>

@@ -18,6 +18,7 @@ interface MemberAttendanceRow {
 }
 
 import { EventCategory } from '../types';
+import { attendanceErrorMessage } from '../errors';
 
 type EventTypeFilter = EventCategory;
 
@@ -150,7 +151,7 @@ export function useTeamAttendance({
 
         const response = await getAttendanceRecords({
           scheduleId,
-          category: category as 'visit' | 'meeting',
+          category,
           limit: 100,
         });
 
@@ -333,8 +334,8 @@ export function useTeamAttendance({
       }));
 
       onAttendanceRegistered();
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar frequência. Tente novamente.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao registrar frequência. Tente novamente.');
       setFormState(prev => ({
         ...prev,
         loading: false,

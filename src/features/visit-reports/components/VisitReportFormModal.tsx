@@ -25,6 +25,7 @@ import { apiListShelterSchedules, apiListMyTeams } from "../../shelter-schedule/
 import { SimpleShelterResponseDto } from "../../shelters/types";
 import { TeamResponseDto } from "../../teams/types";
 import { ShelterScheduleResponseDto, MyTeamResponseDto } from "../../shelter-schedule/types";
+import { formatDayBR } from 'utils/dates';
 
 interface VisitReportFormModalProps {
     open: boolean;
@@ -247,7 +248,7 @@ export default function VisitReportFormModal({
                                         ) : (
                                             schedules.map((s) => (
                                                 <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
-                                                    {s.visitNumber}ª Visita - {s.visitDate ? new Date(s.visitDate).toLocaleDateString('pt-BR') : "Data indefinida"}
+                                                    {s.visitNumber}ª Visita - {formatDayBR(s.visitDate, "Data indefinida")}
                                                 </MenuItem>
                                             ))
                                         )}

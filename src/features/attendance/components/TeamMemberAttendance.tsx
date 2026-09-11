@@ -85,7 +85,7 @@ const TeamMemberAttendance = memo(({
           : '';
 
   return (
-    <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box data-testid="team-attendance-page" sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box
         sx={{
@@ -165,6 +165,7 @@ const TeamMemberAttendance = memo(({
             {/* Editing existing attendance alert */}
             {hasExistingAttendance && (
               <Alert
+                data-testid="team-attendance-existing"
                 severity="info"
                 icon={<EditIcon sx={{ fontSize: { xs: 22, md: 18 } }} />}
                 sx={{

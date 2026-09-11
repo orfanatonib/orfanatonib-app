@@ -123,6 +123,7 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
               }}
             >
               <CardActionArea
+                data-testid="attendance-mode-list"
                 onClick={() => onModeSelect('list')}
                 sx={{
                   height: '100%',
@@ -205,6 +206,7 @@ const AttendanceModeSelector = memo(({ onModeSelect }: AttendanceModeSelectorPro
               }}
             >
               <CardActionArea
+                data-testid="attendance-mode-register"
                 onClick={() => onModeSelect('register')}
                 sx={{
                   height: '100%',

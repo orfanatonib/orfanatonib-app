@@ -21,6 +21,7 @@ import {
     Description as DescriptionIcon,
     Assessment as AssessmentIcon,
 } from "@mui/icons-material";
+import { formatDayBR } from 'utils/dates';
 
 interface VisitReportDetailsModalProps {
     open: boolean;
@@ -77,7 +78,7 @@ export default function VisitReportDetailsModal({
                         </Box>
                         <Typography variant="body1">
                             {report.schedule?.visitDate
-                                ? new Date(report.schedule.visitDate).toLocaleDateString('pt-BR')
+                                ? formatDayBR(report.schedule.visitDate)
                                 : "Data não informada"}
                         </Typography>
                     </Grid>

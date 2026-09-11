@@ -14,8 +14,8 @@ export interface UseAttendancePendingsResult {
   memberPendingsCount: number;
   visitReportPendingsCount: number;
   loading: boolean;
-  error: any;
-  refetch: (options?: any) => Promise<any>;
+  error: unknown;
+  refetch: () => Promise<unknown>;
 }
 
 export function useAttendancePendings(): UseAttendancePendingsResult {

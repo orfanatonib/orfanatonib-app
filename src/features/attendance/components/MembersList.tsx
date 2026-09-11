@@ -157,9 +157,10 @@ const MembersList = memo(({
         }}
       >
         {members.length === 0 ? (
-          <Alert severity="info">Nenhum membro encontrado nesta equipe.</Alert>
+          <Alert data-testid="team-attendance-members-empty" severity="info">Nenhum membro encontrado nesta equipe.</Alert>
         ) : (
           <Box
+            data-testid="team-attendance-members"
             sx={{
               border: '1px solid',
               borderColor: 'divider',
@@ -175,6 +176,7 @@ const MembersList = memo(({
               return (
                 <Box
                   key={member.id}
+                  data-testid={`team-attendance-member-${member.id}`}
                   sx={{
                     bgcolor: index % 2 === 0 ? 'background.paper' : 'grey.50',
                     '&:not(:last-child)': {

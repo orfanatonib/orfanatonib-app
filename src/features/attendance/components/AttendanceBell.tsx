@@ -31,9 +31,11 @@ import { getAllPendings, registerAttendance } from '../api';
 import { AttendanceType, EventCategory } from '../types';
 import type { PendingForMemberDto, RegisterAttendanceDto } from '../types';
 import type { RootState as RootStateType } from '@/store/slices';
+import { attendanceErrorMessage } from '../errors';
+import { formatDayBR } from 'utils/dates';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
-  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const readableDate = formatDayBR(pending.date);
   const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
@@ -74,8 +76,8 @@ const AttendanceBell = () => {
       } else {
         setSelectedId('');
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao buscar pendências.');
       setError(message);
       setPendings([]);
     } finally {
@@ -121,8 +123,8 @@ const AttendanceBell = () => {
         // If no more pendings, close modal automatically (optional but nice)
         // But we can't easily check future state here without re-fetching manually or trusting empty state
       }, 1500);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar presença.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao registrar presença.');
       setError(message);
     } finally {
       setSaving(false);

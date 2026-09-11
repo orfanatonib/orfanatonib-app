@@ -35,6 +35,8 @@ import { EventCategory } from '../types';
 import BackHeader from '@/components/common/header/BackHeader';
 import type { TeamPendingsDto, PendingForLeaderDto, PendingForMemberDto, TeamScheduleDto } from '../types';
 import RegisterAttendance from '../components/RegisterAttendance';
+import { attendanceErrorMessage } from '../errors';
+import { formatDayBR } from 'utils/dates';
 
 const PendingAttendancePage = () => {
   const navigate = useNavigate();
@@ -56,8 +58,8 @@ const PendingAttendancePage = () => {
       const res = await getAllPendings();
       setLeaderPendings(res.leaderPendings);
       setMemberPendings(res.memberPendings);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao buscar pendências.');
       setError(message);
       setLeaderPendings([]);
       setMemberPendings([]);
@@ -123,7 +125,7 @@ const PendingAttendancePage = () => {
   };
 
   const formatScheduleLabel = (pending: PendingForLeaderDto | PendingForMemberDto) => {
-    const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+    const readableDate = formatDayBR(pending.date);
     const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
     return `${kind} #${pending.visitNumber} • ${readableDate}`;
   };
@@ -160,14 +162,17 @@ const PendingAttendancePage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+      <Box
+        data-testid="pendings-loading"
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: { xs: 1, md: 3 } }}>
+    <Box data-testid="pendings-page" sx={{ p: { xs: 1, md: 3 } }}>
       <BackHeader title="Central de Pendências" />
       <Breadcrumbs sx={{ mb: 3, display: { xs: 'none', md: 'flex' } }}>
         <Link underline="hover" sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} color="inherit" onClick={() => navigate('/adm')}>
@@ -202,6 +207,7 @@ const PendingAttendancePage = () => {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         sx={{ mb: 4 }}
+        inputProps={{ 'data-testid': 'pendings-search' }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -211,10 +217,18 @@ const PendingAttendancePage = () => {
         }}
       />
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" data-testid="pendings-error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {totalLeaderPendings === 0 && totalMemberPendings === 0 && !loading && (
-        <Alert severity="success" sx={{ borderRadius: 2 }}>
+        <Alert
+          severity="success"
+          data-testid="pendings-empty"
+          sx={{ borderRadius: 2 }}
+        >
           Nenhuma pendência encontrada. Tudo em dia!
         </Alert>
       )}

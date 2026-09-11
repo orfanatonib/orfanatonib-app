@@ -55,7 +55,7 @@ export interface AttendancePendingsProps {
   memberPendingsCount: number;
   visitReportPendingsCount: number;
   loading: boolean;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<unknown>;
 }
 
 export interface CompleteProfileAlertProps {

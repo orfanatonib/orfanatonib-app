@@ -50,7 +50,9 @@ subir e diz qual processo está segurando cada uma, em vez de encerrar calado.
 | `auth.api.spec.ts` | `live-api` | contratos de `/auth`: login, sessão, rotação e invalidação de refresh, cadastro e recuperação de senha |
 | `notifications.api.spec.ts` | `live-api` | templates de e-mail, preview, confirmação de e-mail e fila de saída |
 | `feature-flags.ui.spec.ts` | `live-ui` | painel de flags pela tela, mapa público e catálogo administrativo |
+| `attendance.api.spec.ts` | `live-api` | contratos de `/attendance`: escopo por papel, pendências, histórico e estatísticas |
 | `sheltered.ui.spec.ts` | `live-ui` | a tela de acolhidos navegando contra a API real |
+| `attendance.ui.spec.ts` | `live-ui` | as telas de frequência: hierarquia, busca, pendências, datas e o lançamento gravando no banco |
 
 ## Rodando
 
@@ -89,3 +91,9 @@ banco e dependem uns dos outros na ordem declarada.
 Cada execução usa um sufixo único (`e2e-<timestamp>`) nos nomes e remove no
 `afterAll` tudo que criou. Se uma execução for interrompida no meio, sobram
 registros com esse prefixo — seguros de apagar.
+
+Um cenário que depende de dados do banco **monta os seus próprios**, pela API,
+no `beforeAll`. `attendance.ui.spec.ts` cria abrigo, equipe, vínculo do membro e
+uma visita no passado; o `DELETE /shelters/:id` do final cascateia a equipe e o
+agendamento e devolve o membro ao estado sem equipe. Antes disso a suíte pulava
+quatro cenários em banco vazio — e um teste que pula não prova nada.

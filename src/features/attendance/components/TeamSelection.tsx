@@ -105,6 +105,7 @@ const TeamCard = memo(({
         }
         action={
           <IconButton
+            data-testid={`attendance-shelter-toggle-${shelter.shelterId}`}
             onClick={() => onToggle(shelter.shelterId)}
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? 'Recolher' : 'Expandir'} equipes do abrigo ${shelter.shelterName}`}
@@ -148,6 +149,7 @@ const TeamCard = memo(({
                         boxShadow: 1
                       },
                     }}
+                    data-testid={`attendance-team-${team.teamId}`}
                     onClick={() => onTeamSelect(shelter, team)}
                   >
                     <CardContent sx={{ flex: 1, p: { xs: 1.5, sm: 2 }, pb: { xs: 1.5, sm: 2 } + ' !important' }}>
@@ -289,7 +291,7 @@ const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }:
 
   if (data.length === 0) {
     return (
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ width: '100%' }} data-testid="attendance-empty">
         {header}
         <Alert severity="info" sx={{ mt: 2 }}>
           {searchTerm
@@ -301,7 +303,7 @@ const TeamSelection = memo(({ data, loading, onTeamSelect, searchTerm, onBack }:
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }} data-testid="attendance-shelters">
       {header}
 
       <Box
