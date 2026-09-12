@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { IdeasSection, IdeasPage } from './types';
 import { listIdeasSections, listIdeasPages } from './api';
+import { ideasSectionErrorMessage } from './errors';
+import { IDEAS_SECTION_MESSAGES } from './constants';
 
 export function useIdeasSections() {
   const [sections, setSections] = useState<IdeasSection[]>([]);
@@ -18,7 +20,7 @@ export function useIdeasSections() {
       setSections(data);
       setFilteredSections(data);
     } catch (e) {
-      setError('Erro ao buscar Ideias compartilhadas');
+      setError(ideasSectionErrorMessage(e, IDEAS_SECTION_MESSAGES.LOAD_FAILED));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export function useIdeasPages() {
       const data = await listIdeasPages();
       setPages(data);
     } catch (e) {
-      setError('Erro ao buscar páginas de ideias');
+      setError(ideasSectionErrorMessage(e, IDEAS_SECTION_MESSAGES.LOAD_PAGES_FAILED));
     } finally {
       setLoading(false);
     }

@@ -23,7 +23,12 @@ import { RootState } from '@/store/slices';
 import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
 import { setIdeasSectionData, clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
 import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
-import api from '@/config/axiosConfig';
+import {
+  attachIdeasSectionToPage,
+  buildIdeasSectionFormData,
+  ideasSectionErrorMessage,
+  listIdeasPages,
+} from '@/features/ideas-sections';
 import { motion } from 'framer-motion';
 
 interface IdeasSectionAdminEditorProps {
@@ -58,12 +63,14 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
     const loadPages = async () => {
       setPagesLoading(true);
       try {
-        const res = await api.get('/ideas-pages');
-        setPages(res.data || []);
-      } catch {
+        setPages(await listIdeasPages());
+      } catch (error: unknown) {
         setSnackbar({
           open: true,
-          message: 'Erro ao carregar páginas disponíveis',
+          message: ideasSectionErrorMessage(
+            error,
+            'Erro ao carregar páginas disponíveis',
+          ),
           severity: 'error',
         });
       } finally {
@@ -105,84 +112,19 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
     setLoading(true);
     try {
-      const formData = new FormData();
-
-      const mediaTypeCounters = { video: 0, document: 0, image: 0 };
-
-      const mediasPayload = sectionData.medias.map((media) => {
-        const baseItem = {
-          title: media.title,
-          description: media.description,
-          mediaType: media.mediaType,
-          uploadType: media.uploadType,
-          isLocalFile: media.uploadType === 'upload',
-        };
-
-        if (media.uploadType === 'upload' && media.mediaType !== 'audio') {
-          if (media.id && !media.file) {
-            return {
-              ...baseItem,
-              id: media.id,
-              url: media.url,
-              originalName: media.originalName,
-              size: media.size
-            };
-          }
-
-          if (!media.file) {
-            throw new Error(`Upload media "${media.title}" has no file associated`);
-          }
-
-          mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters]++;
-          const count = mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters];
-          const fieldKey = count === 1 ? `${media.mediaType}_upload` : `${media.mediaType}${count}_upload`;
-
-          formData.append(fieldKey, media.file);
-
-          if (media.id) {
-            return {
-              ...baseItem,
-              id: media.id,
-              fieldKey,
-              originalName: media.file.name
-            };
-          }
-
-          return { ...baseItem, fieldKey, originalName: media.file.name };
-        }
-
-        if (media.uploadType === 'link' && media.url) {
-          if (media.id) {
-            return {
-              ...baseItem,
-              id: media.id,
-              url: media.url,
-              platformType: media.platformType
-            };
-          }
-
-          return {
-            ...baseItem,
-            url: media.url,
-            platformType: media.platformType
-          };
-        }
-
-        return baseItem;
-      });
-
-      const payloadData = {
-        title: sectionData.title,
-        description: sectionData.description,
-        public: sectionData.public,
-        medias: mediasPayload,
-      };
-
-      formData.append('sectionData', JSON.stringify(payloadData));
-
-      await api.patch(`/ideas-sections/${existingSection.id}/attach/${selectedPage.id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // Edição: os `id` das mídias viajam junto, senão a API trataria tudo
+      // como novo e recriaria os arquivos no bucket a cada salvamento.
+      await attachIdeasSectionToPage(
+        existingSection.id,
+        selectedPage.id,
+        buildIdeasSectionFormData({
+          title: sectionData.title,
+          description: sectionData.description,
+          public: sectionData.public ?? false,
+          medias: sectionData.medias,
+          keepMediaIds: true,
+        }),
+      );
       dispatch(clearIdeasSectionData());
       setSnackbar({
         open: true,
@@ -192,10 +134,13 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       setTimeout(() => {
         navigate('/adm/ideias-compartilhadas');
       }, 2000);
-    } catch {
+    } catch (error: unknown) {
       setSnackbar({
         open: true,
-        message: 'Ops! Algo deu errado ao salvar a seção. Tente novamente.',
+        message: ideasSectionErrorMessage(
+          error,
+          'Ops! Algo deu errado ao salvar a seção. Tente novamente.',
+        ),
         severity: 'error',
       });
     } finally {

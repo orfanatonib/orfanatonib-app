@@ -122,6 +122,7 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
             fullWidth
             value={title}
             onChange={handleTitleChange}
+            inputProps={{ 'data-testid': 'idea-title' }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -148,6 +149,7 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
             rows={4}
             value={description}
             onChange={handleDescriptionChange}
+            inputProps={{ 'data-testid': 'idea-description' }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -206,9 +208,9 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
           },
         }}
       >
-        <Tab label="📄 Documentos" />
-        <Tab label="🖼️ Imagens" />
-        <Tab label="🎥 Vídeos" />
+        <Tab label="📄 Documentos" data-testid="idea-tab-documents" />
+        <Tab label="🖼️ Imagens" data-testid="idea-tab-images" />
+        <Tab label="🎥 Vídeos" data-testid="idea-tab-videos" />
       </Tabs>
 
       {tabIndex === 0 && (

@@ -14,7 +14,11 @@ import { useNavigate } from 'react-router-dom';
 import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
 import { clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
 import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
-import api from '@/config/axiosConfig';
+import {
+  buildIdeasSectionFormData,
+  createIdeasSection,
+  ideasSectionErrorMessage,
+} from '@/features/ideas-sections';
 
 export function IdeasSectionUserCreator() {
   const dispatch = useDispatch();
@@ -82,54 +86,15 @@ export function IdeasSectionUserCreator() {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-
-      const mediaTypeCounters = { video: 0, document: 0, image: 0 };
-
-      const mediasPayload = sectionData.medias.map((media) => {
-        const baseItem = {
-          title: media.title,
-          description: media.description,
-          mediaType: media.mediaType,
-          uploadType: media.uploadType,
-          isLocalFile: media.uploadType === 'upload',
-        };
-
-        if (media.uploadType === 'upload' && media.mediaType !== 'audio') {
-          if (!media.file) {
-            throw new Error(`Upload media "${media.title}" has no file associated`);
-          }
-
-          mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters]++;
-          const count = mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters];
-          const fieldKey = count === 1 ? `${media.mediaType}_upload` : `${media.mediaType}${count}_upload`;
-
-          formData.append(fieldKey, media.file);
-
-          return { ...baseItem, fieldKey, originalName: media.file.name };
-        }
-
-        if (media.uploadType === 'link' && media.url) {
-          return {
-            ...baseItem,
-            url: media.url,
-            platformType: media.platformType
-          };
-        }
-
-        return baseItem;
-      });
-
-      formData.append('sectionData', JSON.stringify({
-        title: sectionData.title,
-        description: sectionData.description,
-        public: true,
-        medias: mediasPayload,
-      }));
-
-      await api.post('/ideas-sections', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // A ideia enviada por um membro nasce pública e sempre com mídia nova.
+      await createIdeasSection(
+        buildIdeasSectionFormData({
+          title: sectionData.title,
+          description: sectionData.description,
+          public: true,
+          medias: sectionData.medias,
+        }),
+      );
 
       dispatch(clearIdeasSectionData());
 
@@ -149,10 +114,13 @@ export function IdeasSectionUserCreator() {
       setTimeout(() => {
         navigate('/area-do-membro');
       }, 2000);
-    } catch {
+    } catch (error: unknown) {
       setSnackbar({
         open: true,
-        message: 'Ops! Algo deu errado ao compartilhar sua ideia. Tente novamente.',
+        message: ideasSectionErrorMessage(
+          error,
+          'Ops! Algo deu errado ao compartilhar sua ideia. Tente novamente.',
+        ),
         severity: 'error',
       });
     } finally {
@@ -317,6 +285,7 @@ export function IdeasSectionUserCreator() {
             </Box>
 
             <Button
+              data-testid="idea-share-submit"
               variant="contained"
               onClick={handleShareIdea}
               disabled={loading}

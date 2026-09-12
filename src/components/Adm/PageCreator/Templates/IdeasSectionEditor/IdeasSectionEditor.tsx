@@ -17,9 +17,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
 import { IdeasSection, clearIdeasSectionData } from 'store/slices/ideas/ideasSlice';
 import { RootState } from 'store/slices';
-import api from '@/config/axiosConfig';
-import { MediaUploadType } from 'store/slices/types';
 import { useIdeasPages } from '@/features/ideas-sections/hooks';
+import {
+  attachIdeasSectionToPage,
+  buildIdeasSectionFormData,
+  createIdeasSection,
+  ideasSectionErrorMessage,
+} from '@/features/ideas-sections';
 
 interface IdeasSectionEditorProps {
   fromTemplatePage?: boolean;
@@ -96,44 +100,18 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
     setLoading(true);
 
     try {
-      const formData = new FormData();
-
-      const processedMedias = sectionData.medias.map((media, mediaIndex) => {
-        const baseItem: any = {
-          ...(fromTemplatePage ? {} : media.id ? { id: media.id } : {}),
-          title: media.title,
-          description: media.description,
-          mediaType: media.mediaType,
-          uploadType: media.uploadType,
-          platformType: media.platformType,
-          isLocalFile: media.uploadType === MediaUploadType.UPLOAD,
-        };
-
-        if (media.uploadType === MediaUploadType.UPLOAD && media.file) {
-          const extension = media.file.name.split('.').pop() || 'bin';
-          const fieldKey = `${media.mediaType}_${mediaIndex}.${extension}`;
-          formData.append(fieldKey, media.file, fieldKey);
-          return { ...baseItem, fieldKey };
-        }
-
-        return { ...baseItem, url: media.url };
-      });
-
-      const sectionPayload = {
+      // Numa seção vinda do template a mídia é toda nova; na edição os `id`
+      // precisam viajar para a API reconhecer o que já está no bucket.
+      const formData = buildIdeasSectionFormData({
         title: sectionData.title,
         description: sectionData.description,
         public: isPublic,
-        medias: processedMedias,
-      };
-
-      formData.append('sectionData', JSON.stringify(sectionPayload));
+        medias: sectionData.medias,
+        keepMediaIds: !fromTemplatePage,
+      });
 
       if (fromTemplatePage) {
-        const res = await api.post('/ideas-sections', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-
-        if (!res?.data) throw new Error('Erro ao criar seção');
+        await createIdeasSection(formData);
 
         setSnackbar({
           open: true,
@@ -150,15 +128,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
           navigate('/adm/ideias-compartilhadas');
         }
       } else if (existingSection?.id) {
-        const res = await api.patch(
-          `/ideas-sections/${existingSection.id}/attach/${selectedPage.id}`,
-          formData,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          }
-        );
-
-        if (!res?.data) throw new Error('Erro ao salvar seção');
+        await attachIdeasSectionToPage(existingSection.id, selectedPage.id, formData);
 
         setSnackbar({
           open: true,
@@ -171,10 +141,10 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
       } else {
         throw new Error('Seção não encontrada para edição');
       }
-    } catch {
+    } catch (error: unknown) {
       setSnackbar({
         open: true,
-        message: 'Erro ao salvar a seção.',
+        message: ideasSectionErrorMessage(error, 'Erro ao salvar a seção.'),
         severity: 'error',
       });
     } finally {

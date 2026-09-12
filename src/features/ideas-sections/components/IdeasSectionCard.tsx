@@ -34,6 +34,7 @@ export default function IdeasSectionCard({ section, onDelete, onEdit, onViewDeta
 
   return (
     <Card
+      data-testid={`ideas-section-card-${section.id}`}
       variant="outlined"
       sx={{
         borderRadius: 2,
@@ -77,6 +78,7 @@ export default function IdeasSectionCard({ section, onDelete, onEdit, onViewDeta
 
         <Tooltip title="Excluir seção">
           <IconButton
+            data-testid={`ideas-section-delete-${section.id}`}
             size="small"
             onClick={() => onDelete(section)}
             sx={{
@@ -156,6 +158,7 @@ export default function IdeasSectionCard({ section, onDelete, onEdit, onViewDeta
         }}
       >
         <Button
+          data-testid={`ideas-section-details-${section.id}`}
           variant="contained"
           size="small"
           startIcon={<Visibility />}
@@ -166,6 +169,7 @@ export default function IdeasSectionCard({ section, onDelete, onEdit, onViewDeta
           Ver detalhes
         </Button>
         <Button
+          data-testid={`ideas-section-edit-${section.id}`}
           variant="outlined"
           size="small"
           startIcon={<EditIcon />}

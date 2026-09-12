@@ -53,6 +53,8 @@ subir e diz qual processo está segurando cada uma, em vez de encerrar calado.
 | `attendance.api.spec.ts` | `live-api` | contratos de `/attendance`: escopo por papel, pendências, histórico e estatísticas |
 | `sheltered.ui.spec.ts` | `live-ui` | a tela de acolhidos navegando contra a API real |
 | `attendance.ui.spec.ts` | `live-ui` | as telas de frequência: hierarquia, busca, pendências, datas e o lançamento gravando no banco |
+| `ideas-sections.api.spec.ts` | `live-api` | contratos de `/ideas-sections`: autenticação das leituras, multipart, mídia, vinculação e remoção |
+| `ideas-sections.ui.spec.ts` | `live-ui` | as telas de ideias compartilhadas, inclusive um membro enviando a ideia pela tela |
 
 ## Rodando
 

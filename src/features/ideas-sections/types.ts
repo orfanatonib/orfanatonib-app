@@ -1,9 +1,10 @@
+/** Mídia como a API devolve. Ideia não aceita áudio. */
 export interface MediaItem {
   id: string;
   title: string;
   description: string;
   uploadType: 'upload' | 'link';
-  mediaType: 'image' | 'video' | 'audio' | 'document';
+  mediaType: 'image' | 'video' | 'document';
   isLocalFile: boolean;
   url: string;
   platformType: string | null;
@@ -57,10 +58,5 @@ export interface SectionData {
   description: string;
   public: boolean;
   medias: MediaItem[];
-}
-
-export interface UpdateSectionPayload {
-  sectionData: SectionData;
-  files?: File[];
 }
 

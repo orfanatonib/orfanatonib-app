@@ -141,7 +141,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
           🎥 Adicionar Vídeo
         </Typography>
 
-        <FormControl fullWidth sx={{ mb: 3 }}>
+        <FormControl fullWidth sx={{ mb: 3 }} data-testid="idea-video-upload-type">
           <InputLabel>Tipo de Upload</InputLabel>
           <Select
             value={tempVideo.uploadType}
@@ -189,6 +189,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
                   </InputLabel>
                   <input
                     type="text"
+                    data-testid="idea-video-url"
                     placeholder="https://www.youtube.com/watch?v=..."
                     value={tempVideo.url}
                     onChange={(e) => {
@@ -321,6 +322,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
 
         <Button
           ref={addButtonRef}
+          data-testid="idea-video-add"
           variant="contained"
           fullWidth
           onClick={handleAddOrUpdate}

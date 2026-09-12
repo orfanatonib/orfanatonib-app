@@ -30,6 +30,8 @@ import { motion } from 'framer-motion';
 import IdeasSectionCard from './components/IdeasSectionCard';
 import IdeasSectionDetailsModal from './components/IdeasSectionDetailsModal';
 import { deleteIdeasSection } from './api';
+import { ideasSectionErrorMessage } from './errors';
+import { IDEAS_SECTION_MESSAGES } from './constants';
 import { useIdeasSections } from './hooks';
 import { IdeasSection as IdeasSectionType } from './types';
 import { setIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
@@ -96,8 +98,10 @@ export default function IdeasSectionManager() {
     try {
       await deleteIdeasSection(id);
       await fetchSections();
-    } catch {
-      setError('Erro ao deletar seção de ideias');
+    } catch (error: unknown) {
+      setError(
+        ideasSectionErrorMessage(error, IDEAS_SECTION_MESSAGES.DELETE_FAILED),
+      );
     }
   };
 
@@ -105,7 +109,10 @@ export default function IdeasSectionManager() {
   const hasQuery = Boolean(searchTerm);
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box
+      data-testid="ideas-sections-page"
+      sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}
+    >
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -135,7 +142,10 @@ export default function IdeasSectionManager() {
               label="Buscar seções"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              inputProps={{ 'aria-label': 'Buscar Ideias compartilhadas' }}
+              inputProps={{
+                'aria-label': 'Buscar Ideias compartilhadas',
+                'data-testid': 'ideas-sections-search',
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -184,6 +194,7 @@ export default function IdeasSectionManager() {
 
         {isBusy && filteredSections.length === 0 ? (
           <Box
+            data-testid="ideas-sections-loading"
             sx={{
               display: 'flex',
               justifyContent: 'center',
@@ -200,6 +211,7 @@ export default function IdeasSectionManager() {
             transition={{ duration: 0.5 }}
           >
             <Alert
+              data-testid="ideas-sections-error"
               severity="error"
               onClose={() => setError('')}
               sx={{
@@ -217,6 +229,7 @@ export default function IdeasSectionManager() {
             transition={{ duration: 0.5 }}
           >
             <Paper
+              data-testid="ideas-sections-empty"
               elevation={1}
               sx={{
                 p: 6,
@@ -250,7 +263,7 @@ export default function IdeasSectionManager() {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <Grid container spacing={3} alignItems="stretch">
+            <Grid data-testid="ideas-sections-list" container spacing={3} alignItems="stretch">
               {filteredSections.map((section, index) => (
                 <Grid
                   item
