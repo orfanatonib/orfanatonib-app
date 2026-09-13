@@ -32,7 +32,7 @@ import MeditationPageCreator from './components/Adm/PageCreator/Templates/Medita
 import ImagePageCreator from './components/Adm/PageCreator/Templates/ImagePageCreator/ImagePageCreator';
 import VideoPageCreator from './components/Adm/PageCreator/Templates/VideoPageCreator/VideoPageCreator';
 import VisitMaterialPageCreator from './components/Adm/PageCreator/Templates/VisitMaterialPageCreator/VisitMaterialPageCreator';
-import SelecPageTemplate from './components/Adm/PageCreator/SelectPageTemplate/SelecPageTemplate';
+import SelectPageTemplate from './components/Adm/PageCreator/SelectPageTemplate';
 
 import AdminDashboardPage from './components/Adm/AdminDashboardPage';
 import AdminLayout from './components/Adm/AdminLayout/AdminLayout';
@@ -233,7 +233,7 @@ function App() {
                     <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
                     <Route path="paginas-videos" element={<VideosManager />} />
                     <Route path="paginas-ideias" element={<IdeasManager />} />
-                    <Route path="criar-pagina" element={<SelecPageTemplate />} />
+                    <Route path="criar-pagina" element={<SelectPageTemplate />} />
                     <Route path="usuarios" element={<UsersManager />} />
                     <Route path="perfis" element={<ProfilesManager />} />
                     <Route path="lideres" element={<LeaderProfilesManager />} />
