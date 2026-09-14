@@ -60,6 +60,20 @@ export const SHELTER_MANAGEMENT_FLAG: FeatureFlag = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
+export const SHELTER_PAGELAS_FLAG: FeatureFlag = {
+  id: "flag-shelter-pagelas",
+  key: "shelter-pagelas",
+  name: "Pagelas dos acolhidos",
+  description: "Habilita a gestão de pagelas dos acolhidos",
+  enabled: true,
+  environment: "local",
+  targetRoles: ["admin", "leader", "member"],
+  audience: "ALL_ROLES",
+  metadata: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+};
+
 export const SHELTERS: ShelterListItem[] = [
   { id: "shelter-1", name: "Abrigo Esperança", leader: false },
   { id: "shelter-2", name: "Abrigo Bom Pastor", leader: false },

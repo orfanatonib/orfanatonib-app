@@ -1,194 +1,168 @@
-import type { ReactElement } from "react";
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import {
+  ArrowUpward,
+  ChevronRight,
+  Search as SearchIcon,
+} from "@mui/icons-material";
 import {
   Box,
-  Typography,
-  Grid,
-  Paper,
   Button,
-  TextField,
+  Divider,
+  Fab,
+  Grid,
   InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useTheme,
+  Paper,
+  TextField,
+  Typography,
   useMediaQuery,
-  Fab,
-  Divider,
+  useTheme,
 } from "@mui/material";
-import {
-  Search as SearchIcon,
-  NoteAdd,
-  EventNote,
-  PhotoLibrary,
-  Collections,
-  VideoLibrary,
-  Description,
-  Comment,
-  Campaign,
-  ContactPhone,
-  Lightbulb,
-  RateReview,
-  Group,
-  School,
-  SupervisorAccount,
-  Groups,
-  MenuBook,
-  ArrowUpward,
-  ChevronRight,
-  CalendarMonth,
-  Favorite,
-  EventAvailable,
-  Handshake,
-  Badge,
-} from "@mui/icons-material";
-
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
-import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
-type SectionId = "all" | "pessoas" | "abrigos" | "conteudo" | "midias" | "materiais" | "interacoes";
-
-interface CardData {
-  title: string;
-  description: string;
-  icon: ReactElement;
-  path: string;
-  section: Exclude<SectionId, "all">;
-}
-
-const cardData: CardData[] = [
-
-  { title: "Usuários", description: "Gerencie contas de acesso ao sistema.", icon: <Group fontSize="large" color="primary" />, path: "/adm/usuarios", section: "pessoas" },
-  { title: "Perfis", description: "Conheça melhor as pessoas do ministério.", icon: <Favorite fontSize="large" color="primary" />, path: "/adm/perfis", section: "pessoas" },
-  { title: "Membros", description: "Gerencie membros voluntários do ministério.", icon: <School fontSize="large" color="primary" />, path: "/adm/membros", section: "pessoas" },
-  { title: "Líderes", description: "Gerencie líderes responsáveis pelos abrigos.", icon: <SupervisorAccount fontSize="large" color="primary" />, path: "/adm/lideres", section: "pessoas" },
-  { title: "Acolhidos", description: "Gerencie crianças e jovens dos abrigos.", icon: <Group fontSize="large" color="primary" />, path: "/adm/acolhidos", section: "pessoas" },
-  { title: "Antecedentes Criminais", description: "Gerencie antecedentes criminais e documentos PDF vinculados a integração ou usuário.", icon: <Badge fontSize="large" color="primary" />, path: "/adm/antecedentes", section: "pessoas" },
-
-  { title: "Abrigos", description: "Cadastre e gerencie os abrigos parceiros.", icon: <Groups fontSize="large" color="primary" />, path: "/adm/abrigos", section: "abrigos" },
-  { title: "Pagelas", description: "Gerencie pagelas de presença e atividades.", icon: <Description fontSize="large" color="primary" />, path: "/adm/pagelas", section: "abrigos" },
-  { title: "Agendamentos", description: "Agende reuniões e visitas aos abrigos.", icon: <CalendarMonth fontSize="large" color="primary" />, path: "/adm/agendamentos", section: "abrigos" },
-  { title: "Presenças", description: "Gerencie a frequência das equipes e membros.", icon: <EventAvailable fontSize="large" color="primary" />, path: "/adm/presenca", section: "abrigos" },
-  { title: "Relatórios das Visitas", description: "Gerencie Relatórios das Visitass realizadas.", icon: <Description fontSize="large" color="primary" />, path: "/adm/relatorios-visita", section: "abrigos" },
-  { title: "Integrações FM", description: "Gerencie integrações de pessoas na Feira de Ministério.", icon: <Handshake fontSize="large" color="primary" />, path: "/adm/integracoes", section: "abrigos" },
-
-  { title: "Criar Página", description: "Crie novas páginas de conteúdo para o site.", icon: <NoteAdd fontSize="large" color="primary" />, path: "/adm/criar-pagina", section: "conteudo" },
-  { title: "Meditações", description: "Crie e edite meditações semanais.", icon: <MenuBook fontSize="large" color="primary" />, path: "/adm/meditacoes", section: "conteudo" },
-  { title: "Documentos", description: "Disponibilize documentos para download.", icon: <Description fontSize="large" color="primary" />, path: "/adm/documentos", section: "conteudo" },
-  { title: "Informativos", description: "Gerencie banners e avisos do site.", icon: <Campaign fontSize="large" color="primary" />, path: "/adm/informativos", section: "conteudo" },
-
-  { title: "Galerias de Fotos", description: "Organize galerias de imagens do ministério.", icon: <PhotoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-fotos", section: "midias" },
-  { title: "Fotos dos Abrigos", description: "Gerencie fotos específicas de cada abrigo.", icon: <Collections fontSize="large" color="primary" />, path: "/adm/fotos-abrigos", section: "midias" },
-  { title: "Vídeos", description: "Adicione vídeos e links do YouTube.", icon: <VideoLibrary fontSize="large" color="primary" />, path: "/adm/paginas-videos", section: "midias" },
-
-  { title: "Materiais de Visita", description: "Gerencie materiais para as visitas.", icon: <EventNote fontSize="large" color="primary" />, path: "/adm/paginas-materiais-visita", section: "materiais" },
-  { title: "Páginas de Ideias", description: "Organize páginas com sugestões de atividades.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/paginas-ideias", section: "materiais" },
-  { title: "Ideias Compartilhadas", description: "Veja ideias enviadas pelos abrigos.", icon: <Lightbulb fontSize="large" color="primary" />, path: "/adm/ideias-compartilhadas", section: "materiais" },
-
-  { title: "Comentários", description: "Modere comentários dos usuários.", icon: <Comment fontSize="large" color="primary" />, path: "/adm/comentarios", section: "interacoes" },
-  { title: "Contatos", description: "Visualize mensagens de contato recebidas.", icon: <ContactPhone fontSize="large" color="primary" />, path: "/adm/contatos", section: "interacoes" },
-  { title: "Feedbacks", description: "Analise feedbacks enviados pelos usuários.", icon: <RateReview fontSize="large" color="primary" />, path: "/adm/feedbacks", section: "interacoes" },
-];
-
-const sectionLabels: Record<SectionId, string> = {
-  all: "Tudo",
-  pessoas: "Pessoas",
-  abrigos: "Abrigos",
-  conteudo: "Conteúdo",
-  midias: "Mídias",
-  materiais: "Materiais",
-  interacoes: "Interações",
-};
-
-const order: Exclude<SectionId, "all">[] = ["pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"];
+import {
+  ADMIN_FOOTER_HEIGHT_PX,
+  ADMIN_NAVIGATION_FILTER_ALL_ID,
+  ADMIN_NAVIGATION_FILTERS,
+  ADMIN_NAVIGATION_TEST_IDS,
+  type AdminNavigationFilterId,
+  filterAdminNavigationSections,
+  getVisibleAdminNavigationSections,
+} from "./navigation";
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const role = user?.role;
-  const isAdmin = !!isAuthenticated && role === UserRole.ADMIN;
-  const isLeader = !!isAuthenticated && role === UserRole.LEADER;
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth,
+  );
+  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
+  const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isSimpleMode = isLeader && !isAdmin;
-
-  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isShelterManagementEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.SHELTER_MANAGEMENT,
+  );
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
 
-  const [query, setQuery] = React.useState("");
-  const [section, setSection] = React.useState<SectionId>("all");
-  const [showTop, setShowTop] = React.useState(false);
+  const [query, setQuery] = useState("");
+  const [sectionFilter, setSectionFilter] = useState<AdminNavigationFilterId>(
+    ADMIN_NAVIGATION_FILTER_ALL_ID,
+  );
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   React.useEffect(() => {
     if (!isMobile) return;
-    const onScroll = () => setShowTop(window.scrollY > 120);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    const handleScroll = () => setShowScrollTop(window.scrollY > 120);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isMobile]);
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const leaderAllowed = new Set<string>([
-    "/adm/acolhidos",
-    "/adm/membros",
-    "/adm/perfis",
-    "/adm/abrigos",
-    "/adm/pagelas",
-    "/adm/agendamentos",
-    "/adm/presenca",
-    "/adm/integracoes",
-    "/adm/relatorios-visita",
-    "/adm/antecedentes",
-  ]);
-
-  const canSeeCard = (card: CardData): boolean => {
-    if (card.path === '/adm/acolhidos' && !isShelterManagementEnabled) return false;
-    if (card.path === '/adm/pagelas' && !isPagelasEnabled) return false;
-
-    if (isAdmin) return true;
-    if (isLeader) return leaderAllowed.has(card.path);
-    return false;
-  };
-
-  const visibleCards = React.useMemo(
-    () => cardData.filter(canSeeCard),
-    [isAdmin, isLeader]
+  const visibleSections = useMemo(
+    () =>
+      getVisibleAdminNavigationSections({
+        isAuthenticated,
+        role: user?.role,
+        featureFlags: {
+          [FeatureFlagKeys.SHELTER_MANAGEMENT]: isShelterManagementEnabled,
+          [FeatureFlagKeys.SHELTER_PAGELAS]: isPagelasEnabled,
+        },
+      }),
+    [isAuthenticated, isPagelasEnabled, isShelterManagementEnabled, user?.role],
   );
 
-  const grouped = React.useMemo(() => {
-    const g: Record<Exclude<SectionId, "all">, CardData[]> = {
-      pessoas: [],
-      abrigos: [],
-      conteudo: [],
-      midias: [],
-      materiais: [],
-      interacoes: [],
-    };
-    for (const c of visibleCards) {
-      const inSection = section === "all" ? true : c.section === section;
-      if (!inSection) continue;
-      if (normalizedQuery) {
-        const hay = `${c.title} ${c.description}`.toLowerCase();
-        if (!hay.includes(normalizedQuery)) continue;
-      }
-      g[c.section].push(c);
-    }
-    return g;
-  }, [section, normalizedQuery, visibleCards]);
+  const availableFilters = useMemo(
+    () =>
+      ADMIN_NAVIGATION_FILTERS.filter(
+        (filter) =>
+          filter.id === ADMIN_NAVIGATION_FILTER_ALL_ID ||
+          visibleSections.some((section) => section.id === filter.id),
+      ),
+    [visibleSections],
+  );
 
-  const hasResults =
-    grouped.pessoas.length + grouped.abrigos.length + grouped.conteudo.length +
-    grouped.midias.length + grouped.materiais.length + grouped.interacoes.length > 0;
+  const filteredSections = useMemo(
+    () => filterAdminNavigationSections(visibleSections, sectionFilter, query),
+    [query, sectionFilter, visibleSections],
+  );
+  const filteredItems = filteredSections.flatMap((section) => section.items);
 
-  const MobileList: React.FC = () => {
-    const allFiltered = order.flatMap((sec) => grouped[sec]);
+  const renderFilters = (compact: boolean) => (
+    <>
+      <TextField
+        fullWidth={compact}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={
+          compact ? "Buscar… (ex.: fotos, usuários, vídeos)" : "Buscar…"
+        }
+        size="small"
+        inputProps={{
+          "data-testid": ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_SEARCH,
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+        sx={compact ? { mb: 1 } : { maxWidth: 360, mr: 1 }}
+      />
 
+      <Box
+        sx={
+          compact
+            ? {
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(104px, 1fr))",
+                gap: 0.5,
+              }
+            : { display: "contents" }
+        }
+      >
+        {availableFilters.map((filter) => (
+          <Button
+            key={filter.id}
+            size={compact ? "small" : "medium"}
+            variant={sectionFilter === filter.id ? "contained" : "outlined"}
+            onClick={() => setSectionFilter(filter.id)}
+            data-testid={`${ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_FILTER_PREFIX}-${filter.id}`}
+            sx={{
+              minHeight: 44,
+              textTransform: "none",
+              justifyContent: "center",
+              px: 1,
+              py: 0.5,
+              borderRadius: 2,
+              fontSize: compact ? 12 : undefined,
+              lineHeight: compact ? 1.2 : undefined,
+              minWidth: 0,
+            }}
+          >
+            {filter.label}
+          </Button>
+        ))}
+      </Box>
+    </>
+  );
+
+  if (isMobile) {
     return (
-      <Box sx={{ width: "100%", px: 2, pb: 8, mt: 0, pt: 0 }}>
+      <Box
+        data-testid={ADMIN_NAVIGATION_TEST_IDS.DASHBOARD}
+        sx={{ width: "100%", px: 2, pb: 8, mt: 0, pt: 0 }}
+      >
         {!isSimpleMode && (
           <Box
             sx={{
@@ -197,216 +171,150 @@ export default function AdminDashboardPage() {
               zIndex: 1,
               bgcolor: "background.paper",
               pt: 0,
-
               pb: 1.25,
               borderBottom: 1,
               borderColor: "divider",
             }}
           >
-            <TextField
-              fullWidth
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar… (ex.: fotos, usuários, vídeos)"
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 1 }}
-            />
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(104px, 1fr))",
-                gap: 0.5,
-              }}
-            >
-              {(["all", "pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"] as SectionId[]).map((key) => (
-                <Button
-                  key={key}
-                  size="small"
-                  variant={section === key ? "contained" : "outlined"}
-                  onClick={() => setSection(key)}
-                  sx={{
-                    textTransform: "none",
-                    justifyContent: "center",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 2,
-                    fontSize: 12,
-                    lineHeight: 1.2,
-                    minWidth: 0,
-                  }}
-                >
-                  {sectionLabels[key]}
-                </Button>
-              ))}
-            </Box>
+            {renderFilters(true)}
           </Box>
         )}
 
-        {!isSimpleMode &&
-          order.map((sec) =>
-            grouped[sec].length ? (
-              <Box key={sec} sx={{ mt: 2 }}>
-                {section === "all" && (
-                  <Typography
-                    variant="overline"
-                    color="text.secondary"
-                    sx={{ pl: 0.5, letterSpacing: 0.4 }}
-                  >
-                    {sectionLabels[sec]}
-                  </Typography>
-                )}
-                <List dense sx={{ mt: section === "all" ? 0.5 : 1 }}>
-                  {grouped[sec].map((card) => (
-                    <Paper
-                      key={card.path}
-                      variant="outlined"
-                      sx={{ mb: 1, borderRadius: 2, overflow: "hidden" }}
-                    >
-                      <ListItemButton onClick={() => navigate(card.path)}>
-                        <ListItemIcon sx={{ minWidth: 40 }}>{card.icon}</ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {card.title}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography variant="body2" color="text.secondary">
-                              {card.description}
-                            </Typography>
-                          }
-                        />
-                        <ChevronRight />
-                      </ListItemButton>
-                    </Paper>
-                  ))}
-                </List>
-              </Box>
-            ) : null
-          )}
-
-        {isSimpleMode && (
-          <>
-            <List dense sx={{ mt: 2 }}>
-              {allFiltered.map((card) => (
-                <Paper
-                  key={card.path}
-                  variant="outlined"
-                  sx={{ mb: 1, borderRadius: 2, overflow: "hidden" }}
+        {filteredSections.map((section) => (
+          <Box key={section.id} sx={{ mt: 2 }}>
+            {!isSimpleMode &&
+              sectionFilter === ADMIN_NAVIGATION_FILTER_ALL_ID && (
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ pl: 0.5, letterSpacing: 0.4 }}
                 >
-                  <ListItemButton onClick={() => navigate(card.path)}>
-                    <ListItemIcon sx={{ minWidth: 40 }}>{card.icon}</ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {card.title}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          {card.description}
-                        </Typography>
-                      }
-                    />
-                    <ChevronRight />
-                  </ListItemButton>
-                </Paper>
-              ))}
-            </List>
-
-            {allFiltered.length === 0 && (
-              <Box sx={{ textAlign: "center", py: 6 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Nada disponível para seu perfil.
+                  {section.title}
                 </Typography>
-              </Box>
-            )}
-          </>
-        )}
+              )}
+            <List
+              dense
+              sx={{
+                mt: sectionFilter === ADMIN_NAVIGATION_FILTER_ALL_ID ? 0.5 : 1,
+              }}
+            >
+              {section.items.map((item) => {
+                const ItemIcon = item.icon;
 
-        {!hasResults && !isSimpleMode && (
-          <Box sx={{ textAlign: "center", py: 6 }}>
+                return (
+                  <Paper
+                    key={item.path}
+                    variant="outlined"
+                    data-testid={`${ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_CARD_PREFIX}-${item.id}`}
+                    sx={{ mb: 1, borderRadius: 2, overflow: "hidden" }}
+                  >
+                    <ListItemButton
+                      onClick={() => navigate(item.path)}
+                      sx={{ minHeight: 44 }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <ItemIcon color="primary" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {item.label}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="body2" color="text.secondary">
+                            {item.description}
+                          </Typography>
+                        }
+                      />
+                      <ChevronRight />
+                    </ListItemButton>
+                  </Paper>
+                );
+              })}
+            </List>
+          </Box>
+        ))}
+
+        {filteredItems.length === 0 && (
+          <Box
+            data-testid={ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_EMPTY}
+            sx={{ textAlign: "center", py: 6 }}
+          >
             <Typography variant="body2" color="text.secondary">
-              Nada encontrado para “{query}”.
+              {isSimpleMode
+                ? "Nada disponível para seu perfil."
+                : `Nada encontrado para “${query}”.`}
             </Typography>
           </Box>
         )}
 
-        {showTop && (
+        {showScrollTop && (
           <Fab
             color="primary"
             size="small"
             aria-label="Voltar ao topo"
+            data-testid={ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_SCROLL_TOP}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            sx={{ position: "fixed", bottom: 88, right: 16 }}
+            sx={{
+              position: "fixed",
+              bottom: ADMIN_FOOTER_HEIGHT_PX,
+              right: 16,
+              minWidth: 44,
+              minHeight: 44,
+            }}
           >
             <ArrowUpward />
           </Fab>
         )}
       </Box>
     );
-  };
+  }
 
-  const DesktopGrid: React.FC = () => {
-    const allFiltered = order.flatMap((sec) => grouped[sec]);
-    const greetName =
-      (user?.name && user.name.split(" ")[0]) || (isAdmin ? "Admin" : isLeader ? "Líder(a)" : "Usuário");
-    return (
-      <Box sx={{ width: "100%", px: { xs: 2, md: 6 }, pt: { xs: 4, md: 0 } }}>
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          textAlign={{ xs: "center", md: "left" }}
-          mb={3}
-          sx={{ fontSize: { xs: "2rem", md: "2.5rem" }, color: "primary.main" }}
+  const greetingName =
+    (user?.name && user.name.split(" ")[0]) ||
+    (isAdmin ? "Admin" : isLeader ? "Líder(a)" : "Usuário");
+
+  return (
+    <Box
+      data-testid={ADMIN_NAVIGATION_TEST_IDS.DASHBOARD}
+      sx={{ width: "100%", px: { xs: 2, md: 6 }, pt: { xs: 4, md: 0 } }}
+    >
+      <Typography
+        variant="h4"
+        fontWeight="bold"
+        textAlign={{ xs: "center", md: "left" }}
+        mb={3}
+        sx={{ fontSize: { xs: "2rem", md: "2.5rem" }, color: "primary.main" }}
+      >
+        Bem-vindo(a), {greetingName} 👋
+      </Typography>
+
+      {!isSimpleMode && (
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1.25,
+            alignItems: "center",
+            mb: 3,
+          }}
         >
-          Bem-vindo(a), {greetName} 👋
-        </Typography>
+          {renderFilters(false)}
+        </Box>
+      )}
 
-        {!isSimpleMode && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25, alignItems: "center", mb: 3 }}>
-            <TextField
-              placeholder="Buscar…"
-              size="small"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ maxWidth: 360, mr: 1 }}
-            />
-            {(["all", "pessoas", "abrigos", "conteudo", "midias", "materiais", "interacoes"] as SectionId[]).map((key) => (
-              <Button
-                key={key}
-                variant={section === key ? "contained" : "outlined"}
-                onClick={() => setSection(key)}
-                sx={{ textTransform: "none", borderRadius: 2 }}
-              >
-                {sectionLabels[key]}
-              </Button>
-            ))}
-          </Box>
-        )}
+      {!isSimpleMode && <Divider sx={{ mb: 3 }} />}
 
-        {!isSimpleMode && <Divider sx={{ mb: 3 }} />}
+      <Grid container spacing={3}>
+        {filteredItems.map((item) => {
+          const ItemIcon = item.icon;
 
-        <Grid container spacing={3}>
-          {allFiltered.map((card) => (
-            <Grid item key={card.path} xs={12} sm={6} md={4} lg={3}>
+          return (
+            <Grid item key={item.path} xs={12} sm={6} md={4} lg={3}>
               <Paper
                 elevation={4}
+                data-testid={`${ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_CARD_PREFIX}-${item.id}`}
                 sx={{
                   p: 3,
                   height: "100%",
@@ -414,45 +322,49 @@ export default function AdminDashboardPage() {
                   flexDirection: "column",
                   justifyContent: "space-between",
                   borderRadius: 3,
-                  backgroundColor: "#ffffff",
+                  bgcolor: "background.paper",
                   transition: "transform .12s ease, box-shadow .12s ease",
                   "&:hover": { transform: "translateY(-2px)", boxShadow: 6 },
                 }}
               >
                 <Box sx={{ mb: 2 }}>
-                  <Box sx={{ mb: 1.5 }}>{card.icon}</Box>
+                  <Box sx={{ mb: 1.5 }}>
+                    <ItemIcon fontSize="large" color="primary" />
+                  </Box>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {card.title}
+                    {item.label}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {card.description}
+                    {item.description}
                   </Typography>
                 </Box>
                 <Button
                   variant="contained"
                   fullWidth
-                  onClick={() => navigate(card.path)}
-                  aria-label={`Acessar ${card.title}`}
+                  onClick={() => navigate(item.path)}
+                  aria-label={`Acessar ${item.label}`}
+                  sx={{ minHeight: 44 }}
                 >
                   Acessar
                 </Button>
               </Paper>
             </Grid>
-          ))}
+          );
+        })}
 
-          {allFiltered.length === 0 && (
-            <Grid item xs={12}>
-              <Box sx={{ textAlign: "center", py: 8 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Nada disponível para seu perfil.
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
-      </Box>
-    );
-  };
-
-  return isMobile ? <MobileList /> : <DesktopGrid />;
+        {filteredItems.length === 0 && (
+          <Grid item xs={12}>
+            <Box
+              data-testid={ADMIN_NAVIGATION_TEST_IDS.DASHBOARD_EMPTY}
+              sx={{ textAlign: "center", py: 8 }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Nada disponível para seu perfil.
+              </Typography>
+            </Box>
+          </Grid>
+        )}
+      </Grid>
+    </Box>
+  );
 }
