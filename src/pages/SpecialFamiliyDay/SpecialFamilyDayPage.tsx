@@ -15,11 +15,12 @@ import {
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PlaceIcon from "@mui/icons-material/Place";
-import api from "@/config/axiosConfig";
-import { VisitMaterialPageData } from "@/store/slices/visit-material/visitMaterialSlice";
+import { getVisitMaterialById } from "@/features/visit-materials/api";
+import { VisitMaterialPageResponseDto } from "@/features/visit-materials/types";
 import { MediaItem } from "store/slices/types";
 import MediaDocumentPreviewModal from "@/utils/MediaDocumentPreviewModal";
 import Slider from "react-slick";
+import type { CustomArrowProps } from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { motion } from "framer-motion";
@@ -63,7 +64,7 @@ const programIcons = [
   <CardGiftcardIcon sx={{ color: "#FF6F00", fontSize: 32 }} />,
 ];
 
-const NextArrow = (props: any) => {
+const NextArrow = (props: CustomArrowProps) => {
   const { onClick } = props;
   return (
     <Box
@@ -95,7 +96,7 @@ const NextArrow = (props: any) => {
   );
 };
 
-const PrevArrow = (props: any) => {
+const PrevArrow = (props: CustomArrowProps) => {
   const { onClick } = props;
   return (
     <Box
@@ -128,7 +129,7 @@ const PrevArrow = (props: any) => {
 };
 
 const SpecialFamilyDayPage: React.FC = () => {
-  const [data, setData] = useState<VisitMaterialPageData | null>(null);
+  const [data, setData] = useState<VisitMaterialPageResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -137,11 +138,13 @@ const SpecialFamilyDayPage: React.FC = () => {
 
   useEffect(() => {
     async function fetchData() {
+      if (!defaultSectionId) {
+        setError("Material do Dia Especial da Família não configurado.");
+        setLoading(false);
+        return;
+      }
       try {
-        const response = await api.get<VisitMaterialPageData>(
-          `/visit-material-pages/${defaultSectionId}`
-        );
-        setData(response.data);
+        setData(await getVisitMaterialById({ id: defaultSectionId }));
       } catch {
         setError("Erro ao carregar dados do Dia Especial da Família.");
       } finally {
@@ -149,11 +152,11 @@ const SpecialFamilyDayPage: React.FC = () => {
       }
     }
     fetchData();
-  }, []);
+  }, [defaultSectionId]);
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Box data-testid="special-family-day-loading" display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <CircularProgress color="primary" />
       </Box>
     );
@@ -162,7 +165,7 @@ const SpecialFamilyDayPage: React.FC = () => {
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 5 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert data-testid="special-family-day-error" severity="error">{error}</Alert>
       </Container>
     );
   }
@@ -171,7 +174,7 @@ const SpecialFamilyDayPage: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, mt: 6, pb: 6 }}>
+      <Box data-testid="special-family-day-page" sx={{ backgroundColor: theme.palette.background.default, mt: 6, pb: 6 }}>
         <Box
           component={motion.section}
           initial={{ opacity: 0, y: -50 }}

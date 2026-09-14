@@ -184,7 +184,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
         py: { xs: 2, md: 4 },
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
           <IconButton
             onClick={() => navigate(-1)}

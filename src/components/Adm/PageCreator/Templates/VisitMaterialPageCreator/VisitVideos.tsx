@@ -113,7 +113,7 @@ export default function VisitVideos({ videos, setVideos }: Props) {
   };
 
   return (
-    <Box sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
+    <Box data-testid="visit-material-video-editor" sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -290,6 +290,7 @@ export default function VisitVideos({ videos, setVideos }: Props) {
 
         <Grid item xs={12}>
           <Button
+            data-testid="visit-material-video-add"
             variant="contained"
             fullWidth
             onClick={handleAddOrUpdate}
@@ -313,7 +314,7 @@ export default function VisitVideos({ videos, setVideos }: Props) {
       <Grid container spacing={3} mt={4}>
         {videos.map((video, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box border={1} borderRadius={2} p={2} position="relative">
+            <Box data-testid="visit-material-video-item" border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{video.title}</Typography>
               <Typography variant="body2" mb={1}>
                 {video.description}
@@ -334,12 +335,12 @@ export default function VisitVideos({ videos, setVideos }: Props) {
               )}
               <Box position="absolute" top={8} right={8} display="flex" gap={1}>
                 <Tooltip title="Editar">
-                  <IconButton size="small" onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="visit-material-video-edit" aria-label="Editar vídeo" size="small" onClick={() => handleEdit(index)}>
                     <Edit fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton size="small" color="error" onClick={() => setDeleteIndex(index)}>
+                  <IconButton data-testid="visit-material-video-remove" aria-label="Remover vídeo" size="small" color="error" onClick={() => setDeleteIndex(index)}>
                     <Delete fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -349,7 +350,7 @@ export default function VisitVideos({ videos, setVideos }: Props) {
         ))}
       </Grid>
 
-      <Dialog open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
+      <Dialog data-testid="visit-material-video-remove-dialog" open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>Deseja realmente remover este vídeo?</Typography>

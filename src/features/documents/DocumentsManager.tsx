@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box, Button, Paper, Grid, Stack, Snackbar, Alert,
   Dialog, DialogTitle, DialogContent, IconButton, TextField,
@@ -52,30 +52,26 @@ const DocumentsManager: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   });
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async (querySearch?: string) => {
     try {
       setLoading(true);
-      const data = await listDocuments();
+      setIsFiltering(true);
+      const data = await listDocuments(querySearch);
       setDocuments(data);
     } catch {
       setSnackbar({ open: true, message: 'Erro ao carregar documentos.', severity: 'error' });
     } finally {
       setLoading(false);
+      setIsFiltering(false);
     }
-  };
-
-  useEffect(() => { fetchDocuments(); }, []);
-
-  const filteredDocuments = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return documents.filter((d) => d.name.toLowerCase().includes(term));
-  }, [documents, searchTerm]);
+  }, []);
 
   useEffect(() => {
-    setIsFiltering(true);
-    const t = setTimeout(() => setIsFiltering(false), 200);
-    return () => clearTimeout(t);
-  }, [filteredDocuments]);
+    const timer = setTimeout(() => {
+      fetchDocuments(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchDocuments]);
 
   const handleCreate = () => {
     dispatch(clearDocumentData());
@@ -120,7 +116,7 @@ const DocumentsManager: React.FC = () => {
 
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
+      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -222,7 +218,7 @@ const DocumentsManager: React.FC = () => {
           </Paper>
         </motion.div>
 
-        {loading && filteredDocuments.length === 0 ? (
+        {loading && documents.length === 0 ? (
           <Box
             sx={{
               display: 'flex',
@@ -233,7 +229,7 @@ const DocumentsManager: React.FC = () => {
           >
             <CircularProgress size={60} thickness={4} />
           </Box>
-        ) : filteredDocuments.length === 0 ? (
+        ) : documents.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -261,7 +257,7 @@ const DocumentsManager: React.FC = () => {
           </motion.div>
         ) : (
           <>
-            {isFiltering && filteredDocuments.length > 0 && (
+            {isFiltering && documents.length > 0 && (
               <Box
                 sx={{
                   display: 'flex',
@@ -274,7 +270,7 @@ const DocumentsManager: React.FC = () => {
               </Box>
             )}
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
-              {filteredDocuments.map((doc, index) => (
+              {documents.map((doc, index) => (
                 <Grid
                   item
                   xs={12}
@@ -308,7 +304,9 @@ const DocumentsManager: React.FC = () => {
           fullWidth
           PaperProps={{
             sx: {
-              borderRadius: 3,
+              borderRadius: 4,
+              boxShadow: '0 24px 48px rgba(0,0,0,0.15)',
+              overflow: 'hidden',
             },
           }}
         >
@@ -317,29 +315,41 @@ const DocumentsManager: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              pr: 2,
-              pb: 2,
+              px: 3,
+              py: 2.5,
+              bgcolor: 'background.paper',
               borderBottom: '1px solid',
               borderColor: 'divider',
             }}
           >
-            <Typography variant="h6" fontWeight="bold">
-              {isEditing ? '✏️ Editar Documento' : '➕ Novo Documento'}
-            </Typography>
-            <IconButton
-              onClick={() => setFormOpen(false)}
-              size="small"
-              sx={{
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                },
-              }}
-            >
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Box
+                sx={{
+                  bgcolor: 'primary.50',
+                  color: 'primary.main',
+                  p: 1,
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <DescriptionIcon />
+              </Box>
+              <Box>
+                <Typography variant="h6" fontWeight={800} lineHeight={1.2}>
+                  {isEditing ? 'Editar Documento' : 'Novo Documento'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {isEditing ? 'Atualize as informações do documento selecionado' : 'Preencha os campos para cadastrar um novo documento'}
+                </Typography>
+              </Box>
+            </Box>
+            <IconButton onClick={() => setFormOpen(false)} size="small">
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <DocumentForm isEditing={isEditing} onSuccess={handleFormSuccess} />
+          <DialogContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+            <DocumentForm isEditing={isEditing} onSuccess={handleFormSuccess} onCancel={() => setFormOpen(false)} />
           </DialogContent>
         </Dialog>
 

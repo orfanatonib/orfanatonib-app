@@ -106,7 +106,7 @@ export default function VisitImages({ images, setImages }: Props) {
   };
 
   return (
-    <Box sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
+    <Box data-testid="visit-material-image-editor" sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -200,7 +200,7 @@ export default function VisitImages({ images, setImages }: Props) {
         )}
 
         <Grid item xs={12}>
-          <Button variant="contained" fullWidth onClick={handleAddOrUpdate}>
+          <Button data-testid="visit-material-image-add" variant="contained" fullWidth onClick={handleAddOrUpdate}>
             {editingIndex !== null ? 'Salvar Alterações' : 'Adicionar Imagem'}
           </Button>
         </Grid>
@@ -209,7 +209,7 @@ export default function VisitImages({ images, setImages }: Props) {
       <Grid container spacing={3} mt={4}>
         {images.map((img, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box border={1} borderRadius={2} p={2} position="relative">
+            <Box data-testid="visit-material-image-item" border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{img.title}</Typography>
               <Typography variant="body2" mb={1}>
                 {img.description}
@@ -221,12 +221,12 @@ export default function VisitImages({ images, setImages }: Props) {
               />
               <Box position="absolute" top={8} right={8} display="flex" gap={1}>
                 <Tooltip title="Editar">
-                  <IconButton size="small" onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="visit-material-image-edit" aria-label="Editar imagem" size="small" onClick={() => handleEdit(index)}>
                     <Edit fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton size="small" color="error" onClick={() => setDeleteIndex(index)}>
+                  <IconButton data-testid="visit-material-image-remove" aria-label="Remover imagem" size="small" color="error" onClick={() => setDeleteIndex(index)}>
                     <Delete fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -236,7 +236,7 @@ export default function VisitImages({ images, setImages }: Props) {
         ))}
       </Grid>
 
-      <Dialog open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
+      <Dialog data-testid="visit-material-image-remove-dialog" open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>Deseja realmente remover esta imagem?</Typography>

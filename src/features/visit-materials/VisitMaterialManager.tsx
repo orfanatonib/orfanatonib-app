@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { AppDispatch } from '@/store/slices';
-import { setVisitMaterialData, VisitMaterialPageData } from 'store/slices/visit-material/visitMaterialSlice';
+import { setVisitMaterialData } from 'store/slices/visit-material/visitMaterialSlice';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
 
 import { useVisitMaterials } from './hooks';
@@ -29,14 +29,27 @@ import SetCurrentMaterialConfirmDialog from './components/SetCurrentMaterialConf
 import VisitMaterialCard from './components/VisitMaterialCard';
 import BackHeader from '@/components/common/header/BackHeader';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import {
+  VISIT_MATERIAL_TAB_LABELS,
+  VISIT_MATERIAL_TAB_MOBILE_LABELS,
+} from './constants';
+import {
+  VisitMaterialListTab,
+  VisitMaterialMutation,
+  VisitMaterialPageResponseDto,
+} from './types';
+import { tabFromTestament, testamentFromTab } from './utils';
 
 export default function VisitMaterialManager() {
-  const { materials, search, setSearch, testament, setTestament, loading, isFiltering, error, setError, fetchAll, remove, markAsCurrent } =
+  const { materials, search, setSearch, testament, setTestament, loading, isFiltering, error, setError, fetchAll, remove, markAsCurrent, pendingMutation } =
     useVisitMaterials();
 
-  const [materialToDelete, setMaterialToDelete] = useState<VisitMaterialPageData | null>(null);
-  const [selectedMaterial, setSelectedMaterial] = useState<VisitMaterialPageData | null>(null);
-  const [materialToSetAsCurrent, setMaterialToSetAsCurrent] = useState<VisitMaterialPageData | null>(null);
+  const [materialToDelete, setMaterialToDelete] =
+    useState<VisitMaterialPageResponseDto | null>(null);
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<VisitMaterialPageResponseDto | null>(null);
+  const [materialToSetAsCurrent, setMaterialToSetAsCurrent] =
+    useState<VisitMaterialPageResponseDto | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -44,36 +57,36 @@ export default function VisitMaterialManager() {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: 'ALL' | 'OLD_TESTAMENT' | 'NEW_TESTAMENT') => {
-    if (newValue === 'ALL') {
-      setTestament(undefined);
-    } else {
-      setTestament(newValue);
-    }
+  const handleTabChange = (
+    _: React.SyntheticEvent,
+    newValue: VisitMaterialListTab,
+  ) => {
+    setTestament(testamentFromTab(newValue));
   };
 
-  const activeTab = testament || 'ALL';
+  const activeTab = tabFromTestament(testament);
 
-  const handleEdit = (material: VisitMaterialPageData) => {
+  const handleEdit = (material: VisitMaterialPageResponseDto) => {
     dispatch(setVisitMaterialData(material));
-    navigate('/adm/editar-pagina-visita');
+    navigate(`/adm/editar-pagina-visita?id=${material.id}`);
   };
 
   const handleDelete = async () => {
     if (!materialToDelete) return;
-    await remove(materialToDelete.id);
-    setMaterialToDelete(null);
+    if (await remove(materialToDelete.id)) setMaterialToDelete(null);
   };
 
   const handleSetAsCurrentMaterial = async () => {
     if (!materialToSetAsCurrent) return;
-    await markAsCurrent(materialToSetAsCurrent.id);
-    setMaterialToSetAsCurrent(null);
-    await dispatch(fetchRoutes());
+    if (await markAsCurrent(materialToSetAsCurrent.id)) {
+      setMaterialToSetAsCurrent(null);
+      await dispatch(fetchRoutes());
+    }
   };
 
   return (
     <Box
+      data-testid="visit-material-manager"
       sx={{
         minHeight: '100vh',
         bgcolor: 'background.default',
@@ -99,6 +112,8 @@ export default function VisitMaterialManager() {
           >
             <Box sx={{ mb: 3 }}>
               <TextField
+                data-testid="visit-material-manager-search"
+                label="Buscar materiais"
                 fullWidth
                 placeholder="Buscar materiais por título, subtítulo ou descrição..."
                 value={search}
@@ -145,6 +160,7 @@ export default function VisitMaterialManager() {
                 </Typography>
               </Box>
               <Tabs
+                data-testid="visit-material-manager-testament-tabs"
                 value={activeTab}
                 onChange={handleTabChange}
                 variant={isXs ? 'scrollable' : 'standard'}
@@ -166,9 +182,18 @@ export default function VisitMaterialManager() {
                   },
                 }}
               >
-                <Tab label={isXs ? "📚 Todos" : "📚 Todos"} value="ALL" />
-                <Tab label={isXs ? "📖 AT" : "📖 Antigo Testamento"} value="OLD_TESTAMENT" />
-                <Tab label={isXs ? "✝️ NT" : "✝️ Novo Testamento"} value="NEW_TESTAMENT" />
+                {Object.values(VisitMaterialListTab).map((tabValue) => (
+                  <Tab
+                    key={tabValue}
+                    data-testid={`visit-material-manager-tab-${tabValue.toLowerCase().replaceAll('_', '-')}`}
+                    label={
+                      isXs
+                        ? VISIT_MATERIAL_TAB_MOBILE_LABELS[tabValue]
+                        : VISIT_MATERIAL_TAB_LABELS[tabValue]
+                    }
+                    value={tabValue}
+                  />
+                ))}
               </Tabs>
             </Box>
           </Paper>
@@ -176,6 +201,7 @@ export default function VisitMaterialManager() {
 
         {loading && materials.length === 0 ? (
           <Box
+            data-testid="visit-material-manager-loading"
             sx={{
               display: 'flex',
               justifyContent: 'center',
@@ -188,6 +214,7 @@ export default function VisitMaterialManager() {
         ) : error ? (
           <Box sx={{ mt: 4 }}>
             <Alert
+              data-testid="visit-material-manager-error"
               severity="error"
               onClose={() => setError('')}
               sx={{
@@ -200,6 +227,7 @@ export default function VisitMaterialManager() {
           </Box>
         ) : materials.length === 0 ? (
           <Paper
+            data-testid="visit-material-manager-empty"
             elevation={1}
             sx={{
               p: 6,
@@ -215,7 +243,7 @@ export default function VisitMaterialManager() {
               {search
                 ? 'Tente ajustar sua busca ou limpar os filtros.'
                 : activeTab !== 'ALL'
-                ? `Nenhum material do ${activeTab === 'OLD_TESTAMENT' ? 'Antigo' : 'Novo'} Testamento encontrado.`
+                ? `Nenhum material do ${activeTab === VisitMaterialListTab.OLD_TESTAMENT ? 'Antigo' : 'Novo'} Testamento encontrado.`
                 : 'Ainda não há materiais cadastrados.'}
             </Typography>
           </Paper>
@@ -223,6 +251,7 @@ export default function VisitMaterialManager() {
           <>
             {(loading || isFiltering) && materials.length > 0 && (
               <Box
+                data-testid="visit-material-manager-filtering"
                 sx={{
                   display: 'flex',
                   justifyContent: 'center',
@@ -266,6 +295,8 @@ export default function VisitMaterialManager() {
         title={materialToDelete?.title}
         onClose={() => setMaterialToDelete(null)}
         onConfirm={handleDelete}
+        loading={pendingMutation === VisitMaterialMutation.DELETE}
+        testId="visit-material-delete-dialog"
       />
 
       <VisitMaterialDetailsModal
@@ -279,6 +310,7 @@ export default function VisitMaterialManager() {
         materialTitle={materialToSetAsCurrent?.title || ''}
         onClose={() => setMaterialToSetAsCurrent(null)}
         onConfirm={handleSetAsCurrentMaterial}
+        loading={pendingMutation === VisitMaterialMutation.SET_CURRENT}
       />
     </Box>
   );

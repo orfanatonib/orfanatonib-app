@@ -1,7 +1,8 @@
 import { expect, test } from "../support/test";
 
 test.describe("Criador de Páginas (/adm/criar-pagina)", () => {
-  test("exibe o modo card com todas as 5 opções de modelos de página no estado inicial", async ({ page }) => {
+  test("exibe o modo card com todas as 5 opções de modelos de página no estado inicial", async ({ page, api }) => {
+    void api;
     await page.goto("/adm/criar-pagina");
 
     await expect(page.getByTestId("page-creator-select-template-container")).toBeVisible();
@@ -16,7 +17,8 @@ test.describe("Criador de Páginas (/adm/criar-pagina)", () => {
     await expect(page.getByTestId("page-template-card-ideas")).toBeVisible();
   });
 
-  test("esconde a página de cards e exibe a tela de criação ao clicar em um card", async ({ page }) => {
+  test("esconde a página de cards e exibe a tela de criação ao clicar em um card", async ({ page, api }) => {
+    void api;
     await page.goto("/adm/criar-pagina");
 
     const visitCard = page.getByTestId("page-template-card-visit-materials");
@@ -31,7 +33,8 @@ test.describe("Criador de Páginas (/adm/criar-pagina)", () => {
     await expect(page.getByTestId("page-creator-back-to-cards-btn")).toBeVisible();
   });
 
-  test("retorna para a página de cards ao clicar no botão/setinha de voltar", async ({ page }) => {
+  test("retorna para a página de cards ao clicar no botão/setinha de voltar", async ({ page, api }) => {
+    void api;
     await page.goto("/adm/criar-pagina");
 
     // Selecionar Meditação
@@ -49,7 +52,8 @@ test.describe("Criador de Páginas (/adm/criar-pagina)", () => {
     await expect(page.getByTestId("page-creator-card-grid")).toBeVisible();
   });
 
-  test("suporta seleção por teclado pressionando Enter", async ({ page }) => {
+  test("suporta seleção por teclado pressionando Enter", async ({ page, api }) => {
+    void api;
     await page.goto("/adm/criar-pagina");
 
     const galleryCard = page.getByTestId("page-template-card-gallery");

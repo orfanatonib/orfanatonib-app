@@ -1,48 +1,72 @@
 import api from '@/config/axiosConfig';
-import { VisitMaterialPageData } from '@/store/slices/visit-material/visitMaterialSlice';
-
-export interface ListVisitMaterialsParams {
-  testament?: 'OLD_TESTAMENT' | 'NEW_TESTAMENT';
-  searchString?: string;
-}
+import {
+  ListVisitMaterialsQueryDto,
+  VisitMaterialIdParamsDto,
+  VisitMaterialPageResponseDto,
+} from './types';
+import {
+  VISIT_MATERIAL_CURRENT_ENDPOINT,
+  VISIT_MATERIAL_ENDPOINT,
+} from './constants';
 
 export async function listVisitMaterials(
-  params?: ListVisitMaterialsParams,
-): Promise<VisitMaterialPageData[]> {
-  const queryParams = new URLSearchParams();
-  
-  if (params?.testament) {
-    queryParams.append('testament', params.testament);
-  }
-  
-  if (params?.searchString) {
-    queryParams.append('searchString', params.searchString);
-  }
-
-  const queryString = queryParams.toString();
-  const url = queryString ? `/visit-material-pages?${queryString}` : '/visit-material-pages';
-  
-  const { data } = await api.get<VisitMaterialPageData[]>(url);
-  return [...data].sort(
-    (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),
+  params: ListVisitMaterialsQueryDto = {},
+): Promise<VisitMaterialPageResponseDto[]> {
+  const { data } = await api.get<VisitMaterialPageResponseDto[]>(
+    VISIT_MATERIAL_ENDPOINT,
+    { params },
   );
+  return data ?? [];
 }
 
-export async function deleteVisitMaterial(id: string): Promise<void> {
-  await api.delete(`/visit-material-pages/${id}`);
-}
-
-export async function setCurrentMaterial(id: string): Promise<void> {
-  await api.post(`/visit-material-pages/current-material/${id}`);
-}
-
-export async function getCurrentMaterial(): Promise<VisitMaterialPageData | null> {
-  const { data } = await api.get<VisitMaterialPageData | null>('/visit-material-pages/current-material');
+export async function createVisitMaterial(
+  payload: FormData,
+): Promise<VisitMaterialPageResponseDto> {
+  const { data } = await api.post<VisitMaterialPageResponseDto>(
+    VISIT_MATERIAL_ENDPOINT,
+    payload,
+  );
   return data;
 }
 
-export async function getVisitMaterialById(id: string): Promise<VisitMaterialPageData> {
-  const { data } = await api.get<VisitMaterialPageData>(`/visit-material-pages/${id}`);
+export async function updateVisitMaterial(
+  params: VisitMaterialIdParamsDto,
+  payload: FormData,
+): Promise<VisitMaterialPageResponseDto> {
+  const { data } = await api.patch<VisitMaterialPageResponseDto>(
+    `${VISIT_MATERIAL_ENDPOINT}/${params.id}`,
+    payload,
+  );
   return data;
 }
 
+export async function deleteVisitMaterial(
+  params: VisitMaterialIdParamsDto,
+): Promise<void> {
+  await api.delete(`${VISIT_MATERIAL_ENDPOINT}/${params.id}`);
+}
+
+export async function setCurrentMaterial(
+  params: VisitMaterialIdParamsDto,
+): Promise<VisitMaterialPageResponseDto> {
+  const { data } = await api.post<VisitMaterialPageResponseDto>(
+    `${VISIT_MATERIAL_CURRENT_ENDPOINT}/${params.id}`,
+  );
+  return data;
+}
+
+export async function getCurrentMaterial(): Promise<VisitMaterialPageResponseDto | null> {
+  const { data } = await api.get<VisitMaterialPageResponseDto | null>(
+    VISIT_MATERIAL_CURRENT_ENDPOINT,
+  );
+  return data;
+}
+
+export async function getVisitMaterialById(
+  params: VisitMaterialIdParamsDto,
+): Promise<VisitMaterialPageResponseDto> {
+  const { data } = await api.get<VisitMaterialPageResponseDto>(
+    `${VISIT_MATERIAL_ENDPOINT}/${params.id}`,
+  );
+  return data;
+}

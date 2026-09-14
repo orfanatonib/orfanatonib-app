@@ -1,25 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RouteData } from '@/store/slices/route/routeSlice';
-import { MediaItem } from '@/store/slices/types';
-
-export interface VisitMaterialPageData {
-  id: string;
-  title: string;
-  subtitle: string;
-  testament?: 'OLD_TESTAMENT' | 'NEW_TESTAMENT';
-  currentWeek: boolean;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  videos: MediaItem[];
-  documents: MediaItem[];
-  images: MediaItem[];
-  audios: MediaItem[];
-  route: RouteData;
-}
+import { VisitMaterialPageResponseDto } from '@/features/visit-materials/types';
 
 interface VisitMaterialState {
-  visitMaterialSData: VisitMaterialPageData | null;
+  visitMaterialSData: VisitMaterialPageResponseDto | null;
   loading: boolean;
   error: string | null;
 }
@@ -34,7 +17,10 @@ const visitMaterialSlice = createSlice({
   name: 'visitMaterial',
   initialState,
   reducers: {
-    setVisitMaterialData: (state, action: PayloadAction<VisitMaterialPageData>) => {
+    setVisitMaterialData: (
+      state,
+      action: PayloadAction<VisitMaterialPageResponseDto>,
+    ) => {
       state.visitMaterialSData = action.payload;
     },
     clearVisitMaterialData: (state) => {
@@ -45,4 +31,3 @@ const visitMaterialSlice = createSlice({
 
 export const { setVisitMaterialData, clearVisitMaterialData } = visitMaterialSlice.actions;
 export default visitMaterialSlice.reducer;
-

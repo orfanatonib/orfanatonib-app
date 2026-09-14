@@ -113,7 +113,7 @@ export default function IdeasSectionManager() {
       data-testid="ideas-sections-page"
       sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

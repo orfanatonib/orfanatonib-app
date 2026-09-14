@@ -3,12 +3,13 @@ import {
   useMediaQuery, useTheme, Tooltip, CardActions
 } from '@mui/material';
 import { Visibility, Delete, Public, Lock, Edit, Star } from '@mui/icons-material';
-import { VisitMaterialPageData } from 'store/slices/visit-material/visitMaterialSlice';
 import { truncate } from '../../visit-materials/utils';
 import { motion } from 'framer-motion';
+import { VisitMaterialPageResponseDto, TestamentType } from '../types';
+import { VISIT_MATERIAL_TESTAMENT_LABELS } from '../constants';
 
 interface Props {
-  material: VisitMaterialPageData;
+  material: VisitMaterialPageResponseDto;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -25,6 +26,8 @@ export default function VisitMaterialCard({
 
   return (
     <Card
+        data-testid="visit-material-card"
+        data-material-id={material.id}
         component={motion.div}
         whileHover={{ y: -8, transition: { duration: 0.2 } }}
         sx={{
@@ -75,7 +78,13 @@ export default function VisitMaterialCard({
             </Tooltip>
             {material.testament && (
               <Chip
-                label={material.testament === 'OLD_TESTAMENT' ? (isMobile ? '📖 AT' : '📖 Antigo Testamento') : (isMobile ? '✝️ NT' : '✝️ Novo Testamento')}
+                label={
+                  isMobile
+                    ? material.testament === TestamentType.OLD_TESTAMENT
+                      ? '📖 AT'
+                      : '✝️ NT'
+                    : VISIT_MATERIAL_TESTAMENT_LABELS[material.testament]
+                }
                 size="small"
                 sx={{
                   bgcolor: 'primary.main',
@@ -88,6 +97,7 @@ export default function VisitMaterialCard({
             )}
           </Box>
           <IconButton
+            data-testid="visit-material-card-delete"
             onClick={onDelete}
             aria-label="Excluir material"
             sx={{
@@ -175,6 +185,7 @@ export default function VisitMaterialCard({
 
         <CardActions sx={{ p: { xs: 1.5, sm: 2 }, pt: 0, gap: { xs: 0.5, sm: 1 }, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
+            data-testid="visit-material-card-view"
             variant="contained"
             startIcon={<Visibility />}
             onClick={onView}
@@ -195,6 +206,7 @@ export default function VisitMaterialCard({
             Ver
           </Button>
           <Button
+            data-testid="visit-material-card-edit"
             variant="outlined"
             startIcon={<Edit />}
             onClick={onEdit}
@@ -221,6 +233,7 @@ export default function VisitMaterialCard({
         {!material.currentWeek && onSetAsCurrent && (
           <Box sx={{ px: { xs: 1.5, sm: 2 }, pb: { xs: 1.5, sm: 2 } }}>
             <Button
+              data-testid="visit-material-card-set-current"
               variant="text"
               fullWidth
               onClick={onSetAsCurrent}

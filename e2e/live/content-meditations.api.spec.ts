@@ -1,0 +1,121 @@
+import { API_URL } from "../../playwright.live.config";
+import { authHeaders, expect, loginAs, test } from "./support/live";
+
+/**
+ * Contratos de `/meditations` contra a API ao vivo.
+ * Garante criação de massa de dados permanente e valida a busca por filtro no backend.
+ */
+const RUN_TAG = `med-${Date.now()}`;
+
+test.describe.serial("Meditações — API ao vivo com massa de dados", () => {
+  let adminToken: string;
+  let meditationId: string;
+
+  test.beforeAll(async ({ request }) => {
+    adminToken = (await loginAs(request, "admin")).accessToken;
+
+    // Garante que exista ao menos 1 item base (massa de dados permanente)
+    const listRes = await request.get(`${API_URL}/meditations`, {
+      headers: authHeaders(adminToken),
+    });
+    const existing = (await listRes.json()) || [];
+    if (!Array.isArray(existing) || existing.length === 0) {
+      const createRes = await request.post(`${API_URL}/meditations`, {
+        headers: authHeaders(adminToken),
+        multipart: {
+          meditationData: JSON.stringify({
+            topic: "O Amor de Deus e a Esperança",
+            startDate: "2030-01-07",
+            endDate: "2030-01-11",
+            days: [
+              { day: "Monday", verse: "João 3:16", topic: "Deus amou o mundo" },
+              { day: "Tuesday", verse: "Romanos 8:28", topic: "Todas as coisas cooperam" },
+            ],
+            media: {
+              title: "Estudo Devocional PDF",
+              description: "Devocional semanal",
+              mediaType: "document",
+              typeUpload: "link",
+              url: "https://example.com/devocional.pdf",
+              isLocalFile: false,
+            },
+          }),
+        },
+      });
+      expect(createRes.status()).toBe(201);
+    }
+  });
+
+  test("a rota POST /meditations exige autenticação de admin", async ({ request }) => {
+    const response = await request.post(`${API_URL}/meditations`, {
+      multipart: {
+        meditationData: JSON.stringify({
+          topic: `Tópico ${RUN_TAG}`,
+          startDate: "2030-01-07",
+          endDate: "2030-01-11",
+          days: [],
+        }),
+      },
+    });
+    expect(response.status()).toBe(401);
+  });
+
+  test("cria e mantém nova meditação semanal na massa de dados", async ({ request }) => {
+    const response = await request.post(`${API_URL}/meditations`, {
+      headers: authHeaders(adminToken),
+      multipart: {
+        meditationData: JSON.stringify({
+          topic: `Jornada no Salmo 23 ${RUN_TAG}`,
+          startDate: "2030-03-04",
+          endDate: "2030-03-08",
+          days: [
+            { day: "Monday", verse: "Salmos 23:1", topic: "O Senhor é o meu pastor" },
+            { day: "Tuesday", verse: "Salmos 23:2", topic: "Deitar-me faz em verdes pastos" },
+          ],
+          media: {
+            title: "Guia da Meditação",
+            description: "Conteúdo em PDF",
+            mediaType: "document",
+            typeUpload: "link",
+            url: "https://example.com/salmo23.pdf",
+            isLocalFile: false,
+          },
+        }),
+      },
+    });
+
+    expect(response.status()).toBe(201);
+    const body = await response.json();
+    expect(body.id).toBeTruthy();
+    meditationId = body.id;
+  });
+
+  test("filtra as meditações pelo parâmetro search no backend", async ({ request }) => {
+    const searchResponse = await request.get(`${API_URL}/meditations`, {
+      headers: authHeaders(adminToken),
+      params: { search: RUN_TAG },
+    });
+    expect(searchResponse.status()).toBe(200);
+    const results = await searchResponse.json();
+    expect(Array.isArray(results)).toBe(true);
+    expect(
+      results.some(
+        (res: any) =>
+          res.meditation?.id === meditationId || res.id === meditationId,
+      ),
+    ).toBe(true);
+
+    const emptyResponse = await request.get(`${API_URL}/meditations`, {
+      headers: authHeaders(adminToken),
+      params: { search: `inexistente-${RUN_TAG}` },
+    });
+    expect(emptyResponse.status()).toBe(200);
+    const emptyResults = await emptyResponse.json();
+    expect(
+      emptyResults.some(
+        (res: any) =>
+          res.meditation?.id === meditationId || res.id === meditationId,
+      ),
+    ).toBe(false);
+  });
+});

@@ -9,18 +9,27 @@ interface Props {
   materialTitle: string;
   onClose: () => void;
   onConfirm: () => Promise<void>;
+  loading?: boolean;
 }
 
 export default function SetCurrentMaterialConfirmDialog({
-  open, materialTitle, onClose, onConfirm,
+  open, materialTitle, onClose, onConfirm, loading = false,
 }: Props) {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      data-testid="visit-material-set-current-dialog"
+      open={open}
+      onClose={loading ? undefined : onClose}
+      maxWidth="xs"
+      fullWidth
+    >
       <DialogTitle sx={{ pr: 6 }}>
         Confirmar alteração
         <IconButton
           aria-label="fechar"
           onClick={onClose}
+          disabled={loading}
+          data-testid="visit-material-set-current-close"
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
@@ -32,9 +41,15 @@ export default function SetCurrentMaterialConfirmDialog({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={onConfirm} variant="contained" color="primary">
-          Confirmar
+        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+        <Button
+          data-testid="visit-material-set-current-confirm"
+          onClick={onConfirm}
+          variant="contained"
+          color="primary"
+          disabled={loading}
+        >
+          {loading ? 'Confirmando...' : 'Confirmar'}
         </Button>
       </DialogActions>
     </Dialog>

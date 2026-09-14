@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { gradients } from '@/theme';
 import {
   Box,
@@ -10,54 +10,52 @@ import {
   Container,
   useTheme,
   useMediaQuery,
-  Fab,
-  Zoom,
   Paper,
   Chip,
   IconButton,
-  Tooltip,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import BookIcon from '@mui/icons-material/Book';
-import api from '@/config/axiosConfig';
-import { fetchRoutes } from 'store/slices/route/routeSlice';
-import { RootState, AppDispatch } from 'store/slices';
+import { AppDispatch } from 'store/slices';
 import {
   setVisitMaterialData,
-  VisitMaterialPageData,
 } from 'store/slices/visit-material/visitMaterialSlice';
 import VisitDocumentViewer from './VisitDocumentViewer';
 import VisitImageGalleryView from './VisitImageGalleryView';
 import VisitAudioPlayerView from './VisitAudioPlayerView';
 import VisitVideoPlayerView from './VisitVideoPlayerView';
-import { MediaItem } from 'store/slices/types';
-import { UserRole } from '@/store/slices/auth/authSlice';
-import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import { useVisitMaterial } from '@/features/visit-materials/hooks';
+import {
+  VisitMaterialMediaResponseDto,
+  VisitMaterialMediaSection,
+  VisitMaterialMediaSectionView,
+} from '@/features/visit-materials/types';
+import { buildVisitMaterialMediaSections } from '@/features/visit-materials/utils';
 
 interface VisitMaterialsPageViewProps {
   idToFetch: string;
 }
 
-interface MediaType {
-  label: string;
-  items: MediaItem[];
-  component: React.ComponentType<any>;
-  propName: 'video' | 'document' | 'image' | 'audio';
-  icon: () => React.ReactElement;
-  color: string;
-}
+const renderMediaItem = (
+  section: VisitMaterialMediaSectionView,
+  item: VisitMaterialMediaResponseDto,
+): ReactNode => {
+  switch (section.kind) {
+    case VisitMaterialMediaSection.VIDEOS:
+      return <VisitVideoPlayerView video={item} />;
+    case VisitMaterialMediaSection.DOCUMENTS:
+      return <VisitDocumentViewer document={item} />;
+    case VisitMaterialMediaSection.IMAGES:
+      return <VisitImageGalleryView image={item} />;
+    case VisitMaterialMediaSection.AUDIOS:
+      return <VisitAudioPlayerView audio={item} />;
+  }
+};
 
 export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPageViewProps) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [visitMaterials, setVisitMaterials] = useState<VisitMaterialPageData | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { material: visitMaterials, loading, error } = useVisitMaterial(idToFetch);
   const [activeTab, setActiveTab] = useState(0);
 
   const theme = useTheme();
@@ -65,41 +63,9 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
 
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get(`/visit-material-pages/${idToFetch}`);
-        setVisitMaterials(response.data);
-        dispatch(setVisitMaterialData(response.data));
-      } catch {
-        setError('Erro ao carregar os materiais de estudo. Tente novamente mais tarde.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [idToFetch, dispatch]);
-
-  const handleDeletePage = async () => {
-    try {
-      setIsDeleting(true);
-      await api.delete(`/visit-material-pages/${idToFetch}`);
-      dispatch(fetchRoutes());
-      navigate('/adm/paginas-materiais-visita');
-    } catch {
-    } finally {
-      setIsDeleting(false);
-      setDeleteConfirmOpen(false);
-    }
-  };
-
-  const handleEditPage = () => {
-    navigate('/adm/editar-pagina-visita');
-  };
+    if (visitMaterials) dispatch(setVisitMaterialData(visitMaterials));
+  }, [dispatch, visitMaterials]);
 
   const handleBack = () => {
     navigate(-1);
@@ -109,6 +75,7 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
     return (
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
         <Box
+          data-testid="visit-material-page-loading"
           display="flex"
           justifyContent="center"
           alignItems="center"
@@ -123,7 +90,7 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
   if (error) {
     return (
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        <Alert severity="error" sx={{ mt: 2 }}>
+        <Alert data-testid="visit-material-page-error" severity="error" sx={{ mt: 2 }}>
           {error}
         </Alert>
       </Container>
@@ -133,52 +100,18 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
   if (!visitMaterials) {
     return (
       <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        <Alert severity="info">
+        <Alert data-testid="visit-material-page-empty" severity="info">
           Nenhum material encontrado.
         </Alert>
       </Container>
     );
   }
 
-  const mediaTypes: MediaType[] = [
-    {
-      label: 'Vídeos',
-      items: visitMaterials.videos || [],
-      component: VisitVideoPlayerView,
-      propName: 'video' as const,
-      icon: () => <Typography>🎥</Typography>,
-      color: '#ff5722',
-    },
-    {
-      label: 'Documentos',
-      items: visitMaterials.documents || [],
-      component: VisitDocumentViewer,
-      propName: 'document' as const,
-      icon: () => <Typography>📄</Typography>,
-      color: '#2196f3',
-    },
-    {
-      label: 'Imagens',
-      items: visitMaterials.images || [],
-      component: VisitImageGalleryView,
-      propName: 'image' as const,
-      icon: () => <Typography>🖼️</Typography>,
-      color: '#4caf50',
-    },
-    {
-      label: 'Áudios',
-      items: visitMaterials.audios || [],
-      component: VisitAudioPlayerView,
-      propName: 'audio' as const,
-      icon: () => <Typography>🎵</Typography>,
-      color: '#9c27b0',
-    },
-  ].filter(type => type.items.length > 0);
-
-  const totalItems = mediaTypes.reduce((sum, type) => sum + type.items.length, 0);
+  const mediaTypes = buildVisitMaterialMediaSections(visitMaterials);
 
   return (
     <Box
+      data-testid="visit-material-page"
       sx={{
         minHeight: '100vh',
         pt: 0,
@@ -223,6 +156,8 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2, position: 'relative', zIndex: 10 }}>
               <IconButton
+                data-testid="visit-material-page-back"
+                aria-label="Voltar"
                 onClick={handleBack}
                 sx={{
                   color: 'white',
@@ -468,6 +403,7 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
                 }}
               >
                 <Tabs
+                  data-testid="visit-material-page-media-tabs"
                   value={activeTab}
                   onChange={(_, newValue) => setActiveTab(newValue)}
                   variant={isMobile ? "fullWidth" : "scrollable"}
@@ -518,7 +454,7 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
                           gap={isMobile ? 0.5 : 1}
                           sx={{ width: '100%' }}
                         >
-                          {type.icon()}
+                          <Typography>{type.icon}</Typography>
                           {!isMobile && (
                             <Typography
                               variant="body2"
@@ -576,17 +512,15 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
                   }}
                 >
                   {mediaTypes[activeTab].items.map((item, index) => {
-                    const Component = mediaTypes[activeTab].component as any;
-                    const props = { [mediaTypes[activeTab].propName]: item };
-
                     return (
                       <motion.div
-                        key={`${item.id}-${index}`}
+                        key={item.id}
+                        data-testid="visit-material-page-media-item"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                       >
-                        <Component {...props} />
+                        {renderMediaItem(mediaTypes[activeTab], item)}
                       </motion.div>
                     );
                   })}
@@ -602,6 +536,7 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
               transition={{ duration: 0.6 }}
             >
               <Paper
+                data-testid="visit-material-page-no-media"
                 elevation={2}
                 sx={{
                   p: 6,
@@ -623,13 +558,6 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
             </motion.div>
           )}
 
-          <DeleteConfirmDialog
-            open={deleteConfirmOpen}
-            onClose={() => setDeleteConfirmOpen(false)}
-            onConfirm={handleDeletePage}
-            title="Excluir Material"
-            loading={isDeleting}
-          />
         </Container>
       </Box>
     </Box>

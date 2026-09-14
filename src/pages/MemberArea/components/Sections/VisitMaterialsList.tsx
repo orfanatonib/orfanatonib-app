@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
     Grid,
@@ -18,78 +18,50 @@ import {
     Tab,
     InputAdornment,
     Chip,
+    Alert,
 } from '@mui/material';
 import { ArrowBack, Search, Clear, FilterList } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { listVisitMaterials, ListVisitMaterialsParams } from '@/features/visit-materials/api';
-import { VisitMaterialPageData } from '@/store/slices/visit-material/visitMaterialSlice';
+import { useVisitMaterials } from '@/features/visit-materials/hooks';
+import {
+    VISIT_MATERIAL_TAB_LABELS,
+    VISIT_MATERIAL_TAB_MOBILE_LABELS,
+    VISIT_MATERIAL_TESTAMENT_LABELS,
+} from '@/features/visit-materials/constants';
+import {
+    TestamentType,
+    VisitMaterialListTab,
+} from '@/features/visit-materials/types';
+import { tabFromTestament, testamentFromTab } from '@/features/visit-materials/utils';
 import { FofinhoButton } from '../Buttons';
 
 const VisitMaterialsList = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [loading, setLoading] = useState(true);
-    const [isFiltering, setIsFiltering] = useState(false);
-    const [materials, setMaterials] = useState<VisitMaterialPageData[]>([]);
-    const [filter, setFilter] = useState('');
-    const [activeTab, setActiveTab] = useState<'ALL' | 'OLD_TESTAMENT' | 'NEW_TESTAMENT'>('ALL');
-    const debounceRef = useRef<number | null>(null);
-    const isInitialMount = useRef(true);
+    const {
+        materials: allMaterials,
+        search: filter,
+        setSearch: setFilter,
+        testament,
+        setTestament,
+        loading,
+        isFiltering,
+        error,
+    } = useVisitMaterials();
+    const materials = allMaterials.filter((material) => material.route.public);
+    const activeTab = tabFromTestament(testament);
 
-    const fetchMaterials = useCallback(async (params?: ListVisitMaterialsParams) => {
-        try {
-            setLoading(true);
-            setIsFiltering(true);
-            const data = await listVisitMaterials(params);
-            const publicMaterials = data.filter((material) => material.route?.public);
-            setMaterials(publicMaterials);
-        } catch {
-        } finally {
-            setLoading(false);
-            setIsFiltering(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            fetchMaterials();
-        }
-    }, [fetchMaterials]);
-
-    useEffect(() => {
-        if (isInitialMount.current) return;
-        
-        setIsFiltering(true);
-        if (debounceRef.current) window.clearTimeout(debounceRef.current);
-        debounceRef.current = window.setTimeout(() => {
-            const params: ListVisitMaterialsParams = {};
-            
-            if (activeTab !== 'ALL') {
-                params.testament = activeTab;
-            }
-            
-            if (filter.trim()) {
-                params.searchString = filter.trim();
-            }
-            
-            fetchMaterials(params);
-        }, 300);
-        
-        return () => {
-            if (debounceRef.current) window.clearTimeout(debounceRef.current);
-        };
-    }, [filter, activeTab, fetchMaterials]);
-
-    const handleTabChange = (_: React.SyntheticEvent, newValue: 'ALL' | 'OLD_TESTAMENT' | 'NEW_TESTAMENT') => {
-        setActiveTab(newValue);
-    };
+    const handleTabChange = (
+        _: React.SyntheticEvent,
+        newValue: VisitMaterialListTab,
+    ) => setTestament(testamentFromTab(newValue));
 
     if (loading && materials.length === 0) {
         return (
             <Box
+                data-testid="visit-material-member-list-loading"
                 sx={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -108,6 +80,7 @@ const VisitMaterialsList = () => {
 
     return (
         <Box
+            data-testid="visit-material-member-list"
             sx={{
                 minHeight: '100vh',
                 bgcolor: 'background.default',
@@ -117,6 +90,8 @@ const VisitMaterialsList = () => {
             <Container maxWidth="xl">
                 <Box sx={{ mb: { xs: 2, sm: 3 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
                     <IconButton
+                        data-testid="visit-material-member-list-back"
+                        aria-label="Voltar para a área do membro"
                         onClick={handleBack}
                         sx={{
                             bgcolor: 'background.paper',
@@ -151,6 +126,8 @@ const VisitMaterialsList = () => {
                     >
                         <Box sx={{ mb: 3 }}>
                             <TextField
+                                data-testid="visit-material-member-list-search"
+                                label="Buscar materiais"
                                 fullWidth
                                 placeholder="Buscar materiais por título, subtítulo ou descrição..."
                                 value={filter}
@@ -165,6 +142,8 @@ const VisitMaterialsList = () => {
                                     endAdornment: filter && (
                                         <InputAdornment position="end">
                                             <IconButton
+                                                data-testid="visit-material-member-list-clear-search"
+                                                aria-label="Limpar busca"
                                                 size="small"
                                                 onClick={() => setFilter('')}
                                             >
@@ -207,6 +186,7 @@ const VisitMaterialsList = () => {
                                 </Typography>
                             </Box>
                             <Tabs
+                                data-testid="visit-material-member-list-tabs"
                                 value={activeTab}
                                 onChange={handleTabChange}
                                 variant={isMobile ? 'scrollable' : 'standard'}
@@ -228,16 +208,35 @@ const VisitMaterialsList = () => {
                                     },
                                 }}
                             >
-                                <Tab label="📚 Todos" value="ALL" />
-                                <Tab label={isMobile ? "📖 AT" : "📖 Antigo Testamento"} value="OLD_TESTAMENT" />
-                                <Tab label={isMobile ? "✝️ NT" : "✝️ Novo Testamento"} value="NEW_TESTAMENT" />
+                                {Object.values(VisitMaterialListTab).map((tabValue) => (
+                                    <Tab
+                                        key={tabValue}
+                                        label={
+                                            isMobile
+                                                ? VISIT_MATERIAL_TAB_MOBILE_LABELS[tabValue]
+                                                : VISIT_MATERIAL_TAB_LABELS[tabValue]
+                                        }
+                                        value={tabValue}
+                                    />
+                                ))}
                             </Tabs>
                         </Box>
                     </Paper>
                 </motion.div>
 
+                {error && (
+                    <Alert
+                        data-testid="visit-material-member-list-error"
+                        severity="error"
+                        sx={{ mb: 3 }}
+                    >
+                        {error}
+                    </Alert>
+                )}
+
                 {(loading || isFiltering) && materials.length > 0 && (
                     <Box
+                        data-testid="visit-material-member-list-filtering"
                         sx={{
                             display: 'flex',
                             justifyContent: 'center',
@@ -249,8 +248,9 @@ const VisitMaterialsList = () => {
                     </Box>
                 )}
 
-                {materials.length === 0 && !loading && !isFiltering ? (
+                {materials.length === 0 && !loading && !isFiltering && !error ? (
                     <Paper
+                        data-testid="visit-material-member-list-empty"
                         elevation={1}
                         sx={{
                             p: 6,
@@ -266,7 +266,7 @@ const VisitMaterialsList = () => {
                             {filter
                                 ? 'Tente ajustar sua busca ou limpar os filtros.'
                                 : activeTab !== 'ALL'
-                                ? `Nenhum material do ${activeTab === 'OLD_TESTAMENT' ? 'Antigo' : 'Novo'} Testamento encontrado.`
+                                ? `Nenhum material do ${activeTab === VisitMaterialListTab.OLD_TESTAMENT ? 'Antigo' : 'Novo'} Testamento encontrado.`
                                 : 'Ainda não há materiais disponíveis.'}
                         </Typography>
                     </Paper>
@@ -287,6 +287,8 @@ const VisitMaterialsList = () => {
                                     lg={3}
                                 >
                                     <Card
+                                        data-testid="visit-material-member-card"
+                                        data-material-id={material.id}
                                         component={motion.div}
                                         whileHover={{ y: -8, transition: { duration: 0.2 } }}
                                         sx={{
@@ -315,7 +317,13 @@ const VisitMaterialsList = () => {
                                 }}
                             >
                                 <Chip
-                                    label={material.testament === 'OLD_TESTAMENT' ? (isMobile ? '📖 AT' : '📖 Antigo Testamento') : (isMobile ? '✝️ NT' : '✝️ Novo Testamento')}
+                                    label={
+                                        isMobile
+                                            ? material.testament === TestamentType.OLD_TESTAMENT
+                                                ? '📖 AT'
+                                                : '✝️ NT'
+                                            : VISIT_MATERIAL_TESTAMENT_LABELS[material.testament]
+                                    }
                                     size="small"
                                     sx={{
                                         bgcolor: 'primary.main',
@@ -384,6 +392,7 @@ const VisitMaterialsList = () => {
 
                                         <Box sx={{ p: { xs: 1.5, sm: 2 }, pt: 0 }}>
                                             <Button
+                                                data-testid="visit-material-member-card-open"
                                                 variant="contained"
                                                 component={Link}
                                                 to={`/${material.route?.path}`}

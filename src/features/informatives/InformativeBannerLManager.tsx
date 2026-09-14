@@ -59,7 +59,7 @@ export default function InformativeBannerLManager() {
 
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
+      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -128,7 +128,7 @@ export default function InformativeBannerLManager() {
                     cursor: 'pointer',
                     fontWeight: 600,
                   }}
-                  onClick={fetchBanners}
+                  onClick={() => fetchBanners()}
                 >
                   Tentar novamente
                 </Box>

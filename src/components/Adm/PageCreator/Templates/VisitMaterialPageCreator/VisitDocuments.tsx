@@ -106,7 +106,7 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
   };
 
   return (
-    <Box sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
+    <Box data-testid="visit-material-document-editor" sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -200,7 +200,7 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
         )}
 
         <Grid item xs={12}>
-          <Button variant="contained" fullWidth onClick={handleAddOrUpdate}>
+          <Button data-testid="visit-material-document-add" variant="contained" fullWidth onClick={handleAddOrUpdate}>
             {editingIndex !== null ? 'Salvar Alterações' : 'Adicionar Documento'}
           </Button>
         </Grid>
@@ -209,7 +209,7 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
       <Grid container spacing={3} mt={4}>
         {documents.map((doc, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box border={1} borderRadius={2} p={2} position="relative">
+            <Box data-testid="visit-material-document-item" border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{doc.title}</Typography>
               <Typography variant="body2" mb={1}>
                 {doc.description}
@@ -217,18 +217,18 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
               <Box display="flex" gap={1} mt={1}>
                 {doc.uploadType === MediaUploadType.UPLOAD && (
                   <Tooltip title="Visualizar">
-                    <IconButton color="primary" onClick={() => setPreviewDoc(doc.url)}>
+                    <IconButton aria-label="Visualizar documento" color="primary" onClick={() => setPreviewDoc(doc.url)}>
                       <Visibility fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 )}
                 <Tooltip title="Editar">
-                  <IconButton onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="visit-material-document-edit" aria-label="Editar documento" onClick={() => handleEdit(index)}>
                     <Edit fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton color="error" onClick={() => setDeleteIndex(index)}>
+                  <IconButton data-testid="visit-material-document-remove" aria-label="Remover documento" color="error" onClick={() => setDeleteIndex(index)}>
                     <Delete fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -238,7 +238,7 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
         ))}
       </Grid>
 
-      <Dialog open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth="md" fullWidth>
+      <Dialog data-testid="visit-material-document-preview-dialog" open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth="md" fullWidth>
         <DialogTitle>Visualizar Documento</DialogTitle>
         <DialogContent>
           {previewDoc?.startsWith('data:') || previewDoc?.startsWith('blob:') ? (
@@ -256,7 +256,7 @@ export default function VisitDocuments({ documents, setDocuments }: Props) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
+      <Dialog data-testid="visit-material-document-remove-dialog" open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>Deseja realmente remover este documento?</Typography>

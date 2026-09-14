@@ -5,12 +5,13 @@ import {
   IconButton, Divider, Paper, Grid,
 } from '@mui/material';
 import { ContentCopy, Close } from '@mui/icons-material';
-import { VisitMaterialPageData } from 'store/slices/visit-material/visitMaterialSlice';
 import { formatDate } from '../../visit-materials/utils';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import { VisitMaterialPageResponseDto } from '../types';
+import { VISIT_MATERIAL_TESTAMENT_LABELS } from '../constants';
 
 interface VisitMaterialDetailsModalProps {
-  material: VisitMaterialPageData | null;
+  material: VisitMaterialPageResponseDto | null;
   open: boolean;
   onClose: () => void;
   deletable?: boolean;
@@ -45,6 +46,7 @@ export default function VisitMaterialDetailsModal({
   return (
     <>
       <Dialog
+        data-testid="visit-material-details-dialog"
         open={open}
         onClose={isDeleting ? undefined : onClose}
         fullWidth
@@ -61,6 +63,8 @@ export default function VisitMaterialDetailsModal({
         }}
       >
         <IconButton
+          data-testid="visit-material-details-close"
+          aria-label="Fechar detalhes do material"
           onClick={onClose}
           sx={{ position: 'absolute', top: 8, right: 8, color: '#555' }}
           disabled={isDeleting}
@@ -95,7 +99,8 @@ export default function VisitMaterialDetailsModal({
                   {material.testament && (
                     <Grid item xs={12} md={6}>
                       <Typography variant="body1">
-                        <strong>Testamento:</strong> {material.testament === 'OLD_TESTAMENT' ? 'Antigo Testamento' : 'Novo Testamento'}
+                        <strong>Testamento:</strong>{' '}
+                        {VISIT_MATERIAL_TESTAMENT_LABELS[material.testament]}
                       </Typography>
                     </Grid>
                   )}
@@ -169,6 +174,8 @@ export default function VisitMaterialDetailsModal({
                                 <strong>URL:</strong> {item.url}
                               </Typography>
                               <IconButton
+                                data-testid="visit-material-details-copy-url"
+                                aria-label={`Copiar URL de ${item.title}`}
                                 size="small"
                                 onClick={() => handleCopyUrl(item.url)}
                                 title="Copiar URL"
@@ -191,6 +198,7 @@ export default function VisitMaterialDetailsModal({
         <DialogActions sx={{ justifyContent: 'center', p: 2, gap: 1 }}>
           {deletable && (
             <Button
+              data-testid="visit-material-details-delete"
               variant="contained"
               color="error"
               onClick={() => setConfirmOpen(true)}
@@ -201,6 +209,7 @@ export default function VisitMaterialDetailsModal({
             </Button>
           )}
           <Button
+            data-testid="visit-material-details-dismiss"
             variant="outlined"
             onClick={onClose}
             disabled={isDeleting}
@@ -209,6 +218,7 @@ export default function VisitMaterialDetailsModal({
             Fechar
           </Button>
           <Button
+            data-testid="visit-material-details-open-page"
             variant="contained"
             onClick={() => material && navigate(`/${material.route.path}`)}
             disabled={!material || isDeleting}
@@ -225,6 +235,7 @@ export default function VisitMaterialDetailsModal({
         onClose={() => !isDeleting && setConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
         loading={isDeleting}
+        testId="visit-material-details-delete-dialog"
       />
     </>
   );

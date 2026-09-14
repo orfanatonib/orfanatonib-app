@@ -1,8 +1,10 @@
 import api from '@/config/axiosConfig';
 import { InformativeBannerData } from 'store/slices/informative/informativeBannerSlice';
 
-export async function fetchBannersApi(): Promise<InformativeBannerData[]> {
-  const { data } = await api.get<InformativeBannerData[]>('/informatives');
+export async function fetchBannersApi(search?: string): Promise<InformativeBannerData[]> {
+  const { data } = await api.get<InformativeBannerData[]>('/informatives', {
+    params: search?.trim() ? { search: search.trim() } : undefined,
+  });
   return data;
 }
 

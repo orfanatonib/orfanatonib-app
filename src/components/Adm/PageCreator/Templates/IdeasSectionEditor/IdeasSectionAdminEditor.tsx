@@ -156,7 +156,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
         py: { xs: 2, md: 4 },
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

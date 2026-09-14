@@ -183,10 +183,7 @@ function App() {
                 <Route path="/verificar-email/:token" element={<ConfirmEmail />} />
                 <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
                 <Route path="/cadastrar" element={<Register commonUser />} />
-                <Route path="/cadastrar" element={<Register commonUser />} />
-                <Route path="/esqueci-minha-senha" element={<ForgotPassword />} />
                 <Route path="/recuperar-senha/:token" element={<ResetPassword />} />
-                <Route path="*" element={<Home />} />
 
                 <Route element={<ProtectedRoute />}>
                   <Route path="/area-do-membro" element={<MemberArea />} />
@@ -289,6 +286,7 @@ function App() {
                     element={<PageRenderer entityType={route.entityType} idToFetch={route.idToFetch} />}
                   />
                 ))}
+                <Route path="*" element={<Home />} />
               </Routes>
             </GlobalErrorBoundary>
           </Box>
