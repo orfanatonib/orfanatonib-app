@@ -101,7 +101,7 @@ test.describe.serial("Materiais de visita — API ao vivo", () => {
     expect(body === "" || body === "null").toBe(true);
   });
 
-  test("cria a página com mídia de link e de upload", async ({ request }) => {
+  test("cria a página com mídias em link", async ({ request }) => {
     const response = await request.post("/visit-material-pages", {
       headers: authHeaders(token),
       multipart: {
@@ -111,9 +111,17 @@ test.describe.serial("Materiais de visita — API ao vivo", () => {
           pageDescription: "Estudo sobre Gênesis",
           testament: "OLD_TESTAMENT",
           videos: [linkVideo("https://youtube.test/a")],
-          documents: [uploadDocument("doc-0")],
+          documents: [
+            {
+              title: "Documento da visita",
+              description: "Descrição",
+              uploadType: "link",
+              mediaType: "document",
+              isLocalFile: false,
+              url: `https://example.com/material-${RUN_TAG}.pdf`,
+            },
+          ],
         }),
-        "doc-0": pdf(),
       },
     });
 
@@ -129,9 +137,8 @@ test.describe.serial("Materiais de visita — API ao vivo", () => {
     expect(page.documents).toHaveLength(1);
     expect(page.images).toEqual([]);
     expect(page.audios).toEqual([]);
-    // O arquivo foi de fato para o bucket e ficou marcado como local.
-    expect(page.documents[0].isLocalFile).toBe(true);
-    expect(page.documents[0].url).toContain("orfanatos-nib-storage");
+    expect(page.documents[0].isLocalFile).toBe(false);
+    expect(page.documents[0].url).toContain(`material-${RUN_TAG}.pdf`);
     expect(page.videos[0].isLocalFile).toBe(false);
     // A rota pública é criada junto, com o prefixo do módulo.
     expect(page.route.path).toMatch(/^materiais_visita_/);

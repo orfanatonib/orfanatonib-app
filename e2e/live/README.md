@@ -1,16 +1,17 @@
 # E2E ao vivo
 
 Suíte que exercita a **pilha real** — API NestJS, MySQL e S3 (LocalStack) — sem
-nenhuma interceptação. Complementa `e2e/specs/`, que usa dublês de API para
-testar a UI de forma determinística.
+nenhuma interceptação. Esta é a suíte padrão de e2e: não use `page.route`,
+`route.fulfill`, fixtures de API, sessão falsa ou qualquer mock HTTP em
+Playwright.
 
-| | `e2e/specs/` | `e2e/live/` |
-|---|---|---|
-| API | interceptada (`page.route`) | real, em `:3000` |
-| Banco | nenhum | MySQL local |
-| S3 | nenhum | LocalStack em `:4566` |
-| Sessão | token falso no `localStorage` | login real em `/auth/login` |
-| Serve para | comportamento da UI, estados, acessibilidade | contrato real ponta a ponta |
+| Camada | Padrão obrigatório |
+|---|---|
+| API | real, em `:3000` |
+| Banco | MySQL local |
+| S3 | LocalStack em `:4566` |
+| Sessão | login real em `/auth/login` |
+| Serve para | contrato real ponta a ponta |
 
 ## Pré-requisito
 
@@ -59,7 +60,8 @@ subir e diz qual processo está segurando cada uma, em vez de encerrar calado.
 ## Rodando
 
 ```bash
-npm run test:e2e:live        # API + UI
+npm run test:e2e             # API + UI, sem mocks
+npm run test:e2e:live        # alias para a mesma suíte live
 npm run test:e2e:live:api    # só os contratos da API
 npm run test:e2e:live:ui     # só a navegação real
 ```
@@ -67,8 +69,8 @@ npm run test:e2e:live:ui     # só a navegação real
 ### Vendo o navegador
 
 ```bash
-npm run test:e2e:live:headed                  # abre o Chromium, 400ms por ação
-npm run test:e2e:live:headed -- --grep editar # só os cenários que casam
+npm run test:e2e:headed                  # abre o Chromium, 400ms por ação
+npm run test:e2e:headed -- --grep editar # só os cenários que casam
 ```
 
 `E2E_SLOWMO` controla a pausa entre ações (padrão `0`, ou seja, sem freio):

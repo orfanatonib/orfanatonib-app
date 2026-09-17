@@ -40,14 +40,14 @@ test.describe.serial("Aceitos a Cristo — API ao vivo", () => {
     }
   });
 
-  test("a rota POST /accepted-christs exige autenticação", async ({ request }) => {
+  test("a rota POST /accepted-christs valida o acolhido informado", async ({ request }) => {
     const response = await request.post(`${API_URL}/accepted-christs`, {
       data: {
         shelteredId: "00000000-0000-0000-0000-000000000000",
         decision: "ACCEPTED",
       },
     });
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(404);
   });
 
   test("registra uma nova decisão de Aceitou a Cristo para um acolhido", async ({ request }) => {

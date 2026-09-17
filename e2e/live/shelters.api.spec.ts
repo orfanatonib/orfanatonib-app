@@ -126,7 +126,7 @@ test.describe.serial("Abrigos — API ao vivo", () => {
     expect(fields).toEqual(["name", "teamsQuantity"]);
   });
 
-  test("cria o abrigo com endereço, equipes e foto enviada", async ({
+  test("cria o abrigo com endereço, equipes e foto em link", async ({
     request,
   }) => {
     const response = await request.post("/shelters", {
@@ -140,12 +140,11 @@ test.describe.serial("Abrigos — API ao vivo", () => {
           teams: [{ numberTeam: 1, description: "Equipe um" }],
           mediaItem: {
             title: "Foto",
-            uploadType: "upload",
-            isLocalFile: true,
-            fieldKey: "foto",
+            uploadType: "link",
+            isLocalFile: false,
+            url: `https://example.com/${RUN_TAG}.png`,
           },
         }),
-        foto: png(),
       },
     });
 
@@ -156,7 +155,7 @@ test.describe.serial("Abrigos — API ao vivo", () => {
     expect(shelter.name).toBe(RUN_TAG);
     expect(numbers(shelter.teams)).toEqual([1, 2]);
     // A resposta da criação carrega a foto, como a da atualização.
-    expect(shelter.mediaItem?.url).toContain("foto.png");
+    expect(shelter.mediaItem?.url).toContain(`${RUN_TAG}.png`);
     // Nada de entidade crua: a rota não vai na resposta.
     expect(shelter).not.toHaveProperty("route");
   });

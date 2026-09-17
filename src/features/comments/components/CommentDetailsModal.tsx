@@ -10,6 +10,7 @@ interface Props { comment: CommentData | null; open: boolean; onClose: () => voi
 export default function CommentDetailsModal({ comment, open, onClose }: Props) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"
+      data-testid="comments-details-dialog"
       PaperProps={{ sx: { width: "100%", m: "10px auto", p: "5px", borderRadius: 3, bgcolor: "#fafafa" } }}>
       <DialogTitle textAlign="center" fontWeight="bold" sx={{ fontSize: "1.5rem", color: "#333", p: "5px" }}>
         Detalhes do Comentário
@@ -52,7 +53,7 @@ export default function CommentDetailsModal({ comment, open, onClose }: Props) {
         )}
       </DialogContent>
       <DialogActions sx={{ justifyContent: "center", p: "5px" }}>
-        <Button variant="outlined" onClick={onClose} sx={{ minWidth: 100 }}>Fechar</Button>
+        <Button data-testid="comments-details-close" variant="outlined" onClick={onClose} sx={{ minWidth: 100 }}>Fechar</Button>
       </DialogActions>
     </Dialog>
   );

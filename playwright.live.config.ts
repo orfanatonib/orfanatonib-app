@@ -2,8 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Suíte "ao vivo": exercita a pilha real — API NestJS, MySQL e S3 (LocalStack) —
- * sem nenhuma interceptação. Diferente de `playwright.config.ts`, que usa
- * dublês de API para testar a UI de forma determinística.
+ * sem nenhuma interceptação. Esta também é a configuração padrão importada por
+ * `playwright.config.ts`; todo teste e2e deve bater na API real.
  *
  * Pré-requisito: `./run.sh local` no ar (API em :3000, app em :5173), que
  * também semeia as contas usadas aqui.

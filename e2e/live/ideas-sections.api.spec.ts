@@ -136,7 +136,7 @@ test.describe.serial("Ideias compartilhadas — API ao vivo", () => {
     expect((await response.json()).message).toContain("Arquivo ausente");
   });
 
-  test("um membro compartilha uma ideia com link e arquivo", async ({
+  test("um membro compartilha uma ideia com mídias em link", async ({
     request,
   }) => {
     const response = await request.post("/ideas-sections", {
@@ -154,19 +154,18 @@ test.describe.serial("Ideias compartilhadas — API ao vivo", () => {
               url: "https://youtu.be/abc",
               platformType: "youtube",
               title: "Vídeo",
+              description: "Vídeo da ideia",
             },
-            // Sem `description`: a coluna é NOT NULL e isto derrubava o
-            // insert com "Field 'description' doesn't have a default value".
             {
-              uploadType: "upload",
+              uploadType: "link",
               mediaType: "image",
-              isLocalFile: true,
-              fieldKey: "foto",
+              isLocalFile: false,
+              url: "https://example.com/foto.png",
               title: "Foto",
+              description: "Foto da ideia",
             },
           ],
         }),
-        foto: png(),
       },
     });
 
@@ -176,9 +175,8 @@ test.describe.serial("Ideias compartilhadas — API ao vivo", () => {
 
     expect(section.title).toBe(RUN_TAG);
     expect(section.medias).toHaveLength(2);
-    // O arquivo foi de fato para o bucket.
     expect(
-      section.medias.find((media) => media.uploadType === "upload")?.url,
+      section.medias.find((media) => media.mediaType === "image")?.url,
     ).toContain("foto.png");
     // A resposta traz o autor: antes vinha `user: { name: "" }`.
     expect(section.user?.email).toBe("e2e.member@orfanatonib.test");

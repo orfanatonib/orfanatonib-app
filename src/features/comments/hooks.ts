@@ -17,7 +17,7 @@ export function useCommentsData() {
     try {
       const data = await apiGetComments();
       dispatch(setComments(data));
-    } catch (e: any) {
+    } catch {
       setError("Erro ao buscar comentários");
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export function useCommentActions(fetchComments: () => Promise<void> | void) {
   const publish = useCallback(async (c: CommentData) => {
     setActionLoading(true); setActionError("");
     try { await apiPublishComment(c); await fetchComments(); }
-    catch (e: any) { setActionError("Erro ao publicar comentário"); throw e; }
+    catch (error: unknown) { setActionError("Erro ao publicar comentário"); throw error; }
     finally { setActionLoading(false); }
   }, [fetchComments]);
 
@@ -83,7 +83,7 @@ export function useCommentActions(fetchComments: () => Promise<void> | void) {
     if (!c.id) return;
     setActionLoading(true); setActionError("");
     try { await apiDeleteComment(c.id); await fetchComments(); }
-    catch (e: any) { setActionError("Erro ao deletar comentário"); throw e; }
+    catch (error: unknown) { setActionError("Erro ao deletar comentário"); throw error; }
     finally { setActionLoading(false); }
   }, [fetchComments]);
 
@@ -92,7 +92,7 @@ export function useCommentActions(fetchComments: () => Promise<void> | void) {
   }) => {
     setActionLoading(true); setActionError("");
     try { await apiUpdateComment(c, payload); await fetchComments(); }
-    catch (e: any) { setActionError("Erro ao salvar comentário"); throw e; }
+    catch (error: unknown) { setActionError("Erro ao salvar comentário"); throw error; }
     finally { setActionLoading(false); }
   }, [fetchComments]);
 

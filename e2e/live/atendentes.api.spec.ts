@@ -3,7 +3,7 @@ import { authHeaders, expect, loginAs, test } from "./support/live";
 
 /**
  * Testes E2E ao vivo do contrato da API `/antecedentes-criminais`.
- * Valida autenticação, criação com multipart/form-data, busca paginada,
+ * Valida autenticação, criação com mídia em link, busca paginada,
  * consulta individual, edição e exclusão no banco/S3 real.
  */
 const RUN_TAG = `e2e-${Date.now()}`;
@@ -43,29 +43,23 @@ test.describe.serial("Antecedentes Criminais — API ao vivo", () => {
     expect(responsePost.status()).toBe(401);
   });
 
-  test("cria um antecedente criminal com PDF usando multipart/form-data", async ({ request }) => {
+  test("cria um antecedente criminal com PDF em link usando multipart/form-data", async ({ request }) => {
     const payload = {
       name: testName,
       pdfEstadual: {
         title: "Certidão Estadual Teste",
         description: "PDF de teste E2E",
-        uploadType: "upload",
+        uploadType: "link",
         mediaType: "document",
-        isLocalFile: true,
+        isLocalFile: false,
+        url: `https://example.com/certidao-${RUN_TAG}.pdf`,
       },
     };
-
-    const dummyPdfBuffer = Buffer.from("%PDF-1.4 Antecedente Criminal Teste E2E");
 
     const response = await request.post(`${API_URL}/antecedentes-criminais`, {
       headers: authHeaders(adminToken),
       multipart: {
         atendenteData: JSON.stringify(payload),
-        estadual: {
-          name: "certidao_estadual.pdf",
-          mimeType: "application/pdf",
-          buffer: dummyPdfBuffer,
-        },
       },
     });
 

@@ -1,9 +1,12 @@
-export const debounce = <T extends (...args: any[]) => void>(fn: T, delay = 300) => {
+export const debounce = <TArgs extends readonly unknown[]>(
+  fn: (...args: TArgs) => void,
+  delay = 300,
+) => {
   let t: ReturnType<typeof setTimeout> | undefined;
-  const debounced = (...args: Parameters<T>) => {
+  const debounced = (...args: TArgs) => {
     if (t) clearTimeout(t);
     t = setTimeout(() => fn(...args), delay);
   };
   debounced.cancel = () => { if (t) clearTimeout(t); t = undefined; };
-  return debounced as T & { cancel: () => void };
+  return debounced;
 };

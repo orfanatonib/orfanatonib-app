@@ -50,7 +50,10 @@ export default function CommentsManager() {
   };
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
+    <Box
+      data-testid="comments-manager"
+      sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}
+    >
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -86,6 +89,7 @@ export default function CommentsManager() {
 
       <DeleteConfirmDialog
         open={!!toDelete}
+        testId="comments-delete-dialog"
         title={toDelete?.name || "Sem Nome"}
         onClose={() => setToDelete(null)}
         onConfirm={async () => {
@@ -98,6 +102,7 @@ export default function CommentsManager() {
       <ConfirmDialog
         open={!!toPublish}
         title="Confirmar Publicação"
+        testId="comments-publish-dialog"
         content={<>Deseja publicar o comentário de <strong>{toPublish?.name || "Sem Nome"}</strong>?</>}
         confirmText="Publicar"
         confirmColor="success"

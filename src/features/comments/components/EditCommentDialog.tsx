@@ -30,7 +30,7 @@ export default function EditCommentDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth data-testid="comments-edit-dialog">
       <DialogTitle>Editar Comentário</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -38,6 +38,7 @@ export default function EditCommentDialog({
           {(["name", "comment", "shelter", "neighborhood"] as const).map((field) => (
             <TextField
               key={field}
+              data-testid={`comments-edit-${field}`}
               fullWidth
               required={field !== "name"}
               label={`${fieldLabels[field]}${field !== "name" ? " (Obrigatório)" : ""}`}
@@ -59,8 +60,9 @@ export default function EditCommentDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} sx={{ color: "#757575" }}>Cancelar</Button>
+        <Button data-testid="comments-edit-cancel" onClick={onCancel} sx={{ color: "#757575" }}>Cancelar</Button>
         <Button color="primary" variant="contained" onClick={onSave} disabled={loading}
+          data-testid="comments-edit-save"
           sx={{ bgcolor: "#1976d2", "&:hover": { bgcolor: "#1565c0" } }}>
           Salvar e Publicar
         </Button>

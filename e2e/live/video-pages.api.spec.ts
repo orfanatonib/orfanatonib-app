@@ -60,10 +60,11 @@ test.describe.serial("Video Pages — API ao vivo", () => {
       videos: [
         {
           url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          uploadType: "LINK",
-          platformType: "YOUTUBE",
+          uploadType: "link",
+          platformType: "youtube",
+          mediaType: "video",
           isLocalFile: false,
-          caption: "Vídeo 1",
+          title: "Vídeo 1",
           description: "Descrição do Vídeo 1",
         },
       ],
@@ -113,10 +114,11 @@ test.describe.serial("Video Pages — API ao vivo", () => {
       videos: [
         {
           url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          uploadType: "LINK",
-          platformType: "YOUTUBE",
+          uploadType: "link",
+          platformType: "youtube",
+          mediaType: "video",
           isLocalFile: false,
-          caption: "Vídeo 1 Atualizado",
+          title: "Vídeo 1 Atualizado",
           description: "Descrição do Vídeo 1 Atualizado",
         },
       ],

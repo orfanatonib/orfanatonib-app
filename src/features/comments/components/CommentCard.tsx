@@ -37,6 +37,7 @@ export default function CommentCard({
 
   return (
     <Card
+      data-testid={`comments-card-${comment.id ?? "without-id"}`}
       component={motion.div}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       sx={{
@@ -89,6 +90,8 @@ export default function CommentCard({
         <Tooltip title="Excluir comentário">
           <IconButton
             size="small"
+            data-testid={`comments-card-delete-${comment.id ?? "without-id"}`}
+            aria-label="Excluir comentário"
             onClick={() => onAskDelete(comment)}
             sx={{
               color: "error.main",
@@ -151,6 +154,7 @@ export default function CommentCard({
       >
         <Tooltip title="Ver detalhes">
           <Button
+            data-testid={`comments-card-view-${comment.id ?? "without-id"}`}
             variant="outlined"
             size={isMobile ? "small" : "medium"}
             startIcon={<Visibility />}
@@ -169,6 +173,7 @@ export default function CommentCard({
         </Tooltip>
         <Tooltip title="Editar">
           <Button
+            data-testid={`comments-card-edit-${comment.id ?? "without-id"}`}
             variant="outlined"
             size={isMobile ? "small" : "medium"}
             startIcon={<Edit />}
@@ -188,6 +193,7 @@ export default function CommentCard({
         {!comment.published && (
           <Tooltip title="Publicar">
             <Button
+              data-testid={`comments-card-publish-${comment.id ?? "without-id"}`}
               variant="contained"
               size={isMobile ? "small" : "medium"}
               startIcon={<Publish />}

@@ -1,7 +1,9 @@
 import * as React from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography, IconButton, Box, CircularProgress
+  Button, Typography, IconButton, Box, CircularProgress,
+  type SxProps,
+  type Theme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -25,10 +27,17 @@ export type ConfirmDialogProps = {
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
   showCloseIcon?: boolean;
   startAdornment?: React.ReactNode;
-  titleSx?: any;
-  contentSx?: any;
-  actionsSx?: any;
+  testId?: string;
+  titleSx?: SxProps<Theme>;
+  contentSx?: SxProps<Theme>;
+  actionsSx?: SxProps<Theme>;
 };
+
+const isPromiseLike = (value: unknown): value is Promise<unknown> =>
+  typeof value === "object" &&
+  value !== null &&
+  "then" in value &&
+  typeof value.then === "function";
 
 export default function ConfirmDialog({
   open,
@@ -50,6 +59,7 @@ export default function ConfirmDialog({
   maxWidth = "xs",
   showCloseIcon = true,
   startAdornment,
+  testId,
   titleSx,
   contentSx,
   actionsSx,
@@ -58,7 +68,7 @@ export default function ConfirmDialog({
 
   const isLoading = loading ?? internalLoading;
 
-  const handleClose = (_: any, reason?: "backdropClick" | "escapeKeyDown") => {
+  const handleClose = (_: unknown, reason?: "backdropClick" | "escapeKeyDown") => {
     if (isLoading) return; 
     if (disableBackdropClose && reason === "backdropClick") return;
     if (disableEscapeKeyDown && reason === "escapeKeyDown") return;
@@ -68,13 +78,12 @@ export default function ConfirmDialog({
   const handleConfirm = async () => {
     try {
       const result = onConfirm?.();
-      const isPromise = result && typeof (result as any).then === "function";
-      if (loading === undefined && isPromise) {
+      if (loading === undefined && isPromiseLike(result)) {
         setInternalLoading(true);
-        await (result as Promise<unknown>);
+        await result;
         setInternalLoading(false);
         if (autoCloseOnConfirm) onClose();
-      } else if (autoCloseOnConfirm && !isPromise) {
+      } else if (autoCloseOnConfirm && !isPromiseLike(result)) {
         onClose();
       }
     } catch {
@@ -89,6 +98,7 @@ export default function ConfirmDialog({
       fullWidth={fullWidth}
       maxWidth={maxWidth}
       disableEscapeKeyDown={disableEscapeKeyDown}
+      data-testid={testId}
       PaperProps={{
         sx: {
           overflowX: "hidden",
@@ -141,6 +151,7 @@ export default function ConfirmDialog({
           onClick={onClose}
           variant={cancelVariant}
           disabled={isLoading}
+          data-testid={testId ? `${testId}-cancel` : undefined}
           sx={{ color: cancelVariant === "text" ? "#757575" : undefined }}
         >
           {cancelText}
@@ -152,6 +163,7 @@ export default function ConfirmDialog({
           variant={confirmVariant}
           disabled={isLoading}
           startIcon={isLoading ? <CircularProgress size={18} /> : null}
+          data-testid={testId ? `${testId}-confirm` : undefined}
         >
           {confirmText}
         </Button>

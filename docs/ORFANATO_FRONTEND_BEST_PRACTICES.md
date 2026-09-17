@@ -203,22 +203,23 @@ Every screen MUST work on mobile first and progressively enhance through MUI bre
 
 Every behavior change MUST add or update tests in the same delivery.
 
-Automated frontend testing is driven by **Playwright** (`playwright.config.ts`, sources in `e2e/`), paired with Vitest for pure unit rules:
+Automated frontend testing is driven by **Playwright** (`playwright.config.ts`, `playwright.live.config.ts`, and sources in `e2e/live/`), paired with Vitest for pure unit rules:
 
 - `unit` (`e2e/unit/*.spec.ts` or `src/**/*.test.ts`): pure rules — utils, query and payload builders, validators.
-- `setup` (`e2e/support/auth.setup.ts`): logs in as administrator through the UI once and stores the session state.
-- `chromium` (`e2e/edit/**` and `e2e/flows/**`): real browser screens against the running app (`http://localhost:5173`) and API (`http://localhost:3000`).
+- `e2e/live/`: the only accepted Playwright e2e suite. It MUST use real login, drive the real UI, call the real NestJS API, pass through services/repositories, and verify persistence through API/database-visible state.
+- E2E tests MUST NOT mock, stub, intercept, route, fulfill, or fake HTTP. Do not use `page.route`, mocked API fixtures, fake sessions, or synthetic persistence in e2e. If a test does not need the backend, write a unit/component test instead of Playwright e2e.
 
 What each kind of change needs:
 
-- Components and screens: a Playwright `flows` or `edit` test that creates its data through the API, drives the real UI, and reads the API back to prove persistence. Cover rendering, interaction, loading, empty, success, and error states.
-- Hooks and API modules: assert through network interception (`page.on('request')`, `page.waitForRequest`) — method, endpoint, filters, payload, and refetch protection.
+- Components and screens that only change presentation: use Vitest/component tests with explicit fixtures. Do not add a Playwright e2e with mocked HTTP.
+- User-facing feature flows with backend state: an `e2e/live/*.ui.spec.ts` test MUST create unique data, drive the screen, prove the result through the real API, and clean up its records. This is mandatory for create/update/delete, moderation/publication, role-scoped listings, uploads, and any workflow whose value is persistence across layers.
+- Hooks and API modules: assert request shape with non-mutating observation (`page.on('request')`, `page.waitForRequest`) when useful, but do not replace required live persistence tests with mocked request assertions.
 - Protected routes and feature flags: anonymous user, allowed role, denied role, flag on and off.
 - Forms: valid payload, validation messages, and API failures shown on screen.
 - Pure rules: a unit test.
 - Bug fixes: add a regression test that fails before the fix.
 
-Test data MUST be created and removed by the test itself with a unique suffix, and MUST never point at production. Prefer role-based locators and the `data-testid` convention from section 5.1; avoid broad screenshots.
+Test data MUST be created and removed by the test itself with a unique suffix, and MUST never point at production. Live tests must fail if the API/database did not actually persist the expected state. Prefer role-based locators and the `data-testid` convention from section 5.1; avoid broad screenshots.
 
 ### 10.1 Naming, Imports, and Public Feature APIs
 

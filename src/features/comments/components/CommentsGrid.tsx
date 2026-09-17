@@ -21,6 +21,7 @@ export default function CommentsGrid({
   if (loading) {
     return (
       <Box
+        data-testid="comments-grid-loading"
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -45,6 +46,7 @@ export default function CommentsGrid({
         transition={{ duration: 0.5 }}
       >
         <Alert
+          data-testid="comments-grid-error"
           severity="error"
           sx={{
             borderRadius: 3,
@@ -65,6 +67,7 @@ export default function CommentsGrid({
         transition={{ duration: 0.5 }}
       >
         <Paper
+          data-testid="comments-grid-empty"
           elevation={1}
           sx={{
             p: 6,
@@ -86,7 +89,12 @@ export default function CommentsGrid({
   }
 
   return (
-    <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
+    <Grid
+      data-testid="comments-grid"
+      container
+      spacing={{ xs: 2, sm: 2.5, md: 3 }}
+      alignItems="stretch"
+    >
       {comments.map((comment, index) => (
         <Grid
           item

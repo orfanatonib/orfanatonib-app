@@ -30,12 +30,15 @@ test.describe.serial("Meditações — API ao vivo com massa de dados", () => {
             days: [
               { day: "Monday", verse: "João 3:16", topic: "Deus amou o mundo" },
               { day: "Tuesday", verse: "Romanos 8:28", topic: "Todas as coisas cooperam" },
+              { day: "Wednesday", verse: "Salmos 27:1", topic: "O Senhor é luz" },
+              { day: "Thursday", verse: "Filipenses 4:13", topic: "Tudo posso" },
+              { day: "Friday", verse: "Isaías 41:10", topic: "Não temas" },
             ],
             media: {
               title: "Estudo Devocional PDF",
               description: "Devocional semanal",
               mediaType: "document",
-              typeUpload: "link",
+              uploadType: "link",
               url: "https://example.com/devocional.pdf",
               isLocalFile: false,
             },
@@ -71,12 +74,15 @@ test.describe.serial("Meditações — API ao vivo com massa de dados", () => {
           days: [
             { day: "Monday", verse: "Salmos 23:1", topic: "O Senhor é o meu pastor" },
             { day: "Tuesday", verse: "Salmos 23:2", topic: "Deitar-me faz em verdes pastos" },
+            { day: "Wednesday", verse: "Salmos 23:3", topic: "Refrigera a minha alma" },
+            { day: "Thursday", verse: "Salmos 23:4", topic: "Tu estás comigo" },
+            { day: "Friday", verse: "Salmos 23:5", topic: "Preparas uma mesa" },
           ],
           media: {
             title: "Guia da Meditação",
             description: "Conteúdo em PDF",
             mediaType: "document",
-            typeUpload: "link",
+            uploadType: "link",
             url: "https://example.com/salmo23.pdf",
             isLocalFile: false,
           },

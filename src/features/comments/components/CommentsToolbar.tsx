@@ -22,11 +22,17 @@ type Props = {
   isFiltering: boolean;
 };
 
+const isCommentsStatus = (
+  value: unknown,
+): value is "all" | "published" | "unpublished" =>
+  value === "all" || value === "published" || value === "unpublished";
+
 export default function CommentsToolbar({ search, onSearchChange, status, setStatus, isFiltering }: Props) {
   const hasQuery = Boolean(search);
 
   return (
     <Paper
+      data-testid="comments-toolbar"
       elevation={2}
       sx={{
         p: { xs: 3, md: 4 },
@@ -44,6 +50,7 @@ export default function CommentsToolbar({ search, onSearchChange, status, setSta
         }}
       >
         <TextField
+          data-testid="comments-search"
           fullWidth
           label="Buscar comentários"
           placeholder="Buscar por nome, abrigo ou bairro..."
@@ -64,6 +71,8 @@ export default function CommentsToolbar({ search, onSearchChange, status, setSta
                   <Tooltip title="Limpar busca">
                     <IconButton
                       size="small"
+                      data-testid="comments-search-clear"
+                      aria-label="Limpar busca"
                       onClick={() => onSearchChange("")}
                       sx={{
                         "&:hover": {
@@ -106,9 +115,14 @@ export default function CommentsToolbar({ search, onSearchChange, status, setSta
         >
           <InputLabel>Status</InputLabel>
           <Select
+            data-testid="comments-status-filter"
             value={status}
             label="Status"
-            onChange={(e) => setStatus(e.target.value as any)}
+            onChange={(e) => {
+              if (isCommentsStatus(e.target.value)) {
+                setStatus(e.target.value);
+              }
+            }}
           >
             <MenuItem value="all">Todos</MenuItem>
             <MenuItem value="published">Publicado</MenuItem>
