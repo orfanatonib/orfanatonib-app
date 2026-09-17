@@ -12,6 +12,15 @@ import type {
 } from "./types";
 import type { SortingState } from "@tanstack/react-table";
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "response" in err) {
+    const res = (err as { response?: { data?: { message?: string } } }).response;
+    if (res?.data?.message) return res.data.message;
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
 function mapSortingToServer(sorting: SortingState) {
   const first = sorting?.[0];
   const sortId =
@@ -61,10 +70,8 @@ export function useLeaderProfiles(
       });
       setRows(data.items || []);
       setTotal(data.total || 0);
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message || err.message || "Erro ao listar líderes"
-      );
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao listar líderes"));
     } finally {
       setLoading(false);
     }
@@ -115,8 +122,8 @@ export function useSheltersIndex() {
         createdAt: '',
         updatedAt: '',
       })));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao listar shelters");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao listar abrigos"));
     } finally {
       setLoading(false);
     }

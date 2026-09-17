@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, Alert, Box, Typography, Stack,
-  FormControl, InputLabel, Select, MenuItem, Chip, useMediaQuery, useTheme
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, Alert, Box, Typography,
+  useMediaQuery, useTheme
 } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import { LeaderProfile, ShelterSimple } from "../types";
@@ -18,37 +18,20 @@ type Props = {
 };
 
 export default function LeaderLinkDialog({
-  open, leader, shelters, onSetShelter, onClearShelter, loading, error, onClose,
+  open, leader, loading, error, onClose,
 }: Props) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [selectedShelterId, setSelectedShelterId] = React.useState<string>("");
   const [localErr, setLocalErr] = React.useState<string>("");
 
   React.useEffect(() => {
-    setSelectedShelterId("");
     setLocalErr("");
   }, [leader]);
 
   const firstShelter = leader?.shelters?.[0];
-  const hasShelter = !!firstShelter;
   const currentTeamNumber = firstShelter?.teams?.[0]?.numberTeam ?? null;
   const currentShelterName = firstShelter?.name ?? "—";
-
-  const handleVincular = React.useCallback(() => {
-    setLocalErr("");
-    if (!selectedShelterId) {
-      setLocalErr("Selecione um abrigo para vincular.");
-      return;
-    }
-    onSetShelter(selectedShelterId);
-  }, [selectedShelterId, onSetShelter]);
-
-  const handleDesvincular = React.useCallback(() => {
-    setLocalErr("");
-    onClearShelter();
-  }, [onClearShelter]);
 
   return (
     <Dialog 
@@ -56,6 +39,7 @@ export default function LeaderLinkDialog({
       onClose={onClose} 
       maxWidth="sm" 
       fullWidth
+      data-testid="leader-link-dialog"
       sx={{
         "& .MuiDialog-paper": {
           width: { xs: "98%", sm: "auto" },
@@ -69,7 +53,7 @@ export default function LeaderLinkDialog({
       </DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 }, position: "relative" }}>
         {(error || localErr) && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="leader-link-dialog-error">
             {error || localErr}
           </Alert>
         )}
@@ -126,7 +110,7 @@ export default function LeaderLinkDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} variant="contained">
+        <Button onClick={onClose} variant="contained" data-testid="leader-link-close-button">
           Fechar
         </Button>
       </DialogActions>

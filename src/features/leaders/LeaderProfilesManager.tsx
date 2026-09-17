@@ -50,8 +50,7 @@ export default function LeaderProfilesManager() {
   }, [fetchPage]);
 
   const {
-    shelters,
-    byId: shelterById,
+    byId: _shelterById,
     loading: sheltersLoading,
     error: sheltersError,
     refresh: refreshShelters,
@@ -63,11 +62,11 @@ export default function LeaderProfilesManager() {
     severity: "success" | "error" | "info" | "warning";
   }>({ open: false, message: "", severity: "success" });
 
-  const showSnack = React.useCallback(
+  const _showSnack = React.useCallback(
     (message: string, severity: typeof snack.severity = "success") => {
       setSnack({ open: true, message, severity });
     },
-    []
+    [snack.severity]
   );
 
   const closeSnack = (_?: unknown, reason?: string) => {
@@ -79,8 +78,6 @@ export default function LeaderProfilesManager() {
   const [editingTeam, setEditingTeam] = React.useState<LeaderProfile | null>(null);
 
   const {
-    dialogLoading,
-    dialogError,
     setDialogError,
   } = useLeaderMutations(fetchPage, refreshOne);
 
@@ -94,6 +91,7 @@ export default function LeaderProfilesManager() {
 
   return (
     <Box
+      data-testid="leader-profiles-manager"
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
@@ -127,6 +125,7 @@ export default function LeaderProfilesManager() {
 
         {(loading && !rows.length) || sheltersLoading ? (
           <Box
+            data-testid="leader-profiles-loading"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -145,6 +144,7 @@ export default function LeaderProfilesManager() {
         {(error || sheltersError) && !(loading || sheltersLoading) && (
           <Alert
             severity="error"
+            data-testid="leader-profiles-error"
             sx={{ mb: 2, borderRadius: 2 }}
             onClose={() => {
               setError("");
@@ -157,6 +157,7 @@ export default function LeaderProfilesManager() {
 
         {!loading && !error && !sheltersLoading && !sheltersError && rows.length === 0 && (
           <Paper
+            data-testid="leader-profiles-empty"
             sx={{
               p: 6,
               textAlign: "center",

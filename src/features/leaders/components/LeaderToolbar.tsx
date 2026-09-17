@@ -58,6 +58,7 @@ export default function LeaderToolbar({
 
   return (
     <Paper
+      data-testid="leader-toolbar"
       sx={{
         p: { xs: 2, md: 3 },
         mb: 3,
@@ -83,7 +84,7 @@ export default function LeaderToolbar({
               value={filters.leaderSearchString ?? ""}
               onChange={(e) => set("leaderSearchString", e.target.value || undefined)}
               placeholder="Nome, email, telefone do líder"
-              inputProps={{ "aria-label": "Campo de busca por líder" }}
+              inputProps={{ "aria-label": "Campo de busca por líder", "data-testid": "leader-search-input" }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -96,6 +97,7 @@ export default function LeaderToolbar({
                       size="small"
                       onClick={() => set("leaderSearchString", undefined)}
                       edge="end"
+                      data-testid="clear-leader-search"
                     >
                       <Clear fontSize="small" />
                     </IconButton>
@@ -124,7 +126,7 @@ export default function LeaderToolbar({
               value={filters.shelterSearchString ?? ""}
               onChange={(e) => set("shelterSearchString", e.target.value || undefined)}
               placeholder="Todos os campos do abrigo"
-              inputProps={{ "aria-label": "Campo de busca por abrigo" }}
+              inputProps={{ "aria-label": "Campo de busca por abrigo", "data-testid": "shelter-search-input" }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -137,6 +139,7 @@ export default function LeaderToolbar({
                       size="small"
                       onClick={() => set("shelterSearchString", undefined)}
                       edge="end"
+                      data-testid="clear-shelter-search"
                     >
                       <Clear fontSize="small" />
                     </IconButton>
@@ -164,6 +167,7 @@ export default function LeaderToolbar({
                 labelId="has-shelter-label"
                 label="Vínculo"
                 value={filters.hasShelter ?? "all"}
+                data-testid="has-shelter-select"
                 onChange={(e) => {
                   const value = e.target.value;
                   let hasShelterValue: boolean | undefined;
@@ -203,6 +207,7 @@ export default function LeaderToolbar({
               placeholder="Ex: 1, 2, 3..."
               inputProps={{
                 "aria-label": "Número da equipe",
+                "data-testid": "team-number-input",
                 min: 1
               }}
               InputProps={{
@@ -212,6 +217,7 @@ export default function LeaderToolbar({
                       size="small"
                       onClick={() => set("teamName", undefined)}
                       edge="end"
+                      data-testid="clear-team-number"
                     >
                       <Clear fontSize="small" />
                     </IconButton>
@@ -239,6 +245,7 @@ export default function LeaderToolbar({
                 labelId="has-team-label"
                 label="Equipe"
                 value={filters.hasTeam ?? "all"}
+                data-testid="has-team-select"
                 onChange={(e) => {
                   const value = e.target.value;
                   let hasTeamValue: boolean | undefined;
@@ -281,6 +288,7 @@ export default function LeaderToolbar({
                   color="secondary"
                   startIcon={<CleaningServices />}
                   onClick={clear}
+                  data-testid="clear-filters-button"
                   sx={{
                     borderRadius: 2,
                     textTransform: "none",
@@ -295,6 +303,7 @@ export default function LeaderToolbar({
                 <IconButton
                   onClick={onRefresh}
                   aria-label="Recarregar"
+                  data-testid="refresh-button"
                   sx={{
                     borderRadius: 2,
                     "&:hover": {
@@ -326,6 +335,7 @@ export default function LeaderToolbar({
               size="medium"
               aria-label="Recarregar"
               onClick={onRefresh}
+              data-testid="mobile-refresh-button"
               sx={{ boxShadow: 4 }}
             >
               <Refresh />
@@ -339,6 +349,7 @@ export default function LeaderToolbar({
                 color="secondary"
                 aria-label="Limpar filtros"
                 onClick={clear}
+                data-testid="mobile-clear-filters-button"
                 sx={{ boxShadow: 4 }}
               >
                 <CleaningServices />

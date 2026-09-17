@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import {
   Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TableSortLabel, Divider, Typography, Chip, Box, TablePagination,
-  useMediaQuery, useTheme, Tooltip, IconButton, Stack
+  useMediaQuery, useTheme, Tooltip, IconButton
 } from "@mui/material";
 import {
   ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel, SortingState, useReactTable
@@ -274,7 +274,11 @@ export default function LeaderTable({
         return (
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
             <Tooltip title="Detalhes">
-              <IconButton size={isXs ? "small" : "medium"} onClick={() => onView(row.original)}>
+              <IconButton 
+                size={isXs ? "small" : "medium"} 
+                onClick={() => onView(row.original)}
+                data-testid={`leader-table-view-${row.original.id}`}
+              >
                 <Visibility fontSize="inherit" />
               </IconButton>
             </Tooltip>
@@ -287,6 +291,7 @@ export default function LeaderTable({
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{ color: "success.main" }}
+                  data-testid={`leader-table-wa-${row.original.id}`}
                 >
                   <WhatsApp fontSize="inherit" />
                 </IconButton>
@@ -297,6 +302,7 @@ export default function LeaderTable({
                 size={isXs ? "small" : "medium"} 
                 onClick={() => onEdit(row.original)}
                 color="primary"
+                data-testid={`leader-table-edit-${row.original.id}`}
               >
                 <EditIcon fontSize="inherit" />
               </IconButton>
@@ -332,6 +338,7 @@ export default function LeaderTable({
 
   return (
     <Paper
+      data-testid="leader-table"
       sx={{
         borderRadius: 2,
         boxShadow: 2,
@@ -346,7 +353,7 @@ export default function LeaderTable({
               <TableRow key={hg.id}>
                 {hg.headers.map(h => {
                   const sorted = h.column.getIsSorted();
-                  const width = (h.column.columnDef.meta as any)?.width;
+                  const width = (h.column.columnDef.meta as { width?: number } | undefined)?.width;
                   const isActions = h.column.id === "actions";
                   return (
                     <TableCell
@@ -388,7 +395,7 @@ export default function LeaderTable({
           </TableHead>
           <TableBody>
             {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
+              <TableRow data-testid="leader-table-empty">
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">Nenhum líder encontrado nesta página.</Typography>
                 </TableCell>
@@ -398,6 +405,7 @@ export default function LeaderTable({
                 <TableRow
                   key={row.id}
                   hover
+                  data-testid={`leader-row-${row.id}`}
                   sx={{
                     "&:hover": {
                       bgcolor: "action.hover",

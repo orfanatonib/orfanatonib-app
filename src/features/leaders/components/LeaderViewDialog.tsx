@@ -12,11 +12,8 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
-  IconButton,
-  Tooltip,
   Stack,
 } from "@mui/material";
-import { Edit as EditIcon } from "@mui/icons-material";
 import { LeaderProfile } from "../types";
 import CircularProgress from "@mui/material/CircularProgress";
 import { fmtDate } from "@/utils/dates";
@@ -42,7 +39,7 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
   const totalMembers = allMembers.length;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth data-testid="leader-view-dialog">
       <DialogTitle>Detalhes do Líder</DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {loading && <Box textAlign="center" my={2}><CircularProgress size={24} /></Box>}
@@ -157,7 +154,7 @@ export default function LeaderViewDialog({ open, loading, leader, onClose }: Pro
           </Grid>
         )}
       </DialogContent>
-      <DialogActions><Button onClick={onClose}>Fechar</Button></DialogActions>
+      <DialogActions><Button onClick={onClose} data-testid="leader-view-close-button">Fechar</Button></DialogActions>
 
     </Dialog>
   );

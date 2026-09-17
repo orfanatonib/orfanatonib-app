@@ -18,12 +18,20 @@ import {
   IconButton,
   Card,
   CardContent,
-  Divider,
 } from "@mui/material";
-import { Close, Add, Delete } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
 import { LeaderProfile, LeaderAssociationUpdateDto } from "../types";
 import { apiUpdateLeaderAssociations, apiListSheltersSimple, apiGetTeamsByShelter } from "../api";
 import { ShelterSimpleResponse } from "../types";
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "response" in err) {
+    const res = (err as { response?: { data?: { message?: string } } }).response;
+    if (res?.data?.message) return res.data.message;
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
 
 type ShelterAssociation = {
   shelterId: string;
@@ -73,8 +81,8 @@ export default function LeaderMultiEditDialog({
     try {
       const data = await apiListSheltersSimple();
       setShelters(data || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao carregar abrigos");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao carregar abrigos"));
     } finally {
       setLoadingShelters(false);
     }
@@ -146,19 +154,6 @@ export default function LeaderMultiEditDialog({
     return shelters.filter(shelter => !selectedShelterIds.includes(shelter.id));
   };
 
-  const getShelterTeams = async (shelterId: string): Promise<{ id: string; numberTeam: number; description: string | null }[]> => {
-    try {
-      const teams = await apiGetTeamsByShelter(shelterId);
-      return teams.map(team => ({
-        id: team.id,
-        numberTeam: team.numberTeam,
-        description: team.description ?? null,
-      }));
-    } catch {
-      return [];
-    }
-  };
-
   const validateAssociations = (): string | null => {
     if (associations.length === 0) {
       return null; 
@@ -197,8 +192,8 @@ export default function LeaderMultiEditDialog({
       await apiUpdateLeaderAssociations(leader.id, payload);
       if (onSuccess) await onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao atualizar associações");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao atualizar associações"));
     } finally {
       setLoading(false);
     }
@@ -209,7 +204,7 @@ export default function LeaderMultiEditDialog({
     const selectedShelter = shelters.find(s => s.id === association.shelterId);
 
     return (
-      <Card key={index} sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }}>
+      <Card key={index} sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }} data-testid={`leader-association-card-${index}`}>
         <CardContent sx={{ pb: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6" fontWeight={600}>
@@ -221,6 +216,7 @@ export default function LeaderMultiEditDialog({
                 onClick={() => handleRemoveAssociation(index)}
                 color="error"
                 disabled={loading}
+                data-testid={`remove-association-button-${index}`}
               >
                 <Delete />
               </IconButton>
@@ -244,6 +240,7 @@ export default function LeaderMultiEditDialog({
                     required
                     error={!association.shelterId}
                     helperText={!association.shelterId ? "Obrigatório" : ""}
+                    data-testid={`association-shelter-input-${index}`}
                   />
                 )}
                 renderOption={(props, option) => (
@@ -284,6 +281,7 @@ export default function LeaderMultiEditDialog({
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      data-testid="leader-multi-edit-dialog"
       PaperProps={{
         sx: {
           width: isXs ? "98vw" : undefined,
@@ -302,6 +300,12 @@ export default function LeaderMultiEditDialog({
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="leader-multi-edit-error">
+            {error}
+          </Alert>
+        )}
+
         {leader && associations.length > 0 && (
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2" fontWeight={600} gutterBottom>
@@ -322,6 +326,7 @@ export default function LeaderMultiEditDialog({
             onClick={handleAddAssociation}
             disabled={loading || associations.length >= shelters.length}
             sx={{ borderRadius: 2 }}
+            data-testid="add-association-button"
           >
             Adicionar Associação
           </Button>
@@ -356,7 +361,7 @@ export default function LeaderMultiEditDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={onClose} disabled={loading} data-testid="leader-multi-edit-cancel-button">
           Cancelar
         </Button>
         <Button
@@ -364,6 +369,7 @@ export default function LeaderMultiEditDialog({
           variant="contained"
           disabled={loading}
           sx={{ minWidth: 120 }}
+          data-testid="leader-multi-edit-submit-button"
         >
           {loading ? "Salvando..." : "Salvar Associações"}
         </Button>
@@ -418,7 +424,7 @@ function TeamsSelector({
   };
 
   return (
-    <Box>
+    <Box data-testid="teams-selector">
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         Equipes:
       </Typography>
@@ -440,6 +446,7 @@ function TeamsSelector({
               size="small"
               disabled={disabled}
               sx={{ borderRadius: 1 }}
+              data-testid={`team-chip-${team.numberTeam}`}
             />
           ))
         )}

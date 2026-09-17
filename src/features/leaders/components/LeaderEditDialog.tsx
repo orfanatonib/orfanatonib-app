@@ -19,6 +19,15 @@ import { LeaderProfile, ShelterSimple } from "../types";
 import { apiManageLeaderTeam } from "../api";
 import { apiFetchSheltersSimple, apiGetShelterTeamsQuantity } from "../../shelters/api";
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "response" in err) {
+    const res = (err as { response?: { data?: { message?: string } } }).response;
+    if (res?.data?.message) return res.data.message;
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
 type Props = {
   open: boolean;
   leader: LeaderProfile | null;
@@ -76,8 +85,8 @@ export default function LeaderEditDialog({
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       })));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao carregar abrigos");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao carregar abrigos"));
     } finally {
       setLoadingShelters(false);
     }
@@ -100,7 +109,7 @@ export default function LeaderEditDialog({
           setNumberTeam(1);
         }
       }
-    } catch (err: any) {
+    } catch {
       setTeamsQuantity(null);
     } finally {
       setLoadingTeamsQuantity(false);
@@ -150,8 +159,8 @@ export default function LeaderEditDialog({
       });
       if (onSuccess) await onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao vincular líder");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao vincular líder"));
     } finally {
       setLoading(false);
     }
@@ -167,6 +176,7 @@ export default function LeaderEditDialog({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      data-testid="leader-edit-dialog"
       PaperProps={{
         sx: {
           width: isXs ? "98vw" : undefined,
@@ -178,6 +188,11 @@ export default function LeaderEditDialog({
       <DialogTitle>Vincular Líder a Equipe</DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="leader-edit-dialog-error">
+            {error}
+          </Alert>
+        )}
         {leader && (
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -215,6 +230,7 @@ export default function LeaderEditDialog({
                     placeholder="Selecione um abrigo"
                     required
                     helperText="Selecione o abrigo onde o líder será vinculado"
+                    data-testid="leader-edit-shelter-input"
                   />
                 )}
                 renderOption={(props, option) => (
@@ -243,6 +259,7 @@ export default function LeaderEditDialog({
                     onChange={(e) => setNumberTeam(parseInt(e.target.value) || 1)}
                     required
                     helperText={`Selecione o número da equipe (1 a ${teamsQuantity})`}
+                    data-testid="leader-edit-team-select"
                     SelectProps={{
                       native: true,
                     }}
@@ -298,13 +315,14 @@ export default function LeaderEditDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={onClose} disabled={loading} data-testid="leader-edit-cancel-button">
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={loading || !selectedShelter || !numberTeam || numberTeam < 1 || teamsQuantity === null}
+          data-testid="leader-edit-submit-button"
         >
           {loading ? "Salvando..." : "Vincular"}
         </Button>

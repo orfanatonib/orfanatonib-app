@@ -2,8 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box, Card, CardContent, Chip, Grid, IconButton, Stack,
-  Typography, Divider, TablePagination, Tooltip, Collapse, Select, MenuItem, FormControl, InputLabel,
-  Paper, Avatar, Slide, ButtonBase, Link
+  Typography, Divider, TablePagination, Tooltip, Select, MenuItem, FormControl, InputLabel,
+  Paper, Avatar, Slide, ButtonBase
 } from "@mui/material";
 import { 
   Visibility, Edit as EditIcon, ExpandMore as ExpandMoreIcon, SwapVert, Phone as PhoneIcon, SupervisorAccount, GroupOutlined, SchoolOutlined, WhatsApp
@@ -58,7 +58,7 @@ export default function LeaderCards(props: Props) {
   const toggleSortDir = () => setSorting([{ id: sortField, desc: !sortDesc }]);
 
   return (
-    <Box sx={{ px: 0, py: 0 }}>
+    <Box sx={{ px: 0, py: 0 }} data-testid="leader-cards">
       <Stack direction="row" spacing={0.75} sx={{ mb: 1 }} alignItems="center" justifyContent="flex-end">
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Ordenar por</InputLabel>
@@ -67,12 +67,13 @@ export default function LeaderCards(props: Props) {
             value={sortField}
             onChange={(e) => handleSortField(String(e.target.value))}
             sx={{ ".MuiSelect-select": { py: .75 } }}
+            data-testid="leader-cards-sort-select"
           >
             {sortOptions.map(o => <MenuItem key={o.id} value={o.id}>{o.label}</MenuItem>)}
           </Select>
         </FormControl>
         <Tooltip title={sortDesc ? "Ordem: Descendente" : "Ordem: Ascendente"}>
-          <IconButton size="small" onClick={toggleSortDir} aria-label="Inverter ordem">
+          <IconButton size="small" onClick={toggleSortDir} aria-label="Inverter ordem" data-testid="leader-cards-toggle-sort">
             <SwapVert fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -86,12 +87,17 @@ export default function LeaderCards(props: Props) {
           const totalTeams = shelters.reduce((total, shelter) => total + shelter.teams.length, 0);
           const allMembers = shelters.flatMap(shelter => shelter.members || []);
           const totalMembers = allMembers.length;
-          const wa = buildWhatsappLink({ id: c.id, name: c.user?.name, phone: c.user?.phone } as any, loggedUser?.name);
+          const wa = buildWhatsappLink(
+            c.user?.name,
+            loggedUser?.name,
+            c.user?.phone
+          );
 
           return (
             <Grid item xs={12} key={c.id} sx={{ mb: { xs: 0.75, sm: 1 }, pb: { xs: 1, sm: 1.25 } }}>
               <Card
                 variant="outlined"
+                data-testid={`leader-card-${c.id}`}
                 sx={{
                   borderRadius: 2,
                   overflow: "hidden",
@@ -164,6 +170,7 @@ export default function LeaderCards(props: Props) {
                   <ButtonBase
                     onClick={() => toggle(c.id)}
                     aria-label={expanded ? "Recolher" : "Expandir"}
+                    data-testid={`leader-card-toggle-${c.id}`}
                     sx={{
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
@@ -568,6 +575,7 @@ export default function LeaderCards(props: Props) {
                       <IconButton 
                         size="small" 
                         onClick={() => onView(c)}
+                        data-testid={`leader-card-view-${c.id}`}
                         sx={{ 
                           color: "primary.main",
                           "&:hover": { bgcolor: "primary.50" }
@@ -580,6 +588,7 @@ export default function LeaderCards(props: Props) {
                       <IconButton 
                         size="small" 
                         onClick={() => onEdit(c)}
+                        data-testid={`leader-card-edit-${c.id}`}
                         sx={{ 
                           color: "primary.main",
                           "&:hover": { bgcolor: "primary.50" }
