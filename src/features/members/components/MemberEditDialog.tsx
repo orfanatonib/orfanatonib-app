@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AxiosError } from "axios";
 import {
   Dialog,
   DialogTitle,
@@ -75,8 +76,12 @@ export default function MemberEditDialog({
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       })));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao carregar abrigos");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao carregar abrigos");
+      } else {
+        setError("Erro ao carregar abrigos");
+      }
     } finally {
       setLoadingShelters(false);
     }
@@ -97,7 +102,7 @@ export default function MemberEditDialog({
           setNumberTeam(1);
         }
       }
-    } catch (err: any) {
+    } catch {
       setTeamsQuantity(null);
     } finally {
       setLoadingTeamsQuantity(false);
@@ -147,8 +152,12 @@ export default function MemberEditDialog({
       });
       if (onSuccess) await onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao vincular membro");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao vincular membro");
+      } else {
+        setError("Erro ao vincular membro");
+      }
     } finally {
       setLoading(false);
     }
@@ -165,16 +174,22 @@ export default function MemberEditDialog({
       maxWidth="sm"
       fullWidth
       PaperProps={{
+        "data-testid": "member-edit-dialog",
         sx: {
           width: isXs ? "98vw" : undefined,
           maxWidth: isXs ? "98vw" : undefined,
           m: isXs ? 0 : undefined,
         },
-      }}
+      } as React.HTMLAttributes<HTMLDivElement>}
     >
       <DialogTitle>Vincular Membro a Equipe</DialogTitle>
 
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
         {member && (
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -205,6 +220,7 @@ export default function MemberEditDialog({
 
             <Grid item xs={12}>
               <Autocomplete
+                data-testid="shelter-autocomplete"
                 options={shelters}
                 getOptionLabel={(option) => option.name}
                 value={selectedShelter}
@@ -247,6 +263,9 @@ export default function MemberEditDialog({
                     helperText={`Selecione o número da equipe (1 a ${teamsQuantity})`}
                     SelectProps={{
                       native: true,
+                      inputProps: {
+                        "data-testid": "number-team-select",
+                      },
                     }}
                   >
                     {teamNumberOptions.map((num) => (
@@ -300,10 +319,11 @@ export default function MemberEditDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button data-testid="cancel-member-edit-button" onClick={onClose} disabled={loading}>
           Cancelar
         </Button>
         <Button
+          data-testid="save-member-edit-button"
           onClick={handleSubmit}
           variant="contained"
           disabled={loading || !selectedShelter || !numberTeam || numberTeam < 1 || teamsQuantity === null}

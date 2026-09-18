@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
+import { AxiosError } from "axios";
 import {
   apiCreateShelter,
   apiDeleteShelter,
@@ -25,7 +26,7 @@ function useDebounce<T>(value: T, delay: number): T {
     const handler = setTimeout(() => {
       if (typeof value === 'object' && value !== null) {
         const cleanedValue = Object.fromEntries(
-          Object.entries(value as any).map(([key, val]) => [
+          Object.entries(value as Record<string, unknown>).map(([key, val]) => [
             key, 
             val === "" || val === null || val === undefined ? undefined : val
           ])
@@ -79,8 +80,12 @@ export function useShelters(
       });
       setRows(Array.isArray(data?.items) ? data.items : []);
       setTotal(Number(data?.total ?? 0));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao listar shelters");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao listar abrigos");
+      } else {
+        setError("Erro ao listar abrigos");
+      }
     } finally {
       setLoading(false);
     }
@@ -123,8 +128,12 @@ export function useShelterMutations(
         const result = await apiCreateShelter(payload);
         if (onSuccess) await onSuccess();
         return result;
-      } catch (err: any) {
-        setDialogError(err?.response?.data?.message || err.message || "Erro ao criar shelter");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setDialogError(err.response?.data?.message || err.message || "Erro ao criar abrigo");
+        } else {
+          setDialogError("Erro ao criar abrigo");
+        }
         throw err;
       } finally {
         setDialogLoading(false);
@@ -141,8 +150,12 @@ export function useShelterMutations(
         const result = await apiUpdateShelter(id, payload);
         if (onSuccess) await onSuccess();
         return result;
-      } catch (err: any) {
-        setDialogError(err?.response?.data?.message || err.message || "Erro ao atualizar shelter");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setDialogError(err.response?.data?.message || err.message || "Erro ao atualizar abrigo");
+        } else {
+          setDialogError("Erro ao atualizar abrigo");
+        }
         throw err;
       } finally {
         setDialogLoading(false);
@@ -158,8 +171,12 @@ export function useShelterMutations(
       try {
         await apiDeleteShelter(id);
         if (onSuccess) await onSuccess();
-      } catch (err: any) {
-        setDialogError(err?.response?.data?.message || err.message || "Erro ao remover shelter");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setDialogError(err.response?.data?.message || err.message || "Erro ao remover abrigo");
+        } else {
+          setDialogError("Erro ao remover abrigo");
+        }
         throw err;
       } finally {
         setDialogLoading(false);
@@ -193,7 +210,7 @@ export function useOptions() {
         vinculado: c.vinculado,
       }));
 
-      const mappedMembers: MemberOption[] = (membersApi ?? []).map((t: any) => ({
+      const mappedMembers: MemberOption[] = (membersApi ?? []).map((t) => ({
         memberProfileId: t.memberProfileId,
         name: t.name,
         vinculado: !!t.vinculado,

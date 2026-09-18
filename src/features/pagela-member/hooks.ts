@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AxiosError } from "axios";
 import type {
   CreatePagelaPayload,
   Pagela,
@@ -82,10 +83,14 @@ export function useShelteredBrowser() {
       setItems(response.data || []);
       setTotalItems(response.meta?.totalItems || 0);
       setTotalPages(response.meta?.totalPages || 0);
-    } catch (e: any) {
-      setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao listar acolhidos"
-      );
+    } catch (e: unknown) {
+      if (e instanceof AxiosError) {
+        setShelteredError(
+          e.response?.data?.message || e.message || "Erro ao listar acolhidos"
+        );
+      } else {
+        setShelteredError("Erro ao listar acolhidos");
+      }
     } finally {
       setLoading(false);
     }
@@ -254,9 +259,13 @@ export function useShelteredPagelas(
         const data = await apiListPagelasPaginated(q, { signal: ctrl.signal });
         setRows(data.items || []);
         setTotal(data.total || 0);
-      } catch (e: any) {
-        if (e?.name !== "CanceledError" && e?.name !== "AbortError") {
-          setError(e?.response?.data?.message || e?.message || "Erro ao listar pagelas");
+      } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+          if (e.name !== "CanceledError" && e.name !== "AbortError") {
+            setError(e.response?.data?.message || e.message || "Erro ao listar pagelas");
+          }
+        } else {
+          setError("Erro ao listar pagelas");
         }
       } finally {
         if (abortRef.current === ctrl) abortRef.current = null;

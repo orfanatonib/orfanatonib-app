@@ -117,18 +117,31 @@ function SheltersTableDesktop(props: Props) {
         cell: ({ row }) => (
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <Tooltip title="Detalhes">
-              <IconButton size={isXs ? "small" : "medium"} onClick={() => onOpenView(row.original)}>
+              <IconButton
+                data-testid={`view-shelter-button-${row.original.id}`}
+                size={isXs ? "small" : "medium"}
+                onClick={() => onOpenView(row.original)}
+              >
                 <Visibility fontSize="inherit" />
               </IconButton>
             </Tooltip>
             <Tooltip title="Editar">
-              <IconButton size={isXs ? "small" : "medium"} onClick={() => onStartEdit(row.original)}>
+              <IconButton
+                data-testid={`edit-shelter-button-${row.original.id}`}
+                size={isXs ? "small" : "medium"}
+                onClick={() => onStartEdit(row.original)}
+              >
                 <Edit fontSize="inherit" />
               </IconButton>
             </Tooltip>
             {isAdmin && (
               <Tooltip title="Excluir">
-                <IconButton size={isXs ? "small" : "medium"} color="error" onClick={() => onAskDelete(row.original)}>
+                <IconButton
+                  data-testid={`delete-shelter-button-${row.original.id}`}
+                  size={isXs ? "small" : "medium"}
+                  color="error"
+                  onClick={() => onAskDelete(row.original)}
+                >
                   <Delete fontSize="inherit" />
                 </IconButton>
               </Tooltip>
@@ -139,7 +152,7 @@ function SheltersTableDesktop(props: Props) {
       },
     ];
     return base;
-  }, [isXs, isMdUp, onAskDelete, onOpenView, onStartEdit]);
+  }, [isXs, isMdUp, onAskDelete, onOpenView, onStartEdit, isAdmin]);
 
   const table = useReactTable({
     data: rows,
@@ -168,6 +181,7 @@ function SheltersTableDesktop(props: Props) {
 
   return (
     <Paper
+      data-testid="shelter-table"
       sx={{
         borderRadius: 2,
         boxShadow: 2,
@@ -182,7 +196,7 @@ function SheltersTableDesktop(props: Props) {
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => {
                   const sorted = header.column.getIsSorted();
-                  const width = (header.column.columnDef.meta as any)?.width;
+                  const width = (header.column.columnDef.meta as { width?: number } | undefined)?.width;
                   const isActions = header.column.id === "actions";
                   return (
                     <TableCell
@@ -235,6 +249,7 @@ function SheltersTableDesktop(props: Props) {
               rowModel.rows.map((row) => (
                 <TableRow
                   key={row.id}
+                  data-testid={`shelter-row-${row.id}`}
                   hover
                   sx={{
                     "&:hover": {

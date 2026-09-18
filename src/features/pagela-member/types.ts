@@ -8,7 +8,7 @@ export type Pagela = {
   };
   member: {
     id: string;
-    user: Record<string, any>; 
+    user: Record<string, unknown>; 
   };
   referenceDate: string;
   year: number;

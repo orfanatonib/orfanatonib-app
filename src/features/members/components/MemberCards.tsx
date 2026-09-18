@@ -97,7 +97,7 @@ export default function MemberCards({
     setSorting([{ id: sortField, desc: !sortDesc }]);
 
   return (
-    <Box sx={{ px: 0, py: 0 }}>
+    <Box data-testid="member-cards" sx={{ px: 0, py: 0 }}>
       <Stack
         direction="row"
         spacing={0.75}
@@ -139,6 +139,7 @@ export default function MemberCards({
           return (
             <Grid item xs={12} key={t.id} sx={{ mb: { xs: 0.75, sm: 1 }, pb: { xs: 1, sm: 1.25 } }}>
               <Card
+                data-testid={`member-card-${t.id}`}
                 variant="outlined"
                 sx={{
                   borderRadius: 2,
@@ -467,6 +468,7 @@ export default function MemberCards({
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Visualizar detalhes">
                       <IconButton
+                        data-testid={`view-member-card-button-${t.id}`}
                         size="small"
                         onClick={() => onView(t)}
                         sx={{
@@ -479,6 +481,7 @@ export default function MemberCards({
                     </Tooltip>
                     <Tooltip title={t.shelter?.id ? "Gerenciar Equipes do Abrigo" : "Gerenciar Equipes"}>
                       <IconButton
+                        data-testid={`edit-member-card-button-${t.id}`}
                         size="small"
                         onClick={() => onEdit(t)}
                         sx={{

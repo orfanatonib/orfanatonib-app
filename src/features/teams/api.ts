@@ -23,12 +23,8 @@ export async function apiCreateTeam(payload: CreateTeamDto) {
 }
 
 export async function apiUpdateTeam(teamId: string, payload: UpdateTeamDto) {
-  try {
-    const response = await api.put<TeamResponseDto>(`/teams/${teamId}`, payload);
-    return response.data;
-  } catch (error: any) {
-    throw error;
-  }
+  const response = await api.put<TeamResponseDto>(`/teams/${teamId}`, payload);
+  return response.data;
 }
 
 export async function apiDeleteTeam(teamId: string) {

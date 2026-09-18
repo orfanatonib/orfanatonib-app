@@ -57,6 +57,7 @@ const ActionsCell = memo(function ActionsCell({
     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
       <Tooltip title="Detalhes">
         <IconButton
+          data-testid={`view-member-button-${member.id}`}
           size={isXs ? "small" : "medium"}
           onClick={() => onView(member)}
           aria-label="ver detalhes"
@@ -68,6 +69,7 @@ const ActionsCell = memo(function ActionsCell({
       {wa && (
         <Tooltip title="WhatsApp">
           <IconButton
+            data-testid={`whatsapp-member-button-${member.id}`}
             size={isXs ? "small" : "medium"}
             component="a"
             href={wa}
@@ -83,6 +85,7 @@ const ActionsCell = memo(function ActionsCell({
 
       <Tooltip title={member.shelter?.id ? "Gerenciar Equipes do Abrigo" : "Gerenciar Equipes"}>
         <IconButton
+          data-testid={`edit-member-button-${member.id}`}
           size={isXs ? "small" : "medium"}
           onClick={() => onEdit(member)}
           aria-label="gerenciar equipes"
@@ -201,6 +204,7 @@ export default function MemberTable({
 
   return (
     <Paper
+      data-testid="member-table"
       sx={{
         borderRadius: 2,
         boxShadow: 2,
@@ -215,7 +219,7 @@ export default function MemberTable({
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => {
                   const sorted = h.column.getIsSorted();
-                  const width = (h.column.columnDef.meta as any)?.width;
+                  const width = (h.column.columnDef.meta as { width?: number } | undefined)?.width;
                   const isActions = h.column.id === "actions";
                   return (
                     <TableCell
@@ -272,6 +276,7 @@ export default function MemberTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
+                  data-testid={`member-row-${row.id}`}
                   hover
                   sx={{
                     "&:hover": {

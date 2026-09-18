@@ -84,6 +84,7 @@ export default function SheltersToolbar({
 
   return (
     <Paper
+      data-testid="shelter-toolbar"
       sx={{
         p: { xs: 2, md: 3 },
         mb: 3,
@@ -109,6 +110,7 @@ export default function SheltersToolbar({
             value={filters.shelterSearchString ?? ""}
             onChange={(e) => handleChange("shelterSearchString", e.target.value || undefined)}
             placeholder="Nome do abrigo"
+            inputProps={{ "data-testid": "shelter-search-input" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -149,6 +151,7 @@ export default function SheltersToolbar({
             value={filters.userSearchString ?? ""}
             onChange={(e) => handleChange("userSearchString", e.target.value || undefined)}
             placeholder="Nome, email ou telefone"
+            inputProps={{ "data-testid": "shelter-staff-search-input" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -189,6 +192,7 @@ export default function SheltersToolbar({
             value={filters.city ?? ""}
             onChange={(e) => handleChange("city", e.target.value || undefined)}
             placeholder="Rua, bairro, cidade, estado ou CEP"
+            inputProps={{ "data-testid": "shelter-address-search-input" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -237,6 +241,7 @@ export default function SheltersToolbar({
                   {hasFilters && (
                     <Tooltip title="Limpar filtros">
                       <Fab
+                        data-testid="clear-filters-button"
                         size="medium"
                         color="secondary"
                         aria-label="Limpar filtros"
@@ -250,6 +255,7 @@ export default function SheltersToolbar({
 
                   <Tooltip title="Recarregar">
                     <Fab
+                      data-testid="refresh-button"
                       size="medium"
                       aria-label="Recarregar"
                       onClick={onRefreshClick}
@@ -262,6 +268,7 @@ export default function SheltersToolbar({
                   {isAdmin && (
                     <Tooltip title="Criar Abrigo">
                       <Fab
+                        data-testid="create-shelter-button"
                         size="medium"
                         color="primary"
                         aria-label="Criar Abrigo"
@@ -286,6 +293,7 @@ export default function SheltersToolbar({
             >
               {hasFilters && (
                 <Button
+                  data-testid="clear-filters-button"
                   variant="outlined"
                   color="secondary"
                   startIcon={<CleaningServices />}
@@ -303,6 +311,7 @@ export default function SheltersToolbar({
 
               <Tooltip title="Recarregar">
                 <IconButton
+                  data-testid="refresh-button"
                   onClick={onRefreshClick}
                   sx={{
                     borderRadius: 2,
@@ -317,6 +326,7 @@ export default function SheltersToolbar({
 
               {isAdmin && (
                 <Button
+                  data-testid="create-shelter-button"
                   variant="contained"
                   color="primary"
                   startIcon={<Add />}

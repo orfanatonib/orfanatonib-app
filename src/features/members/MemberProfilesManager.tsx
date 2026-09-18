@@ -10,6 +10,7 @@ import MemberCards from "./components/MemberCards";
 import MemberViewDialog from "./components/MemberViewDialog";
 import MemberEditDialog from "./components/MemberEditDialog";
 
+import type { SortingState } from "@tanstack/react-table";
 import { useSheltersIndex, useMemberMutations, useMemberProfiles } from "./hooks";
 import { MemberProfile } from "./types";
 import BackHeader from "@/components/common/header/BackHeader";
@@ -35,7 +36,7 @@ export default function MemberProfilesManager() {
 
   const [pageSize, setPageSize] = React.useState<number>(12);
   const [pageIndex, setPageIndex] = React.useState<number>(0);
-  const [sorting, setSorting] = React.useState([{ id: "updatedAt", desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "updatedAt", desc: true }]);
 
   const [filters, setFilters] = React.useState<MemberFilters>({
     memberSearchString: "",
@@ -47,7 +48,7 @@ export default function MemberProfilesManager() {
   });
 
   const { rows, total, loading, error, setError, fetchPage, refreshOne } =
-    useMemberProfiles(pageIndex, pageSize, sorting as any, {
+    useMemberProfiles(pageIndex, pageSize, sorting, {
       memberSearchString: filters.memberSearchString || undefined,
       shelterSearchString: filters.shelterSearchString || undefined,
       hasShelter: filters.hasShelter,
@@ -102,6 +103,7 @@ export default function MemberProfilesManager() {
 
   return (
     <Box
+      data-testid="member-profiles-manager"
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
@@ -194,8 +196,8 @@ export default function MemberProfilesManager() {
                 pageSize={pageSize}
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
-                sorting={sorting as any}
-                setSorting={setSorting as any}
+                sorting={sorting}
+                setSorting={setSorting}
                 onView={(t) => setViewing(t)}
                 onEdit={handleEditTeam}
               />
@@ -207,8 +209,8 @@ export default function MemberProfilesManager() {
                 pageSize={pageSize}
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
-                sorting={sorting as any}
-                setSorting={setSorting as any}
+                sorting={sorting}
+                setSorting={setSorting}
                 onView={(t) => setViewing(t)}
                 onEdit={handleEditTeam}
               />

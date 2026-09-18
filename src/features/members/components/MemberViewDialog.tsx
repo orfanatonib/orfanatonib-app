@@ -49,7 +49,15 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          "data-testid": "member-view-dialog",
+        } as React.HTMLAttributes<HTMLDivElement>}
+      >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold">Detalhes do Membro</Typography>
           {shelterId && user?.role === UserRole.ADMIN && (
@@ -158,7 +166,16 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={onClose} size="large" fullWidth variant="contained" sx={{ borderRadius: 2 }}>Fechar</Button>
+          <Button
+            data-testid="close-member-view-dialog-button"
+            onClick={onClose}
+            size="large"
+            fullWidth
+            variant="contained"
+            sx={{ borderRadius: 2 }}
+          >
+            Fechar
+          </Button>
         </DialogActions>
 
         {/* TeamManagementDialog removed as we redirect to edit page */}

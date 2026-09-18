@@ -79,6 +79,7 @@ export default function SheltersManager() {
 
   return (
     <Box
+      data-testid="shelters-manager"
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
@@ -171,10 +172,11 @@ export default function SheltersManager() {
               pageSize={pageSize}
               setPageIndex={setPageIndex}
               setPageSize={setPageSize}
-              sorting={sorting ? ([sorting] as any) : []}
-              setSorting={(s) =>
-                setSorting(Array.isArray(s) ? (s[0] ?? null) : (s as any))
-              }
+              sorting={sorting ? [sorting] : []}
+              setSorting={(s) => {
+                const first = Array.isArray(s) ? s[0] : s;
+                setSorting(first ? (first as ShelterSort) : null);
+              }}
               onOpenView={handleOpenView}
               onStartEdit={handleEdit}
               onAskDelete={askDelete}

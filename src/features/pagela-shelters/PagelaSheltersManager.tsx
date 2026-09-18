@@ -444,10 +444,10 @@ function PagelaSheltersManagerForAdmin() {
   const handleMobileBack = () => {
     if (!isMobile) return;
     if (mobileStep === "pagelas") {
-      handleShelteredSelect(null as any);
+      handleShelteredSelect(null);
       setMobileStep("sheltered");
     } else if (mobileStep === "sheltered") {
-      handleShelterSelect(null as any);
+      handleShelterSelect(null);
       setMobileStep("shelters");
     }
   };
@@ -657,8 +657,8 @@ function PagelaSheltersManagerForAdmin() {
                     <MuiLink
                       component="button"
                       onClick={() => {
-                        handleShelterSelect(null as any);
-                        handleShelteredSelect(null as any);
+                        handleShelterSelect(null);
+                        handleShelteredSelect(null);
                       }}
                       sx={{
                         color: "primary.main",
@@ -672,7 +672,7 @@ function PagelaSheltersManagerForAdmin() {
                     {selectedShelter && (
                       <MuiLink
                         component="button"
-                        onClick={() => handleShelteredSelect(null as any)}
+                        onClick={() => handleShelteredSelect(null)}
                         sx={{
                           color: selectedSheltered ? "primary.main" : "text.primary",
                           fontWeight: selectedSheltered ? 600 : 400,

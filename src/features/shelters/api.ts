@@ -38,7 +38,7 @@ export async function apiFetchShelters(args: {
   const sortField = sort?.id ?? "name";
   const order = sort?.desc ? "DESC" : "ASC";
 
-  const params: any = {
+  const params: Record<string, string | number> = {
     page,
     limit,
     sort: sortField,
@@ -109,7 +109,7 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
   if (payload.file) {
     const formData = new FormData();
 
-    const shelterData: any = {
+    const shelterData: Record<string, unknown> = {
       name: payload.name,
       description: payload.description,
       teamsQuantity: payload.teamsQuantity,
@@ -123,8 +123,8 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
       } : undefined,
     };
 
-    if ((payload as any).teams && Array.isArray((payload as any).teams) && (payload as any).teams.length > 0) {
-      shelterData.teams = (payload as any).teams;
+    if (payload.teams && Array.isArray(payload.teams) && payload.teams.length > 0) {
+      shelterData.teams = payload.teams;
     }
 
     formData.append("shelterData", JSON.stringify(shelterData));
@@ -138,9 +138,10 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
     return data;
   } else {
     const { file, ...rest } = payload;
+    const body: Record<string, unknown> = { ...rest };
 
     if (rest.mediaItem && rest.mediaItem.url) {
-      (rest as any).mediaItem = {
+      body.mediaItem = {
         uploadType: "link",
         isLocalFile: false,
         url: rest.mediaItem.url,
@@ -148,14 +149,14 @@ export async function apiCreateShelter(payload: CreateShelterForm | FormData) {
         description: rest.mediaItem.description || "Imagem do abrigo",
       };
     } else if (rest.mediaItem && !rest.mediaItem.url) {
-      delete rest.mediaItem;
+      delete body.mediaItem;
     }
 
     if (rest.teams && Array.isArray(rest.teams) && rest.teams.length === 0) {
-      delete rest.teams;
+      delete body.teams;
     }
 
-    const { data } = await api.post<ShelterResponseDto>("/shelters", rest);
+    const { data } = await api.post<ShelterResponseDto>("/shelters", body);
     return data;
   }
 }
@@ -173,7 +174,7 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
   if (payload.file) {
     const formData = new FormData();
 
-    const shelterData: any = {
+    const shelterData: Record<string, unknown> = {
       name: payload.name,
       description: payload.description,
       teamsQuantity: payload.teamsQuantity,
@@ -186,8 +187,8 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
       } : undefined,
     };
 
-    if ((payload as any).teams) {
-      shelterData.teams = (payload as any).teams;
+    if (payload.teams) {
+      shelterData.teams = payload.teams;
     }
 
     formData.append("shelterData", JSON.stringify(shelterData));
@@ -201,15 +202,15 @@ export async function apiUpdateShelter(id: string, payload: Omit<EditShelterForm
     return data;
   } else {
     const { file, ...rest } = payload;
-    const payloadJson: any = {
+    const payloadJson: Record<string, unknown> = {
       name: rest.name,
       description: rest.description,
       teamsQuantity: rest.teamsQuantity,
       address: rest.address,
     };
 
-    if ((rest as any).teams) {
-      payloadJson.teams = (rest as any).teams;
+    if (rest.teams) {
+      payloadJson.teams = rest.teams;
     }
 
     if (rest.mediaItem && rest.mediaItem.uploadType === "link" && rest.mediaItem.url) {
@@ -294,12 +295,12 @@ export async function apiGetMemberProfile(userId: string) {
 }
 
 export async function apiLoadLeaderOptions() {
-  let allLeaders: any[] = [];
+  const allLeaders: LeaderProfile[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
-    const { data } = await api.get(`/leader-profiles?page=${page}&limit=100`);
+    const { data } = await api.get<{ items: LeaderProfile[]; limit?: number; total?: number }>(`/leader-profiles?page=${page}&limit=100`);
 
     if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
       allLeaders.push(...data.items);
@@ -324,7 +325,7 @@ export async function apiLoadLeaderOptions() {
 }
 
 export async function apiLoadMemberOptions() {
-  let allMembers: any[] = [];
+  const allMembers: MemberProfile[] = [];
   let page = 1;
   let hasMore = true;
 
@@ -361,12 +362,12 @@ export type LeaderSimpleApi = {
 };
 
 export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
-  let allLeaders: any[] = [];
+  const allLeaders: LeaderProfile[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
-    const { data } = await api.get(`/leader-profiles?page=${page}&limit=100`);
+    const { data } = await api.get<{ items: LeaderProfile[]; limit?: number; total?: number }>(`/leader-profiles?page=${page}&limit=100`);
 
     if (data?.items && data.items.length > 0) {
       allLeaders.push(...data.items);
@@ -384,11 +385,14 @@ export async function apiListLeadersSimple(): Promise<LeaderSimpleApi[]> {
     }
   }
 
-  const mapped = allLeaders.map((l: any) => ({
-    leaderProfileId: l.id,
-    name: l.user?.name || l.user?.email || l.id,
-    vinculado: !!l.team,
-  }));
+  const mapped = allLeaders.map((l) => {
+    const teams = (l as { teams?: unknown[] }).teams;
+    return {
+      leaderProfileId: l.id,
+      name: l.user?.name || l.user?.email || l.id,
+      vinculado: Array.isArray(teams) ? teams.length > 0 : false,
+    };
+  });
 
   return mapped;
 }

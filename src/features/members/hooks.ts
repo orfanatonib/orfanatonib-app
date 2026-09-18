@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AxiosError } from "axios";
 import {
   apiGetMember,
   apiListSheltersSimple,
@@ -65,9 +66,13 @@ export function useMemberProfiles(
 
       setRows(data.items || []);
       setTotal(data.total || 0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (mySeq !== seqRef.current) return;
-      setError(err?.response?.data?.message || err.message || "Erro ao listar membros");
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao listar membros");
+      } else {
+        setError("Erro ao listar membros");
+      }
     } finally {
       if (mySeq === seqRef.current) setLoading(false);
     }
@@ -92,8 +97,8 @@ export function useMemberProfiles(
 }
 
 export function useMemberMutations(
-  refreshPage: () => Promise<void> | void,
-  refreshOne: (memberId: string) => Promise<void> | void
+  _refreshPage: () => Promise<void> | void,
+  _refreshOne: (memberId: string) => Promise<void> | void
 ) {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState("");
@@ -111,8 +116,12 @@ export function useSheltersIndex() {
     try {
       const list = await apiListSheltersSimple();
       setShelters(list || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao listar shelters");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao listar abrigos");
+      } else {
+        setError("Erro ao listar abrigos");
+      }
     } finally {
       setLoading(false);
     }

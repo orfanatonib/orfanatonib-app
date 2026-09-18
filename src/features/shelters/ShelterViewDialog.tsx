@@ -98,13 +98,14 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
         fullWidth
         maxWidth="lg"
         PaperProps={{
+          "data-testid": "shelter-view-dialog",
           sx: {
             width: isXs ? "98%" : "44rem",
             m: 0,
             borderRadius: { xs: 2, sm: 3 },
             overflow: "hidden",
           },
-        }}
+        } as React.HTMLAttributes<HTMLDivElement>}
       >
         <Box
           sx={{
@@ -546,7 +547,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
             justifyContent: "space-between",
           }}
         >
-          <Button fullWidth={isXs} onClick={onClose} variant="outlined">
+          <Button data-testid="close-shelter-view-dialog-button" fullWidth={isXs} onClick={onClose} variant="outlined">
             Fechar
           </Button>
         </DialogActions>

@@ -4,11 +4,13 @@ import AddressFields from "./form/AddressFields";
 import ShelterMediaForm from "./form/ShelterMediaForm";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
+import { AddressResponseDto } from "./types";
+
 type Props = {
   isEdit: boolean;
   name: string;
   description: string;
-  address: any;
+  address: Partial<AddressResponseDto>;
 
   existingImageUrl?: string;
   file: File | null;
@@ -20,7 +22,7 @@ type Props = {
 
   onChangeName: (value: string) => void;
   onChangeDescription: (value: string) => void;
-  onChangeAddress: (addr: any) => void;
+  onChangeAddress: (addr: Partial<AddressResponseDto>) => void;
 
   onChangeFile: (file: File | null) => void;
   onRemoveExistingImage: () => void;

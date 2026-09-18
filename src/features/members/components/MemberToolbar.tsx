@@ -61,6 +61,7 @@ export default function MemberToolbar({
 
   return (
     <Paper
+      data-testid="member-toolbar"
       sx={{
         p: { xs: 2, md: 3 },
         mb: 3,
@@ -86,7 +87,7 @@ export default function MemberToolbar({
             value={filters.memberSearchString ?? ""}
             onChange={(e) => handleChange("memberSearchString", e.target.value || undefined)}
             placeholder="Nome, email, telefone do membro"
-            inputProps={{ "aria-label": "Campo de busca por membro" }}
+            inputProps={{ "aria-label": "Campo de busca por membro", "data-testid": "member-search-input" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -128,7 +129,7 @@ export default function MemberToolbar({
               value={filters.shelterSearchString ?? ""}
               onChange={(e) => handleChange("shelterSearchString", e.target.value || undefined)}
               placeholder="Todos os campos do abrigo"
-              inputProps={{ "aria-label": "Campo de busca por abrigo" }}
+              inputProps={{ "aria-label": "Campo de busca por abrigo", "data-testid": "shelter-search-input" }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -180,6 +181,11 @@ export default function MemberToolbar({
                   handleChange("hasShelter", value === "true");
                 }
               }}
+              SelectProps={{
+                SelectDisplayProps: {
+                  "data-testid": "member-has-shelter-select",
+                } as React.HTMLAttributes<HTMLDivElement>,
+              }}
               sx={{
                 borderRadius: 2,
               }}
@@ -198,6 +204,7 @@ export default function MemberToolbar({
             <Stack direction="row" spacing={1.5} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
               {hasFilters && (
                 <Button
+                  data-testid="clear-filters-button"
                   variant="outlined"
                   color="secondary"
                   startIcon={<CleaningServices />}
@@ -214,6 +221,7 @@ export default function MemberToolbar({
               )}
               <Tooltip title="Recarregar dados">
                 <IconButton
+                  data-testid="refresh-button"
                   onClick={onRefreshClick}
                   aria-label="Recarregar"
                   sx={{
