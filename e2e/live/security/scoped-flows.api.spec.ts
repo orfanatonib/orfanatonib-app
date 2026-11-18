@@ -94,6 +94,52 @@ test.describe.serial("Escopo por abrigo — caminhos felizes ao vivo", () => {
     expect(await countRows("teams", { id })).toBe(0);
   });
 
+  test("[team.get.teams#perfil-membro] [team.get.teams-by-shelter-shelterid#perfil-membro] membro não lê a visão administrativa de equipes (403)", async ({ request }) => {
+    for (const path of ["/teams", `/teams/by-shelter/${own}`]) {
+      const denied = await request.get(`${API_URL}${path}`, { headers: authHeaders(member) });
+      expect(denied.status(), `membro em GET ${path}`).toBe(403);
+    }
+    const ownRows = await queryAll<{ id: string }>("SELECT id FROM teams WHERE shelter_id = ? LIMIT 1", [own]);
+    expect((await request.get(`${API_URL}/teams/${ownRows[0].id}`, { headers: authHeaders(member) })).status()).toBe(403);
+  });
+
+  test("[team.get.teams-my-teams#perfil-membro] membro continua lendo as PRÓPRIAS equipes em /teams/my-teams", async ({ request }) => {
+    const res = await request.get(`${API_URL}/teams/my-teams`, { headers: authHeaders(member) });
+    expect(res.status()).toBe(200);
+    const teams = (await res.json()) as Array<{ shelterId: string }>;
+    expect(teams.map((t) => t.shelterId)).toContain(own);
+  });
+
+  test("[team.get.teams#escopo-proprio-x-outro] líder lista só as equipes do abrigo que lidera", async ({ request }) => {
+    const list = await request.get(`${API_URL}/teams`, { headers: authHeaders(leader) });
+    expect(list.status()).toBe(200);
+    const shelterIds = ((await list.json()) as Array<{ shelterId: string }>).map((t) => t.shelterId);
+    expect(shelterIds).toContain(own);
+    expect(shelterIds).not.toContain(other);
+  });
+
+  test("[team.get.teams-by-shelter-shelterid#escopo-proprio-x-outro] líder lê by-shelter do abrigo que lidera e é negado no de outro", async ({ request }) => {
+    expect((await request.get(`${API_URL}/teams/by-shelter/${own}`, { headers: authHeaders(leader) })).status()).toBe(200);
+    expect((await request.get(`${API_URL}/teams/by-shelter/${other}`, { headers: authHeaders(leader) })).status()).toBe(403);
+  });
+
+  test("[team.get.teams-id#escopo-proprio-x-outro] líder lê a equipe do próprio abrigo e é negado na de outro", async ({ request }) => {
+    const ownRows = await queryAll<{ id: string }>("SELECT id FROM teams WHERE shelter_id = ? LIMIT 1", [own]);
+    const otherRows = await queryAll<{ id: string }>("SELECT id FROM teams WHERE shelter_id = ? LIMIT 1", [other]);
+    expect((await request.get(`${API_URL}/teams/${ownRows[0].id}`, { headers: authHeaders(leader) })).status()).toBe(200);
+    expect((await request.get(`${API_URL}/teams/${otherRows[0].id}`, { headers: authHeaders(leader) })).status()).toBe(403);
+  });
+
+  test("[team.get.teams#perfil-admin] [team.get.teams-id#perfil-admin] [team.get.teams-id#nao-encontrado] admin lê qualquer equipe; id inexistente é 404", async ({ request }) => {
+    const otherRows = await queryAll<{ id: string }>("SELECT id FROM teams WHERE shelter_id = ? LIMIT 1", [other]);
+    const all = await request.get(`${API_URL}/teams`, { headers: authHeaders(admin) });
+    expect(all.status()).toBe(200);
+    const shelterIds = ((await all.json()) as Array<{ shelterId: string }>).map((t) => t.shelterId);
+    expect(shelterIds).toEqual(expect.arrayContaining([own, other]));
+    expect((await request.get(`${API_URL}/teams/${otherRows[0].id}`, { headers: authHeaders(admin) })).status()).toBe(200);
+    expect((await request.get(`${API_URL}/teams/00000000-0000-4000-8000-000000000000`, { headers: authHeaders(admin) })).status()).toBe(404);
+  });
+
   test("[team.post.teams#escopo-proprio-x-outro] líder não cria nem apaga equipe de outro abrigo", async ({ request }) => {
     const before = await countRows("teams");
     const denied = await request.post(`${API_URL}/teams`, { headers: authHeaders(leader), data: { numberTeam: 8, shelterId: other } });
