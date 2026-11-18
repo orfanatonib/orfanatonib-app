@@ -134,7 +134,7 @@ const initialState: AuthState = {
 const IS_DEV = import.meta.env.DEV === true;
 const DEBUG_AUTH = import.meta.env.VITE_DEBUG_AUTH === 'true';
 
-const log = (message: string, ...args: any[]) => {
+const log = (message: string, ...args: unknown[]) => {
   if (IS_DEV || DEBUG_AUTH) console.debug(message, ...args);
 };
 
@@ -162,12 +162,17 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { rejectValue: stri
 
       clearTimeout(timeoutId);
       return response.data;
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+    } catch (error: unknown) {
+      const failure = error as {
+        name?: string;
+        code?: string;
+        response?: { data?: { message?: string } };
+      } | null;
+      if (failure?.name === 'AbortError' || failure?.code === 'ECONNABORTED') {
         log('[Auth] Request timeout');
         return rejectWithValue('Timeout ao verificar autenticação');
       }
-      const errorMessage = error?.response?.data?.message || API_ERROR_MESSAGES.FETCH_USER;
+      const errorMessage = failure?.response?.data?.message || API_ERROR_MESSAGES.FETCH_USER;
       log('[Auth] Error fetching user:', errorMessage);
       return rejectWithValue(errorMessage);
     }
@@ -198,7 +203,7 @@ export const initAuth = createAsyncThunk<void, void, { rejectValue: string }>(
           dispatch(logout());
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       log('[Auth] Init error:', e);
       return rejectWithValue('Falha ao inicializar auth');
     }
