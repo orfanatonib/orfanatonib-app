@@ -11,6 +11,7 @@ export enum AdminNavigationRole {
 export enum AdminNavigationSectionId {
   PEOPLE = "people",
   SHELTERS_AND_VISITS = "shelters-and-visits",
+  CONTENT_STUDIO = "content-studio",
   CONTENT = "content",
   MATERIALS_AND_IDEAS = "materials-and-ideas",
   MEDIA = "media",
@@ -31,6 +32,11 @@ export enum AdminNavigationItemId {
   PAGELAS = "pagelas",
   FM_INTEGRATIONS = "fm-integrations",
   CREATE_PAGE = "create-page",
+  CONTENT_STUDIO = "content-studio",
+  CONTENT_STUDIO_PRODUCTION = "content-studio-production",
+  CONTENT_STUDIO_REVIEW = "content-studio-review",
+  CONTENT_STUDIO_GUIDELINES = "content-studio-guidelines",
+  CONTENT_STUDIO_PROVIDERS = "content-studio-providers",
   MEDITATIONS = "meditations",
   DOCUMENTS = "documents",
   INFORMATIVE_BANNERS = "informative-banners",
@@ -52,10 +58,12 @@ export interface AdminNavigationItem {
   readonly label: string;
   readonly description: string;
   readonly path: string;
+  readonly exact?: boolean;
   readonly activePathPrefixes?: readonly string[];
   readonly icon: ElementType<SvgIconProps>;
   readonly allowedRoles: readonly AdminNavigationRole[];
   readonly requiredFeatureFlag?: FeatureFlagKeys;
+  readonly requiredFeatureFlags?: readonly FeatureFlagKeys[];
 }
 
 export interface AdminNavigationSection {

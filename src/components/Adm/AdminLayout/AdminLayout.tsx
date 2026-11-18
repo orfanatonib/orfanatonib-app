@@ -41,7 +41,7 @@ import {
   ADMIN_NAVIGATION_TEST_IDS,
   ADMIN_OVERVIEW_ITEM,
   type AdminNavigationFilterId,
-  type AdminNavigationSectionId,
+  AdminNavigationSectionId,
   getAdminNavigationSectionForPath,
   getVisibleAdminNavigationSections,
   isAdminNavigationItemActive,
@@ -50,6 +50,7 @@ import {
 function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isContentStudioRoute = location.pathname.startsWith("/adm/estudio");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { isAuthenticated, user } = useSelector(
@@ -59,6 +60,15 @@ function AdminLayout() {
     FeatureFlagKeys.SHELTER_MANAGEMENT,
   );
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isContentStudioEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.CONTENT_STUDIO,
+  );
+  const isContentStudioReviewEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.CONTENT_STUDIO_REVIEW,
+  );
+  const isContentStudioProviderAdminEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN,
+  );
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<AdminNavigationFilterId>(
@@ -77,9 +87,21 @@ function AdminLayout() {
         featureFlags: {
           [FeatureFlagKeys.SHELTER_MANAGEMENT]: isShelterManagementEnabled,
           [FeatureFlagKeys.SHELTER_PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
+          [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: isContentStudioReviewEnabled,
+          [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]:
+            isContentStudioProviderAdminEnabled,
         },
       }),
-    [isAuthenticated, isPagelasEnabled, isShelterManagementEnabled, user?.role],
+    [
+      isAuthenticated,
+      isContentStudioEnabled,
+      isContentStudioProviderAdminEnabled,
+      isContentStudioReviewEnabled,
+      isPagelasEnabled,
+      isShelterManagementEnabled,
+      user?.role,
+    ],
   );
 
   const availableFilters = useMemo(
@@ -265,6 +287,8 @@ function AdminLayout() {
 
       {visibleSections.map((section) => {
         const SectionIcon = section.icon;
+        const isStudioSection =
+          section.id === AdminNavigationSectionId.CONTENT_STUDIO;
 
         return (
           <Accordion
@@ -277,8 +301,16 @@ function AdminLayout() {
             elevation={0}
             sx={{
               "&::before": { display: "none" },
-              borderRadius: 0,
-              bgcolor: "transparent",
+              borderRadius: isStudioSection ? 2 : 0,
+              mx: isStudioSection ? 1 : 0,
+              mb: isStudioSection ? 1 : 0,
+              overflow: "hidden",
+              bgcolor: isStudioSection
+                ? "rgba(48, 94, 143, 0.07)"
+                : "transparent",
+              border: isStudioSection
+                ? "1px solid rgba(48, 94, 143, 0.13)"
+                : "none",
             }}
           >
             <AccordionSummary
@@ -296,7 +328,12 @@ function AdminLayout() {
                   justifyContent:
                     !isMobile && !desktopOpen ? "center" : "flex-start",
                 },
-                "&:hover": { bgcolor: "action.hover" },
+                color: isStudioSection ? "#244d79" : "inherit",
+                "&:hover": {
+                  bgcolor: isStudioSection
+                    ? "rgba(48, 94, 143, 0.11)"
+                    : "action.hover",
+                },
               }}
             >
               <Tooltip
@@ -328,9 +365,13 @@ function AdminLayout() {
             <AccordionDetails
               sx={{
                 p: 0,
-                bgcolor: !isMobile ? "action.hover" : "transparent",
+                bgcolor: isStudioSection
+                  ? "rgba(48, 94, 143, 0.035)"
+                  : !isMobile
+                    ? "action.hover"
+                    : "transparent",
                 borderLeft: !isMobile ? "3px solid" : "none",
-                borderColor: "primary.main",
+                borderColor: isStudioSection ? "#477aa8" : "primary.main",
               }}
             >
               <List dense disablePadding>
@@ -358,11 +399,19 @@ function AdminLayout() {
                           fontSize: isMobile ? "1.1rem" : undefined,
                         },
                         "&.Mui-selected": {
-                          bgcolor: "action.selected",
+                          bgcolor: isStudioSection
+                            ? "rgba(48, 94, 143, 0.12)"
+                            : "action.selected",
                           border: "1px solid",
-                          borderColor: "primary.main",
+                          borderColor: isStudioSection
+                            ? "rgba(48, 94, 143, 0.3)"
+                            : "primary.main",
                           borderRadius: 1,
-                          "&:hover": { bgcolor: "action.selected" },
+                          "&:hover": {
+                            bgcolor: isStudioSection
+                              ? "rgba(48, 94, 143, 0.16)"
+                              : "action.selected",
+                          },
                         },
                       }}
                     >
@@ -481,11 +530,11 @@ function AdminLayout() {
         sx={{
           flexGrow: 1,
           width: "100%",
-          px: { xs: 0, md: 4 },
-          pt: { xs: 2, md: 6 },
+          px: isContentStudioRoute ? 0 : { xs: 0, md: 4 },
+          pt: isContentStudioRoute ? { xs: 1, md: 2 } : { xs: 2, md: 6 },
           pb: "var(--app-footer-h)",
           mt: 0,
-          bgcolor: "grey.100",
+          bgcolor: isContentStudioRoute ? "#f6f8fb" : "grey.100",
           minHeight: "calc(100vh - var(--app-header-h))",
         }}
       >

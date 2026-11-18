@@ -13,13 +13,15 @@ type Props = {
   search: string;
   onSearchChange: (v: string) => void;
   loading?: boolean;
+  testId?: string;
 };
 
-export default function ImagePageToolbar({ search, onSearchChange, loading }: Props) {
+export default function ImagePageToolbar({ search, onSearchChange, loading, testId = 'search-input' }: Props) {
   const hasQuery = Boolean(search);
 
   return (
     <TextField
+      inputProps={{ "data-testid": testId, 'aria-label': 'Buscar páginas de imagens' }}
       fullWidth
       label="Buscar"
       placeholder="Buscar por título..."
@@ -67,7 +69,6 @@ export default function ImagePageToolbar({ search, onSearchChange, loading }: Pr
           },
         },
       }}
-      inputProps={{ 'aria-label': 'Buscar páginas de imagens' }}
     />
   );
 }

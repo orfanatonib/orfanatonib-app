@@ -190,7 +190,7 @@ const ProfilesManager: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box data-testid="profiles-manager" sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <BackHeader title="Nossa Família ❤️" />
 
       {error && (

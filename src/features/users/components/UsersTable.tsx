@@ -233,6 +233,7 @@ function UsersTableDesktop({
 
   return (
     <Paper
+      data-testid="users-table"
       sx={{
         borderRadius: 2,
         boxShadow: 2,

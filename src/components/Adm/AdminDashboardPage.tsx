@@ -52,6 +52,9 @@ export default function AdminDashboardPage() {
     FeatureFlagKeys.SHELTER_MANAGEMENT,
   );
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isContentStudioEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.CONTENT_STUDIO,
+  );
 
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<AdminNavigationFilterId>(
@@ -76,9 +79,16 @@ export default function AdminDashboardPage() {
         featureFlags: {
           [FeatureFlagKeys.SHELTER_MANAGEMENT]: isShelterManagementEnabled,
           [FeatureFlagKeys.SHELTER_PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
         },
       }),
-    [isAuthenticated, isPagelasEnabled, isShelterManagementEnabled, user?.role],
+    [
+      isAuthenticated,
+      isContentStudioEnabled,
+      isPagelasEnabled,
+      isShelterManagementEnabled,
+      user?.role,
+    ],
   );
 
   const availableFilters = useMemo(

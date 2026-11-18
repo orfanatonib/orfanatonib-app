@@ -13,6 +13,7 @@ export default function BannerSearch({ value, onChange, loading }: Props) {
 
   return (
     <TextField
+      inputProps={{ "data-testid": "informatives-search-input" }}
       fullWidth
       label="Buscar banners"
       placeholder="Buscar por título..."

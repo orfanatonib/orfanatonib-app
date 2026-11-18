@@ -58,7 +58,7 @@ export default function InformativeBannerLManager() {
   };
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="informatives-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -74,6 +74,7 @@ export default function InformativeBannerLManager() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Paper
+            data-testid="informatives-toolbar"
             elevation={2}
             sx={{
               p: { xs: 3, md: 4 },
@@ -144,6 +145,7 @@ export default function InformativeBannerLManager() {
             transition={{ duration: 0.5 }}
           >
             <Paper
+              data-testid="informatives-empty"
               elevation={1}
               sx={{
                 p: 6,
@@ -177,7 +179,7 @@ export default function InformativeBannerLManager() {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <BannerGrid items={filtered} onEdit={handleOpenEdit} onDeleteAsk={setDeleteTarget} />
+            <BannerGrid data-testid="informatives-cards" items={filtered} onEdit={handleOpenEdit} onDeleteAsk={setDeleteTarget} />
           </>
         )}
 

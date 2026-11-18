@@ -28,6 +28,7 @@ export default function ContactDetailsModal({ contact, onClose, onMarkAsRead, on
 
   return (
     <Dialog
+      data-testid="contact-view-dialog"
       open={!!contact}
       onClose={onClose}
       maxWidth="sm"
@@ -38,7 +39,7 @@ export default function ContactDetailsModal({ contact, onClose, onMarkAsRead, on
         <DialogTitle sx={{ p: 0, display: "flex", alignItems: "center", gap: 1, fontSize: { xs: ".9rem", md: "1.1rem" } }}>
           <MarkEmailReadIcon color="primary" /> Detalhes do Contato
         </DialogTitle>
-        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+        <IconButton data-testid="close-contact-view-dialog-button" onClick={onClose}><CloseIcon /></IconButton>
       </Box>
 
       <DialogContent sx={{ mt: 2, px: isMobile ? 2 : 3 }}>

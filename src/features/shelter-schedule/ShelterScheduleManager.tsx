@@ -233,7 +233,7 @@ export default function ShelterScheduleManager() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
+    <Box data-testid="shelter-schedule-manager" sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
       {isLeader && !isAdmin && <LeaderInfoBanner />}
 
       <BackHeader title="Agendamentos de Visitas" />

@@ -45,6 +45,14 @@ import {
   FeatureFlagRoute,
   FeatureFlagsPage,
 } from './features/feature-flags';
+import {
+  ContentPackageDetailPage,
+  ContentStudioHomePage,
+  ContentStudioProductionPage,
+  AiProvidersPage,
+  ContentStudioGuidelinesPage,
+  ContentStudioReviewPage,
+} from './features/content-studio';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
@@ -231,6 +239,70 @@ function App() {
                     <Route path="paginas-videos" element={<VideosManager />} />
                     <Route path="paginas-ideias" element={<IdeasManager />} />
                     <Route path="criar-pagina" element={<SelectPageTemplate />} />
+                    <Route
+                      path="estudio"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <ContentStudioHomePage />
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
+                    <Route
+                      path="estudio/producao"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <ContentStudioProductionPage />
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
+                    <Route
+                      path="estudio/pacotes/:id"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <ContentPackageDetailPage />
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
+                    <Route
+                      path="estudio/provedores-ia"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN}>
+                              <AiProvidersPage />
+                            </FeatureFlagRoute>
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
+                    <Route
+                      path="estudio/orientacoes"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <ContentStudioGuidelinesPage />
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
+                    <Route
+                      path="estudio/revisao"
+                      element={
+                        <RequireAdmin>
+                          <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO}>
+                            <FeatureFlagRoute featureKey={FeatureFlagKeys.CONTENT_STUDIO_REVIEW}>
+                              <ContentStudioReviewPage />
+                            </FeatureFlagRoute>
+                          </FeatureFlagRoute>
+                        </RequireAdmin>
+                      }
+                    />
                     <Route path="usuarios" element={<UsersManager />} />
                     <Route path="perfis" element={<ProfilesManager />} />
                     <Route path="lideres" element={<LeaderProfilesManager />} />

@@ -15,16 +15,21 @@ import {
   filterAdminNavigationSections,
   getAdminNavigationSectionForPath,
   getVisibleAdminNavigationSections,
+  isAdminNavigationItemActive,
 } from "./utils";
 
 const enabledFlags = {
   [FeatureFlagKeys.SHELTER_MANAGEMENT]: true,
   [FeatureFlagKeys.SHELTER_PAGELAS]: true,
+  [FeatureFlagKeys.CONTENT_STUDIO]: true,
+  [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: true,
+  [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: true,
 };
 
 describe("admin navigation", () => {
   it("keeps the task-oriented section and item order", () => {
     expect(ADMIN_NAVIGATION_SECTIONS.map((section) => section.id)).toEqual([
+      AdminNavigationSectionId.CONTENT_STUDIO,
       AdminNavigationSectionId.PEOPLE,
       AdminNavigationSectionId.SHELTERS_AND_VISITS,
       AdminNavigationSectionId.CONTENT,
@@ -34,6 +39,13 @@ describe("admin navigation", () => {
     ]);
 
     expect(ADMIN_NAVIGATION_SECTIONS[0].items.map((item) => item.id)).toEqual([
+      AdminNavigationItemId.CONTENT_STUDIO,
+      AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
+      AdminNavigationItemId.CONTENT_STUDIO_REVIEW,
+      AdminNavigationItemId.CONTENT_STUDIO_GUIDELINES,
+      AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
+    ]);
+    expect(ADMIN_NAVIGATION_SECTIONS[1].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.SHELTERED,
       AdminNavigationItemId.MEMBERS,
       AdminNavigationItemId.LEADERS,
@@ -41,7 +53,7 @@ describe("admin navigation", () => {
       AdminNavigationItemId.USERS,
       AdminNavigationItemId.BACKGROUND_CHECKS,
     ]);
-    expect(ADMIN_NAVIGATION_SECTIONS[1].items.map((item) => item.id)).toEqual([
+    expect(ADMIN_NAVIGATION_SECTIONS[2].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.SHELTERS,
       AdminNavigationItemId.SCHEDULES,
       AdminNavigationItemId.ATTENDANCE,
@@ -77,6 +89,9 @@ describe("admin navigation", () => {
       featureFlags: {
         [FeatureFlagKeys.SHELTER_MANAGEMENT]: false,
         [FeatureFlagKeys.SHELTER_PAGELAS]: false,
+        [FeatureFlagKeys.CONTENT_STUDIO]: true,
+        [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: false,
+        [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: false,
       },
     });
     const itemIds = sections.flatMap((section) =>
@@ -85,11 +100,19 @@ describe("admin navigation", () => {
 
     expect(itemIds).not.toContain(AdminNavigationItemId.SHELTERED);
     expect(itemIds).not.toContain(AdminNavigationItemId.PAGELAS);
+    expect(itemIds).toContain(AdminNavigationItemId.CONTENT_STUDIO);
+    expect(itemIds).not.toContain(AdminNavigationItemId.CONTENT_STUDIO_REVIEW);
+    expect(itemIds).not.toContain(
+      AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
+    );
   });
 
   it("maps listing, editing and pending routes back to the correct section", () => {
     expect(getAdminNavigationSectionForPath("/adm/membros")).toBe(
       AdminNavigationSectionId.PEOPLE,
+    );
+    expect(getAdminNavigationSectionForPath("/adm/estudio/revisao")).toBe(
+      AdminNavigationSectionId.CONTENT_STUDIO,
     );
     expect(getAdminNavigationSectionForPath("/adm/editar-pagina-visita")).toBe(
       AdminNavigationSectionId.MATERIALS_AND_IDEAS,
@@ -98,6 +121,30 @@ describe("admin navigation", () => {
       AdminNavigationSectionId.SHELTERS_AND_VISITS,
     );
     expect(getAdminNavigationSectionForPath("/adm")).toBeNull();
+  });
+
+  it("highlights only the active Estúdio submenu", () => {
+    const studioItems = ADMIN_NAVIGATION_SECTIONS[0].items;
+    const dashboard = studioItems.find(
+      (item) => item.id === AdminNavigationItemId.CONTENT_STUDIO,
+    )!;
+    const production = studioItems.find(
+      (item) => item.id === AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
+    )!;
+    const review = studioItems.find(
+      (item) => item.id === AdminNavigationItemId.CONTENT_STUDIO_REVIEW,
+    )!;
+
+    expect(isAdminNavigationItemActive(dashboard, "/adm/estudio")).toBe(true);
+    expect(
+      isAdminNavigationItemActive(dashboard, "/adm/estudio/producao"),
+    ).toBe(false);
+    expect(
+      isAdminNavigationItemActive(production, "/adm/estudio/pacotes/pkg-1"),
+    ).toBe(true);
+    expect(isAdminNavigationItemActive(review, "/adm/estudio/revisao")).toBe(
+      true,
+    );
   });
 
   it("filters the shared catalog by section and search text", () => {

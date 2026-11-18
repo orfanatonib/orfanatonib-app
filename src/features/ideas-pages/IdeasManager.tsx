@@ -42,7 +42,7 @@ export default function IdeasManager() {
   const anyError = error || mutError;
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="ideas-pages-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

@@ -86,7 +86,7 @@ export default function VisitMaterialManager() {
 
   return (
     <Box
-      data-testid="visit-material-manager"
+      data-testid="visit-materials-manager"
       sx={{
         minHeight: '100vh',
         bgcolor: 'background.default',
@@ -102,6 +102,7 @@ export default function VisitMaterialManager() {
           transition={{ duration: 0.5 }}
         >
           <Paper
+            data-testid="visit-materials-toolbar"
             elevation={2}
             sx={{
               p: { xs: 3, md: 4 },
@@ -112,7 +113,7 @@ export default function VisitMaterialManager() {
           >
             <Box sx={{ mb: 3 }}>
               <TextField
-                data-testid="visit-material-manager-search"
+                inputProps={{ "data-testid": "visit-materials-search-input" }}
                 label="Buscar materiais"
                 fullWidth
                 placeholder="Buscar materiais por título, subtítulo ou descrição..."

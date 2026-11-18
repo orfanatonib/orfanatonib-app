@@ -22,6 +22,7 @@ export default function ContactToolbar({ search, onSearchChange, onRefresh, load
 
   return (
     <Paper
+      data-testid="contacts-toolbar"
       elevation={2}
       sx={{
         p: { xs: 3, md: 4 },
@@ -39,6 +40,7 @@ export default function ContactToolbar({ search, onSearchChange, onRefresh, load
         }}
       >
         <TextField
+          inputProps={{ "data-testid": "contacts-search-input" }}
           fullWidth
           label="Buscar contatos"
           placeholder="Buscar por nome, email, telefone ou mensagem..."

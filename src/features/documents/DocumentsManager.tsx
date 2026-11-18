@@ -115,7 +115,7 @@ const DocumentsManager: React.FC = () => {
   const hasQuery = Boolean(searchTerm);
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="documents-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -131,6 +131,7 @@ const DocumentsManager: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Paper
+            data-testid="documents-toolbar"
             elevation={2}
             sx={{
               p: { xs: 3, md: 4 },
@@ -145,6 +146,7 @@ const DocumentsManager: React.FC = () => {
               alignItems={{ xs: 'stretch', sm: 'center' }}
             >
               <TextField
+                inputProps={{ "data-testid": "documents-search-input" }}
                 fullWidth
                 label="Buscar documentos"
                 placeholder="Buscar por nome..."
@@ -236,6 +238,7 @@ const DocumentsManager: React.FC = () => {
             transition={{ duration: 0.5 }}
           >
             <Paper
+              data-testid="documents-empty"
               elevation={1}
               sx={{
                 p: 6,
@@ -269,7 +272,7 @@ const DocumentsManager: React.FC = () => {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
+            <Grid data-testid="documents-cards" container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
               {documents.map((doc, index) => (
                 <Grid
                   item

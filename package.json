@@ -15,6 +15,8 @@
     "prebuild": "npm run type-check",
     "preview": "vite preview --open",
     "test": "vitest",
+    "test:unit": "vitest run --maxWorkers=2",
+    "check:test-ids": "node scripts/check-test-ids.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "E2E_SLOWMO=400 playwright test --project=live-ui --headed --workers=1",

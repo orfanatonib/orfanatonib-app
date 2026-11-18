@@ -158,6 +158,7 @@ export default function IntegrationManager() {
 
   return (
     <Box
+      data-testid="integration-manager"
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",

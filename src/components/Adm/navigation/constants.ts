@@ -1,4 +1,5 @@
 import Article from "@mui/icons-material/Article";
+import AutoAwesome from "@mui/icons-material/AutoAwesome";
 import Badge from "@mui/icons-material/Badge";
 import Build from "@mui/icons-material/Build";
 import CalendarMonth from "@mui/icons-material/CalendarMonth";
@@ -8,6 +9,7 @@ import Collections from "@mui/icons-material/Collections";
 import Comment from "@mui/icons-material/Comment";
 import ContactMail from "@mui/icons-material/ContactMail";
 import Dashboard from "@mui/icons-material/Dashboard";
+import EditNote from "@mui/icons-material/EditNote";
 import Description from "@mui/icons-material/Description";
 import EventAvailable from "@mui/icons-material/EventAvailable";
 import EventNote from "@mui/icons-material/EventNote";
@@ -24,6 +26,7 @@ import PermMedia from "@mui/icons-material/PermMedia";
 import PhotoLibrary from "@mui/icons-material/PhotoLibrary";
 import RateReview from "@mui/icons-material/RateReview";
 import School from "@mui/icons-material/School";
+import Settings from "@mui/icons-material/Settings";
 import SupervisorAccount from "@mui/icons-material/SupervisorAccount";
 import VideoLibrary from "@mui/icons-material/VideoLibrary";
 
@@ -50,6 +53,66 @@ export const ADMIN_OVERVIEW_ITEM = {
 } as const;
 
 export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
+  {
+    id: AdminNavigationSectionId.CONTENT_STUDIO,
+    title: "Estúdio Orfanato",
+    icon: AutoAwesome,
+    items: [
+      {
+        id: AdminNavigationItemId.CONTENT_STUDIO,
+        label: "Visão geral",
+        description: "Acompanhe indicadores e pacotes recentes do Estúdio.",
+        path: "/adm/estudio",
+        exact: true,
+        icon: Dashboard,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlag: FeatureFlagKeys.CONTENT_STUDIO,
+      },
+      {
+        id: AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
+        label: "Produção",
+        description: "Crie pacotes e desenvolva conteúdo por faixa etária.",
+        path: "/adm/estudio/producao",
+        activePathPrefixes: ["/adm/estudio/pacotes"],
+        icon: EditNote,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlag: FeatureFlagKeys.CONTENT_STUDIO,
+      },
+      {
+        id: AdminNavigationItemId.CONTENT_STUDIO_REVIEW,
+        label: "Revisão",
+        description: "Revise conteúdos e acompanhe decisões editoriais.",
+        path: "/adm/estudio/revisao",
+        icon: RateReview,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlags: [
+          FeatureFlagKeys.CONTENT_STUDIO,
+          FeatureFlagKeys.CONTENT_STUDIO_REVIEW,
+        ],
+      },
+      {
+        id: AdminNavigationItemId.CONTENT_STUDIO_GUIDELINES,
+        label: "Orientações",
+        description: "Consulte critérios editoriais e de segurança.",
+        path: "/adm/estudio/orientacoes",
+        icon: Article,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlag: FeatureFlagKeys.CONTENT_STUDIO,
+      },
+      {
+        id: AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
+        label: "Provedores de IA",
+        description: "Consulte provedores e capacidades disponíveis.",
+        path: "/adm/estudio/provedores-ia",
+        icon: Settings,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlags: [
+          FeatureFlagKeys.CONTENT_STUDIO,
+          FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN,
+        ],
+      },
+    ],
+  },
   {
     id: AdminNavigationSectionId.PEOPLE,
     title: "Pessoas",

@@ -64,7 +64,7 @@ export default function ImagePageManager() {
   const isBusy = loading || isFiltering;
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="image-pages-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

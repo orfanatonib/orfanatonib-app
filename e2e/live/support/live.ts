@@ -70,4 +70,8 @@ export const test = base.extend<LiveFixtures>({
   },
 });
 
+export function uniqueSuffix(): string {
+  return Math.random().toString(36).substring(2, 8);
+}
+
 export { expect };

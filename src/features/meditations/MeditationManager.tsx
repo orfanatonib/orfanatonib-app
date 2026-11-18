@@ -41,7 +41,7 @@ export default function MeditationManager() {
   };
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="meditations-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -57,6 +57,7 @@ export default function MeditationManager() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Paper
+            data-testid="meditations-toolbar"
             elevation={2}
             sx={{
               p: { xs: 3, md: 4 },
@@ -66,7 +67,7 @@ export default function MeditationManager() {
             }}
           >
             <Box>
-              <ImagePageToolbar search={search} onSearchChange={setSearch} loading={filtering} />
+              <ImagePageToolbar search={search} onSearchChange={setSearch} loading={filtering} testId="meditations-search-input" />
             </Box>
           </Paper>
         </motion.div>
@@ -110,6 +111,7 @@ export default function MeditationManager() {
             transition={{ duration: 0.5 }}
           >
             <Paper
+              data-testid="meditations-empty"
               elevation={1}
               sx={{
                 p: 6,
@@ -143,7 +145,7 @@ export default function MeditationManager() {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <Grid container spacing={3} alignItems="stretch">
+            <Grid data-testid="meditations-cards" container spacing={3} alignItems="stretch">
               {meditations.map((meditation, index) => {
                 const isExpanded = expandedId === meditation.id;
 

@@ -9,14 +9,15 @@ type Props = {
   items: InformativeBannerData[];
   onEdit: (banner: InformativeBannerData) => void;
   onDeleteAsk: (banner: InformativeBannerData) => void;
+  'data-testid'?: string;
 };
 
-export default function BannerGrid({ items, onEdit, onDeleteAsk }: Props) {
+export default function BannerGrid({ items, onEdit, onDeleteAsk, 'data-testid': testId }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
+    <Grid data-testid={testId} container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
       {items.map((banner, index) => (
         <Grid
           item

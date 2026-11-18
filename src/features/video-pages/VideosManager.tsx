@@ -73,7 +73,7 @@ export default function VideosManager() {
   const isFiltering = pages.length > 0 && pages.length !== filtered.length;
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+    <Box data-testid="video-pages-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

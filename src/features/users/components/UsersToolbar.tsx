@@ -60,6 +60,7 @@ export default function UsersToolbar({
 
   return (
     <Paper
+      data-testid="users-toolbar"
       sx={{
         p: { xs: 2, md: 3 },
         mb: 3,
@@ -79,6 +80,7 @@ export default function UsersToolbar({
       <Grid container spacing={{ xs: 2, md: 2.5 }} alignItems="flex-end">
         <Grid item xs={12} md={5}>
           <TextField
+            inputProps={{ "data-testid": "users-search-input" }}
             fullWidth
             size="small"
             label="Buscar (nome, e-mail, telefone, papel)"

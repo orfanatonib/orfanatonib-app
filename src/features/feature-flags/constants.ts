@@ -10,6 +10,11 @@ export const DEFAULT_FEATURE_FLAGS_MAP: FeatureFlagsMap = {
   'shelter-address': true,
   'shelter-management': true,
   'shelter-pagelas': true,
+  'content-studio': false,
+  'content-studio-generation': false,
+  'content-studio-review': false,
+  'content-studio-publication': false,
+  'content-studio-provider-admin': false,
 };
 
 export const FEATURE_FLAG_AUDIENCE_OPTIONS: ReadonlyArray<{

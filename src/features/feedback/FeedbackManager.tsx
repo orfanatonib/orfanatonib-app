@@ -64,7 +64,7 @@ const FeedbackManager: React.FC = () => {
   const isFiltering = isBusy && items.length > 0;
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
+    <Box data-testid="feedbacks-manager" sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -80,6 +80,7 @@ const FeedbackManager: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Paper
+            data-testid="feedbacks-toolbar"
             elevation={2}
             sx={{
               p: { xs: 3, md: 4 },
@@ -89,6 +90,7 @@ const FeedbackManager: React.FC = () => {
             }}
           >
             <TextField
+              inputProps={{ "data-testid": "feedbacks-search-input" }}
               fullWidth
               label="Buscar feedbacks"
               placeholder="Buscar por nome, email, comentário ou categoria..."
@@ -184,6 +186,7 @@ const FeedbackManager: React.FC = () => {
             transition={{ duration: 0.5 }}
           >
             <Paper
+              data-testid="feedbacks-empty"
               elevation={1}
               sx={{
                 p: 6,
@@ -217,7 +220,7 @@ const FeedbackManager: React.FC = () => {
                 <CircularProgress size={32} />
               </Box>
             )}
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
+            <Grid data-testid="feedbacks-cards" container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
               {filtered.map((feedback, index) => (
                 <Grid
                   item

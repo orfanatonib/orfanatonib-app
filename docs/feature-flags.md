@@ -5,6 +5,18 @@ usuários com papel `admin`. O link discreto no rodapé também aparece somente
 para administradores. O painel em si nunca é protegido por uma feature flag,
 pois ele é o caminho usado para religar recursos.
 
+## Estúdio Orfanato
+
+O fallback do frontend reconhece as flags abaixo, todas desligadas por padrão:
+
+- `content-studio`;
+- `content-studio-generation`;
+- `content-studio-review`;
+- `content-studio-publication`;
+- `content-studio-provider-admin`.
+
+O backend continua sendo a autoridade para o valor efetivo e para autorização.
+
 ## Funcionalidades do painel
 
 - criação, edição e exclusão de flags;

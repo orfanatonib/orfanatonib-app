@@ -17,9 +17,11 @@ export function isAdminNavigationItemVisible(
   if (!visibility.isAuthenticated || !visibility.role) return false;
   if (!item.allowedRoles.some((role) => role === visibility.role)) return false;
 
-  return item.requiredFeatureFlag
-    ? visibility.featureFlags[item.requiredFeatureFlag] === true
-    : true;
+  const requiredFlags = [
+    ...(item.requiredFeatureFlag ? [item.requiredFeatureFlag] : []),
+    ...(item.requiredFeatureFlags ?? []),
+  ];
+  return requiredFlags.every((flag) => visibility.featureFlags[flag] === true);
 }
 
 export function getVisibleAdminNavigationSections(
@@ -43,7 +45,11 @@ export function isAdminNavigationItemActive(
   item: AdminNavigationItem,
   pathname: string,
 ): boolean {
-  const prefixes = [item.path, ...(item.activePathPrefixes ?? [])];
+  if (item.exact && pathname === item.path) return true;
+  const prefixes = [
+    ...(item.exact ? [] : [item.path]),
+    ...(item.activePathPrefixes ?? []),
+  ];
   return prefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );

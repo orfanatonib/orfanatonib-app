@@ -105,6 +105,7 @@ export default function UsersManager() {
 
   return (
     <Box
+      data-testid="users-manager"
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",

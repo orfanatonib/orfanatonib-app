@@ -204,7 +204,7 @@ export default function LeaderMultiEditDialog({
     const selectedShelter = shelters.find(s => s.id === association.shelterId);
 
     return (
-      <Card key={index} sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }} data-testid={`leader-association-card-${index}`}>
+      <Card key={index} sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }} data-testid="leader-association-card">
         <CardContent sx={{ pb: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6" fontWeight={600}>
@@ -216,7 +216,7 @@ export default function LeaderMultiEditDialog({
                 onClick={() => handleRemoveAssociation(index)}
                 color="error"
                 disabled={loading}
-                data-testid={`remove-association-button-${index}`}
+                data-testid="remove-association-button"
               >
                 <Delete />
               </IconButton>
@@ -240,7 +240,7 @@ export default function LeaderMultiEditDialog({
                     required
                     error={!association.shelterId}
                     helperText={!association.shelterId ? "Obrigatório" : ""}
-                    data-testid={`association-shelter-input-${index}`}
+                    data-testid="association-shelter-input"
                   />
                 )}
                 renderOption={(props, option) => (

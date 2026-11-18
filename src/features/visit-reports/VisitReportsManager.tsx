@@ -226,7 +226,7 @@ export default function VisitReportsManager() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
+        <Box data-testid="visit-reports-manager" sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
             <BackHeader title="Relatórios das Visitas" />
 
             <Box display="flex" justifyContent={{ xs: "center", md: "flex-end" }} alignItems="center" mb={3} flexWrap="wrap" gap={2}>
