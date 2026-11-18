@@ -31,7 +31,10 @@ const imageSectionPaginationSlice = createSlice({
     },
     appendSections(state, action: PayloadAction<SectionData[]>) {
       if (state.section) {
-        state.section.sections = [...state.section.sections, ...action.payload];
+        // Dedupe por id: página repetida (clique duplo, refetch) não duplica o item no feed.
+        const known = new Set(state.section.sections.map((section) => section.id));
+        const fresh = action.payload.filter((section) => !known.has(section.id));
+        state.section.sections = [...state.section.sections, ...fresh];
       }
     },
     updatePagination(state, action: PayloadAction<{ page: number; total: number }>) {
