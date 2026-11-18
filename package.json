@@ -27,7 +27,9 @@
     "type-check:watch": "tsc --noEmit --watch",
     "validate": "npm run type-check && npm run lint",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "check:scenarios": "node scripts/check-scenario-coverage.mjs",
+    "check:routes": "node scripts/check-route-coverage.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -63,6 +65,7 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1171.0",
     "@eslint/js": "^9.25.1",
     "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.0",
@@ -87,6 +90,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
     "jsdom": "^25.0.0",
+    "mysql2": "^3.24.6",
     "prettier": "^3.5.3",
     "sharp": "^0.34.5",
     "typescript": "^5.6.2",

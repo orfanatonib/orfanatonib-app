@@ -40,7 +40,15 @@ export default defineConfig({
     {
       name: "live-ui",
       testMatch: "**/*.ui.spec.ts",
+      grepInvert: /@mobile/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // Fluxos marcados com @mobile no título, em 375×812 (mobile-first).
+      name: "live-ui-mobile",
+      testMatch: "**/*.ui.spec.ts",
+      grep: /@mobile/,
+      use: { ...devices["Pixel 5"], viewport: { width: 375, height: 812 } },
     },
   ],
 });

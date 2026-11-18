@@ -57,7 +57,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "e2e/live/support/**/*.test.ts"],
     css: false
   }
 }));
