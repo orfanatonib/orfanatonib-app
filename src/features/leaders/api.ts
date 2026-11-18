@@ -31,11 +31,6 @@ export type ListLeadersParams = {
 
 export type ApiMessage = { message?: string };
 
-export async function apiCreateLeaderForUser(userId: string) {
-  const { data } = await api.post<LeaderProfile>(`/leader-profiles/create-for-user/${userId}`);
-  return data;
-}
-
 export async function apiListLeaders(params: ListLeadersParams) {
   const { data } = await api.get<PageDto<LeaderProfile>>(
     "/leader-profiles",
