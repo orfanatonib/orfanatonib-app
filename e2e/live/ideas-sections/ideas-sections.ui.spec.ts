@@ -146,7 +146,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
     const title = `${RUN_TAG}-pela-tela`;
     await seedBrowserSession(page, await loginAs(request, "member"));
 
-    await page.goto("/compartilhar-ideia");
+    await page.goto("/area-do-membro/compartilhar-ideia");
     await page.getByTestId("idea-title").fill(title);
     await page.getByTestId("idea-description").fill("Enviada pela tela");
 

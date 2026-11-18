@@ -1,4 +1,5 @@
 import type React from 'react';
+import { MEMBER_SUBPAGE_PATHS } from '../../constants/navigation';
 import {
   MenuBook as MenuBookIcon,
   PhotoCamera as PhotoCameraIcon,
@@ -35,19 +36,19 @@ export interface MemberActionConfig {
 
 export const memberActionMap: Record<string, MemberActionConfig> = {
   materials: {
-    to: '/lista-materias-visita',
+    to: MEMBER_SUBPAGE_PATHS.materials,
     label: 'Materiais de visita',
     icon: MenuBookIcon,
     color: 'primary',
   },
   photos: {
-    to: '/imagens-abrigo',
+    to: MEMBER_SUBPAGE_PATHS.photos,
     label: 'Envie fotos do seu Abrigo',
     icon: PhotoCameraIcon,
     color: 'success',
   },
   rate: {
-    to: '/avaliar-site',
+    to: MEMBER_SUBPAGE_PATHS.rate,
     label: 'Avalie nosso Site',
     icon: StarRateIcon,
     color: 'success',
@@ -107,13 +108,13 @@ export const memberActionMap: Record<string, MemberActionConfig> = {
     color: 'primary',
   },
   integrations: {
-    to: '/adm/integracoes',
+    to: MEMBER_SUBPAGE_PATHS.integrations,
     label: 'Integrações FM',
     icon: GroupsIcon,
     color: 'secondary',
   },
   training: {
-    to: '/manual-membro',
+    to: MEMBER_SUBPAGE_PATHS.manual,
     label: 'Manual do Membro',
     icon: MenuBookIcon,
     color: 'warning',

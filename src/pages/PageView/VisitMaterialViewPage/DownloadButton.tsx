@@ -1,5 +1,4 @@
 import { Button, useTheme, useMediaQuery } from '@mui/material';
-import { motion } from 'framer-motion';
 import DownloadIcon from '@mui/icons-material/Download';
 
 interface DownloadButtonProps {
@@ -47,56 +46,19 @@ export default function DownloadButton({
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
+    <Button
+      data-testid="visit-media-download"
+      variant="outlined"
+      startIcon={<DownloadIcon sx={{ fontSize: { xs: '1rem', md: '1.2rem' } }} />}
+      href={url}
+      download={filename}
+      target="_blank"
+      rel="noopener noreferrer"
+      disabled={disabled}
+      fullWidth={fullWidth}
+      sx={{ ...getSizeStyles(), textTransform: 'none', fontWeight: 600 }}
     >
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<DownloadIcon sx={{ fontSize: { xs: '1rem', md: '1.2rem' } }} />}
-        href={url}
-        download={filename}
-        target="_blank"
-        rel="noopener noreferrer"
-        disabled={disabled}
-        fullWidth={fullWidth}
-        sx={{
-          ...getSizeStyles(),
-          borderRadius: 3,
-          textTransform: 'none',
-          fontWeight: 'bold',
-          background: disabled 
-            ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
-            : 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
-          color: disabled ? 'grey.500' : 'white',
-          boxShadow: disabled 
-            ? 'none'
-            : '0 4px 16px rgba(33, 150, 243, 0.3)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            background: disabled 
-              ? 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)'
-              : 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            transform: 'translateY(-2px)',
-            boxShadow: disabled 
-              ? 'none'
-              : '0 6px 20px rgba(33, 150, 243, 0.4)',
-          },
-          '&:active': {
-            transform: 'translateY(0px)',
-            boxShadow: disabled 
-              ? 'none'
-              : '0 2px 8px rgba(33, 150, 243, 0.3)',
-          },
-          '&.Mui-disabled': {
-            background: 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
-            color: 'grey.500',
-          },
-        }}
-      >
-        Baixar
-      </Button>
-    </motion.div>
+      Baixar
+    </Button>
   );
 }

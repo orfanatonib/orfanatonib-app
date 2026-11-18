@@ -5,6 +5,7 @@ import { Box, Typography, Button, Paper } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { MediaTargetType } from '@/store/slices/types';
 import { motion } from 'framer-motion';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 const MemberWeekBanner: React.FC = () => {
   return null;
@@ -211,7 +212,7 @@ const MemberWeekBanner: React.FC = () => {
               variant="contained"
               size="medium"
               component={Link}
-              to="/lista-materias-visita"
+              to={MEMBER_SUBPAGE_PATHS.materials}
               sx={{
                 bgcolor: 'white',
                 color: '#1976d2',

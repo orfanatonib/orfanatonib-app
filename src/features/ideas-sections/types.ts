@@ -60,3 +60,10 @@ export interface SectionData {
   medias: MediaItem[];
 }
 
+
+/** Pendência que impede o envio de uma ideia nova pelo membro. */
+export enum IdeaDraftIssue {
+  MissingTitle = 'missing-title',
+  MissingDescription = 'missing-description',
+  MissingMedia = 'missing-media',
+}

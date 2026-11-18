@@ -16,7 +16,6 @@ import EventNote from "@mui/icons-material/EventNote";
 import Favorite from "@mui/icons-material/Favorite";
 import Group from "@mui/icons-material/Group";
 import Groups from "@mui/icons-material/Groups";
-import Handshake from "@mui/icons-material/Handshake";
 import HomeWork from "@mui/icons-material/HomeWork";
 import Lightbulb from "@mui/icons-material/Lightbulb";
 import MenuBook from "@mui/icons-material/MenuBook";
@@ -216,14 +215,6 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
         icon: Description,
         allowedRoles: ADMIN_AND_LEADER_ROLES,
         requiredFeatureFlag: FeatureFlagKeys.SHELTER_PAGELAS,
-      },
-      {
-        id: AdminNavigationItemId.FM_INTEGRATIONS,
-        label: "Integrações FM",
-        description: "Gerencie integrações de pessoas na Feira de Ministério.",
-        path: "/adm/integracoes",
-        icon: Handshake,
-        allowedRoles: ADMIN_AND_LEADER_ROLES,
       },
     ],
   },

@@ -1,16 +1,10 @@
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  useTheme, 
-  useMediaQuery,
-  Chip,
-  Stack,
-  Alert,
-} from '@mui/material';
-import { motion } from 'framer-motion';
+import { Box, Alert } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import DownloadButton from './DownloadButton';
+import { VISIT_MATERIAL_MEDIA_CONFIG } from '@/features/visit-materials/constants';
+import { VisitMaterialMediaSection } from '@/features/visit-materials/types';
+import VisitMediaCard from './VisitMediaCard';
+import { formatMediaSizeMb } from './utils';
 import { MediaItem, MediaUploadType, MediaPlatform } from 'store/slices/types';
 
 interface Props {
@@ -18,8 +12,6 @@ interface Props {
 }
 
 export default function VisitVideoPlayer({ video }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const getYouTubeEmbedUrl = (url: string): string | null => {
     if (url.includes('youtube.com')) {
@@ -162,113 +154,28 @@ export default function VisitVideoPlayer({ video }: Props) {
     );
   };
 
-  const fileSize = video.size ? `${(video.size / 1024 / 1024).toFixed(1)} MB` : null;
+  const fileSize = formatMediaSizeMb(video.size);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.3 }}
+    <VisitMediaCard
+      testId="visit-media-video"
+      icon={PlayCircleOutlineIcon}
+      accentColor={VISIT_MATERIAL_MEDIA_CONFIG[VisitMaterialMediaSection.VIDEOS].color}
+      title={video.title}
+      fileSize={fileSize}
+      description={video.description}
+      actions={
+        shouldAllowDownload() ? (
+          <DownloadButton
+            url={video.platformType === MediaPlatform.DROPBOX ? getDropboxRawUrl(video.url) : video.url}
+            filename={video.originalName || video.title || 'video'}
+            size="medium"
+            fullWidth
+          />
+        ) : undefined
+      }
     >
-      <Paper
-        elevation={3}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: { xs: 3, md: 4 },
-          border: `2px solid ${theme.palette.error.main}20`,
-          background: 'linear-gradient(135deg, #ffffff 0%, #ffebee 100%)',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            elevation: 6,
-            transform: 'translateY(-2px)',
-            borderColor: theme.palette.error.main,
-          },
-        }}
-      >
-        <Box
-          display="flex"
-          alignItems="center"
-          gap={2}
-          mb={3}
-        >
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 3,
-              bgcolor: 'error.main',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <PlayCircleOutlineIcon sx={{ fontSize: { xs: '1.5rem', md: '2rem' } }} />
-          </Box>
-          
-          <Box flex={1}>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              color="error.main"
-              sx={{
-                fontSize: { xs: '1.1rem', md: '1.3rem' },
-                mb: 0.5,
-                lineHeight: 1.3,
-              }}
-            >
-              {video.title}
-            </Typography>
-            
-            {fileSize && (
-              <Chip
-                label={fileSize}
-                size="small"
-                sx={{
-                  bgcolor: 'error.light',
-                  color: 'white',
-                  fontSize: '0.75rem',
-                }}
-              />
-            )}
-          </Box>
-        </Box>
-
-        <Box sx={{ mb: 3 }}>
-          {renderVideo()}
-        </Box>
-
-        {video.description && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 3,
-              lineHeight: 1.6,
-              fontSize: { xs: '0.9rem', md: '1rem' },
-              flex: 1,
-            }}
-          >
-            {video.description}
-          </Typography>
-        )}
-
-        {shouldAllowDownload() && (
-          <Box sx={{ mt: 'auto' }}>
-            <DownloadButton
-              url={
-                video.platformType === MediaPlatform.DROPBOX ? getDropboxRawUrl(video.url) : video.url
-              }
-              filename={video.originalName || video.title || 'video'}
-              size={isMobile ? 'medium' : 'large'}
-              fullWidth
-            />
-          </Box>
-        )}
-      </Paper>
-    </motion.div>
+      {renderVideo()}
+    </VisitMediaCard>
   );
 }

@@ -24,6 +24,7 @@ import {
   createIdeasSection,
   ideasSectionErrorMessage,
 } from '@/features/ideas-sections';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 interface IdeasSectionEditorProps {
   fromTemplatePage?: boolean;
@@ -122,7 +123,7 @@ export default function IdeasSectionEditor({ fromTemplatePage }: IdeasSectionEdi
         dispatch(clearIdeasSectionData());
 
         const currentPath = window.location.pathname;
-        if (currentPath === '/compartilhar-ideia') {
+        if (currentPath === MEMBER_SUBPAGE_PATHS.shareIdea) {
           navigate('/area-do-membro');
         } else {
           navigate('/adm/ideias-compartilhadas');

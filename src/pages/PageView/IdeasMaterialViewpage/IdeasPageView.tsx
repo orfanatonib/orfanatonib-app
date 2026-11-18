@@ -1,29 +1,18 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import { Box, Container, useTheme, alpha, Grid } from "@mui/material";
-import { AnimatePresence } from "framer-motion";
-
-import { RootState } from "@/store/slices";
-import { UserRole } from "@/store/slices/auth/authSlice";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
-
-import { useIdeasPage, useExpandedMediaTypes } from "./hooks";
-import { groupSectionMedias } from "./utils";
-import {
-  MediaSection,
-  IdeasPageHeader,
-  LoadingState,
-  ErrorState,
-  EmptyState,
-} from "./components";
+import { useSelector } from 'react-redux';
+import { Container, Stack } from '@mui/material';
+import { RootState } from '@/store/slices';
+import { UserRole } from '@/store/slices/auth/authSlice';
+import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import { useIdeasPage } from './hooks';
+import { EmptyState, ErrorState, IdeaSectionCard, IdeasPageHeader, LoadingState } from './components';
+import type { IdeaSectionView } from './types';
 
 interface IdeasPageViewProps {
   idToFetch: string;
 }
 
+/** Página de ideias (`/area-do-membro/ideias/:id`): cabeçalho + uma seção por cartão. */
 export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
-  const theme = useTheme();
-
   const {
     ideasPage,
     loading,
@@ -36,114 +25,55 @@ export default function IdeasPageView({ idToFetch }: IdeasPageViewProps) {
     handleBack,
   } = useIdeasPage({ idToFetch });
 
-  const { expandedMediaTypes, toggleMediaType } = useExpandedMediaTypes();
-
-  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
-
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
 
-  const handleToggleSection = (sectionId: string) => {
-    setExpandedSectionId(prev => prev === sectionId ? null : sectionId);
-  };
-
+  let content: React.ReactNode;
   if (loading) {
-    return <LoadingState />;
-  }
+    content = <LoadingState />;
+  } else if (error) {
+    content = <ErrorState message={error} />;
+  } else if (!ideasPage) {
+    content = <EmptyState />;
+  } else {
+    content = (
+      <>
+        <Stack data-testid="ideas-page" spacing={{ xs: 2, md: 3 }}>
+          <IdeasPageHeader
+            title={ideasPage.title}
+            subtitle={ideasPage.subtitle}
+            description={ideasPage.description}
+            isAdmin={isAdmin}
+            onBack={handleBack}
+            onEdit={handleEdit}
+            onDelete={() => setDeleteConfirmOpen(true)}
+          />
+          {ideasPage.sections.map((section, index) => (
+            <IdeaSectionCard
+              key={section.id ?? index}
+              section={section as IdeaSectionView}
+              index={index}
+            />
+          ))}
+        </Stack>
 
-  if (error) {
-    return <ErrorState message={error} />;
+        <DeleteConfirmDialog
+          open={deleteConfirmOpen}
+          title={ideasPage.title}
+          onClose={() => !isDeleting && setDeleteConfirmOpen(false)}
+          onConfirm={async () => {
+            if (isDeleting) return;
+            await handleDeletePage();
+          }}
+          loading={isDeleting}
+        />
+      </>
+    );
   }
-
-  if (!ideasPage) {
-    return <EmptyState />;
-  }
-
-  const { title, subtitle, description, sections } = ideasPage;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: `linear-gradient(180deg, 
-          ${alpha(theme.palette.warning.main, 0.03)} 0%, 
-          ${alpha(theme.palette.background.default, 1)} 15%,
-          ${alpha(theme.palette.background.default, 1)} 85%,
-          ${alpha(theme.palette.primary.main, 0.03)} 100%
-        )`,
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        "&::before": {
-          content: '""',
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "100%",
-          background: `radial-gradient(ellipse at 100% 0%, ${alpha(theme.palette.warning.main, 0.05)} 0%, transparent 50%),
-                       radial-gradient(ellipse at 0% 100%, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%)`,
-          pointerEvents: "none",
-          zIndex: 0,
-        },
-      }}
-    >
-      <IdeasPageHeader
-        title={title}
-        subtitle={subtitle}
-        description={description}
-        isAdmin={isAdmin}
-        onBack={handleBack}
-        onEdit={handleEdit}
-        onDelete={() => setDeleteConfirmOpen(true)}
-      />
-
-      <Box sx={{ flex: 1, py: { xs: 2, sm: 3, md: 5 }, position: "relative", zIndex: 1 }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
-          <Grid container spacing={{ xs: 2, sm: 3 }}>
-            <AnimatePresence>
-              {sections.map((section, sectionIndex) => {
-                const mediasWithId = (section.medias ?? []).map((m, i) => ({
-                  ...m,
-                  id: m.id ?? `${sectionIndex}-${i}`,
-                  mediaType: m.mediaType as "image" | "video" | "document",
-                }));
-                const { videos, documents, images } = groupSectionMedias(mediasWithId);
-
-                return (
-                  <Grid item xs={12} lg={6} key={section.id || sectionIndex}>
-                    <MediaSection
-                      sectionId={section.id || sectionIndex.toString()}
-                      sectionIndex={sectionIndex}
-                      title={section.title}
-                      description={section.description}
-                      videos={videos}
-                      documents={documents}
-                      images={images}
-                      expandedMediaTypes={expandedMediaTypes}
-                      onToggleMediaType={toggleMediaType}
-                      user={(section as any).user}
-                      isExpanded={expandedSectionId === (section.id || sectionIndex.toString())}
-                      onToggleSection={handleToggleSection}
-                    />
-                  </Grid>
-                );
-              })}
-            </AnimatePresence>
-          </Grid>
-        </Container>
-      </Box>
-
-      <DeleteConfirmDialog
-        open={deleteConfirmOpen}
-        title={ideasPage.title}
-        onClose={() => !isDeleting && setDeleteConfirmOpen(false)}
-        onConfirm={async () => {
-          if (isDeleting) return;
-          await handleDeletePage();
-        }}
-        loading={isDeleting}
-      />
-    </Box>
+    <Container maxWidth="lg" disableGutters sx={{ px: 0 }}>
+      {content}
+    </Container>
   );
 }

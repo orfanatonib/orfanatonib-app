@@ -42,14 +42,14 @@ test.describe.serial("Gerenciamento de Feedbacks do Site — Teste E2E Full-Stac
     expect(isTableVisible || isCardsVisible || isEmptyVisible).toBe(true);
   });
 
-  test("3. Navegação para página de formulário de avaliação (/avaliar-site)", async ({
+  test("3. Navegação para página de formulário de avaliação (/area-do-membro/avaliar-site)", async ({
     page,
     request,
   }) => {
     const loginResult = await loginAs(request, "admin");
     await seedBrowserSession(page, loginResult);
 
-    await page.goto("/avaliar-site");
+    await page.goto("/area-do-membro/avaliar-site");
     await page.waitForLoadState("networkidle");
 
     await expect(page.locator("body")).toBeVisible();

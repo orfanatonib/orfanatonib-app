@@ -32,6 +32,7 @@ import {
 } from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
 import ErrorState, { ErrorType } from '@/components/common/ErrorState';
 import { isRequestCanceled } from '@/utils/apiErrorMessage';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 interface ShelterFeedViewProps {
   idToFetch?: string;
@@ -291,7 +292,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
               {feed && isAuthenticated && (
                 <Button
                   component={Link}
-                  to="/imagens-abrigo"
+                  to={MEMBER_SUBPAGE_PATHS.photos}
                   variant="contained"
                   startIcon={!isMobile && <PhotoCameraIcon />}
                   sx={{

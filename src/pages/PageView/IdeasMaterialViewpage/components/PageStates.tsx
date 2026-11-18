@@ -1,24 +1,20 @@
-import React from "react";
-import { Box, Typography, CircularProgress, Alert } from "@mui/material";
+import React from 'react';
+import { Alert, Box, CircularProgress, Typography } from '@mui/material';
+import { IDEAS_VIEW_COPY } from '../constants';
 
 interface LoadingStateProps {
   message?: string;
 }
 
-export function LoadingState({ message = "Carregando página de ideias..." }: LoadingStateProps) {
+export function LoadingState({ message = IDEAS_VIEW_COPY.LOADING }: LoadingStateProps) {
   return (
     <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bgcolor: "background.default",
-      }}
+      data-testid="ideas-page-loading"
+      sx={{ minHeight: '40vh', display: 'grid', placeItems: 'center', textAlign: 'center' }}
     >
-      <Box textAlign="center">
-        <CircularProgress size={60} thickness={4} />
-        <Typography variant="h6" mt={2} color="text.secondary">
+      <Box>
+        <CircularProgress size={48} aria-label={message} />
+        <Typography variant="body1" mt={2} color="text.secondary">
           {message}
         </Typography>
       </Box>
@@ -32,54 +28,16 @@ interface ErrorStateProps {
 
 export function ErrorState({ message }: ErrorStateProps) {
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bgcolor: "background.default",
-        p: 3,
-      }}
-    >
-      <Alert
-        severity="error"
-        sx={{
-          maxWidth: 500,
-          width: "100%",
-          fontSize: "1.1rem",
-          borderRadius: 3,
-        }}
-      >
-        {message}
-      </Alert>
-    </Box>
+    <Alert data-testid="ideas-page-error" severity="error">
+      {message}
+    </Alert>
   );
 }
 
-interface EmptyStateProps {
-  message?: string;
-}
-
-export function EmptyState({ message = "Nenhuma página de ideias encontrada." }: EmptyStateProps) {
+export function EmptyState() {
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Typography
-        variant="h5"
-        align="center"
-        color="text.secondary"
-        sx={{ maxWidth: 400 }}
-      >
-        {message}
-      </Typography>
-    </Box>
+    <Alert data-testid="ideas-page-empty" severity="info">
+      {IDEAS_VIEW_COPY.EMPTY}
+    </Alert>
   );
 }

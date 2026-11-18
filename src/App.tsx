@@ -1,7 +1,7 @@
 import { AttendanceDashboard, PendingAttendancePage } from './features/attendance/pages';
 import PendingVisitReportsPage from './features/visit-reports/pages/PendingVisitReportsPage';
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, CircularProgress, Toolbar, Button, Typography } from '@mui/material';
 
@@ -21,6 +21,16 @@ import About from './pages/About/About';
 import Contact from './pages/Contact/Contact';
 import Login from './pages/Login/Login';
 import MemberArea from './pages/MemberArea/MemberArea';
+import { MemberAreaLayout, MemberAreaShell } from './pages/MemberArea/components/Layout';
+import { buildMemberContentPath, isMemberAreaEntityType } from './pages/MemberArea/utils/navigation';
+import {
+  MEMBER_LEGACY_PATH_REDIRECTS,
+  MEMBER_SUBPAGE_PATHS,
+} from './pages/MemberArea/constants/navigation';
+import MemberDocumentsPage from './pages/MemberArea/subpages/MemberDocumentsPage';
+import MemberIdeasPage from './pages/MemberArea/subpages/MemberIdeasPage';
+import MemberVideosPage from './pages/MemberArea/subpages/MemberVideosPage';
+import MemberContentPage from './pages/MemberArea/subpages/MemberContentPage';
 import EmailVerificationInstructions from './pages/EmailVerification/EmailVerificationInstructions';
 import ConfirmEmail from '@/pages/EmailVerification/ConfirmEmail';
 import ShelterFeedView from './pages/PageView/ShelterFeedView/ShelterFeedView';
@@ -55,6 +65,7 @@ import {
 } from './features/content-studio';
 
 import type { RouteData as DynamicRouteType } from './store/slices/route/routeSlice';
+import { MediaTargetType } from './store/slices/types';
 import type { RootState as RootStateType, AppDispatch as AppDispatchType } from './store/slices';
 
 import { IdeasMaterialPageCreator } from 'components/Adm/PageCreator/Templates/IdeasMaterialPageCreator/IdeasMaterialPageCreator';
@@ -194,14 +205,23 @@ function App() {
                 <Route path="/recuperar-senha/:token" element={<ResetPassword />} />
 
                 <Route element={<ProtectedRoute />}>
-                  <Route path="/area-do-membro" element={<MemberArea />} />
-                  <Route path="/manual-membro" element={<MinistryInstructions />} />
-                  <Route path="/perfil" element={<ProfilePage />} />
-                  <Route path="/presenca" element={<AttendanceDashboard />} />
-                  <Route path="/imagens-abrigo" element={<ImageSectionPage />} />
-                  <Route path="/lista-materias-visita" element={<VisitMaterialsList />} />
-                  <Route path="/avaliar-site" element={<SiteFeedbackForm />} />
-                  <Route path="/integracao" element={<IntegrationShelteredPage />} />
+                  <Route element={<MemberAreaLayout />}>
+                    <Route path="/area-do-membro" element={<MemberArea />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.manual} element={<MinistryInstructions />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.photos} element={<ImageSectionPage />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.materials} element={<VisitMaterialsList />} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.materials}/:id`} element={<MemberContentPage entityType={MediaTargetType.VisitMaterialsPage} />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.rate} element={<SiteFeedbackForm />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.shareIdea} element={<IdeasSectionPage />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.documents} element={<MemberDocumentsPage />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.ideas} element={<MemberIdeasPage />} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.ideas}/:id`} element={<MemberContentPage entityType={MediaTargetType.IdeasPage} />} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.videos} element={<MemberVideosPage />} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.videos}/:id`} element={<MemberContentPage entityType={MediaTargetType.VideosPage} />} />
+                    <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
+                      <Route path={MEMBER_SUBPAGE_PATHS.integrations} element={<IntegrationManager />} />
+                    </Route>
+                  </Route>
                   <Route
                     path="/area-dos-acolhidos"
                     element={
@@ -218,8 +238,15 @@ function App() {
                       </FeatureFlagRoute>
                     }
                   />
-                  <Route path="/compartilhar-ideia" element={<IdeasSectionPage />} />
+                  <Route path="/perfil" element={<ProfilePage />} />
+                  <Route path="/presenca" element={<AttendanceDashboard />} />
+                  <Route path="/integracao" element={<IntegrationShelteredPage />} />
                 </Route>
+
+                {/* Endereços antigos da Área do Membro (e Integrações FM, que saiu do /adm) redirecionam. */}
+                {Object.entries(MEMBER_LEGACY_PATH_REDIRECTS).map(([from, to]) => (
+                  <Route key={from} path={from} element={<Navigate to={to} replace />} />
+                ))}
 
                 <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
                   <Route path="/adm" element={<AdminLayout />}>
@@ -327,7 +354,6 @@ function App() {
                       }
                     />
                     <Route path="agendamentos" element={<ShelterScheduleManager />} />
-                    <Route path="integracoes" element={<IntegrationManager />} />
                     <Route path="antecedentes" element={<AtendentesManager />} />
                     <Route
                       path="feature-flags"
@@ -351,13 +377,22 @@ function App() {
                   </Route>
                 </Route>
 
-                {dynamicRoutes.map((route: DynamicRouteType) => (
-                  <Route
-                    key={route.id}
-                    path={`/${route.path}`}
-                    element={<PageRenderer entityType={route.entityType} idToFetch={route.idToFetch} />}
-                  />
-                ))}
+                {dynamicRoutes.map((route: DynamicRouteType) => {
+                  const page = <PageRenderer entityType={route.entityType} idToFetch={route.idToFetch} />;
+                  // Endereço antigo por slug (material, ideia ou vídeo): logado, vai para o endereço da Área do Membro.
+                  const memberPath = isAuthenticated ? buildMemberContentPath(route.entityType, route.idToFetch) : null;
+                  if (memberPath) {
+                    return <Route key={route.id} path={`/${route.path}`} element={<Navigate to={memberPath} replace />} />;
+                  }
+                  // Páginas de conteúdo do membro abrem dentro da casca (sidebar) quando há login.
+                  const element =
+                    isAuthenticated && isMemberAreaEntityType(route.entityType) ? (
+                      <MemberAreaShell>{page}</MemberAreaShell>
+                    ) : (
+                      page
+                    );
+                  return <Route key={route.id} path={`/${route.path}`} element={element} />;
+                })}
                 <Route path="*" element={<Home />} />
               </Routes>
             </GlobalErrorBoundary>

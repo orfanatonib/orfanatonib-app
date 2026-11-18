@@ -1,3 +1,4 @@
+import { MEMBER_CARD_SX } from "@/pages/MemberArea/constants/navigation";
 import React from "react";
 import {
   Box,
@@ -34,7 +35,6 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import type { SortingState } from "@tanstack/react-table";
 import { useIntegrations, useIntegrationMutations } from "./hooks";
 import type { IntegrationFilters, IntegrationResponseDto, CreateIntegrationDto, UpdateIntegrationDto } from "./types";
-import BackHeader from "@/components/common/header/BackHeader";
 import IntegrationFormDialog from "./components/IntegrationFormDialog";
 import IntegrationViewDialog from "./components/IntegrationViewDialog";
 import ImageCarouselDialog from "./components/ImageCarouselDialog";
@@ -160,15 +160,11 @@ export default function IntegrationManager() {
     <Box
       data-testid="integration-manager"
       sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
         pb: 4,
       }}
     >
 
-      <Container maxWidth="xl" sx={{ pt: 2 }}>
-        <BackHeader title="Integrações da Feira de Ministério" />
-
+      <Container maxWidth={false} disableGutters sx={{ pt: { xs: 2, md: 0 }, px: 0 }}>
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -185,45 +181,21 @@ export default function IntegrationManager() {
           </motion.div>
         )}
 
-        <Paper
-          elevation={2}
-          sx={{
-            p: 3,
-            mb: 3,
-            borderRadius: 3,
-            backgroundColor: "#ffffff",
-          }}
-        >
+        <Paper data-testid="integration-manager-card" elevation={0} sx={{ ...MEMBER_CARD_SX, mb: 3 }}>
           <Box
             sx={{
               display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 2,
-              alignItems: { xs: "stretch", md: "center" },
-              justifyContent: "space-between",
+              justifyContent: { xs: "stretch", md: "flex-end" },
             }}
           >
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Integrações da Feira de Ministério
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Gerencie as integrações de pessoas na Feira de Ministério
-              </Typography>
-            </Box>
-
             <Button
+              data-testid="integration-create"
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleCreateClick}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1.5,
-                fontWeight: "bold",
-              }}
+              sx={{ minHeight: 44, px: 3, textTransform: "none", fontWeight: 700, width: { xs: "100%", md: "auto" } }}
             >
-              Nova Integração
+              Nova integração
             </Button>
           </Box>
 

@@ -23,6 +23,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 import { AddImageModal } from '../components/Modals';
+import { MEMBER_CARD_SX } from '../constants/navigation';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
 import { MediaItem } from '@/store/slices/types';
 
@@ -95,25 +96,17 @@ export default function ImageSectionEditor({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Paper
-              elevation={3}
-              sx={{
-                p: { xs: 2, md: 3 },
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)',
-                border: '1px solid rgba(102, 126, 234, 0.1)',
-              }}
-            >
+            <Paper data-testid="member-photos-info-card" elevation={0} sx={MEMBER_CARD_SX}>
               <Typography
                 variant="h6"
                 fontWeight={600}
                 sx={{
                   mb: 2,
-                  color: 'primary.main',
+                  color: '#0f2942',
                   fontSize: { xs: '1rem', md: '1.1rem' },
                 }}
               >
-                📝 Informações da Galeria
+                Informações da Galeria
               </Typography>
               
               <Box display="flex" flexDirection="column" gap={{ xs: 1.5, md: 2 }}>
@@ -193,14 +186,9 @@ export default function ImageSectionEditor({
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Paper
-              elevation={3}
-              sx={{
-                p: { xs: 2, md: 3 },
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #fff5f8 0%, #fef7ff 100%)',
-                border: '1px solid rgba(118, 75, 162, 0.1)',
-                minHeight: { xs: 300, md: 400 },
-              }}
+              data-testid="member-photos-gallery-card"
+              elevation={0}
+              sx={{ ...MEMBER_CARD_SX, minHeight: { xs: 300, md: 400 } }}
             >
               <Box
                 display="flex"
@@ -214,11 +202,11 @@ export default function ImageSectionEditor({
                   variant="h6"
                   fontWeight={600}
                   sx={{
-                    color: 'primary.main',
+                    color: '#0f2942',
                     fontSize: { xs: '1rem', md: '1.1rem' },
                   }}
                 >
-                  🖼️ Galeria de Imagens
+                  Galeria de Imagens
                 </Typography>
                 
                 <Button
@@ -226,23 +214,10 @@ export default function ImageSectionEditor({
                   color="primary"
                   onClick={() => setIsModalOpen(true)}
                   size={isMobile ? "small" : "medium"}
-                  sx={{
-                    borderRadius: 2,
-                    px: { xs: 2, md: 3 },
-                    py: { xs: 1, md: 1.5 },
-                    fontSize: { xs: '0.8rem', md: '0.9rem' },
-                    fontWeight: 600,
-                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                    boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)',
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #5a6fd8, #6a4190)',
-                      boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
-                      transform: 'translateY(-1px)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
+                  data-testid="member-photos-add-images"
+                  sx={{ minHeight: 44, textTransform: 'none', fontWeight: 600 }}
                 >
-                  📸 Adicionar Imagens
+                  Adicionar imagens
                 </Button>
               </Box>
 
@@ -395,9 +370,9 @@ export default function ImageSectionEditor({
                     textAlign="center"
                     py={4}
                     sx={{
-                      background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)',
+                      bgcolor: '#f8fafc',
                       borderRadius: 3,
-                      border: '2px dashed rgba(102, 126, 234, 0.3)',
+                      border: '1px dashed #cbd5e1',
                     }}
                   >
                     <Typography 
@@ -407,7 +382,7 @@ export default function ImageSectionEditor({
                         fontWeight: 500,
                       }}
                     >
-                      📷 Adicione imagens dos momentos especiais do seu Abrigo!
+                      Adicione imagens dos momentos especiais do seu Abrigo.
                     </Typography>
                     <Typography 
                       color="text.secondary" 

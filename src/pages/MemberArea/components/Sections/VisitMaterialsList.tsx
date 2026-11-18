@@ -20,9 +20,8 @@ import {
     Chip,
     Alert,
 } from '@mui/material';
-import { ArrowBack, Search, Clear, FilterList } from '@mui/icons-material';
+import { Search, Clear, FilterList } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { useVisitMaterials } from '@/features/visit-materials/hooks';
 import {
     VISIT_MATERIAL_TAB_LABELS,
@@ -35,9 +34,11 @@ import {
 } from '@/features/visit-materials/types';
 import { tabFromTestament, testamentFromTab } from '@/features/visit-materials/utils';
 import { FofinhoButton } from '../Buttons';
+import { MEMBER_CARD_SX } from '../../constants/navigation';
+import { MediaTargetType } from '@/store/slices/types';
+import { buildMemberContentPath } from '../../utils/navigation';
 
 const VisitMaterialsList = () => {
-    const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const {
@@ -66,7 +67,7 @@ const VisitMaterialsList = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: '100vh',
+                    minHeight: '40vh',
                 }}
             >
                 <CircularProgress />
@@ -74,56 +75,20 @@ const VisitMaterialsList = () => {
         );
     }
 
-    const handleBack = () => {
-        navigate('/area-do-membro');
-    };
-
     return (
         <Box
             data-testid="visit-material-member-list"
             sx={{
-                minHeight: '100vh',
-                bgcolor: 'background.default',
-                py: { xs: 2, md: 4 },
+                py: { xs: 2, md: 0 },
             }}
         >
-            <Container maxWidth="xl">
-                <Box sx={{ mb: { xs: 2, sm: 3 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
-                    <IconButton
-                        data-testid="visit-material-member-list-back"
-                        aria-label="Voltar para a área do membro"
-                        onClick={handleBack}
-                        sx={{
-                            bgcolor: 'background.paper',
-                            boxShadow: 2,
-                            '&:hover': {
-                                bgcolor: 'action.hover',
-                                transform: 'scale(1.05)',
-                            },
-                            transition: 'all 0.2s ease',
-                        }}
-                    >
-                        <ArrowBack />
-                    </IconButton>
-                    <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-                        📚 Materiais de Visita
-                    </Typography>
-                </Box>
-
+            <Container maxWidth={false} disableGutters sx={{ px: 0 }}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <Paper
-                        elevation={2}
-                        sx={{
-                            p: { xs: 3, md: 4 },
-                            mb: 4,
-                            borderRadius: 3,
-                            bgcolor: 'background.paper',
-                        }}
-                    >
+                    <Paper elevation={0} sx={{ ...MEMBER_CARD_SX, mb: 3 }}>
                         <Box sx={{ mb: 3 }}>
                             <TextField
                                 data-testid="visit-material-member-list-search"
@@ -395,7 +360,7 @@ const VisitMaterialsList = () => {
                                                 data-testid="visit-material-member-card-open"
                                                 variant="contained"
                                                 component={Link}
-                                                to={`/${material.route?.path}`}
+                                                to={buildMemberContentPath(MediaTargetType.VisitMaterialsPage, material.id) ?? ''}
                                                 fullWidth
                                                 sx={{
                                                     borderRadius: 2,

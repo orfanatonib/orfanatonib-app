@@ -104,21 +104,17 @@ const SiteFeedbackForm: React.FC = () => {
 
     return (
         <Box
+            data-testid="site-feedback-form"
             sx={{
-                maxWidth: 500,
-                mx: 'auto',
-                mt: 10,
-                p: 3,
-                boxShadow: 3,
-                borderRadius: 2,
-                backgroundColor: 'background.paper',
+                maxWidth: 720,
+                p: { xs: 2, md: 3 },
+                borderRadius: 3,
+                border: '1px solid #dbe4f0',
+                backgroundColor: '#ffffff',
             }}
             role="form"
-            aria-labelledby="feedback-title"
+            aria-label="Formulário de avaliação do site"
         >
-            <Typography id="feedback-title" variant="h5" mb={2} textAlign="center">
-                Avalie nosso site
-            </Typography>
 
             <TextField
                 label="Seu nome"

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Share } from '@mui/icons-material';
 import { BANNER_STYLES } from '../../constants';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 interface IdeasSharingBannerProps {
   variant?: 'full' | 'compact';
@@ -140,7 +141,7 @@ const IdeasSharingBanner: React.FC<IdeasSharingBannerProps> = ({ variant = 'full
             <Button
               variant="contained"
               size="medium"
-              onClick={() => navigate('/compartilhar-ideia')}
+              onClick={() => navigate(MEMBER_SUBPAGE_PATHS.shareIdea)}
               sx={{
                 bgcolor: 'white',
                 color: '#667eea',

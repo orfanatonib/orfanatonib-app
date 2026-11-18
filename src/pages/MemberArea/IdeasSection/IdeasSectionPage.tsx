@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Container } from '@mui/material';
 import { IdeasSectionAdminEditor, IdeasSectionUserCreator } from '@/components/Adm/PageCreator/Templates/IdeasSectionEditor';
 import { RootState } from '@/store/slices';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 export default function IdeasSectionPage() {
   const location = useLocation();
@@ -11,7 +12,7 @@ export default function IdeasSectionPage() {
   const ideasSectionData = useSelector((state: RootState) => state.ideas.ideasSectionData);
   const actualEditMode = !!ideasSectionData;
   
-  const isPublicCreation = location.pathname === '/compartilhar-ideia';
+  const isPublicCreation = location.pathname === MEMBER_SUBPAGE_PATHS.shareIdea;
 
   useEffect(() => {
     if (isPublicCreation) {

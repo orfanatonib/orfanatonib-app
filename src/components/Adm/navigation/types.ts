@@ -30,7 +30,6 @@ export enum AdminNavigationItemId {
   ATTENDANCE = "attendance",
   VISIT_REPORTS = "visit-reports",
   PAGELAS = "pagelas",
-  FM_INTEGRATIONS = "fm-integrations",
   CREATE_PAGE = "create-page",
   CONTENT_STUDIO = "content-studio",
   CONTENT_STUDIO_PRODUCTION = "content-studio-production",

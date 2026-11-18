@@ -6,6 +6,7 @@ import { Box, Typography, Button, Container } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MediaTargetType } from '@/store/slices/types';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 const VisitMaterialsBanner: React.FC = () => {
   return null;
@@ -198,7 +199,7 @@ const VisitMaterialsBanner: React.FC = () => {
               variant="contained"
               size="large"
               component={Link}
-              to="/lista-materias-visita"
+              to={MEMBER_SUBPAGE_PATHS.materials}
               sx={{
                 px: { xs: 4, md: 6 },
                 py: { xs: 2, md: 2.5 },

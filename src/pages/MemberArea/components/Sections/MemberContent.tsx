@@ -7,7 +7,7 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { MemberContentProps } from '../../types';
 import { SECTION_DATA, MOTIVATION_TEXT } from '../../constants';
-import { DocumentsSection, IdeasGallerySection, TrainingVideosSection, CommentsSection } from './';
+import { CommentsSection } from './';
 
 const MemberContent: React.FC<MemberContentProps> = ({ userName }) => {
   const theme = useTheme();
@@ -368,39 +368,6 @@ const MemberContent: React.FC<MemberContentProps> = ({ userName }) => {
         </Grid>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <Box mt={8}>
-          <DocumentsSection />
-        </Box>
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <Box mt={8}>
-          <IdeasGallerySection />
-        </Box>
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <Box mt={8}>
-          <TrainingVideosSection />
-        </Box>
-      </motion.div>
-      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
