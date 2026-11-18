@@ -140,4 +140,36 @@ test.describe.serial("Geração com provedor simulado — ao vivo", () => {
     const again = await request202(request, packageId, stage.id, `${TAG}-esgota-2`);
     expect(again.ok()).toBe(true);
   });
+
+  test("todo público (bebê, criança, adolescente, adulto) gera todas as etapas do seu catálogo, e o conteúdo muda por público", async ({ request }) => {
+    const res = await request.post(`${API_URL}/content-studio/packages`, {
+      headers: authHeaders(admin),
+      data: { theme: `${TAG} públicos`, biblicalReferences: "Jo 10.1-18", canonicalObjective: "Jesus cuida" },
+    });
+    const pkg = (await res.json()) as { id: string; tracks: Array<{ audience: string; stages: Array<{ id: string; stageType: string }> }> };
+    expect(pkg.tracks.map((t) => t.audience).sort()).toEqual(["ADULT", "BABY", "CHILD", "TEEN"]);
+
+    const lessonWords: Record<string, number> = {};
+    for (const track of pkg.tracks) {
+      // respeita as dependências: gera na ordem do catálogo, esperando cada etapa concluir
+      for (const stage of track.stages) {
+        const job = (await (await request202(request, pkg.id, stage.id, `${TAG}-${track.audience}-${stage.stageType}`)).json()) as { id: string };
+        const done = await waitJob(job.id, (s) => s === "SUCCEEDED" || s === "FAILED");
+        expect(done.status, `${track.audience} ${stage.stageType}`).toBe("SUCCEEDED");
+        const version = await queryOne<{ structuredContent: string | { story?: Array<{ body: string }> }; generationSnapshot: string | { audience?: string; stageType?: string; promptVersion?: string } }>(
+          "SELECT structuredContent, generationSnapshot FROM content_versions WHERE stage_id = ?",
+          [stage.id],
+        );
+        const snap = typeof version?.generationSnapshot === "string" ? JSON.parse(version.generationSnapshot) : version?.generationSnapshot;
+        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: "orfanato.studio.prompts/1.0.0" });
+        if (stage.stageType === "LESSON") {
+          const content = typeof version?.structuredContent === "string" ? JSON.parse(version.structuredContent) : version?.structuredContent;
+          lessonWords[track.audience] = (content?.story ?? []).reduce((n: number, b: { body: string }) => n + b.body.split(" ").length, 0);
+        }
+      }
+    }
+    // bebê: narrativa curta; adulto: estudo longo
+    expect(lessonWords.BABY).toBeLessThan(lessonWords.CHILD);
+    expect(lessonWords.CHILD).toBeLessThan(lessonWords.ADULT);
+  });
 });
