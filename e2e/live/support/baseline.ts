@@ -58,3 +58,27 @@ export async function seedShelter(request: APIRequestContext, tag: string): Prom
     await r.delete(`${API_URL}/shelters/${id}`, { headers: authHeaders(token) });
   };
 }
+
+/** Meditação semanal numa semana futura aleatória (a API recusa duas meditações na mesma semana). */
+export async function seedMeditation(request: APIRequestContext, tag: string): Promise<Undo> {
+  const admin = (await loginAs(request, "admin")).accessToken;
+  const monday = new Date(Date.UTC(2040, 0, 2) + Math.floor(Math.random() * 4000) * 7 * 86_400_000);
+  const day = (offset: number) => new Date(monday.getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+  const res = await request.post(`${API_URL}/meditations`, {
+    headers: authHeaders(admin),
+    multipart: {
+      meditationData: JSON.stringify({
+        topic: `Meditação a ${tag}`,
+        startDate: day(0),
+        endDate: day(4),
+        days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((d) => ({ day: d, verse: "Salmos 23:1", topic: `Tema ${d}` })),
+        media: { title: "Guia", description: "Guia", mediaType: "document", uploadType: "link", url: "https://example.com/guia.pdf", isLocalFile: false },
+      }),
+    },
+  });
+  const id = ((await res.json()) as { id: string }).id;
+  return async (r) => {
+    const token = (await loginAs(r, "admin")).accessToken;
+    await r.delete(`${API_URL}/meditations/${id}`, { headers: authHeaders(token) });
+  };
+}

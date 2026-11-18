@@ -5,6 +5,11 @@ import { authHeaders, expect, loginAs, test } from "../support/live";
  * Contratos de `/meditations` contra a API ao vivo.
  * Garante criação de massa de dados permanente e valida a busca por filtro no backend.
  */
+const WEEK = (() => {
+  const monday = new Date(Date.UTC(2050, 0, 3) + Math.floor(Math.random() * 4000) * 7 * 86_400_000);
+  const iso = (offset: number) => new Date(monday.getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+  return { start: iso(0), end: iso(4) };
+})();
 const RUN_TAG = `med-${Date.now()}`;
 
 test.describe.serial("Meditações — API ao vivo com massa de dados", () => {
@@ -69,8 +74,9 @@ test.describe.serial("Meditações — API ao vivo com massa de dados", () => {
       multipart: {
         meditationData: JSON.stringify({
           topic: `Jornada no Salmo 23 ${RUN_TAG}`,
-          startDate: "2030-03-04",
-          endDate: "2030-03-08",
+          // Semana futura aleatória: a API recusa duas meditações na mesma semana (re-execução não pode dar 409).
+          startDate: WEEK.start,
+          endDate: WEEK.end,
           days: [
             { day: "Monday", verse: "Salmos 23:1", topic: "O Senhor é o meu pastor" },
             { day: "Tuesday", verse: "Salmos 23:2", topic: "Deitar-me faz em verdes pastos" },

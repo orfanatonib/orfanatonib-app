@@ -1,6 +1,15 @@
+import { seedMeditation, type Undo } from "../support/baseline";
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
 
 test.describe.serial("Gerenciamento de Meditações — Teste E2E Full-Stack (Sem Mocks)", () => {
+  let undo: Undo | undefined;
+  test.beforeAll(async ({ request }) => {
+    undo = await seedMeditation(request, `e2e-ui-${Date.now()}`);
+  });
+  test.afterAll(async ({ request }) => {
+    await undo?.(request);
+  });
+
   test("1. Autenticação real e carregamento da página /adm/meditacoes", async ({
     page,
     request,
