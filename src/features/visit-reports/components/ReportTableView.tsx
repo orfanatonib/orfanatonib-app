@@ -20,7 +20,7 @@ import {
 } from "@mui/icons-material";
 import { VisitReport } from "../types";
 import { Tooltip, Zoom } from "@mui/material";
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface TeamGroup {
     id: string;

@@ -21,7 +21,7 @@ import {
     Home as HomeIcon
 } from '@mui/icons-material';
 import { TeamVisitReportPendingsDto } from '../../attendance/types';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface LeaderPendingViewProps {
     pendings: TeamVisitReportPendingsDto[];

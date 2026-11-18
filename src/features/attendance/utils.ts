@@ -1,5 +1,5 @@
 import type { ScheduleDates, TeamScheduleDto, ValidationResult } from './types';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 export const ATTENDANCE_RULES = {
   MAX_COMMENT_LENGTH: 500,

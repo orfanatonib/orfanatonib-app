@@ -17,7 +17,7 @@ import {
     LocationCity as ShelterIcon,
 } from "@mui/icons-material";
 import { VisitReport } from "../types";
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface TeamGroup {
     id: string;

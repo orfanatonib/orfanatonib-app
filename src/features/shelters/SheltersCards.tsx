@@ -16,7 +16,7 @@ import {
 import { SortingState } from "@tanstack/react-table";
 import { ShelterResponseDto } from "./types";
 import { formatDate } from "@/utils/dateUtils";
-import { CopyButton } from "@/utils/components";
+import { CopyButton } from "@/components/common/CopyButton";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 
 type Props = {

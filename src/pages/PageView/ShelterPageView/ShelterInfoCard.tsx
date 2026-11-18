@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, Divider, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 
-import { fmtDate } from '@/utils/dates';
+import { fmtDate } from '@/utils/dateUtils';
 
 type Props = { createdAt: string; updatedAt: string };
 

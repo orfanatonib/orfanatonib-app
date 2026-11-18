@@ -38,7 +38,8 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { formatDate, gLabel, timeDifference } from "@/utils/dateUtils";
-import { CopyButton, initials } from "@/utils/components";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 import {
   MIN_TOUCH_TARGET_PX,
   SHELTERED_CARD_PAGE_SIZE_OPTIONS,

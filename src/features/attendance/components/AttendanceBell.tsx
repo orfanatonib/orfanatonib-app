@@ -32,7 +32,7 @@ import { AttendanceType, EventCategory } from '../types';
 import type { PendingForMemberDto, RegisterAttendanceDto } from '../types';
 import type { RootState as RootStateType } from '@/store/slices';
 import { attendanceErrorMessage } from '../errors';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
   const readableDate = formatDayBR(pending.date);

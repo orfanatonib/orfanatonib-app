@@ -18,7 +18,7 @@ import {
 import { Edit as EditIcon, Person as PersonIcon, Home as HomeIcon, Groups as GroupsIcon, SupervisorAccount as SupervisorIcon } from "@mui/icons-material";
 import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
 import { MemberProfile } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";

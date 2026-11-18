@@ -35,8 +35,9 @@ import {
 } from "@mui/icons-material";
 import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
 import { ShelterResponseDto } from "./types";
-import { fmtDate } from "@/utils/dates";
-import { CopyButton, initials } from "@/utils/components";
+import { fmtDate } from "@/utils/dateUtils";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";

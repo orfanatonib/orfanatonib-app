@@ -56,3 +56,12 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 export const isCoreOrSensitive = (k: string) => CORE_KEYS.has(k) || SENSITIVE_KEYS.has(k);
+
+/** Iniciais (até 2 letras) de um nome; "?" quando não há nome. */
+export const initials = (name?: string): string =>
+  (name || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("") || "?";

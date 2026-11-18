@@ -25,7 +25,7 @@ import { apiListShelterSchedules, apiListMyTeams } from "../../shelter-schedule/
 import { SimpleShelterResponseDto } from "../../shelters/types";
 import { TeamResponseDto } from "../../teams/types";
 import { ShelterScheduleResponseDto, MyTeamResponseDto } from "../../shelter-schedule/types";
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface VisitReportFormModalProps {
     open: boolean;

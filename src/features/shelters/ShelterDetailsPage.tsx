@@ -39,7 +39,7 @@ import { ShelterResponseDto } from "./types";
 import { apiGetMyShelters } from "@/features/leaders/api";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import ChipsListWithExpand from "./components/ChipsListWithExpand";
 import { SUPPORT_CONTACTS, buildTeamLinkingWhatsappLink } from "@/utils/whatsapp";
 

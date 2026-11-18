@@ -11,7 +11,7 @@ import { Visibility, Edit, Delete } from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { ShelterResponseDto, WEEKDAYS } from "./types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import SheltersCards from "./SheltersCards";
 import ChipsListWithExpand from "./components/ChipsListWithExpand";
 

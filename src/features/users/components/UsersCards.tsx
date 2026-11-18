@@ -13,7 +13,7 @@ import {
 } from "@mui/icons-material";
 import { SortingState } from "@tanstack/react-table";
 import { UserRow } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { useSelector } from "react-redux";

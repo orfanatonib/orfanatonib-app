@@ -8,7 +8,7 @@ import { Close, ContentCopy } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { ImagePageData } from 'store/slices/image/imageSlice';
 import { copyToClipboard } from '../utils';
-import { fmtDate } from '@/utils/dates';
+import { fmtDate } from '@/utils/dateUtils';
 
 type Props = {
   page: ImagePageData | null;

@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { LeaderProfile } from "../types";
 import CircularProgress from "@mui/material/CircularProgress";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 
 type Props = {
   open: boolean;

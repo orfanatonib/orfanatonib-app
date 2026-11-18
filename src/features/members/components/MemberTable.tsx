@@ -14,7 +14,7 @@ import {
 } from "@tanstack/react-table";
 import { Visibility, Edit as EditIcon, WhatsApp } from "@mui/icons-material";
 import { MemberProfile } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";

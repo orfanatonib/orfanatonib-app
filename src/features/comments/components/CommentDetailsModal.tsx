@@ -1,4 +1,4 @@
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import {
   Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Stack,
   Button, Paper, Grid

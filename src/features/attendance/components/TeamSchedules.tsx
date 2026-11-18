@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { TeamScheduleDto } from '../types';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface Props {
   schedules: TeamScheduleDto[];

@@ -17,7 +17,7 @@ import { getAllPendings } from '../api';
 import { EventCategory } from '../types';
 import type { PendingForLeaderDto, TeamPendingsDto } from '../types';
 import { attendanceErrorMessage } from '../errors';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface Props {
   teamId?: string;

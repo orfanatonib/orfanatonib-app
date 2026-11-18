@@ -14,7 +14,7 @@ import { getAllPendings } from '../api';
 import { EventCategory } from '../types';
 import type { PendingForMemberDto } from '../types';
 import { attendanceErrorMessage } from '../errors';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
   const readableDate = formatDayBR(pending.date);

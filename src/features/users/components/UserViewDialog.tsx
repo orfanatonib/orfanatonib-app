@@ -35,7 +35,8 @@ import { UserRole } from "@/store/slices/auth/authSlice";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { formatDate } from "@/utils/dateUtils";
 import { roleChipColor, anchorProps, isCoreOrSensitive } from "@/utils/textUtils";
-import { initials, CopyButton } from "@/utils/components";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 import { RootState } from "@/store/slices";
 import { apiGetUserProfile } from "../api";
 

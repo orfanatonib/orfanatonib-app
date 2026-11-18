@@ -21,7 +21,7 @@ import {
     Description as DescriptionIcon,
     Assessment as AssessmentIcon,
 } from "@mui/icons-material";
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface VisitReportDetailsModalProps {
     open: boolean;

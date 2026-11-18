@@ -36,7 +36,7 @@ import BackHeader from '@/components/common/header/BackHeader';
 import type { TeamPendingsDto, PendingForLeaderDto, PendingForMemberDto, TeamScheduleDto } from '../types';
 import RegisterAttendance from '../components/RegisterAttendance';
 import { attendanceErrorMessage } from '../errors';
-import { formatDayBR } from 'utils/dates';
+import { formatDayBR } from 'utils/dateUtils';
 
 const PendingAttendancePage = () => {
   const navigate = useNavigate();

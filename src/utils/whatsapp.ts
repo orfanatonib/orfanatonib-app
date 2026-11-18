@@ -1,5 +1,8 @@
-export function justDigits(phone?: string | number | null) {
-  return phone ? String(phone).replace(/\D/g, "") : "";
+import { digitsOnly } from "./masks";
+
+/** Telefone só com dígitos; vazio/zero vira "" (diferente de `digitsOnly(0)`, que devolve "0"). */
+export function justDigits(phone?: string | number | null): string {
+  return phone ? digitsOnly(phone) : "";
 }
 
 export const SUPPORT_CONTACTS = {

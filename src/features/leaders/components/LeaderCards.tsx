@@ -10,10 +10,11 @@ import {
 } from "@mui/icons-material";
 import type { SortingState } from "@tanstack/react-table";
 import type { LeaderProfile } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import { RootState } from "@/store/slices";
 import { buildWhatsappLink } from "@/utils/whatsapp";
-import { CopyButton, initials } from "@/utils/components";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 
 type Props = {
   rows: LeaderProfile[];

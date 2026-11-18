@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { Visibility, Edit as EditIcon, WhatsApp } from "@mui/icons-material";
 import type { LeaderProfile } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";

@@ -29,7 +29,7 @@ import {
 } from "@tanstack/react-table";
 import { Visibility, Edit, Delete, WhatsApp } from "@mui/icons-material";
 import { UserRow } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { RootState } from "@/store/slices";
 import UsersCards from "./UsersCards";
