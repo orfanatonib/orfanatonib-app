@@ -28,9 +28,12 @@ function getClient(): S3Client {
   return client;
 }
 
-/** Prefixo do ambiente usado pela API: `<ENVIRONMENT>/uploads/`. */
+/**
+ * Prefixo do ambiente usado pela API: `<ENVIRONMENT>/`. Cobre as chaves legadas
+ * (`<env>/uploads/…`) e as novas por entidade (`<env>/<Entidade>/<dono>/<uuid>.<ext>`).
+ */
 export function uploadsPrefix(): string {
-  return `${s3Config().environmentPrefix}/uploads/`;
+  return `${s3Config().environmentPrefix}/`;
 }
 
 export async function listObjects(prefix: string = uploadsPrefix()): Promise<string[]> {
