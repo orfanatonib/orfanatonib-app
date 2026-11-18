@@ -1,3 +1,4 @@
+import { seedShelter, type Undo } from "../support/baseline";
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
 
 /**
@@ -6,6 +7,14 @@ import { expect, loginAs, seedBrowserSession, test } from "../support/live";
  * Navegador (Playwright) -> Frontend React -> Cliente Axios -> NestJS Controller -> Services -> TypeORM Repository -> Banco MySQL.
  */
 test.describe.serial("Gerenciamento de Abrigos — Teste E2E Full-Stack (Sem Mocks)", () => {
+  let undo: Undo | undefined;
+  test.beforeAll(async ({ request }) => {
+    undo = await seedShelter(request, `e2e-ui-${Date.now()}`);
+  });
+  test.afterAll(async ({ request }) => {
+    await undo?.(request);
+  });
+
   test("1. Autenticação real e carregamento da página /adm/abrigos com dados do banco", async ({
     page,
     request,

@@ -1,6 +1,15 @@
+import { seedContact, type Undo } from "../support/baseline";
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
 
 test.describe.serial("Gerenciamento de Contatos — Teste E2E Full-Stack (Sem Mocks)", () => {
+  let undo: Undo | undefined;
+  test.beforeAll(async ({ request }) => {
+    undo = await seedContact(request, `e2e-ui-${Date.now()}`);
+  });
+  test.afterAll(async ({ request }) => {
+    await undo?.(request);
+  });
+
   test("1. Autenticação real e carregamento da página /adm/contatos", async ({
     page,
     request,

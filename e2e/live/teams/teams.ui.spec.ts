@@ -1,4 +1,5 @@
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
+const API_BASE = process.env.E2E_API_URL ?? "http://localhost:3000";
 
 /**
  * Teste E2E Full-Stack (Sem Mocks) para a funcionalidade de Equipes.
@@ -15,7 +16,7 @@ test.describe.serial("Equipes — Teste E2E Full-Stack (Sem Mocks)", () => {
     await seedBrowserSession(page, loginResult);
 
     // Valida requisição de equipes diretamente na API
-    const response = await request.get("http://localhost:3000/teams", {
+    const response = await request.get(`${API_BASE}/teams`, {
       headers: {
         Authorization: `Bearer ${loginResult.accessToken}`,
       },
@@ -33,7 +34,7 @@ test.describe.serial("Equipes — Teste E2E Full-Stack (Sem Mocks)", () => {
     const loginResult = await loginAs(request, "leader");
     await seedBrowserSession(page, loginResult);
 
-    const response = await request.get("http://localhost:3000/teams/my-teams", {
+    const response = await request.get(`${API_BASE}/teams/my-teams`, {
       headers: {
         Authorization: `Bearer ${loginResult.accessToken}`,
       },
