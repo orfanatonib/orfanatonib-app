@@ -14,7 +14,6 @@ src/pages/MemberArea/
 │   │   └── index.ts
 │   ├── Sections/          # Seções de conteúdo
 │   │   ├── BannerSection.tsx
-│   │   ├── MotivationSection.tsx
 │   │   ├── MemberContent.tsx
 │   │   ├── CommentsSection.tsx
 │   │   ├── DocumentsSection.tsx
@@ -30,7 +29,6 @@ src/pages/MemberArea/
 │   │   └── index.ts
 │   ├── Modals/            # Modais e componentes modais
 │   │   ├── AddImageModal.tsx
-│   │   ├── ConfirmModal.tsx
 │   │   ├── NotificationModal.tsx
 │   │   ├── LoadingSpinner.tsx
 │   │   └── index.ts
@@ -61,7 +59,6 @@ src/pages/MemberArea/
 
 ### Sections
 - **BannerSection**: Gerencia a exibição dos banners
-- **MotivationSection**: Seção de texto motivacional
 - **MemberContent**: Conteúdo principal para membros logados
 - **CommentsSection**: Seção de comentários
 - **DocumentsSection**: Seção de documentos
@@ -77,7 +74,6 @@ src/pages/MemberArea/
 
 ### Modals
 - **AddImageModal**: Modal para adicionar imagens
-- **ConfirmModal**: Modal de confirmação
 - **NotificationModal**: Modal de notificações
 - **LoadingSpinner**: Spinner de carregamento
 

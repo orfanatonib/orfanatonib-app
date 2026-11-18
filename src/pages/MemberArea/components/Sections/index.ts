@@ -1,5 +1,4 @@
 export { default as BannerSection } from './BannerSection';
-export { default as MotivationSection } from './MotivationSection';
 export { default as MemberContent } from './MemberContent';
 export { default as CommentsSection } from './CommentsSection';
 export { default as DocumentsSection } from './DocumentsSection';

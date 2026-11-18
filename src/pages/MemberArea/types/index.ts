@@ -3,10 +3,6 @@ export interface BannerSectionProps {
   showMeditationBanner: boolean;
 }
 
-export interface MotivationSectionProps {
-  motivationText: string;
-}
-
 export interface MemberContentProps {
   userName?: string;
 }
