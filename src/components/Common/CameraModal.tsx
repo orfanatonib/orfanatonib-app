@@ -82,13 +82,14 @@ const CameraModal: React.FC<CameraModalProps> = ({
                     setVideoReady(true);
                 };
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             let errorMessage = 'Erro ao acessar a câmera. ';
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            const errName = err instanceof Error ? err.name : '';
+            if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
                 errorMessage += 'Permissão negada.';
-            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+            } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
                 errorMessage += 'Nenhuma câmera encontrada.';
-            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+            } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
                 errorMessage += 'A câmera está sendo usada por outro aplicativo.';
             } else {
                 errorMessage += 'Tente novamente.';

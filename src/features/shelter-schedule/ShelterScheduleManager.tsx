@@ -175,7 +175,7 @@ export default function ShelterScheduleManager() {
         await createSchedule(data);
       }
       handleCloseForm();
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw err;
     } finally {
       setSubmitting(false);

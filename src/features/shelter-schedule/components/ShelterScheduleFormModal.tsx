@@ -32,6 +32,7 @@ import {
   MyTeamResponseDto
 } from "../types";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 dayjs.locale("pt-br");
 
@@ -132,8 +133,8 @@ export default function ShelterScheduleFormModal({
         observation: observation.trim() || undefined,
         meetingRoom: meetingRoom.trim() || undefined,
       });
-    } catch (err: any) {
-      setFormError(err.response?.data?.message || "Erro ao salvar agendamento.");
+    } catch (err: unknown) {
+      setFormError(getApiErrorMessage(err, "Erro ao salvar agendamento."));
     }
   };
 

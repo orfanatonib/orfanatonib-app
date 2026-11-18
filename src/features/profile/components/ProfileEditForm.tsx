@@ -14,6 +14,7 @@ import { apiUpdateProfile } from '../api';
 import { digitsOnly, maskPhoneBR } from '@/utils/masks';
 import { isValidEmail, normalizeEmail } from '@/utils/validators';
 import { normalizeName } from '@/utils/textUtils';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface ProfileEditFormProps {
   profile: Profile | null;
@@ -109,8 +110,8 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       setSuccess(true);
       onUpdate();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 'Erro ao atualizar perfil';
+    } catch (err: unknown) {
+      const errorMessage = getApiErrorMessage(err, 'Erro ao atualizar perfil');
       onError(errorMessage);
       
       if (errorMessage.includes('já está em uso')) {

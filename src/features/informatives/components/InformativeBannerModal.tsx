@@ -16,6 +16,7 @@ import type { AppDispatch } from 'store/slices';
 import { fetchRoutes } from 'store/slices/route/routeSlice';
 import type { InformativeBannerData } from 'store/slices/informative/informativeBannerSlice';
 import { createBannerApi, updateBannerApi } from '../api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface InformativeBannerModalProps {
   open: boolean;
@@ -74,11 +75,9 @@ export default function InformativeBannerModal({
       await onSave();
 
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Erro ao salvar banner. Tente novamente.';
+        getApiErrorMessage(err, 'Erro ao salvar banner. Tente novamente.');
       setErrMsg(String(msg));
     } finally {
       setLoading(false);

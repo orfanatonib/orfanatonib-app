@@ -15,6 +15,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { ChangePasswordDto } from '../types';
 import { apiChangePassword } from '../api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface PasswordChangeFormProps {
   onError: (error: string) => void;
@@ -120,8 +121,8 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
       setFormData({ currentPassword: '', newPassword: '' });
       setConfirmPassword('');
       setTimeout(() => setSuccess(false), 5000);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 'Erro ao alterar senha';
+    } catch (err: unknown) {
+      const errorMessage = getApiErrorMessage(err, 'Erro ao alterar senha');
       onError(errorMessage);
 
       if (isCommonUser && errorMessage.includes('incorreta')) {

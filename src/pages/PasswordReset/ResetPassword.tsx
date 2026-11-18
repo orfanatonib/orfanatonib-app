@@ -21,6 +21,7 @@ import {
     AUTH_VALIDATION
 } from '@/constants/errors';
 import type { ValidateTokenResponse, ResetPasswordResponse } from '@/types/api/auth';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ResetPassword: React.FC = () => {
     const { token } = useParams<{ token: string }>();
@@ -82,8 +83,8 @@ const ResetPassword: React.FC = () => {
             await api.post<ResetPasswordResponse>('/auth/reset-password', { token, newPassword });
             setSuccess(true);
             setTimeout(() => navigate('/login'), AUTH_VALIDATION.REDIRECT_DELAY_MS);
-        } catch (error: any) {
-            setSubmitError(error.response?.data?.message || AUTH_ERROR_MESSAGES.RESET_PASSWORD_GENERIC);
+        } catch (error: unknown) {
+            setSubmitError(getApiErrorMessage(error, AUTH_ERROR_MESSAGES.RESET_PASSWORD_GENERIC));
         } finally {
             setSubmitting(false);
         }

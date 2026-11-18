@@ -1,7 +1,7 @@
 /**
  * Mensagem de erro de uma chamada à API.
  *
- * Cada componente do módulo repetia `catch (err: any)` seguido de
+ * Cada componente do módulo repetia `catch (err: unknown)` seguido de
  * `err?.response?.data?.message` — onze vezes, com fallbacks diferentes.
  */
 export function attendanceErrorMessage(

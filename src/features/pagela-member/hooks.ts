@@ -14,6 +14,7 @@ import {
 import { apiFetchShelteredSimple, apiUpdateShelteredStatus } from "../sheltered/api";
 import type { ShelteredSimpleResponseDto } from "../sheltered/types";
 import { AcceptedJesusFilter, ShelteredActiveFilter } from "../sheltered/enums";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 /** Maps this page's local filter values onto the sheltered domain enums. */
 const ACCEPTED_JESUS_BY_VALUE: Readonly<
@@ -86,7 +87,7 @@ export function useShelteredBrowser() {
     } catch (e: unknown) {
       if (e instanceof AxiosError) {
         setShelteredError(
-          e.response?.data?.message || e.message || "Erro ao listar acolhidos"
+          getApiErrorMessage(e, "Erro ao listar acolhidos")
         );
       } else {
         setShelteredError("Erro ao listar acolhidos");
@@ -144,9 +145,9 @@ export function useShelteredBrowser() {
     try {
       await apiUpdateShelteredStatus(id, newActive);
       await search(debouncedQ, page, acceptedJesus, active);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao atualizar status do acolhido"
+        getApiErrorMessage(e, "Erro ao atualizar status do acolhido")
       );
     } finally {
       setLoading(false);
@@ -262,7 +263,7 @@ export function useShelteredPagelas(
       } catch (e: unknown) {
         if (e instanceof AxiosError) {
           if (e.name !== "CanceledError" && e.name !== "AbortError") {
-            setError(e.response?.data?.message || e.message || "Erro ao listar pagelas");
+            setError(getApiErrorMessage(e, "Erro ao listar pagelas"));
           }
         } else {
           setError("Erro ao listar pagelas");

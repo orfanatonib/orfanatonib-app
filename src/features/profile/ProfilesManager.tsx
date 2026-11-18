@@ -43,6 +43,7 @@ import BackHeader from '@/components/common/header/BackHeader';
 import NoTeamLinked from '@/components/Common/NoTeamLinked';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ProfilesManager: React.FC = () => {
   const [profiles, setProfiles] = useState<CompleteProfileListItem[]>([]);
@@ -86,8 +87,8 @@ const ProfilesManager: React.FC = () => {
       const response = await apiGetAllProfiles(filters);
       setProfiles(response.items);
       setMeta(response.meta);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Erro ao carregar perfis');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Erro ao carregar perfis'));
     } finally {
       setLoading(false);
     }

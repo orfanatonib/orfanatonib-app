@@ -36,6 +36,7 @@ import { apiFetchShelter } from "../api";
 import { ShelterResponseDto } from "../types";
 import { LeaderSimpleListDto } from "@/features/leaders/types";
 import { MemberSimpleListDto } from "@/features/members/types";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 type Props = {
   shelterId: string | null;
@@ -95,8 +96,8 @@ const TeamManagementSection = forwardRef<TeamManagementRef, Props>(
         }
         
         setTeams(allTeams);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "Error loading shelter");
+      } catch (err: unknown) {
+        setError(getApiErrorMessage(err, "Error loading shelter"));
       } finally {
         setLoading(false);
       }

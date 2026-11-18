@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -30,6 +31,7 @@ import {
   PaginatedSectionResponse,
 } from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
 import ErrorState, { ErrorType } from '@/components/common/ErrorState';
+import { isRequestCanceled } from '@/utils/apiErrorMessage';
 
 interface ShelterFeedViewProps {
   idToFetch?: string;
@@ -195,15 +197,16 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
         }
 
         setHasMore(data.page * data.limit < data.total);
-      } catch (err: any) {
-        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+      } catch (err: unknown) {
+        if (!isRequestCanceled(err)) {
           let type: ErrorType = 'generic';
+          const status = axios.isAxiosError(err) ? err.response?.status : undefined;
 
-          if (err.response?.status === 404) {
+          if (status === 404) {
             type = '404';
-          } else if (err.response?.status === 500) {
+          } else if (status === 500) {
             type = '500';
-          } else if (err.code === 'ERR_NETWORK' || !err.response) {
+          } else if (!axios.isAxiosError(err) || err.code === 'ERR_NETWORK' || !err.response) {
             type = 'network';
           }
 

@@ -12,6 +12,7 @@ import {
   UpdateShelterScheduleDto,
   MyTeamResponseDto,
 } from "./types";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export function useShelterSchedules() {
   const [schedules, setSchedules] = useState<ShelterScheduleResponseDto[]>([]);
@@ -24,8 +25,8 @@ export function useShelterSchedules() {
       setError(null);
       const data = await apiListShelterSchedules();
       setSchedules(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Erro ao carregar agendamentos");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Erro ao carregar agendamentos"));
     } finally {
       setLoading(false);
     }
@@ -74,8 +75,8 @@ export function useMyTeams() {
       setError(null);
       const data = await apiListMyTeams();
       setTeams(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Erro ao carregar equipes");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Erro ao carregar equipes"));
     } finally {
       setLoading(false);
     }

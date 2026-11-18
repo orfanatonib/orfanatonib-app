@@ -16,7 +16,7 @@ export function useInformativeBanners() {
     try {
       const data = await fetchBannersApi(querySearch);
       setBanners(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
         err instanceof Error
           ? `Erro ao buscar banners: ${err.message}`

@@ -12,6 +12,7 @@ import "./ShelterFormPage.css";
 import ShelterFormLeftPanel from "./ShelterFormLeftPanel";
 import ShelterFormRightPanel from "./ShelterFormRightPanel";
 import { TeamManagementRef } from "./components/TeamManagementSection";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 type SnackbarState = { open: boolean; message: string };
 
@@ -101,9 +102,9 @@ export default function ShelterFormPage() {
           setSavedShelterId(null);
           setFile(null);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isMounted) return;
-        setError(err?.response?.data?.message || "Erro ao carregar abrigo");
+        setError(getApiErrorMessage(err, "Erro ao carregar abrigo"));
       } finally {
         if (!isMounted) return;
         setInitialLoading(false);
@@ -255,8 +256,8 @@ export default function ShelterFormPage() {
           await createShelter(payload);
         }
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || dialogError || "Erro ao salvar abrigo");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, dialogError) || "Erro ao salvar abrigo");
     }
   };
 

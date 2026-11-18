@@ -7,6 +7,7 @@ import { ShelterResponseDto } from '@/features/shelters/types';
 import { RootState } from '@/store/slices';
 import type { TeamWithMembersDto } from '@/features/teams/types';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export const useShelterPage = (idToFetch: string) => {
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ export const useShelterPage = (idToFetch: string) => {
         setError(null);
         const data = await apiFetchShelter(idToFetch);
         setShelter(data);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || API_ERROR_MESSAGES.FETCH_SHELTER);
+      } catch (err: unknown) {
+        setError(getApiErrorMessage(err, API_ERROR_MESSAGES.FETCH_SHELTER));
       } finally {
         setLoading(false);
       }

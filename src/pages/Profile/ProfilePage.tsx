@@ -21,6 +21,7 @@ import PreferencesForm from '@/features/profile/components/PreferencesForm';
 import { PROFILE_ERROR_MESSAGES } from '@/constants/errors';
 import ProfileSidebar, { menuItems } from './components/ProfileSidebar';
 import ImagePreviewDialog from '@/components/Common/ImagePreviewDialog';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -116,8 +117,8 @@ const ProfilePage: React.FC = () => {
     try {
       setError(null);
       await dispatch(fetchCurrentUser());
-    } catch (err: any) {
-      setError(err?.response?.data?.message || PROFILE_ERROR_MESSAGES.UPDATE_GENERIC);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, PROFILE_ERROR_MESSAGES.UPDATE_GENERIC));
     }
   };
 

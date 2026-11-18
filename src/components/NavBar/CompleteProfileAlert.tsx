@@ -40,6 +40,7 @@ import type { PendingForMemberDto, RegisterAttendanceDto, PendingForLeaderDto, T
 import type { RootState as RootStateType } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { ATTENDANCE_ERROR_MESSAGES, ATTENDANCE_SUCCESS_MESSAGES } from '@/constants/errors';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export interface ProfileAlert {
   id: string;
@@ -153,8 +154,8 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
         setComment('');
         setFeedback(null);
       }, 2000);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || ATTENDANCE_ERROR_MESSAGES.REGISTER_GENERIC;
+    } catch (err: unknown) {
+      const message = getApiErrorMessage(err, ATTENDANCE_ERROR_MESSAGES.REGISTER_GENERIC);
       setPendingError(message);
     } finally {
       setSaving(false);

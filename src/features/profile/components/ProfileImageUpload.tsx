@@ -18,6 +18,7 @@ import ImagePreviewDialog from '../../../components/Common/ImagePreviewDialog';
 import { apiUpdateProfileImage } from '../api';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import type { AppDispatch } from '@/store/slices';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface ProfileImageUploadProps {
   currentImageUrl?: string;
@@ -102,8 +103,8 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       onUpdate();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 'Erro ao fazer upload da imagem';
+    } catch (err: unknown) {
+      const errorMessage = getApiErrorMessage(err, 'Erro ao fazer upload da imagem');
       onError(errorMessage);
     } finally {
       setIsSubmitting(false);

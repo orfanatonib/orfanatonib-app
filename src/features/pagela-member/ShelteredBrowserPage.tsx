@@ -21,6 +21,7 @@ import { apiFetchSheltered } from "../sheltered/api";
 import NoShelterLinkedPage from "./NoShelterLinkedPage";
 import { useDispatch } from "react-redux";
 import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
@@ -268,8 +269,8 @@ export default function ShelteredBrowserPage() {
           : { street: "", number: "", district: "", city: "", state: "", postalCode: "", complement: "" },
       });
       setDialogError("");
-    } catch (e: any) {
-      setDialogError(e?.response?.data?.message || e?.message || "Não foi possível abrir o acolhido para edição");
+    } catch (e: unknown) {
+      setDialogError(getApiErrorMessage(e, "Não foi possível abrir o acolhido para edição"));
     }
   };
 

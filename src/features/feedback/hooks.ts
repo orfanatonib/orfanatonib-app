@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { apiDeleteFeedback, apiListFeedbacks, apiMarkAsRead } from "./api";
 import { setFeedbacks } from "@/store/slices/feedback/feedbackSlice";
 import { FeedbackData } from "@/store/slices/feedback/feedbackSlice";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 function useDebouncedValue<T>(value: T, delay = 300) {
   const [debounced, setDebounced] = useState(value);
@@ -26,8 +27,8 @@ export function useFeedbackList() {
       const data = await apiListFeedbacks();
       setItems(data);
       dispatch(setFeedbacks(data));
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Erro ao carregar feedbacks");
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Erro ao carregar feedbacks"));
     } finally {
       setLoading(false);
     }
@@ -66,8 +67,8 @@ export function useFeedbackMutations(refresh: () => Promise<void> | void) {
     try {
       await apiDeleteFeedback(id);
       await refresh();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Erro ao excluir feedback");
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Erro ao excluir feedback"));
       throw e;
     } finally {
       setLoading(false);
@@ -80,8 +81,8 @@ export function useFeedbackMutations(refresh: () => Promise<void> | void) {
     try {
       await apiMarkAsRead(id);
       await refresh();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Erro ao marcar como lido");
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Erro ao marcar como lido"));
       throw e;
     } finally {
       setLoading(false);

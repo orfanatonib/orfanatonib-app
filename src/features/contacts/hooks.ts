@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiDeleteContact, apiListContacts, apiMarkAsRead } from "./api";
 import { Contact } from "./types";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -13,8 +14,8 @@ export function useContacts() {
     try {
       const data = await apiListContacts();
       setContacts(data);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e.message || "Erro ao carregar contatos");
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Erro ao carregar contatos"));
     } finally {
       setLoading(false);
     }
@@ -56,14 +57,14 @@ export function useContactMutations(refresh: () => Promise<void> | void) {
   const remove = useCallback(async (id: string) => {
     setBusy(true); setError("");
     try { await apiDeleteContact(id); await refresh(); }
-    catch (e: any) { setError(e?.response?.data?.message || e.message || "Erro ao excluir contato"); throw e; }
+    catch (e: unknown) { setError(getApiErrorMessage(e, "Erro ao excluir contato")); throw e; }
     finally { setBusy(false); }
   }, [refresh]);
 
   const markAsRead = useCallback(async (id: string) => {
     setBusy(true); setError("");
     try { await apiMarkAsRead(id); await refresh(); }
-    catch (e: any) { setError(e?.response?.data?.message || e.message || "Erro ao marcar como lido"); throw e; }
+    catch (e: unknown) { setError(getApiErrorMessage(e, "Erro ao marcar como lido")); throw e; }
     finally { setBusy(false); }
   }, [refresh]);
 

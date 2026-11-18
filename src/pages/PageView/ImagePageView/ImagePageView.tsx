@@ -33,6 +33,7 @@ import {
   updatePagination,
   PaginatedSectionResponse,
 } from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
+import { isRequestCanceled } from '@/utils/apiErrorMessage';
 
 interface PageSectionProps {
   idToFetch?: string;
@@ -182,8 +183,8 @@ export default function PageSectionView({ idToFetch, feed }: PageSectionProps) {
         }
 
         setHasMore(data.page * data.limit < data.total);
-      } catch (err: any) {
-        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+      } catch (err: unknown) {
+        if (!isRequestCanceled(err)) {
           setError('Erro ao carregar a seção. Tente novamente mais tarde.');
         }
       } finally {

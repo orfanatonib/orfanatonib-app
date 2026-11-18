@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import FormHelperText from "@mui/material/FormHelperText";
 import { apiFetchSheltersList } from "@/features/shelters/api";
 import { ShelterResponseDto } from "@/features/shelters/types";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export type SimpleShelterResponseDto = {
   id: string;
@@ -63,8 +64,8 @@ export default function ShelterAutocomplete({
       if (safe.length === 1 && !value) {
         onChange(safe[0].id, safe[0]);
       }
-    } catch (e: any) {
-      setLoadError(e?.response?.data?.message || e?.message || "Falha ao carregar shelters");
+    } catch (e: unknown) {
+      setLoadError(getApiErrorMessage(e, "Falha ao carregar shelters"));
     } finally {
       setLoading(false);
     }

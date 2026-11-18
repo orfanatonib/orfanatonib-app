@@ -13,6 +13,7 @@ import {
   UpadateUserForm,
 } from "./types";
 import { digitsOnly } from "@/utils/masks";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 export function useUsers(
   pageIndex: number,
@@ -46,9 +47,9 @@ export function useUsers(
 
       setRows(Array.isArray(page?.items) ? page.items : []);
       setTotal(Number(page?.meta?.total ?? 0));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.response?.data?.message || err.message || "Erro ao buscar usuários"
+        getApiErrorMessage(err, "Erro ao buscar usuários")
       );
     } finally {
       setLoading(false);
@@ -91,9 +92,9 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
       const { confirmPassword, ...payload } = form;
       await apiCreateUser({ ...payload, phone: digitsOnly(payload.phone) });
       await refreshPage();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDialogError(
-        err?.response?.data?.message || err.message || "Erro ao criar usuário"
+        getApiErrorMessage(err, "Erro ao criar usuário")
       );
       throw err;
     } finally {
@@ -110,9 +111,9 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
         const { confirmPassword, ...payload } = form;
         await apiUpdateUser(id, { ...payload, phone: digitsOnly(payload.phone) } as any);
         await refreshPage();
-      } catch (err: any) {
+      } catch (err: unknown) {
         setDialogError(
-          err?.response?.data?.message || err.message || "Erro ao atualizar usuário"
+          getApiErrorMessage(err, "Erro ao atualizar usuário")
         );
         throw err;
       } finally {
@@ -129,9 +130,9 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
     try {
       await apiDeleteUser(id);
       await refreshPage();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDialogError(
-        err?.response?.data?.message || err.message || "Erro ao excluir usuário"
+        getApiErrorMessage(err, "Erro ao excluir usuário")
       );
       throw err;
     } finally {

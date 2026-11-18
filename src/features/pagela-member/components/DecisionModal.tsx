@@ -8,6 +8,7 @@ import { apiCreateAcceptedChrist } from "@/features/accepted-christs";
 import type { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface Props {
   open: boolean;
@@ -61,8 +62,8 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
       });
       if (onSuccess) await onSuccess();
       handleClose();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Erro ao salvar decisão espiritual");
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Erro ao salvar decisão espiritual"));
     } finally {
       setLoading(false);
     }

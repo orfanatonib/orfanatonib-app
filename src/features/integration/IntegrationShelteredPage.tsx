@@ -22,6 +22,7 @@ import { apiCreateIntegration } from "./api";
 import type { CreateIntegrationDto } from "./types";
 import { maskPhoneBR } from "@/utils/masks";
 import IntegrationImageUpload from "./components/IntegrationImageUpload";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 type FormData = {
   name?: string;
@@ -77,9 +78,9 @@ export default function IntegrationShelteredPage() {
         navigate('/area-dos-acolhidos');
       }, 3000);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.response?.data?.message || err.message || "Erro ao registrar integração"
+        getApiErrorMessage(err, "Erro ao registrar integração")
       );
     } finally {
       setLoading(false);

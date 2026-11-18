@@ -90,7 +90,7 @@ export default function PagelaQuickCard({
       if ((isMember && !user?.memberProfile?.id) || (isLeader && !user?.leaderProfile?.id)) {
         try {
           await dispatch(fetchCurrentUser()).unwrap();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.warn('PagelaQuickCard: Failed to refresh user data', err);
         }
       }
@@ -122,14 +122,14 @@ export default function PagelaQuickCard({
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalMemberProfileId = updatedUser?.memberProfile?.id ?? null;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('PagelaQuickCard: Failed to fetch member profile for save', err);
       }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('PagelaQuickCard: Failed to fetch leader profile for save', err);
       }
     }

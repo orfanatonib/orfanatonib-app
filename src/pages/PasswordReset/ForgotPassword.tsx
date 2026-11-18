@@ -18,6 +18,7 @@ import {
     AUTH_VALIDATION
 } from '@/constants/errors';
 import type { ForgotPasswordResponse } from '@/types/api/auth';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -55,8 +56,8 @@ const ForgotPassword: React.FC = () => {
                 setSuccessMessage(response.data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
             }
             setCooldown(AUTH_VALIDATION.COOLDOWN_SECONDS);
-        } catch (error: any) {
-            const msg = error.response?.data?.message || AUTH_ERROR_MESSAGES.FORGOT_PASSWORD_GENERIC;
+        } catch (error: unknown) {
+            const msg = getApiErrorMessage(error, AUTH_ERROR_MESSAGES.FORGOT_PASSWORD_GENERIC);
             setErrorMessage(msg);
         } finally {
             setLoading(false);
