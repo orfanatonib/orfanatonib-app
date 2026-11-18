@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   Drawer,
   IconButton,
@@ -23,14 +23,13 @@ import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import NavLinks from './NavLinks';
 import { RootState } from '@/store/slices';
-import { logout, UserRole } from '@/store/slices/auth/authSlice';
-import api from '@/config/axiosConfig';
+import { UserRole } from '@/store/slices/auth/authSlice';
+import { useLogout } from './useLogout';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 const MobileNavigation: React.FC = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
@@ -61,16 +60,7 @@ const MobileNavigation: React.FC = () => {
     closeDrawer();
   };
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-    } finally {
-      dispatch(logout());
-      navigate('/');
-      closeDrawer();
-    }
-  };
+  const handleLogout = useLogout(closeDrawer);
 
   return (
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>

@@ -1,10 +1,10 @@
 import React, { Fragment } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Button, Stack } from '@mui/material';
 import { RootState } from '@/store/slices';
-import { logout, UserRole } from '@/store/slices/auth/authSlice';
-import api from '@/config/axiosConfig';
+import { UserRole } from '@/store/slices/auth/authSlice';
+import { useLogout } from './useLogout';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 interface Props {
@@ -15,7 +15,6 @@ interface Props {
 const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
 
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
@@ -25,16 +24,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
 
   const handleClick = () => closeMenu?.();
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-    } finally {
-      dispatch(logout());
-      navigate('/');
-      closeMenu?.();
-    }
-  };
+  const handleLogout = useLogout(closeMenu);
 
   const renderLink = (to: string, label: string) => {
     const active = location.pathname === to || location.pathname.startsWith(to + '/');

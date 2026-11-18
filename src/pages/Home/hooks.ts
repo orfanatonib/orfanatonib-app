@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/slices';
 import { setComments } from 'store/slices/comment/commentsSlice';
 import api from '@/config/axiosConfig';
+import { logger } from '@/utils/logger';
 
 export const useComments = () => {
   const comments = useSelector((state: RootState) => state.comments.comments);
@@ -15,7 +16,9 @@ export const useComments = () => {
       try {
         const response = await api.get('/comments/published');
         dispatch(setComments(response.data));
-      } catch {
+      } catch (error: unknown) {
+        // Depoimentos são opcionais na Home: a falha é registrada, a página segue sem eles.
+        logger.warn('Falha ao carregar depoimentos publicados', { feature: 'home', action: 'fetch-comments' }, error);
       }
     };
     fetchComments();

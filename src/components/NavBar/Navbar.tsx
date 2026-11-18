@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   AppBar,
   Toolbar,
@@ -31,15 +31,14 @@ import CompleteProfileAlert from './CompleteProfileAlert';
 import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { useAttendancePendings } from '@/features/attendance/hooks';
 import { RootState } from '@/store/slices';
-import { logout, UserRole } from '@/store/slices/auth/authSlice';
-import api from '@/config/axiosConfig';
+import { UserRole } from '@/store/slices/auth/authSlice';
+import { useLogout } from './useLogout';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 const NavBar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const profileAlerts = useProfileAlerts();
@@ -86,16 +85,7 @@ const NavBar: React.FC = () => {
     navigate('/login');
   };
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-    } finally {
-      dispatch(logout());
-      navigate('/');
-      handleClose();
-    }
-  };
+  const handleLogout = useLogout(handleClose);
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: '#000000', zIndex: 1300 }}>

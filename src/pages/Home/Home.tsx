@@ -28,7 +28,9 @@ const Home: React.FC = () => {
       <CardsSection />
       <FeaturesSection features={FEATURES} />
       {comments && comments.length > 0 && (
-        <TestimonialsSection testimonials={comments.filter(comment => comment.id) as any} />
+        <TestimonialsSection testimonials={comments.flatMap(({ id, comment, name, shelter, neighborhood }) =>
+            id ? [{ id, comment, name, shelter, neighborhood }] : [],
+          )} />
       )}
       <CTASection isAuthenticated={isAuthenticated} />
     </Box>
