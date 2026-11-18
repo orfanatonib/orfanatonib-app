@@ -128,7 +128,7 @@ test.describe.serial("Acesso e escopo — API ao vivo", () => {
     expect(await countRows("feature_flags", { key: "shelter-management" })).toBe(before);
   });
 
-  test("[visit-report.get.visit-reports#escopo-proprio-x-outro] líder com filtro de equipe alheia recebe lista vazia", async ({ request }) => {
+  test("[visit-report.get.visit-reports#perfil-lider] líder com filtro de equipe alheia recebe lista vazia", async ({ request }) => {
     const res = await request.get(`${API_URL}/visit-reports?teamId=${NIL}`, { headers: authHeaders(leader) });
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual([]);
