@@ -32,6 +32,7 @@ import ReportTableView from "./components/ReportTableView";
 import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
 import BackHeader from "@/components/common/header/BackHeader";
 import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import { logger } from '@/utils/logger';
 
 interface TeamGroup {
     id: string;
@@ -150,7 +151,7 @@ export default function VisitReportsManager() {
             await createReport(data);
             setFormOpen(false);
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
         } finally {
             setSubmitting(false);
         }
@@ -164,7 +165,7 @@ export default function VisitReportsManager() {
             setFormOpen(false);
             setEditingReport(null);
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
         } finally {
             setSubmitting(false);
         }
@@ -184,7 +185,7 @@ export default function VisitReportsManager() {
             setDeleteOpen(false);
             setDeleteId(null);
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
         } finally {
             setDeleting(false);
         }

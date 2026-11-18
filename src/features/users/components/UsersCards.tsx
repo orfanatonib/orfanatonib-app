@@ -18,6 +18,7 @@ import { UserRole } from "@/store/slices/auth/authSlice";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
+import { logger } from '@/utils/logger';
 
 type Props = {
   rows: UserRow[];
@@ -50,7 +51,7 @@ const initials = (name?: string) =>
 function CopyButton({ value, title = "Copiar" }: { value?: string; title?: string }) {
   const copyToClipboard = (text?: string) => {
     if (!text) return;
-    navigator.clipboard?.writeText(String(text)).catch((e) => console.warn('Clipboard write failed', e));
+    navigator.clipboard?.writeText(String(text)).catch((e) => logger.warn('Clipboard write failed', undefined, e));
   };
   return (
     <Tooltip title={title}>

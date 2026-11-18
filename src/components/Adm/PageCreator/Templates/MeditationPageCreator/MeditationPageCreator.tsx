@@ -28,6 +28,7 @@ import MeditationForm from './MeditationForm';
 import { AxiosError } from 'axios';
 import { MediaItem, MediaPlatform, MediaType, MediaUploadType } from 'store/slices/types';
 import MediaManager from './MediaManager';
+import { logger } from '@/utils/logger';
 
 interface Props {
   fromTemplatePage?: boolean;
@@ -193,7 +194,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
       if (error instanceof AxiosError) {
         return;
       }
-      console.error(error);
+      logger.error('Falha inesperada na operação', undefined, error);
       setSnackbar({ open: true, message: 'Erro ao salvar meditação.', severity: 'error' });
     } finally {
       setLoading(false);

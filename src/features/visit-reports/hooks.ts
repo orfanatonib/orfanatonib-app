@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { VisitReport, VisitReportFilters } from "./types";
 import { getVisitReports, createVisitReport, updateVisitReport, deleteVisitReport } from "./api";
 import { CreateVisitReportDto, UpdateVisitReportDto } from "./types";
+import { logger } from '@/utils/logger';
 
 export const useVisitReports = () => {
     const [reports, setReports] = useState<VisitReport[]>([]);
@@ -16,7 +17,7 @@ export const useVisitReports = () => {
             setReports(data);
         } catch (err) {
             setError("Erro ao carregar Relatórios das Visitas");
-            console.error(err);
+            logger.error('Falha inesperada na operação', undefined, err);
         } finally {
             setLoading(false);
         }
@@ -28,7 +29,7 @@ export const useVisitReports = () => {
             setReports((prev) => [newReport, ...prev]);
             return newReport;
         } catch (err) {
-            console.error(err);
+            logger.error('Falha inesperada na operação', undefined, err);
             throw err;
         }
     };
@@ -39,7 +40,7 @@ export const useVisitReports = () => {
             setReports((prev) => prev.map((r) => (r.id === id ? updatedReport : r)));
             return updatedReport;
         } catch (err) {
-            console.error(err);
+            logger.error('Falha inesperada na operação', undefined, err);
             throw err;
         }
     };
@@ -49,7 +50,7 @@ export const useVisitReports = () => {
             await deleteVisitReport(id);
             setReports((prev) => prev.filter((r) => r.id !== id));
         } catch (err) {
-            console.error(err);
+            logger.error('Falha inesperada na operação', undefined, err);
             throw err;
         }
     };

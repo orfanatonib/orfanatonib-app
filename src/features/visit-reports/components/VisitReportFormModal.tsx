@@ -26,6 +26,7 @@ import { SimpleShelterResponseDto } from "../../shelters/types";
 import { TeamResponseDto } from "../../teams/types";
 import { ShelterScheduleResponseDto, MyTeamResponseDto } from "../../shelter-schedule/types";
 import { formatDayBR } from 'utils/dateUtils';
+import { logger } from '@/utils/logger';
 
 interface VisitReportFormModalProps {
     open: boolean;
@@ -104,13 +105,13 @@ export default function VisitReportFormModal({
                 setLoadingShelters(true);
                 apiFetchSheltersList()
                     .then(setShelters)
-                    .catch(console.error)
+                    .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                     .finally(() => setLoadingShelters(false));
             } else if (isLeader) {
                 setLoadingTeams(true);
                 apiListMyTeams()
                     .then(setMyTeams)
-                    .catch(console.error)
+                    .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                     .finally(() => setLoadingTeams(false));
             }
         }
@@ -125,7 +126,7 @@ export default function VisitReportFormModal({
                     setSelectedTeamId("");
                     setSchedules([]);
                 })
-                .catch(console.error)
+                .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                 .finally(() => setLoadingTeams(false));
         }
     }, [selectedShelterId, initialData, isAdmin]);
@@ -135,7 +136,7 @@ export default function VisitReportFormModal({
             setLoadingSchedules(true);
             apiListShelterSchedules(selectedTeamId)
                 .then(setSchedules)
-                .catch(console.error)
+                .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                 .finally(() => setLoadingSchedules(false));
         }
     }, [selectedTeamId, initialData]);
@@ -190,7 +191,6 @@ export default function VisitReportFormModal({
                                                 <MenuItem disabled><CircularProgress size={20} /></MenuItem>
                                             ) : (
                                                 shelters.map((s) => {
-                                                    console.log('Rendering shelter option:', s);
                                                     return (
                                                         <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
                                                             {s.name || "Abrigo sem nome"}

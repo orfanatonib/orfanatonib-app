@@ -19,6 +19,7 @@ import {
 import type { IntegrationResponseDto, CreateIntegrationDto, UpdateIntegrationDto } from "../types";
 import { maskPhoneBR } from "@/utils/masks";
 import IntegrationImageUpload from "./IntegrationImageUpload";
+import { logger } from '@/utils/logger';
 
 type FormData = {
   name?: string;
@@ -210,7 +211,7 @@ export default function IntegrationFormDialog({
                   onImagesSelect={(files) => setSelectedFiles(prev => [...prev, ...files])}
                   onImageDelete={editing ? handleImageDelete : undefined}
                   onError={(error) => {
-                    console.error('Erro no upload:', error);
+                    logger.error('Erro no upload:', undefined, error);
                   }}
                   currentImages={(editing?.images || []).filter(img => !deletedImages.has(img.id))}
                   personName={formData.name}

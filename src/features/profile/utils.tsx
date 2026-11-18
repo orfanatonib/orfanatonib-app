@@ -4,6 +4,7 @@ import {
     School as MemberIcon,
     SupervisorAccount as LeaderIcon,
 } from '@mui/icons-material';
+import { logger } from '@/utils/logger';
 
 export type BirthdayStatus = 'today' | 'this-week' | 'this-month' | null;
 
@@ -41,7 +42,7 @@ export const getBirthdayStatus = (birthDateStr?: string): BirthdayStatus => {
 
         return null;
     } catch (e) {
-        console.debug('getBirthdayStatus: Date parsing error', e);
+        logger.debug('getBirthdayStatus: Date parsing error', undefined, e);
         return null;
     }
 };
@@ -64,7 +65,7 @@ export const getDaysUntilBirthday = (birthDateStr?: string): number | null => {
         const diffTime = birthdayThisYear.getTime() - today.getTime();
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     } catch (e) {
-        console.debug('getDaysUntilBirthday: Date parsing error', e);
+        logger.debug('getDaysUntilBirthday: Date parsing error', undefined, e);
         return null;
     }
 };
@@ -76,7 +77,7 @@ export const formatBirthDate = (dateStr?: string): string => {
         const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         return `${day} de ${months[month - 1]}`;
     } catch (e) {
-        console.debug('formatBirthDate: Date parsing error', e);
+        logger.debug('formatBirthDate: Date parsing error', undefined, e);
         return dateStr;
     }
 };
@@ -88,7 +89,7 @@ export const formatBirthDateShort = (dateStr?: string): string => {
         const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         return `${day} ${months[month - 1]}`;
     } catch (e) {
-        console.debug('formatBirthDateShort: Date parsing error', e);
+        logger.debug('formatBirthDateShort: Date parsing error', undefined, e);
         return dateStr;
     }
 };
@@ -105,7 +106,7 @@ export const calculateAge = (dateStr?: string): number | null => {
         }
         return age;
     } catch (e) {
-        console.debug('calculateAge: Date parsing error', e);
+        logger.debug('calculateAge: Date parsing error', undefined, e);
         return null;
     }
 };

@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
 import { MediaItem } from '@/store/slices/types';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
+import { logger } from '@/utils/logger';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -135,7 +136,7 @@ const IS_DEV = import.meta.env.DEV === true;
 const DEBUG_AUTH = import.meta.env.VITE_DEBUG_AUTH === 'true';
 
 const log = (message: string, ...args: unknown[]) => {
-  if (IS_DEV || DEBUG_AUTH) console.debug(message, ...args);
+  if (IS_DEV || DEBUG_AUTH) logger.debug(message, { feature: 'auth', metadata: { args } });
 };
 
 const clean = (s: string) => s.replace(/^"|"$/g, '');
@@ -233,7 +234,7 @@ const authSlice = createSlice({
         localStorage.setItem('accessToken', state.accessToken!);
         localStorage.setItem('refreshToken', state.refreshToken!);
       } catch (e) {
-        console.warn('Failed to save auth to localStorage', e);
+        logger.warn('Failed to save auth to localStorage', undefined, e);
       }
     },
     logout: (state) => {
@@ -249,7 +250,7 @@ const authSlice = createSlice({
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       } catch (e) {
-        console.warn('Failed to remove auth from localStorage', e);
+        logger.warn('Failed to remove auth from localStorage', undefined, e);
       }
     },
     setEmailVerificationAlert: (state, action: PayloadAction<{ verificationEmailSent: boolean; message?: string } | null>) => {
@@ -302,7 +303,7 @@ const authSlice = createSlice({
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
         } catch (e) {
-          console.warn('Failed to clear auth from localStorage', e);
+          logger.warn('Failed to clear auth from localStorage', undefined, e);
         }
       });
   },

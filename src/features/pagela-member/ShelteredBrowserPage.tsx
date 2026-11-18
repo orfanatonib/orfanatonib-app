@@ -22,6 +22,7 @@ import NoShelterLinkedPage from "./NoShelterLinkedPage";
 import { useDispatch } from "react-redux";
 import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import { logger } from '@/utils/logger';
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
@@ -128,7 +129,7 @@ export default function ShelteredBrowserPage() {
 
         setFullProfile(updatedUser);
       } catch (error) {
-        console.error('Falha ao verificar vínculo com abrigo:', error);
+        logger.error('Falha ao verificar vínculo com abrigo:', undefined, error);
         hasCheckedProfileRef.current = false;
       } finally {
         setCheckingShelter(false);

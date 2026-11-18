@@ -28,6 +28,7 @@ import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch } from "@/store/slices";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO, toLabelVisit } from "../utils";
+import { logger } from '@/utils/logger';
 
 type Props = {
   shelteredName?: string;
@@ -91,7 +92,7 @@ export default function PagelaQuickCard({
         try {
           await dispatch(fetchCurrentUser()).unwrap();
         } catch (err: unknown) {
-          console.warn('PagelaQuickCard: Failed to refresh user data', err);
+          logger.warn('PagelaQuickCard: Failed to refresh user data', undefined, err);
         }
       }
     };
@@ -123,14 +124,14 @@ export default function PagelaQuickCard({
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalMemberProfileId = updatedUser?.memberProfile?.id ?? null;
       } catch (err: unknown) {
-        console.warn('PagelaQuickCard: Failed to fetch member profile for save', err);
+        logger.warn('PagelaQuickCard: Failed to fetch member profile for save', undefined, err);
       }
     } else if (isLeader && !finalLeaderProfileId) {
       try {
         const updatedUser = await dispatch(fetchCurrentUser()).unwrap();
         finalLeaderProfileId = updatedUser?.leaderProfile?.id ?? null;
       } catch (err: unknown) {
-        console.warn('PagelaQuickCard: Failed to fetch leader profile for save', err);
+        logger.warn('PagelaQuickCard: Failed to fetch leader profile for save', undefined, err);
       }
     }
 
