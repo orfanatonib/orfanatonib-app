@@ -43,23 +43,14 @@ test.describe.serial("Antecedentes Criminais — API ao vivo", () => {
     expect(responsePost.status()).toBe(401);
   });
 
-  test("cria um antecedente criminal com PDF em link usando multipart/form-data", async ({ request }) => {
-    const payload = {
-      name: testName,
-      pdfEstadual: {
-        title: "Certidão Estadual Teste",
-        description: "PDF de teste E2E",
-        uploadType: "link",
-        mediaType: "document",
-        isLocalFile: false,
-        url: `https://example.com/certidao-${RUN_TAG}.pdf`,
-      },
-    };
+  test("cria um antecedente criminal enviando o PDF estadual (a API exige ao menos um arquivo)", async ({ request }) => {
+    const payload = { name: testName };
 
     const response = await request.post(`${API_URL}/antecedentes-criminais`, {
       headers: authHeaders(adminToken),
       multipart: {
         atendenteData: JSON.stringify(payload),
+        estadual: { name: `certidao-${RUN_TAG}.pdf`, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF") },
       },
     });
 

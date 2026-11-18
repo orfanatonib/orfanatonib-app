@@ -206,7 +206,7 @@ test.describe.serial("Abrigos — API ao vivo", () => {
     expect(shelter.name).toBe(`${RUN_TAG}-renomeado`);
     expect(numbers(shelter.teams)).toEqual([1, 2, 3]);
     // Update sem mídia não reenvia a imagem nem apaga o arquivo do bucket.
-    expect(shelter.mediaItem?.url).toContain("foto.png");
+    expect(shelter.mediaItem?.url).toContain(`${RUN_TAG}.png`);
   });
 
   test("reduzir a quantidade remove as equipes excedentes", async ({
