@@ -76,6 +76,9 @@ test.describe.serial("Escopo por abrigo — caminhos felizes ao vivo", () => {
     await request.put(`${API_URL}/leader-profiles/${leaderProfileId}`, { headers: authHeaders(admin), data: [] }).catch(() => undefined);
     for (const undo of cleanup.reverse()) await undo(request).catch((e: unknown) => { failures.push(String(e)); });
     expect(failures, "falhas na limpeza").toEqual([]);
+    // apagar o acolhido leva as decisões junto (sem linha órfã em accepted_christs)
+    expect(await countRows("accepted_christs", { sheltered_id: shelteredOwn })).toBe(0);
+    expect(await countRows("accepted_christs", { sheltered_id: shelteredOther })).toBe(0);
     expect(await countRows("shelters", { name: `${TAG}-own` })).toBe(0);
     expect(await countRows("shelters", { name: `${TAG}-other` })).toBe(0);
     await closeDb();
@@ -138,6 +141,39 @@ test.describe.serial("Escopo por abrigo — caminhos felizes ao vivo", () => {
     expect(shelterIds).toEqual(expect.arrayContaining([own, other]));
     expect((await request.get(`${API_URL}/teams/${otherRows[0].id}`, { headers: authHeaders(admin) })).status()).toBe(200);
     expect((await request.get(`${API_URL}/teams/00000000-0000-4000-8000-000000000000`, { headers: authHeaders(admin) })).status()).toBe(404);
+  });
+
+  test("[accepted-christ.post.accepted-christs#escopo-proprio-x-outro] [accepted-christ.post.accepted-christs#perfil-lider] líder registra decisão só de acolhido do abrigo que lidera; de outro abrigo é 404 e nada é gravado", async ({ request }) => {
+    const before = await countRows("accepted_christs");
+
+    const denied = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(leader), data: { shelteredId: shelteredOther, decision: "ACCEPTED" } });
+    expect(denied.status()).toBe(404);
+    expect(await countRows("accepted_christs")).toBe(before);
+
+    // inexistente e fora do escopo são indistinguíveis (não revela o UUID)
+    const missing = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(leader), data: { shelteredId: "00000000-0000-4000-8000-000000000000", decision: "ACCEPTED" } });
+    expect(missing.status()).toBe(404);
+    expect(await denied.text()).toContain("Acolhido não encontrado");
+
+    const ok = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(leader), data: { shelteredId: shelteredOwn, decision: "ACCEPTED", notes: "e2e" } });
+    expect(ok.status(), await ok.text()).toBe(201);
+    const id = ((await ok.json()) as { id: string }).id;
+    expect(await countRows("accepted_christs", { id })).toBe(1);
+  });
+
+  test("[accepted-christ.post.accepted-christs#perfil-membro] membro do abrigo registra a do próprio; a de outro abrigo é 404", async ({ request }) => {
+    const before = await countRows("accepted_christs");
+    const denied = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(member), data: { shelteredId: shelteredOther, decision: "ACCEPTED" } });
+    expect(denied.status()).toBe(404);
+    expect(await countRows("accepted_christs")).toBe(before);
+
+    const ok = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(member), data: { shelteredId: shelteredOwn, decision: "ACCEPTED" } });
+    expect(ok.status(), await ok.text()).toBe(201);
+  });
+
+  test("[accepted-christ.post.accepted-christs#perfil-admin] admin registra decisão de acolhido de qualquer abrigo", async ({ request }) => {
+    const ok = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(admin), data: { shelteredId: shelteredOther, decision: "ACCEPTED" } });
+    expect(ok.status(), await ok.text()).toBe(201);
   });
 
   test("[team.post.teams#escopo-proprio-x-outro] líder não cria nem apaga equipe de outro abrigo", async ({ request }) => {
