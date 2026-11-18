@@ -207,6 +207,23 @@ test.describe.serial("Ideias compartilhadas — API ao vivo", () => {
     expect(((await response.json()) as SectionDto).medias).toHaveLength(2);
   });
 
+  test("[ideas-section.get.ideas-sections#perfil-membro] [ideas-section.get.ideas-sections-id#perfil-membro] membro não lê a fila de ideias nem o detalhe (traz nome, e-mail e telefone do autor)", async ({
+    request,
+  }) => {
+    const list = await request.get("/ideas-sections", {
+      headers: authHeaders(member),
+    });
+    expect(list.status()).toBe(403);
+    // a recusa não devolve nenhum dado da fila
+    expect(await list.text()).not.toContain("@");
+
+    const detail = await request.get(`/ideas-sections/${sectionId}`, {
+      headers: authHeaders(member),
+    });
+    expect(detail.status()).toBe(403);
+    expect(await detail.text()).not.toContain("@");
+  });
+
   test("membro não edita nem remove ideia alguma", async ({ request }) => {
     const update = await request.patch(`/ideas-sections/${sectionId}`, {
       headers: authHeaders(member),
