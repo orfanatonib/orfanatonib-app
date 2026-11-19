@@ -109,4 +109,18 @@ export interface PageFeedbackSnackbarProps {
   testId: string;
   /** Alerta preenchido e centralizado embaixo (galeria de fotos). */
   filled?: boolean;
+  /** Botão de fechar dentro do alerta (padrão: sim). */
+  showCloseButton?: boolean;
+}
+
+export interface TouchedTextFieldProps {
+  testId: string;
+  label: string;
+  value: string;
+  type?: 'text' | 'date';
+  touched: boolean;
+  onChange: (value: string) => void;
+  onTouchedChange: (touched: boolean) => void;
+  /** Só vazio é erro (datas) ou vazio após `trim` (texto). */
+  trimValue?: boolean;
 }

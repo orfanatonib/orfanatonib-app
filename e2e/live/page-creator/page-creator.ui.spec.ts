@@ -134,4 +134,69 @@ test.describe.serial("Criadores de página (admin) — criação pelo formulári
     }
     await expect.poll(() => countRows("videos_pages", { name: title })).toBe(0);
   });
+
+  test("meditação da semana: valida, cria com 5 dias e um link e grava no banco", async ({ page, request }) => {
+    const topic = `Meditação ${RUN_TAG}`;
+    await openCreator(page, "page-template-card-meditation");
+
+    await page.getByRole("button", { name: "Salvar Meditação" }).click();
+    await expect(page.getByText("Informe tema, data de início e fim.")).toBeVisible();
+
+    await page.getByLabel("Tema da Meditação").fill(topic);
+    await page.getByLabel("Data de Início").fill("2099-01-06");
+    await page.getByLabel("Data de Término").fill("2099-01-09");
+    await page.getByRole("button", { name: "Salvar Meditação" }).click();
+    await expect(page.getByText("A data de início deve ser uma segunda-feira.")).toBeVisible();
+    await page.getByLabel("Data de Início").fill("2099-01-05");
+
+    const days = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+    for (const [index, day] of days.entries()) {
+      await page.getByLabel("Dia da Semana").click();
+      await page.getByRole("option", { name: day }).click();
+      await page.getByLabel("Tema *").fill(`Tema ${index + 1}`);
+      await page.getByLabel("Versículo *").fill(`Versículo ${index + 1}`);
+      await page.getByRole("button", { name: "Adicionar Dia" }).click();
+    }
+
+    await page.getByRole("button", { name: "Salvar Meditação" }).click();
+    await expect(page.getByText("Informe um link válido ou envie um arquivo.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Adicionar Doc da meditação" }).click();
+    await page.getByLabel("Insira o link").fill("https://example.com/meditacao.pdf");
+
+    const posted = page.waitForResponse(
+      (r) => r.url().endsWith("/meditations") && r.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: "Salvar Meditação" }).click();
+    const response = await posted;
+    expect(response.status(), await response.text()).toBe(201);
+    const body = (await response.json()) as { id: string };
+
+    try {
+      const form = await readCapturedForm(page);
+      const payload = parseJsonField<{
+        topic: string;
+        startDate: string;
+        endDate: string;
+        media: Record<string, unknown>;
+        days: Array<{ day: string; topic: string; verse: string }>;
+      }>(form, "meditationData");
+      expect(payload).toMatchObject({ topic, startDate: "2099-01-05", endDate: "2099-01-09" });
+      expect(payload.days.map((d) => d.day)).toEqual(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
+      expect(payload.media).toMatchObject({
+        title: topic,
+        mediaType: "document",
+        uploadType: "link",
+        url: "https://example.com/meditacao.pdf",
+        isLocalFile: false,
+        platformType: "ANY",
+      });
+      expect(form.files).toEqual([]);
+      await expect.poll(() => countRows("meditations", { topic })).toBe(1);
+      await expect(page).toHaveURL(/\/adm\/meditacoes$/);
+    } finally {
+      await deletePage(request, "meditations", body.id);
+    }
+    await expect.poll(() => countRows("meditations", { topic })).toBe(0);
+  });
 });

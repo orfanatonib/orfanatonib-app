@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { MediaType, MediaUploadType } from 'store/slices/types';
+import { MediaItem, MediaType, MediaUploadType } from 'store/slices/types';
 import { buildImageFormData, validateImageDraft } from './utils';
 
-const media = (file?: File) => ({
+const media = (file?: File): MediaItem => ({
   isLocalFile: Boolean(file),
   url: '',
   uploadType: MediaUploadType.UPLOAD,
   mediaType: MediaType.IMAGE,
   file,
+  title: '',
+  description: '',
   originalName: file?.name,
 });
 const section = (mediaItems = [media()]) => ({ caption: 'c', description: 'd', public: true, mediaItems });

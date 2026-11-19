@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import { Fragment, useState } from 'react';
 import { MediaPlatform, MediaUploadType } from 'store/slices/types';
+import { getAcceptAttribute } from '../shared/mediaUtils';
+import { MediaFileKind } from '../shared/types';
 
 interface MediaManagerProps {
   uploadType: MediaUploadType;
@@ -106,7 +108,7 @@ export default function MediaManager({
               <input
                 type="file"
                 hidden
-                accept=".pdf,.doc,.docx"
+                accept={getAcceptAttribute(MediaFileKind.DOCUMENT)}
                 onChange={(e) => {
                   const selected = e.target.files?.[0];
                   if (selected) setFile(selected);

@@ -10,6 +10,7 @@ export default function PageFeedbackSnackbar({
   onClose,
   testId,
   filled = false,
+  showCloseButton = true,
 }: PageFeedbackSnackbarProps) {
   return (
     <Snackbar
@@ -20,7 +21,7 @@ export default function PageFeedbackSnackbar({
       {...(filled ? { anchorOrigin: { vertical: 'bottom' as const, horizontal: 'center' as const } } : {})}
     >
       <Alert
-        onClose={onClose}
+        {...(showCloseButton ? { onClose } : {})}
         severity={severity}
         {...(filled ? { variant: 'filled' as const, sx: { width: '100%' } } : {})}
       >
