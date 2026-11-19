@@ -11,6 +11,10 @@
   "observability-audit.get.log-records-observability#storage-arquivo",
   "observability-audit.delete.log-records-audit#perfil-anonimo",
   "observability-audit.delete.log-records-audit#perfil-membro",
-  "observability-audit.post.auth-login#auditoria-sem-dado-pessoal"
+  "observability-audit.post.auth-login#auditoria-sem-dado-pessoal",
+  "observability-audit.get.adm-observabilidade-auditoria#feliz",
+  "observability-audit.get.adm-observabilidade-auditoria#flag-desligada",
+  "observability-audit.get.adm-observabilidade-auditoria#perfil-membro",
+  "observability-audit.get.adm-observabilidade-auditoria#mobile"
  ]
 }
