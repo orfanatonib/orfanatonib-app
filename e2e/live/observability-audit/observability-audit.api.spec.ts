@@ -147,14 +147,21 @@ test.describe.serial("Auditoria e observabilidade — API", () => {
 
     await setFlag(request, true);
     // A gravação é assíncrona (fila de entrega): espera o evento aparecer.
-    const findEvent = async (): Promise<AuditLine | null> => {
-      const day = new Date().toISOString().slice(0, 10);
-      const query = `from=${day}T00:00:00.000Z&to=${day}T23:59:59.000Z&requestId=${requestId}`;
-      const api = await request.get(`${API_URL}/log-records/audit?${query}`, { headers: authHeaders(admin) });
-      if (api.status() === 409) return readAuditLines().find((line) => line.requestId === requestId) ?? null; // storage em arquivo
+    const day = new Date().toISOString().slice(0, 10);
+    const range = `from=${day}T00:00:00.000Z&to=${day}T23:59:59.000Z`;
+    const queryAudit = async (extra: string): Promise<AuditLine[]> => {
+      const api = await request.get(`${API_URL}/log-records/audit?${range}&${extra}`, { headers: authHeaders(admin) });
+      if (api.status() === 409) return readAuditLines(); // storage em arquivo
       expect(api.status()).toBe(200);
-      const body = (await api.json()) as { data: AuditLine[] };
-      return body.data.find((line) => line.requestId === requestId) ?? null;
+      return ((await api.json()) as { data: AuditLine[] }).data;
+    };
+    // Dentro da janela de 60 s um login recusado IGUAL ao anterior vira repetição (contador no evento original,
+    // sem linha nova com este requestId). Então: acha pelo requestId; se este caiu na janela, vale o evento da ação.
+    const findEvent = async (): Promise<AuditLine | null> => {
+      const byRequest = (await queryAudit(`requestId=${requestId}`)).find((line) => line.requestId === requestId);
+      if (byRequest) return byRequest;
+      const byAction = await queryAudit("actionName=AuthController.login");
+      return byAction.find((line) => String(line.actionName).includes("AuthController.login")) ?? null;
     };
     await expect.poll(async () => (await findEvent()) !== null, { timeout: 15_000 }).toBe(true);
 

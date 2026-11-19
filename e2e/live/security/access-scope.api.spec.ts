@@ -32,10 +32,10 @@ test.describe.serial("Acesso e escopo — API ao vivo", () => {
     expect(await countRows("accepted_christs")).toBe(before);
   });
 
-  test("[accepted-christ.post.accepted-christs#validacao] acolhido inexistente é 404 e notes acima de 2000 é 400", async ({ request }) => {
+  test("[accepted-christ.post.accepted-christs#validacao] acolhido inexistente é 404 e notes acima de 500 é 400", async ({ request }) => {
     const missing = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(admin), data: { shelteredId: NIL, decision: "ACCEPTED" } });
     expect(missing.status()).toBe(404);
-    const long = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(admin), data: { shelteredId: NIL, notes: "x".repeat(2001) } });
+    const long = await request.post(`${API_URL}/accepted-christs`, { headers: authHeaders(admin), data: { shelteredId: NIL, notes: "x".repeat(501) } });
     expect(long.status()).toBe(400);
   });
 
