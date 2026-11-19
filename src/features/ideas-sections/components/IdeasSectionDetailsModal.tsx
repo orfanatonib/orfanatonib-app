@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import { Close, Download, PlayArrow, Image as ImageIcon, AudioFile, VideoFile, PictureAsPdf, Person, Email, Phone, ContentCopy, WhatsApp } from '@mui/icons-material';
-import { IdeasSection } from '../types';
+import { IdeasSection, MediaItem } from '../types';
 import { formatDatePtBr, getMediaTypeIcon, getMediaTypeLabel, formatFileSize } from '../utils';
 import { buildIdeasWhatsappLink, phoneDigits } from '@/utils/whatsapp';
 
@@ -48,7 +48,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
     }
   };
 
-  const renderMediaPreview = (media: any) => {
+  const renderMediaPreview = (media: MediaItem) => {
     if (media.mediaType === 'image') {
       return (
         <img
