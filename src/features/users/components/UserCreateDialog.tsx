@@ -33,7 +33,7 @@ export default function UserCreateDialog({
   const roleOptions = [UserRole.LEADER, UserRole.MEMBER];
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+    <Dialog data-testid="user-create-dialog" open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Criar Usuário</DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

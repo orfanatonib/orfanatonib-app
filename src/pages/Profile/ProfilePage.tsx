@@ -173,7 +173,7 @@ const ProfilePage: React.FC = () => {
 
   if (!initialized || isLoading) {
     return (
-      <Box
+      <Box data-testid="profile-page"
         sx={{
           minHeight: '100vh',
           display: 'flex',

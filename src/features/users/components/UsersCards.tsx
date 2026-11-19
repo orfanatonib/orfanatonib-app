@@ -101,7 +101,7 @@ export default function UsersCards(props: Props) {
   };
 
   return (
-    <Box sx={{ px: { xs: 0, sm: 1 }, py: 0 }}>
+    <Box data-testid="users-cards" sx={{ px: { xs: 0, sm: 1 }, py: 0 }}>
       <Stack direction="row" spacing={0.75} sx={{ mb: 1, px: { xs: 0, sm: .5 } }} alignItems="center" justifyContent="flex-end">
         <FormControl size="small" sx={{ minWidth: { xs: 140, sm: 180 } }}>
           <InputLabel>Ordenar por</InputLabel>

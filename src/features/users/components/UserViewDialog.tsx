@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useMemo, useEffect, useState } from "react";
 import {
   Dialog,
@@ -58,7 +59,7 @@ function LineCard({
   children: React.ReactNode;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+    <Paper data-testid="user-view-card" variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
       <Stack spacing={0.5}>
         <Stack direction="row" spacing={0.75} alignItems="center">
           {icon}
@@ -100,7 +101,8 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
         } else {
           setTeamLabel(null);
         }
-      } catch {
+      } catch (error: unknown) {
+        logger.debug('Equipe do usuário indisponível', { feature: 'users' }, error);
         if (!cancelled) setTeamLabel(null);
       }
     };

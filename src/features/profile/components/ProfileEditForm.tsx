@@ -124,7 +124,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
 
   if (!profile) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+      <Box data-testid="profile-edit-form" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
         <CircularProgress />
       </Box>
     );

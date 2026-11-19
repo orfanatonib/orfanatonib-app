@@ -44,7 +44,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ profile, index, onClic
             onClick={onClick}
             style={{ cursor: 'pointer' }}
         >
-            <Paper
+            <Paper data-testid="profile-card"
                 elevation={0}
                 sx={{
                     borderRadius: 3,

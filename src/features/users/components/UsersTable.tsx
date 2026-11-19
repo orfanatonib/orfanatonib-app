@@ -248,7 +248,7 @@ function UsersTableDesktop({
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => {
                   const sorted = h.column.getIsSorted();
-                  const width = (h.column.columnDef.meta as any)?.width;
+                  const width = (h.column.columnDef.meta as { width?: number | string } | undefined)?.width;
                   const isActions = h.column.id === "actions";
                   return (
                     <TableCell

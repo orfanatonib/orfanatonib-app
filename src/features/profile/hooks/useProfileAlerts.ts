@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/slices';
 
 export interface ProfileAlert {
     id: string;
@@ -8,8 +9,8 @@ export interface ProfileAlert {
 }
 
 export function useProfileAlerts() {
-    const emailVerificationAlert = useSelector((state: any) => state.auth.emailVerificationAlert);
-    const user = useSelector((state: any) => state.auth.user);
+    const emailVerificationAlert = useSelector((state: RootState) => state.auth.emailVerificationAlert);
+    const user = useSelector((state: RootState) => state.auth.user);
     
     return useMemo(() => {
         const alerts: ProfileAlert[] = [];
@@ -33,8 +34,8 @@ export function useProfileAlerts() {
         if (user) {
             const pd = user.personalData;
             const pref = user.preferences;
-            const requiredPD = ['birthDate', 'gender', 'gaLeaderName', 'gaLeaderContact'];
-            const requiredPref = ['loveLanguages', 'temperaments', 'favoriteColor', 'favoriteFood', 'favoriteMusic', 'whatMakesYouSmile', 'skillsAndTalents'];
+            const requiredPD = ['birthDate', 'gender', 'gaLeaderName', 'gaLeaderContact'] as const;
+            const requiredPref = ['loveLanguages', 'temperaments', 'favoriteColor', 'favoriteFood', 'favoriteMusic', 'whatMakesYouSmile', 'skillsAndTalents'] as const;
             const pdMissing = !pd || requiredPD.some((k) => !pd[k]);
             const prefMissing = !pref || requiredPref.some((k) => !pref[k]);
             if (pdMissing) {

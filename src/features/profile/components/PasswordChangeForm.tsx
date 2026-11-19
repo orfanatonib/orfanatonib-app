@@ -139,7 +139,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onError, isComm
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="password-change-form" sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             {isCommonUser && (

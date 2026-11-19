@@ -82,18 +82,18 @@ export default function UsersManager() {
       }
     }
 
-    const { id, confirmPassword, editPassword, ...payload } = editing;
+    const { id, confirmPassword, editPassword, ...rest } = editing;
 
-    if (payload.name != null) {
-      (payload as any).name = normalizeName((payload as any).name || "");
-    }
-    if (!wantsPassword) {
-      delete (payload as any).password;
-    } else if (!payload.password) {
-      delete (payload as any).password;
+    // `password` é opcional no envio: só vai quando o admin quis trocá-la.
+    const payload: Omit<UpadateUserForm, "password"> & { password?: string } = {
+      ...rest,
+      name: rest.name != null ? normalizeName(rest.name || "") : rest.name,
+    };
+    if (!wantsPassword || !payload.password) {
+      delete payload.password;
     }
 
-    await updateUser(id, payload as any);
+    await updateUser(id, payload);
     setEditing(null);
   };
 
@@ -203,8 +203,8 @@ export default function UsersManager() {
         pageSize={pageSize}
         setPageIndex={setPageIndex}
         setPageSize={setPageSize}
-        sorting={sorting ? ([sorting] as any) : []}
-        setSorting={(s) => setSorting(Array.isArray(s) ? s[0] ?? null : (s as any))}
+        sorting={sorting ? [sorting] : []}
+        setSorting={(s) => setSorting(s[0] ?? null)}
         onView={(user) => setViewing(user)}
         onEdit={(user) => {
           setEditing({
@@ -218,7 +218,7 @@ export default function UsersManager() {
             password: "",
             confirmPassword: "",
             editPassword: false,
-          } as any);
+          });
 
           if (user.role === UserRole.MEMBER) {
             (async () => {
@@ -230,13 +230,13 @@ export default function UsersManager() {
                   : null;
 
                 setEditing((prev) =>
-                  prev && (prev as any).id === user.id
-                    ? ({
-                      ...(prev as any),
+                  prev && prev.id === user.id
+                    ? {
+                      ...prev,
                       memberTeamId: team?.id ?? null,
                       initialMemberTeamId: team?.id ?? null,
                       memberTeamLabel: label,
-                    } as any)
+                    }
                     : prev
                 );
               } catch {
@@ -264,7 +264,7 @@ export default function UsersManager() {
 
       <UserEditDialog
         open={!!editing}
-        value={editing as any}
+        value={editing}
         onChange={(v) => setEditing((prev) => (prev ? { ...prev, ...v } : null))}
         loading={dialogLoading}
         error={dialogError}

@@ -153,7 +153,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="preferences-form" sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>

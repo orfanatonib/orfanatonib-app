@@ -108,7 +108,7 @@ export async function apiCreateUser(
 
 export async function apiUpdateUser(
   id: string,
-  payload: UpadateUserForm
+  payload: Omit<UpadateUserForm, "password"> & { password?: string }
 ): Promise<UserRow> {
   const {
     name,

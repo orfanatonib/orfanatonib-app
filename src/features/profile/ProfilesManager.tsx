@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
@@ -99,7 +100,9 @@ const ProfilesManager: React.FC = () => {
       setLoadingBirthdays(true);
       const response = await apiGetAllProfiles({ limit: 1000 });
       setAllProfiles(response.items);
-    } catch {
+    } catch (error: unknown) {
+      // Só alimenta o painel de aniversários: sem ele a tela segue funcionando.
+      logger.warn('Não foi possível carregar os perfis para os aniversários', { feature: 'profiles' }, error);
     } finally {
       setLoadingBirthdays(false);
     }

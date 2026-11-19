@@ -60,7 +60,7 @@ export type Profile = {
       };
     };
   } | null;
-  leaderProfile?: any | null;
+  leaderProfile?: Record<string, unknown> | null;
 };
 
 export type UpdateProfileDto = {

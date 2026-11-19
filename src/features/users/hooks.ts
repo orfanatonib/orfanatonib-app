@@ -103,13 +103,13 @@ export function useUserMutations(refreshPage: () => Promise<void> | void) {
   }, [refreshPage]);
 
   const updateUser = useCallback(
-    async (id: string, form: UpadateUserForm & { confirmPassword?: string }) => {
+    async (id: string, form: Omit<UpadateUserForm, "password"> & { password?: string; confirmPassword?: string }) => {
       setDialogLoading(true);
       setDialogError("");
 
       try {
         const { confirmPassword, ...payload } = form;
-        await apiUpdateUser(id, { ...payload, phone: digitsOnly(payload.phone) } as any);
+        await apiUpdateUser(id, { ...payload, phone: digitsOnly(payload.phone) });
         await refreshPage();
       } catch (err: unknown) {
         setDialogError(

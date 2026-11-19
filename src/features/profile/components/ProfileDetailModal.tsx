@@ -94,7 +94,7 @@ const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({ profile, open, 
 
     return (
         <>
-            <Dialog
+            <Dialog data-testid="profile-detail-modal"
                 open={open}
                 onClose={onClose}
                 maxWidth="xs"

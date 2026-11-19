@@ -42,7 +42,7 @@ export default function UserEditDialog({
   const isMember = value.role === UserRole.MEMBER;
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+    <Dialog data-testid="user-edit-dialog" open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Editar Usuário</DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

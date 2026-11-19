@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -92,7 +93,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       try {
         await dispatch(fetchCurrentUser()).unwrap();
-      } catch {
+      } catch (error: unknown) {
+        // A foto já foi salva; o usuário em memória se atualiza na próxima navegação.
+        logger.warn('Não foi possível recarregar o usuário após trocar a foto', { feature: 'profile' }, error);
       }
 
       const newImage = updatedProfile.image || (updatedProfile.mediaItems && updatedProfile.mediaItems.length > 0 ? updatedProfile.mediaItems[0] : null);
@@ -117,7 +120,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="profile-image-upload" sx={{ width: '100%' }}>
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Avatar
             src={preview || currentImageUrl}
