@@ -10,6 +10,8 @@ let member = "";
 let leader = "";
 let userId = "";
 let flagBefore = 0;
+/** Versão atual da etapa LESSON/TEEN ao longo dos testes (a linha sobrevive entre rodadas). */
+let version = 0;
 
 type Item = { stage: string; basePrompt: string; customPrompt: string | null; effectivePrompt: string; lockVersion: number | null; updatedAt: string | null };
 
@@ -59,10 +61,13 @@ test.describe.serial("Orientações de criação", () => {
   });
 
   test("salvar: grava, soma às regras na prévia e versiona; aparece só para este público/etapa", async ({ request }) => {
-    const first = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: `  ${TEXT}  ` } });
+    // A linha sobrevive à restauração (com texto nulo), então uma rodada anterior pode ter deixado uma versão.
+    const start = (await list(request)).find((i) => i.stage === "LESSON")!.lockVersion;
+    const first = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: `  ${TEXT}  `, lockVersion: start ?? undefined } });
     expect(first.status()).toBe(200);
     const saved = (await first.json()) as Item;
-    expect(saved).toMatchObject({ stage: "LESSON", customPrompt: TEXT, lockVersion: 1 });
+    expect(saved).toMatchObject({ stage: "LESSON", customPrompt: TEXT, lockVersion: (start ?? 0) + 1 });
+    const v1 = saved.lockVersion!;
     expect(saved.effectivePrompt).toContain(TEXT);
     expect(saved.effectivePrompt).toContain(saved.basePrompt);
     expect(await countRows("content_prompt_preferences", { user_id: userId, audience: "TEEN", stage_type: "LESSON" })).toBe(1);
@@ -71,18 +76,22 @@ test.describe.serial("Orientações de criação", () => {
     expect(others.every((i) => i.customPrompt === null)).toBe(true);
     expect((await list(request, "CHILD")).every((i) => i.customPrompt === null)).toBe(true);
 
-    const second = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: `${TEXT} Termine com uma oração.`, lockVersion: 1 } });
-    expect(((await second.json()) as Item).lockVersion).toBe(2);
+    const second = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: `${TEXT} Termine com uma oração.`, lockVersion: v1 } });
+    version = ((await second.json()) as Item).lockVersion!;
+    expect(version).toBe(v1 + 1);
   });
 
   test("conflito de versão: texto salvo com versão velha ou sem versão ⇒ 409 e nada muda", async ({ request }) => {
-    const stale = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: "Texto com versão velha, deve ser recusado.", lockVersion: 1 } });
+    const stale = await request.patch(BASE, {
+      headers: authHeaders(admin),
+      data: { audience: "TEEN", stage: "LESSON", customPrompt: "Texto com versão velha, deve ser recusado.", lockVersion: version - 1 },
+    });
     expect(stale.status()).toBe(409);
     const withoutVersion = await request.patch(BASE, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", customPrompt: "Texto sem versão informada, deve ser recusado." } });
     expect(withoutVersion.status()).toBe(409);
     const current = (await list(request)).find((i) => i.stage === "LESSON")!;
     expect(current.customPrompt).toContain("Termine com uma oração.");
-    expect(current.lockVersion).toBe(2);
+    expect(current.lockVersion).toBe(version);
   });
 
   test("validação: texto curto, grande demais, sensível ou etapa inválida ⇒ 400, sem gravar", async ({ request }) => {
@@ -96,17 +105,17 @@ test.describe.serial("Orientações de criação", () => {
   });
 
   test("restaurar: volta ao padrão, mantém a linha com a versão seguinte; versão velha ⇒ 409", async ({ request }) => {
-    const stale = await request.post(`${BASE}/reset`, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", lockVersion: 1 } });
+    const stale = await request.post(`${BASE}/reset`, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", lockVersion: version - 1 } });
     expect(stale.status()).toBe(409);
-    const res = await request.post(`${BASE}/reset`, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", lockVersion: 2 } });
+    const res = await request.post(`${BASE}/reset`, { headers: authHeaders(admin), data: { audience: "TEEN", stage: "LESSON", lockVersion: version } });
     expect(res.status()).toBe(200);
     const reset = (await res.json()) as Item;
-    expect(reset).toMatchObject({ customPrompt: null, lockVersion: 3 });
+    expect(reset).toMatchObject({ customPrompt: null, lockVersion: version + 1 });
     expect(reset.effectivePrompt).toBe(reset.basePrompt);
     const row = await queryOne<{ custom_prompt: string | null; lock_version: number }>(
       "SELECT custom_prompt, lock_version FROM content_prompt_preferences WHERE user_id = ? AND audience = 'TEEN' AND stage_type = 'LESSON'",
       [userId],
     );
-    expect(row).toMatchObject({ custom_prompt: null, lock_version: 3 });
+    expect(row).toMatchObject({ custom_prompt: null, lock_version: version + 1 });
   });
 });
