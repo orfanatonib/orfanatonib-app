@@ -237,4 +237,44 @@ test.describe.serial("Criadores de página (admin) — criação pelo formulári
     }
     await expect.poll(() => countRows("visit_material_pages", { title })).toBe(0);
   });
+
+  test("página de ideias: valida, cria com uma seção e grava no banco", async ({ page, request }) => {
+    const title = `Ideias ${RUN_TAG}`;
+    await openCreator(page, "page-template-card-ideas");
+
+    await page.getByRole("button", { name: "Salvar Página" }).click();
+    await expect(
+      page.getByText("Preencha todos os campos obrigatórios e adicione pelo menos uma seção."),
+    ).toBeVisible();
+
+    await page.getByRole("textbox", { name: /Título da Página/ }).fill(title);
+    await page.getByRole("textbox", { name: /Descrição da Página/ }).fill("Descrição do cenário");
+    await page.getByRole("button", { name: "Adicionar Seção" }).click();
+    await page.getByRole("textbox", { name: "Título da Seção" }).fill("Seção do cenário");
+    await page.getByRole("textbox", { name: "Descrição da Seção" }).fill("Descrição da seção");
+
+    const posted = page.waitForResponse(
+      (r) => r.url().endsWith("/ideas-pages") && r.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: "Salvar Página" }).click();
+    const response = await posted;
+    expect(response.status(), await response.text()).toBe(201);
+    const body = (await response.json()) as { id: string };
+
+    try {
+      const form = await readCapturedForm(page);
+      const payload = parseJsonField<{
+        title: string;
+        description: string;
+        sections: Array<{ title: string; description: string; medias: unknown[] }>;
+      }>(form, "ideasMaterialsPageData");
+      expect(payload.title).toBe(title);
+      expect(payload.sections).toEqual([{ title: "Seção do cenário", description: "Descrição da seção", medias: [] }]);
+      expect(form.files).toEqual([]);
+      await expect.poll(() => countRows("ideas_pages", { title })).toBe(1);
+    } finally {
+      await deletePage(request, "ideas-pages", body.id);
+    }
+    await expect.poll(() => countRows("ideas_pages", { title })).toBe(0);
+  });
 });
