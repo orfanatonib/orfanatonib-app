@@ -199,4 +199,42 @@ test.describe.serial("Criadores de página (admin) — criação pelo formulári
     }
     await expect.poll(() => countRows("meditations", { topic })).toBe(0);
   });
+
+  test("material de visita: valida, cria sem mídia e grava no banco", async ({ page, request }) => {
+    const title = `Material ${RUN_TAG}`;
+    await openCreator(page, "page-template-card-visit-materials");
+
+    await page.getByRole("button", { name: "Salvar Página" }).click();
+    await expect(page.getByText("Preencha todos os campos obrigatórios.")).toBeVisible();
+
+    await page.getByRole("textbox", { name: /Título da Página/ }).fill(title);
+    await page.getByRole("textbox", { name: /Subtítulo da Página/ }).fill("Subtítulo do cenário");
+    await page.getByRole("textbox", { name: /Descrição da Página/ }).fill("Descrição do cenário");
+    await page.getByTestId("visit-material-page-editor-testament").getByRole("combobox").click();
+    await page.getByRole("option", { name: /Novo Testamento/ }).click();
+
+    const posted = page.waitForResponse(
+      (r) => r.url().endsWith("/visit-material-pages") && r.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: "Salvar Página" }).click();
+    const response = await posted;
+    expect(response.status(), await response.text()).toBe(201);
+    const body = (await response.json()) as { id: string };
+
+    try {
+      const form = await readCapturedForm(page);
+      const payload = parseJsonField<Record<string, unknown>>(form, "visitMaterialsPageData");
+      expect(payload).toMatchObject({
+        pageTitle: title,
+        pageSubtitle: "Subtítulo do cenário",
+        pageDescription: "Descrição do cenário",
+        testament: "NEW_TESTAMENT",
+      });
+      expect(form.files).toEqual([]);
+      await expect.poll(() => countRows("visit_material_pages", { title })).toBe(1);
+    } finally {
+      await deletePage(request, "visit-material-pages", body.id);
+    }
+    await expect.poll(() => countRows("visit_material_pages", { title })).toBe(0);
+  });
 });
