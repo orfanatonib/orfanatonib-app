@@ -150,6 +150,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
             return (
                 <Container maxWidth="md" sx={{ py: 4 }}>
                     <Paper
+                        data-testid="global-error-boundary"
                         elevation={3}
                         sx={{
                             p: 4,
@@ -191,7 +192,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
                             </Box>
                         </Box>
 
-                        <Alert severity="error" sx={{ mb: 3 }}>
+                        <Alert severity="error" sx={{ mb: 3 }} data-testid="global-error-id">
                             <Typography variant="body2">
                                 <strong>Erro ID:</strong> {errorId}
                             </Typography>
@@ -207,6 +208,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
 
                         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                             <Button
+                                data-testid="global-error-retry"
                                 variant="contained"
                                 color="primary"
                                 startIcon={<RefreshCcw size={18} />}
@@ -217,6 +219,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
                             </Button>
 
                             <Button
+                                data-testid="global-error-reload"
                                 variant="outlined"
                                 startIcon={<RefreshCcw size={18} />}
                                 onClick={this.handleReload}

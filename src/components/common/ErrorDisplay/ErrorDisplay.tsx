@@ -161,6 +161,7 @@ export default function ErrorDisplay({
     case 'modal':
       return (
         <Dialog
+          data-testid="error-display-modal"
           open={isVisible}
           onClose={handleClose}
           maxWidth="sm"

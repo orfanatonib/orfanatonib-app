@@ -47,7 +47,7 @@ export interface ErrorHandlingOptions {
   logError?: boolean;
   retry?: boolean;
   context?: string;
-  fallback?: any;
+  fallback?: unknown;
 }
 
 export interface ErrorState {

@@ -175,6 +175,7 @@ export default function ErrorScreen({
         style={{ width: '100%' }}
       >
         <Paper
+          data-testid="error-screen"
           elevation={0}
           sx={{
             p: { xs: 3, md: 6 },
@@ -233,6 +234,7 @@ export default function ErrorScreen({
                 transition={{ delay: 0.3 }}
               >
                 <Typography
+                  data-testid="error-screen-title"
                   variant="h4"
                   component="h1"
                   fontWeight="bold"
@@ -243,6 +245,7 @@ export default function ErrorScreen({
                 </Typography>
 
                 <Typography
+                  data-testid="error-screen-message"
                   variant="h6"
                   color="text.secondary"
                   sx={{ mb: 1, fontSize: { xs: '1.1rem', md: '1.25rem' } }}
@@ -305,6 +308,7 @@ export default function ErrorScreen({
                     whileTap={{ scale: 0.98 }}
                   >
                     <Button
+                      data-testid={`error-screen-action-${index}`}
                       variant={action.variant}
                       color={action.color || 'primary'}
                       size="large"
@@ -350,6 +354,7 @@ export default function ErrorScreen({
                 >
                   <CardContent sx={{ p: 0 }}>
                     <Button
+                      data-testid="error-screen-details-toggle"
                       onClick={() => setShowErrorDetails(!showErrorDetails)}
                       fullWidth
                       sx={{
