@@ -1,7 +1,8 @@
+import { SHELTER_FEED_PATH } from '@/features/shelter-feed/routes';
 export const VIDEO_PAGE_TEST_ID = 'video-page-creator';
 export const VIDEO_PAGES_ENDPOINT = '/video-pages';
 export const VIDEO_FIELD_PREFIX = 'video-';
-export const GALLERY_FALLBACK_PATH = '/feed-abrigos';
+export const GALLERY_FALLBACK_PATH = SHELTER_FEED_PATH;
 export const UPLOAD_SIMULATED_DELAY_MS = 1000;
 
 export const VIDEO_PAGE_MESSAGES = {

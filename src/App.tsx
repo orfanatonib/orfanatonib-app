@@ -5,6 +5,8 @@ import {
 import PendingVisitReportsPage from "./features/visit-reports/pages/PendingVisitReportsPage";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
+import { LegacyFeedRedirect } from "./features/shelter-feed/LegacyFeedRedirect";
+import { SHELTER_FEED_PATH } from "./features/shelter-feed/routes";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -232,6 +234,10 @@ function App() {
                 />
                 <Route
                   path="/feed-abrigos"
+                  element={<LegacyFeedRedirect />}
+                />
+                <Route
+                  path={SHELTER_FEED_PATH}
                   element={
                     <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_FEED}>
                       <ShelterFeedView feed />

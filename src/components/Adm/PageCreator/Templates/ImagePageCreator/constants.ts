@@ -1,7 +1,8 @@
+import { SHELTER_FEED_PATH } from '@/features/shelter-feed/routes';
 export const IMAGE_PAGE_TEST_ID = 'image-page-creator';
 export const IMAGE_PAGES_ENDPOINT = '/image-pages';
 export const IMAGE_FORM_FIELD_PREFIX = 'file_sec';
-export const GALLERY_FALLBACK_PATH = '/feed-abrigos';
+export const GALLERY_FALLBACK_PATH = SHELTER_FEED_PATH;
 
 export const IMAGE_PAGE_MESSAGES = {
   CREATE_HEADING: '📸 Criar Galeria de Fotos',
