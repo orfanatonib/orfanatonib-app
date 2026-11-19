@@ -38,6 +38,7 @@ export default function MediaDocumentPreviewModal({ open, onClose, media, title 
 
   return (
     <Dialog
+      data-testid="document-preview-modal"
       open={open}
       onClose={onClose}
       fullScreen={false}
@@ -66,13 +67,14 @@ export default function MediaDocumentPreviewModal({ open, onClose, media, title 
         }}
       >
         {title || media.title}
-        <IconButton onClick={onClose} size="small" sx={{ color: '#FFFF00' }}>
+        <IconButton data-testid="document-preview-close-icon" aria-label="Fechar" onClick={onClose} size="small" sx={{ color: '#FFFF00' }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ p: 0, flexGrow: 1 }}>
         <iframe
+          data-testid="document-preview-frame"
           src={previewUrl}
           title={media.title}
           style={{
@@ -93,7 +95,7 @@ export default function MediaDocumentPreviewModal({ open, onClose, media, title 
           borderTop: '1px solid #333',
         }}
       >
-        <Button variant="outlined" onClick={onClose} sx={{ color: '#FFFF00', borderColor: '#FFFF00' }}>
+        <Button data-testid="document-preview-close" variant="outlined" onClick={onClose} sx={{ color: '#FFFF00', borderColor: '#FFFF00' }}>
           Fechar
         </Button>
       </Box>

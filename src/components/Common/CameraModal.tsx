@@ -26,8 +26,9 @@ const CameraModal: React.FC<CameraModalProps> = ({
 
     useEffect(() => {
         if (open) {
-            const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+            const legacy = window as Window & { opera?: string; MSStream?: unknown };
+            const userAgent = navigator.userAgent || navigator.vendor || legacy.opera || '';
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !legacy.MSStream;
             const isAndroid = /android/i.test(userAgent);
             const isSmallScreen = window.innerWidth <= 768;
             setIsMobileDevice(isIOS || isAndroid || isSmallScreen);
@@ -166,6 +167,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
                     }}
                 >
                     <video
+                        data-testid="camera-video"
                         ref={videoRef}
                         autoPlay
                         playsInline
@@ -179,6 +181,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
 
                     {isMobileDevice && (
                         <Box
+                            data-testid="camera-switch"
                             onClick={handleSwitchCamera}
                             sx={{
                                 position: 'absolute',
@@ -205,6 +208,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
                     )}
 
                     <Box
+                        data-testid="camera-close"
                         onClick={onClose}
                         sx={{
                             position: 'absolute',
@@ -277,6 +281,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
                 </Box>
 
                 <Box
+                    data-testid="camera-capture"
                     onClick={() => videoReady && handleCapture()}
                     sx={{
                         mt: 3,

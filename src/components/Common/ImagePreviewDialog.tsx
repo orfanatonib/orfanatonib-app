@@ -15,6 +15,7 @@ const ImagePreviewDialog: React.FC<ImagePreviewDialogProps> = ({
 }) => {
   return (
     <Dialog
+      data-testid="image-preview-dialog"
       open={!!imageUrl}
       onClose={onClose}
       maxWidth={false}
@@ -44,6 +45,8 @@ const ImagePreviewDialog: React.FC<ImagePreviewDialogProps> = ({
       }}
     >
       <IconButton
+        data-testid="image-preview-close"
+        aria-label="Fechar"
         onClick={onClose}
         sx={{
           position: 'fixed',
