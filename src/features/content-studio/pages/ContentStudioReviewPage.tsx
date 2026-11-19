@@ -1,15 +1,15 @@
+import ArrowBack from "@mui/icons-material/ArrowBack";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FactCheck from "@mui/icons-material/FactCheck";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Grid2, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ListingLayout, ListingToolbar } from "@/components/common/listing";
 import type { ListingFilter } from "@/components/common/listing";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
-import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { ReviewPackageCard } from "../components/ReviewPackageCard";
 import { CONTENT_STUDIO_REVIEW_CHECKLIST } from "../constants";
 import { useContentPackages } from "../hooks/useContentPackages";
@@ -78,12 +78,9 @@ export function ContentStudioReviewPage() {
   return (
     <Box component="section" data-testid="content-studio-review-page" sx={CONTENT_STUDIO_PAGE_SX}>
       <Stack spacing={2}>
-        <ContentStudioPageHeader
-          title="Revisão editorial"
-          description="Confira segurança, fidelidade e adequação antes de aprovar uma versão."
-          backTo="/adm/estudio"
-          backLabel="Voltar à visão geral"
-        />
+        <Button component={RouterLink} to="/adm/estudio" startIcon={<ArrowBack />} sx={{ alignSelf: "flex-start", minHeight: 44, fontWeight: 700, textTransform: "none" }}>
+          Voltar à visão geral
+        </Button>
 
         <ListingLayout
           data-testid="content-studio-review-queue"

@@ -41,6 +41,7 @@ export function ReviewPackageCard({ item, audiences, onOpen }: ReviewPackageCard
         { label: `Mexido ${relativeTimeLabel(item.updatedAt)}` },
       ]}
       onClick={() => onOpen(item.id)}
+      stackedFooter
       footer={
         <Box sx={{ mt: 1 }}>
           <PackageStageSegments segments={item.stageSegments ?? []} audiences={audiences} />

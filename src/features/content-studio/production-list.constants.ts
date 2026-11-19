@@ -41,7 +41,7 @@ export const PRODUCTION_STATUS_FILTER_OPTIONS: ReadonlyArray<{ value: ContentPac
 ];
 
 export const PRODUCTION_LIST_TEXTS = {
-  title: "Seus materiais",
+  title: "Materiais para visita",
   searchPlaceholder: "Buscar por tema ou referência bíblica...",
   emptyTitle: "Nenhum material encontrado",
   emptySubtitle: "Crie o primeiro material para visita ou ajuste os filtros.",

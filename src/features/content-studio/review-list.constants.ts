@@ -54,7 +54,7 @@ export const REVIEW_EMPTY_TEXTS: Record<ReviewQueueView, { title: string; subtit
 };
 
 export const REVIEW_TEXTS = {
-  listTitle: "Fila de revisão",
+  listTitle: "Revisão editorial",
   listSummary: "Confira segurança, fidelidade bíblica e adequação à faixa etária de cada etapa; aprove ou devolva com ajustes.",
   searchPlaceholder: "Buscar por tema ou referência bíblica...",
   loadError: "Não foi possível carregar a fila de revisão. Tente novamente.",
