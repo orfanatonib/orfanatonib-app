@@ -42,7 +42,7 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await setFlag(request, true);
     await seedBrowserSession(page, await loginAs(request, "admin"));
 
-    await page.goto(ROUTE);
+    await page.goto("/adm/observabilidade-auditoria");
     await expect(page.getByTestId("observability-audit-page")).toBeVisible({ timeout: 20_000 });
     // A consulta terminou: tabela com linhas ou estado vazio — nunca o aviso de storage em arquivo.
     await expect(
@@ -94,7 +94,7 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await setFlag(request, false);
     await seedBrowserSession(page, await loginAs(request, "admin"));
 
-    await page.goto(ROUTE);
+    await page.goto("/adm/observabilidade-auditoria");
     await expect(page).not.toHaveURL(/observabilidade-auditoria$/);
     await expect(page.getByTestId("observability-audit-page")).toHaveCount(0);
   });
@@ -106,7 +106,7 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await setFlag(request, true);
     await seedBrowserSession(page, await loginAs(request, "member"));
 
-    await page.goto(ROUTE);
+    await page.goto("/adm/observabilidade-auditoria");
     await expect(page).not.toHaveURL(/observabilidade-auditoria$/);
     await expect(page.getByTestId("observability-audit-page")).toHaveCount(0);
   });
@@ -118,7 +118,7 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await setFlag(request, true);
     await seedBrowserSession(page, await loginAs(request, "admin"));
 
-    await page.goto(ROUTE);
+    await page.goto("/adm/observabilidade-auditoria");
     await expect(page.getByTestId("observability-audit-page")).toBeVisible({ timeout: 20_000 });
     await expect(
       page.getByTestId("observability-records-table").or(page.getByTestId("observability-records-empty")),

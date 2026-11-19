@@ -1,4 +1,4 @@
-import { type APIResponse, expect } from "@playwright/test";
+import { type APIRequestContext, type APIResponse, expect } from "@playwright/test";
 
 import { countRows, queryAll, type Where } from "./db";
 import { expectBucketUnchanged, snapshotBucket } from "./s3";
@@ -43,4 +43,45 @@ export async function expectForbiddenWithoutSideEffects(
   const after = await Promise.all(watch.map((w) => countRows(w.table, w.where ?? {})));
   expect(after).toEqual(before);
   await expectBucketUnchanged(bucketBefore);
+}
+
+/**
+ * Prova na API de auditoria (plano 12) que a ação foi registrada, sem dado pessoal.
+ * Lê `/log-records/audit` como admin; se o ambiente grava em arquivo (409 `LOG_9101`),
+ * não há como consultar e a asserção é ignorada com aviso explícito no resultado.
+ *
+ * Dentro da janela de repetição (60 s) o mesmo evento vira contador no original,
+ * então `requestId` pode não existir como linha: `actionName` cobre esse caso.
+ */
+export async function expectAuditEvent(
+  request: APIRequestContext,
+  adminToken: string,
+  apiUrl: string,
+  filter: { requestId?: string; actionName: string; outcome?: string },
+): Promise<"found" | "storage-unavailable"> {
+  const day = new Date().toISOString().slice(0, 10);
+  const query = `from=${day}T00:00:00.000Z&to=${day}T23:59:59.000Z&actionName=${encodeURIComponent(filter.actionName)}`;
+  await expect
+    .poll(
+      async () => {
+        const res = await request.get(`${apiUrl}/log-records/audit?${query}`, {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        });
+        if (res.status() === 409) return "storage-unavailable";
+        expect(res.status()).toBe(200);
+        const body = (await res.json()) as { data: Array<Record<string, unknown>> };
+        const hit = body.data.find(
+          (row) =>
+            (!filter.requestId || row.requestId === filter.requestId) &&
+            (!filter.outcome || row.outcome === filter.outcome),
+        );
+        return hit ? "found" : "missing";
+      },
+      { timeout: 15_000, message: `evento de auditoria ${filter.actionName}` },
+    )
+    .not.toBe("missing");
+  const final = await request.get(`${apiUrl}/log-records/audit?${query}`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  return final.status() === 409 ? "storage-unavailable" : "found";
 }

@@ -101,3 +101,9 @@ no `beforeAll`. `attendance.ui.spec.ts` cria abrigo, equipe, vínculo do membro 
 uma visita no passado; o `DELETE /shelters/:id` do final cascateia a equipe e o
 agendamento e devolve o membro ao estado sem equipe. Antes disso a suíte pulava
 quatro cenários em banco vazio — e um teste que pula não prova nada.
+
+## Helpers de suporte (plano 02)
+- `support/db.ts` (SELECT apenas; recusa host não local), `support/s3.ts` (snapshot/diff do bucket, invariantes), `support/factory.ts` (`RUN_TAG`, `Cleaner` — desfaz em ordem inversa, reporta falhas no fim), `support/assertions.ts` (`expectOutbox`, `expectNoOutbox`, `expectForbiddenWithoutSideEffects`, `expectAuditEvent`).
+- `expectAuditEvent(request, adminToken, API_URL, { actionName, requestId?, outcome? })` prova na API `/log-records/audit` que a ação foi auditada (devolve `storage-unavailable` se o ambiente grava em arquivo). Dentro da janela de 60 s o mesmo evento vira contador: use `actionName`.
+- Variáveis: `E2E_API_URL`, `E2E_APP_URL`, `E2E_API_AUDIT_DIR` (só para storage em arquivo).
+- Gates: `npm run check:scenarios` (ID de matriz com teste), `npm run check:routes` (toda rota visitada por `page.goto("/literal")` — o script lê o texto, não constantes), `npm run check:test-ids`.

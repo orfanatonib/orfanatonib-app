@@ -1,6 +1,5 @@
 {
   "uncovered": [
-    "/",
     "/adm/abrigos/:id/edit",
     "/adm/abrigos/novo",
     "/adm/criar-pagina",
@@ -11,10 +10,8 @@
     "/adm/editar-pagina-imagens",
     "/adm/editar-pagina-videos",
     "/adm/editar-pagina-visita",
-    "/adm/estudio",
     "/adm/estudio/orientacoes",
     "/adm/estudio/pacotes/:id",
-    "/adm/estudio/producao",
     "/adm/estudio/provedores-ia",
     "/adm/estudio/revisao",
     "/adm/pagelas",
@@ -27,7 +24,6 @@
     "/login",
     "/presenca",
     "/recuperar-senha/:token",
-    "/sobre",
     "/verificar-email",
     "/verificar-email/:token"
   ]
