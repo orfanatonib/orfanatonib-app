@@ -1,4 +1,5 @@
 import { API_URL } from "../../../playwright.live.config";
+import { expectNoRow, expectRow } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /**
@@ -48,7 +49,7 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(Array.isArray(body)).toBe(true);
   });
 
-  test("cria uma nova página de ideias com seções", async ({ request }) => {
+  test("[ideas-page.post.ideas-pages#feliz] cria uma nova página de ideias com seções (linha no banco)", async ({ request }) => {
     const payload = {
       title: `Página de Ideias E2E ${RUN_TAG}`,
       subtitle: "Subtítulo E2E",
@@ -78,13 +79,11 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(body.sections?.length).toBe(1);
 
     createdPageId = body.id;
+    await expectRow("ideas_pages", { id: createdPageId });
   });
 
   test("busca a página de ideias criada por ID", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     // A página criada não é pública: com sessão aparece; anônimo recebe 404.
     const response = await request.get(`${API_URL}/ideas-pages/${createdPageId}`, {
@@ -98,11 +97,8 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(anonymous.status()).toBe(404);
   });
 
-  test("atualiza a página de ideias", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+  test("[ideas-page.patch.ideas-pages-id#feliz] atualiza a página de ideias (título novo no banco)", async ({ request }) => {
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     const payload = {
       id: createdPageId,
@@ -129,18 +125,17 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(response.status()).toBe(200);
     const body = (await response.json()) as IdeasPageResponse;
     expect(body.title).toBe(payload.title);
+    await expectRow("ideas_pages", { id: createdPageId, title: payload.title });
   });
 
-  test("remove a página de ideias", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+  test("[ideas-page.delete.ideas-pages-id#feliz] remove a página de ideias (some do banco)", async ({ request }) => {
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     const response = await request.delete(`${API_URL}/ideas-pages/${createdPageId}`, {
       headers: authHeaders(adminToken),
     });
 
     expect(response.status()).toBe(200);
+    await expectNoRow("ideas_pages", { id: createdPageId });
   });
 });

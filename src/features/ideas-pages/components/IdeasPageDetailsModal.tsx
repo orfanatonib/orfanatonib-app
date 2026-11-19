@@ -25,7 +25,7 @@ export default function IdeasPageDetailsModal({ page, open, onClose }: Props) {
     });
   };
 
-  const renderMediaPreview = (media: any) => {
+  const renderMediaPreview = (media: IdeasSection['medias'][number]) => {
     switch (media.mediaType) {
       case 'image':
         return (
