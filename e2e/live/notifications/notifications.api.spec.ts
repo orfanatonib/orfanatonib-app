@@ -29,6 +29,9 @@ const EXPECTED_TEMPLATES = [
   "visit-report-reminder",
   "image-shared-notification",
   "image-rejected-notification",
+  "feed-comment-pending",
+  "feed-comment-approved",
+  "feed-comment-rejected",
 ];
 
 test.describe.serial("Notificações — API ao vivo", () => {
