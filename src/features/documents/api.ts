@@ -8,6 +8,11 @@ export async function listDocuments(search?: string) {
   return data ?? [];
 }
 
+export async function getDocument(id: string) {
+  const { data } = await api.get<DocumentItem>(`/documents/${id}`);
+  return data;
+}
+
 export async function createDocument(formData: FormData) {
   await api.post('/documents', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

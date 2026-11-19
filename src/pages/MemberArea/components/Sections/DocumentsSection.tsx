@@ -2,7 +2,7 @@ import { useVisibleRoutes } from '@/features/feature-flags';
 import React, { useMemo, useState } from 'react';
 import { Alert, Box } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import api from '@/config/axiosConfig';
+import { getDocument } from '@/features/documents/api';
 import { RootState } from '@/store/slices';
 import { clearDocumentData, setDocumentData } from 'store/slices/documents/documentSlice';
 import MediaDocumentPreviewModal from 'utils/MediaDocumentPreviewModal';
@@ -41,8 +41,8 @@ const DocumentsSection: React.FC = () => {
     if (!route) return;
     try {
       setError(null);
-      const response = await api.get(`/documents/${route.idToFetch}`);
-      dispatch(setDocumentData(response.data));
+      const document = await getDocument(route.idToFetch);
+      dispatch(setDocumentData(document));
       setOpenModal(true);
     } catch {
       setError(MEMBER_DOCUMENTS_COPY.LOAD_FAILED);

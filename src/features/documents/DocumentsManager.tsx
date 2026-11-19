@@ -80,8 +80,8 @@ const DocumentsManager: React.FC = () => {
     setFormOpen(true);
   };
 
-  const handleEdit = (doc: any) => {
-    dispatch(setDocumentData(doc));
+  const handleEdit = (doc: DocumentItem) => {
+    dispatch(setDocumentData(doc as Parameters<typeof setDocumentData>[0]));
     if (doc.media) dispatch(setMedia(doc.media));
     setIsEditing(true);
     setFormOpen(true);
