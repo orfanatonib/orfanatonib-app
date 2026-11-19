@@ -4,7 +4,7 @@ import apiAxios from '@/config/axiosConfig';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
 import { DEFAULT_FEATURE_FLAGS_MAP } from '@/features/feature-flags/constants';
 import type { FeatureFlagsMap } from '@/features/feature-flags/types';
-import { extractErrorMessage } from '@/utils/errorHandler';
+import { extractErrorMessage } from '@/utils/errors/analyze';
 
 interface FeatureFlagsState {
   flags: FeatureFlagsMap;
@@ -13,6 +13,8 @@ interface FeatureFlagsState {
   lastFetched: number | null;
   /** Última requisição disparada: respostas de requisições antigas são ignoradas. */
   activeRequestId: string | null;
+  /** `true` depois de uma resposta REAL do servidor (o que vem de `DEFAULT_FEATURE_FLAGS_MAP` não conta). */
+  loadedFromServer: boolean;
 }
 
 const initialState: FeatureFlagsState = {
@@ -21,6 +23,7 @@ const initialState: FeatureFlagsState = {
   error: null,
   lastFetched: null,
   activeRequestId: null,
+  loadedFromServer: false,
 };
 
 export const fetchFeatureFlags = createAsyncThunk<
@@ -49,6 +52,7 @@ const featureFlagsSlice = createSlice({
       state.flags = DEFAULT_FEATURE_FLAGS_MAP;
       state.error = null;
       state.lastFetched = null;
+      state.loadedFromServer = false;
     },
   },
   extraReducers: (builder) => {
@@ -68,12 +72,15 @@ const featureFlagsSlice = createSlice({
           state.flags = action.payload;
           state.error = null;
           state.lastFetched = Date.now();
+          state.loadedFromServer = true;
         },
       )
       .addCase(fetchFeatureFlags.rejected, (state, action) => {
         if (action.meta.requestId !== state.activeRequestId) return;
         state.loading = false;
-        state.flags = DEFAULT_FEATURE_FLAGS_MAP;
+        // Falha de rede: mantém o que o servidor disse por último (não religa o que o admin desligou).
+        // Sem resposta anterior, vale o padrão do catálogo — a API continua sendo a autoridade (403).
+        if (!state.loadedFromServer) state.flags = DEFAULT_FEATURE_FLAGS_MAP;
         state.error = action.payload ?? API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS;
         state.lastFetched = Date.now();
       });

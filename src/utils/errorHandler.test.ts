@@ -1,4 +1,4 @@
-import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import { AxiosError, AxiosHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -101,5 +101,41 @@ describe('predicados e retry', () => {
     expect(calculateRetryDelay(2)).toBe(2000);
     expect(calculateRetryDelay(3)).toBe(4000);
     expect(calculateRetryDelay(10)).toBe(10000);
+  });
+});
+
+describe('FEATURE_DISABLED (flag desligada para o perfil)', () => {
+  const featureDisabled = (): AxiosError => {
+    const error = new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, undefined, {
+      status: 403,
+      statusText: 'Forbidden',
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+      data: {
+        statusCode: 403,
+        message: 'A funcionalidade "shelter_pages" está temporariamente indisponível',
+        details: { code: 'FEATURE_DISABLED' },
+      },
+    });
+    return error;
+  };
+
+  it('mostra a mensagem própria, não o texto técnico da API', async () => {
+    const { extractErrorMessage, FEATURE_DISABLED_MESSAGE } = await import('./errors/analyze');
+    expect(extractErrorMessage(featureDisabled())).toBe(FEATURE_DISABLED_MESSAGE);
+  });
+
+  it('distingue recurso desligado de falta de permissão (403 comum)', async () => {
+    const { isFeatureDisabledError } = await import('./errors/analyze');
+    expect(isFeatureDisabledError(featureDisabled())).toBe(true);
+    const plain403 = new AxiosError('x', 'ERR', undefined, undefined, {
+      status: 403,
+      statusText: 'Forbidden',
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+      data: { message: 'Acesso negado' },
+    });
+    expect(isFeatureDisabledError(plain403)).toBe(false);
+    expect(isFeatureDisabledError(new Error('x'))).toBe(false);
   });
 });

@@ -178,6 +178,20 @@ export function analyzeError(error: unknown): {
   };
 }
 
+/** Código que a API devolve em `details.code` quando a funcionalidade está desligada para o ator. */
+export const FEATURE_DISABLED_CODE = 'FEATURE_DISABLED';
+export const FEATURE_DISABLED_MESSAGE = 'Este recurso não está disponível no momento.';
+
+export function isFeatureDisabledResponse(data: unknown): boolean {
+  const details = (data as { details?: { code?: unknown } } | undefined)?.details;
+  return details?.code === FEATURE_DISABLED_CODE;
+}
+
+/** `true` quando o erro é o 403 `FEATURE_DISABLED` (recurso desligado), e não falta de permissão. */
+export function isFeatureDisabledError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 403 && isFeatureDisabledResponse(error.response.data);
+}
+
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     if (!error.response && NETWORK_ERRORS.has(error.code || '')) {
@@ -186,6 +200,11 @@ export function extractErrorMessage(error: unknown): string {
 
     const data = error.response?.data as ApiErrorResponse | undefined;
     const status = error.response?.status;
+
+    // Flag desligada para o perfil (403 `FEATURE_DISABLED`): mensagem própria, sem o texto técnico da API.
+    if (isFeatureDisabledResponse(data)) {
+      return FEATURE_DISABLED_MESSAGE;
+    }
 
     if (data?.message) {
       return Array.isArray(data.message)

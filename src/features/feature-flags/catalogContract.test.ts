@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_FEATURE_FLAGS_MAP } from './constants';
+import { FEATURE_PROFILE_RULES } from './profileRules';
 import { FeatureFlagKeys } from './types';
 
 const API_ENUM = resolve(
@@ -36,4 +37,9 @@ describe('contrato do catálogo de flags (API × front)', () => {
       expect(front).toEqual([...apiUiKeys()].sort());
     },
   );
+
+  it('o mapa de regras de perfil cobre exatamente as flags de interface (todas menos email_delivery)', () => {
+    const uiKeys = Object.values(FeatureFlagKeys).filter((key) => key !== FeatureFlagKeys.EMAIL_DELIVERY).sort();
+    expect(Object.keys(FEATURE_PROFILE_RULES).sort()).toEqual(uiKeys);
+  });
 });
