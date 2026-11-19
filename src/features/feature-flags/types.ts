@@ -81,7 +81,6 @@ export interface FeatureFlagResponse {
   name: string;
   description: string | null;
   enabled: boolean;
-  environment: string | null;
   targetRoles: FeatureFlagTargetRole[];
   audience: FeatureFlagAudience;
   metadata: Record<string, unknown> | null;
@@ -133,7 +132,6 @@ export interface CreateFeatureFlagRequest {
   name: string;
   description?: string;
   enabled?: boolean;
-  environment?: string;
   targetRoles?: FeatureFlagTargetRole[];
   metadata?: Record<string, unknown>;
 }
@@ -143,7 +141,6 @@ export interface UpdateFeatureFlagRequest {
   name?: string;
   description?: string;
   enabled?: boolean;
-  environment?: string;
   targetRoles?: FeatureFlagTargetRole[];
   metadata?: Record<string, unknown> | null;
 }

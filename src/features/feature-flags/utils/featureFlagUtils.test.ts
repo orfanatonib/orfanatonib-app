@@ -20,7 +20,6 @@ const FLAG: FeatureFlagResponse = {
   name: 'Gestão de acolhidos',
   description: 'Cadastro e consulta',
   enabled: true,
-  environment: null,
   targetRoles: [FeatureFlagTargetRole.ADMIN, FeatureFlagTargetRole.LEADER],
   audience: 'ADMIN_LEADER',
   metadata: { rollout: 50 },
