@@ -60,7 +60,7 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
       {
         id: AdminNavigationItemId.CONTENT_STUDIO,
         label: "Visão geral",
-        description: "Acompanhe indicadores e pacotes recentes do Estúdio.",
+        description: "Acompanhe indicadores e os materiais para visita recentes.",
         path: "/adm/estudio",
         exact: true,
         icon: Dashboard,
@@ -70,7 +70,7 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
       {
         id: AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
         label: "Produção",
-        description: "Crie pacotes e desenvolva conteúdo por faixa etária.",
+        description: "Crie e desenvolva os materiais para visita por faixa etária.",
         path: "/adm/estudio/producao",
         activePathPrefixes: ["/adm/estudio/pacotes"],
         icon: EditNote,
@@ -97,18 +97,6 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
         icon: Article,
         allowedRoles: ADMIN_ONLY_ROLES,
         requiredFeatureFlag: FeatureFlagKeys.CONTENT_STUDIO,
-      },
-      {
-        id: AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
-        label: "Provedores e Modelos IA",
-        description: "Configure ChatGPT e Gemini: chave de API e modelos.",
-        path: "/adm/config-provedores-ia",
-        icon: Settings,
-        allowedRoles: ADMIN_ONLY_ROLES,
-        requiredFeatureFlags: [
-          FeatureFlagKeys.CONTENT_STUDIO,
-          FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN,
-        ],
       },
     ],
   },

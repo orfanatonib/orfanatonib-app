@@ -43,7 +43,6 @@ describe("admin navigation", () => {
       AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
       AdminNavigationItemId.CONTENT_STUDIO_REVIEW,
       AdminNavigationItemId.CONTENT_STUDIO_GUIDELINES,
-      AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
     ]);
     expect(ADMIN_NAVIGATION_SECTIONS[1].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.SHELTERED,

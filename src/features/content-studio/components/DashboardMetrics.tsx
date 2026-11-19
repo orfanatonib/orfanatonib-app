@@ -21,7 +21,7 @@ interface MetricDefinition {
 }
 
 const METRICS: readonly MetricDefinition[] = [
-  { key: "total", testId: "total", label: "Total de pacotes", hint: "Todos os criados no período", icon: Inventory2, color: "secondary", value: (d) => d.packages.total },
+  { key: "total", testId: "total", label: "Total de materiais", hint: "Todos os criados no período", icon: Inventory2, color: "secondary", value: (d) => d.packages.total },
   { key: "production", testId: "production", label: "Em produção", hint: "Sendo escritos e gerados", icon: EditNote, color: "primary", value: (d) => d.packages.inProduction, to: "/adm/estudio/producao" },
   { key: "review", testId: "review", label: "Em revisão", hint: "Aguardando decisão editorial", icon: RateReview, color: "info", value: (d) => d.packages.awaitingReview, to: "/adm/estudio/revisao" },
   { key: "ready", testId: "ready", label: "Prontos para publicar", hint: "Aprovados em todas as etapas", icon: TaskAlt, color: "warning", value: (d) => d.packages.readyForPublication },

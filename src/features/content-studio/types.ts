@@ -170,6 +170,8 @@ export interface ContentPackageListItemResponse {
   templateCatalogVersion: string;
   createdById: string;
   tracksCount: number;
+  /** Faixas etárias do material, da mais nova para a mais velha. */
+  audiences: ContentAudience[];
   stagesCount: number;
   requiredStagesCount: number;
   approvedStagesCount: number;

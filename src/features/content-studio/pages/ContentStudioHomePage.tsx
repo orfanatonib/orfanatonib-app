@@ -133,17 +133,6 @@ export function ContentStudioHomePage() {
             >
               Orientações
             </Button>
-            {catalog.capabilities.providerAdministration && (
-              <Button
-                component={RouterLink}
-                to="/adm/estudio/provedores-ia"
-                variant="outlined"
-                data-testid="content-studio-open-ai-providers"
-                sx={{ minHeight: 44 }}
-              >
-                Provedores de IA
-              </Button>
-            )}
           </Stack>
         )}
 
@@ -213,7 +202,7 @@ export function ContentStudioHomePage() {
               sx={{ mb: 1.5 }}
             >
               <Typography component="h2" variant="h6" fontWeight={700}>
-                Pacotes recentes
+                Materiais para visita recentes
               </Typography>
               {dashboard.recent.length > 0 && (
                 <Button
@@ -235,13 +224,13 @@ export function ContentStudioHomePage() {
                     <Inventory2 color="disabled" sx={{ fontSize: 48 }} />
                     <Typography fontWeight={600}>
                       {hasFilters
-                        ? "Nenhum pacote encontrado com esses filtros."
-                        : "Nenhum pacote criado ainda."}
+                        ? "Nenhum material encontrado com esses filtros."
+                        : "Nenhum material para visita criado ainda."}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {hasFilters
                         ? "Ajuste o período ou a faixa etária para ver outros resultados."
-                        : "Comece criando o primeiro pacote na produção editorial."}
+                        : "Comece criando o primeiro material para visita na produção."}
                     </Typography>
                     {!hasFilters && (
                       <Button
@@ -250,7 +239,7 @@ export function ContentStudioHomePage() {
                         variant="contained"
                         sx={{ minHeight: 44 }}
                       >
-                        Criar primeiro pacote
+                        Criar primeiro material
                       </Button>
                     )}
                   </Stack>
