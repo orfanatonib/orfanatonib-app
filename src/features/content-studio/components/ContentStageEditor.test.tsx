@@ -46,7 +46,7 @@ describe("ContentStageEditor", () => {
       memoryVerse: { text: "Texto conferido", reference: "Salmos 23" },
       songs: [],
     });
-    fireEvent.click(screen.getByRole("tab", { name: "Prévia do material" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Prévia rápida" }));
     expect(screen.getByText("Texto conferido")).toBeVisible();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });

@@ -1,13 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { Archive, AutoAwesome, ExpandMore, Refresh, Save, TaskAlt } from "@mui/icons-material";
 import {
-  Archive,
-  AutoAwesome,
-  Refresh,
-  Save,
-  TaskAlt,
-} from "@mui/icons-material";
-import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -22,23 +19,18 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  CONTENT_PACKAGE_STATUS_LABELS,
-  CONTENT_STAGE_STATUS_LABELS,
-  CONTENT_STAGE_TYPE_LABELS,
-} from "../constants";
+import { CONTENT_PACKAGE_STATUS_LABELS, CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
-import {
-  ContentPackageStatus,
-  ContentReviewCommentStatus,
-  ContentReviewDecisionType,
-  ContentStageStatus,
-} from "../types";
+import { ContentPackageStatus, ContentReviewCommentStatus, ContentReviewDecisionType, ContentStageStatus } from "../types";
 import { formatContentStudioDateTime } from "../utils";
 import { generationErrorMessage, generationStatusLabel } from "../generation.utils";
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { ContentStageEditor } from "../components/ContentStageEditor";
+import { PACKAGE_STATUS_COLORS } from "../period.utils";
+import { PackageExportMenu } from "../components/PackageExportMenu";
+import { exportFileName } from "../export.utils";
+import { ExportFormat } from "../types";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 import {
   GENERATION_ALLOWED_STATUSES,
@@ -52,24 +44,12 @@ export function ContentPackageDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [params, setParams] = useSearchParams();
   const workspace = useStudioWorkspace(id);
-  const {
-    contentPackage,
-    loading,
-    error,
-    reload,
-    feedback,
-    drafts,
-    busyStageId,
-    packageBusy,
-  } = workspace;
+  const [documentDirty, setDocumentDirty] = useState(false);
+  const { contentPackage, loading, error, reload, feedback, drafts, busyStageId, packageBusy } = workspace;
   const dirtyIds =
     contentPackage?.tracks
       .flatMap((track) => track.stages)
-      .filter(
-        (stage) =>
-          drafts[stage.id] !== undefined &&
-          drafts[stage.id] !== stageDraftValue(stage),
-      )
+      .filter((stage) => drafts[stage.id] !== undefined && drafts[stage.id] !== stageDraftValue(stage))
       .map((stage) => stage.id) ?? [];
   const hasDrafts = dirtyIds.length > 0;
   useEffect(() => {
@@ -80,17 +60,10 @@ export function ContentPackageDetailPage() {
     window.addEventListener("beforeunload", preventLeave);
     return () => window.removeEventListener("beforeunload", preventLeave);
   }, [hasDrafts]);
-  const track =
-    contentPackage?.tracks.find(
-      (item) => item.audience === params.get("audience"),
-    ) ?? contentPackage?.tracks[0];
-  const stage =
-    track?.stages.find((item) => item.stageType === params.get("stage")) ??
-    track?.stages[0];
+  const track = contentPackage?.tracks.find((item) => item.audience === params.get("audience")) ?? contentPackage?.tracks[0];
+  const stage = track?.stages.find((item) => item.stageType === params.get("stage")) ?? track?.stages[0];
   const busy = busyStageId !== null || packageBusy;
-  const locked =
-    !!contentPackage &&
-    PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(contentPackage.status);
+  const locked = !!contentPackage && PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(contentPackage.status);
   const conflict = !!stage && workspace.conflictingDraftIds.includes(stage.id);
   const dirty = !!stage && dirtyIds.includes(stage.id);
   const dependenciesReady =
@@ -99,40 +72,25 @@ export function ContentPackageDetailPage() {
       track?.stages.some(
         (item) =>
           item.stageType === dependency &&
-          [
-            ContentStageStatus.DRAFT,
-            ContentStageStatus.PRODUCER_APPROVED,
-            ContentStageStatus.APPROVED,
-          ].includes(item.status),
+          [ContentStageStatus.DRAFT, ContentStageStatus.PRODUCER_APPROVED, ContentStageStatus.APPROVED].includes(item.status),
       ),
     );
   const allStages = contentPackage?.tracks.flatMap((item) => item.stages) ?? [];
   const completeCount = allStages.filter((item) =>
-    [
-      ContentStageStatus.PRODUCER_APPROVED,
-      ContentStageStatus.APPROVED,
-    ].includes(item.status),
+    [ContentStageStatus.PRODUCER_APPROVED, ContentStageStatus.APPROVED].includes(item.status),
   ).length;
 
   return (
-    <Box
-      component="section"
-      data-testid="content-studio-package-detail-page"
-      sx={CONTENT_STUDIO_PAGE_SX}
-    >
+    <Box component="section" data-testid="content-studio-package-detail-page" sx={CONTENT_STUDIO_PAGE_SX}>
       <Stack spacing={3}>
         <ContentStudioPageHeader
-          title="Estúdio Orfanato"
-          description="Produza, confira e revise cada etapa do material."
+          title="Material para visita"
+          description="Gere, escreva e revise cada etapa; veja o PDF e baixe em DOCX."
           backTo="/adm/estudio/producao"
-          backLabel="Voltar à produção"
+          backLabel="Voltar aos materiais"
         />
         {loading && !contentPackage && (
-          <Stack
-            data-testid="content-studio-detail-loading"
-            alignItems="center"
-            py={6}
-          >
+          <Stack data-testid="content-studio-detail-loading" alignItems="center" py={6}>
             <CircularProgress />
           </Stack>
         )}
@@ -140,48 +98,29 @@ export function ContentPackageDetailPage() {
           <Alert
             severity="error"
             data-testid="content-studio-detail-error"
-            action={
-              <Button onClick={() => void reload()}>Tentar novamente</Button>
-            }
+            action={<Button onClick={() => void reload()}>Tentar novamente</Button>}
           >
             Não foi possível atualizar este material.
           </Alert>
         )}
         {feedback && (
-          <Alert
-            data-testid="content-studio-feedback"
-            severity={feedback.severity}
-            onClose={() => workspace.setFeedback(null)}
-          >
+          <Alert data-testid="content-studio-feedback" severity={feedback.severity} onClose={() => workspace.setFeedback(null)}>
             {feedback.message}
           </Alert>
         )}
         {contentPackage && (
           <>
-            <Card
-              variant="outlined"
-              data-testid="content-studio-production-header"
-            >
+            <Card variant="outlined" data-testid="content-studio-production-header">
               <CardContent>
                 <Stack spacing={2}>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    justifyContent="space-between"
-                    spacing={2}
-                  >
+                  <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
                     <Box>
                       <Typography component="h1" variant="h4" fontWeight={800}>
                         {contentPackage.theme}
                       </Typography>
-                      <Typography color="text.secondary">
-                        {contentPackage.biblicalReferences}
-                      </Typography>
+                      <Typography color="text.secondary">{contentPackage.biblicalReferences}</Typography>
                     </Box>
-                    <Chip
-                      label={
-                        CONTENT_PACKAGE_STATUS_LABELS[contentPackage.status]
-                      }
-                    />
+                    <Chip label={CONTENT_PACKAGE_STATUS_LABELS[contentPackage.status]} />
                   </Stack>
                   <Typography>{contentPackage.canonicalObjective}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -189,29 +128,21 @@ export function ContentPackageDetailPage() {
                   </Typography>
                   <LinearProgress
                     variant="determinate"
-                    value={
-                      allStages.length
-                        ? (completeCount / allStages.length) * 100
-                        : 0
-                    }
+                    value={allStages.length ? (completeCount / allStages.length) * 100 : 0}
                     aria-label="Progresso do material"
                     sx={{ height: 8, borderRadius: 2 }}
                   />
                   <Stack direction="row" flexWrap="wrap" gap={1}>
-                    <Button
-                      startIcon={<Refresh />}
-                      disabled={busy}
-                      onClick={() => void reload()}
-                      sx={{ minHeight: 44 }}
-                    >
+                    <Button startIcon={<Refresh />} disabled={busy} onClick={() => void reload()} sx={{ minHeight: 44 }}>
                       Atualizar
                     </Button>
+                    <PackageExportMenu packageId={contentPackage.id} theme={contentPackage.theme} track={track} disabled={busy} />
                     {workspace.canSubmitReview && (
                       <Button
                         data-testid="content-studio-submit-review"
                         variant="contained"
                         startIcon={<TaskAlt />}
-                        disabled={busy || hasDrafts}
+                        disabled={busy || hasDrafts || documentDirty}
                         onClick={() => void workspace.handleSubmitReview()}
                         sx={{ minHeight: 44 }}
                       >
@@ -234,19 +165,12 @@ export function ContentPackageDetailPage() {
               </CardContent>
             </Card>
             {hasDrafts && (
-              <Alert
-                severity="warning"
-                data-testid="content-studio-unsaved-notice"
-              >
-                Há alterações não salvas. Salve a etapa antes de concluir a
-                produção.
+              <Alert severity="warning" data-testid="content-studio-unsaved-notice">
+                Há alterações não salvas. Salve a etapa antes de concluir a produção.
               </Alert>
             )}
             {workspace.draftStorageFailed && (
-              <Alert severity="warning">
-                Não foi possível guardar o rascunho neste navegador. Salve antes
-                de sair.
-              </Alert>
+              <Alert severity="warning">Não foi possível guardar o rascunho neste navegador. Salve antes de sair.</Alert>
             )}
             <Tabs
               value={track?.audience ?? false}
@@ -271,58 +195,33 @@ export function ContentPackageDetailPage() {
               ))}
             </Tabs>
             {track && stage ? (
-              <Stack
-                direction={{ xs: "column", lg: "row" }}
-                spacing={3}
-                alignItems="flex-start"
-              >
+              <Stack direction={{ xs: "column", lg: "row" }} spacing={3} alignItems="flex-start">
                 <ContentStageNavigation
                   track={track}
                   selectedId={stage.id}
                   dirtyIds={dirtyIds}
                   onSelect={(stageId) => {
                     const next = new URLSearchParams(params);
-                    const selected = track.stages.find(
-                      (item) => item.id === stageId,
-                    );
+                    const selected = track.stages.find((item) => item.id === stageId);
                     if (selected) next.set("stage", selected.stageType);
                     setParams(next);
                   }}
                 />
-                <Card
-                  variant="outlined"
-                  sx={{ flex: 1, minWidth: 0, width: "100%" }}
-                  data-testid="content-studio-active-stage"
-                >
+                <Card variant="outlined" sx={{ flex: 1, minWidth: 0, width: "100%" }} data-testid="content-studio-active-stage">
                   <CardContent>
                     <Stack spacing={3}>
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        justifyContent="space-between"
-                        spacing={1}
-                      >
+                      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
                         <Box>
-                          <Typography
-                            component="h2"
-                            variant="h5"
-                            fontWeight={800}
-                          >
-                            {stage.position}.{" "}
-                            {CONTENT_STAGE_TYPE_LABELS[stage.stageType]}
+                          <Typography component="h2" variant="h5" fontWeight={800}>
+                            {stage.position}. {CONTENT_STAGE_TYPE_LABELS[stage.stageType]}
                           </Typography>
                           <Typography color="text.secondary">
                             {track.audienceName} · {track.minimumAge}
-                            {track.maximumAge === null
-                              ? "+ anos"
-                              : ` a ${track.maximumAge} anos`}
-                            {stage.currentVersion &&
-                              ` · Versão ${stage.currentVersion.versionNumber}`}
+                            {track.maximumAge === null ? "+ anos" : ` a ${track.maximumAge} anos`}
+                            {stage.currentVersion && ` · Versão ${stage.currentVersion.versionNumber}`}
                           </Typography>
                         </Box>
-                        <Chip
-                          label={CONTENT_STAGE_STATUS_LABELS[stage.status]}
-                          variant="outlined"
-                        />
+                        <Chip label={CONTENT_STAGE_STATUS_LABELS[stage.status]} variant="outlined" />
                       </Stack>
                       {stage.status === ContentStageStatus.GENERATING && (
                         <Alert
@@ -330,13 +229,7 @@ export function ContentPackageDetailPage() {
                           data-testid="content-studio-generation-progress"
                           action={
                             workspace.generationEnabled && !locked ? (
-                              <Button
-                                disabled={busy}
-                                onClick={() =>
-                                  void workspace.handleCancelGeneration(stage)
-                                }
-                                sx={{ minHeight: 44 }}
-                              >
+                              <Button disabled={busy} onClick={() => void workspace.handleCancelGeneration(stage)} sx={{ minHeight: 44 }}>
                                 Cancelar geração
                               </Button>
                             ) : undefined
@@ -351,99 +244,92 @@ export function ContentPackageDetailPage() {
                         </Alert>
                       )}
                       {stage.status === ContentStageStatus.STALE && (
-                        <Alert severity="warning">
-                          Uma etapa anterior mudou. Confira e atualize este
-                          conteúdo antes de concluir.
-                        </Alert>
+                        <Alert severity="warning">Uma etapa anterior mudou. Confira e atualize este conteúdo antes de concluir.</Alert>
                       )}
                       {stage.status === ContentStageStatus.FAILED && (
                         <Alert severity="error" data-testid="content-studio-generation-error">
-                          {generationErrorMessage(workspace.generationJobs[stage.id] ?? null)}{" "}
-                          Tente novamente ou edite o conteúdo manualmente.
+                          {generationErrorMessage(workspace.generationJobs[stage.id] ?? null)} Tente novamente ou edite o conteúdo
+                          manualmente.
                         </Alert>
                       )}
                       {!dependenciesReady && stage.dependencies.length > 0 && (
                         <Alert severity="info">
-                          Prepare primeiro:{" "}
-                          {stage.dependencies
-                            .map(
-                              (dependency) =>
-                                CONTENT_STAGE_TYPE_LABELS[dependency],
-                            )
-                            .join(", ")}
-                          .
+                          Prepare primeiro: {stage.dependencies.map((dependency) => CONTENT_STAGE_TYPE_LABELS[dependency]).join(", ")}.
                         </Alert>
                       )}
                       {workspace.generationEnabled && !locked && (
-                        <Stack spacing={1}>
-                          <TextField
-                            label="Instruções para esta geração"
-                            placeholder="Ex.: use exemplos do cotidiano e linguagem adequada ao público."
-                            value={workspace.instructions[stage.id] ?? ""}
-                            disabled={
-                              busy ||
-                              stage.status === ContentStageStatus.GENERATING
-                            }
-                            onChange={(event) =>
-                              workspace.setInstructions((current) => ({
-                                ...current,
-                                [stage.id]: event.target.value,
-                              }))
-                            }
-                            multiline
-                            minRows={2}
-                            inputProps={{
-                              maxLength: REVISION_INSTRUCTIONS_MAX_LENGTH,
-                              "data-testid":
-                                "content-studio-generation-instructions",
-                            }}
-                          />
-                          <Button
-                            data-testid="content-studio-generate-stage"
-                            variant="contained"
-                            startIcon={<AutoAwesome />}
-                            disabled={
-                              busy ||
-                              dirty ||
-                              !dependenciesReady ||
-                              !GENERATION_ALLOWED_STATUSES.includes(
-                                stage.status,
-                              )
-                            }
-                            onClick={() =>
-                              void workspace.handleRequestGeneration(stage)
-                            }
-                            sx={{ alignSelf: "flex-start", minHeight: 44 }}
-                          >
-                            {stage.currentVersion
-                              ? "Gerar novamente"
-                              : "Gerar conteúdo"}
-                          </Button>
-                        </Stack>
+                        <Accordion
+                          key={`gen-${stage.id}`}
+                          defaultExpanded={!stage.currentVersion}
+                          disableGutters
+                          variant="outlined"
+                          sx={{ borderRadius: 2, "&:before": { display: "none" } }}
+                          data-testid="content-studio-generation-panel"
+                        >
+                          <AccordionSummary expandIcon={<ExpandMore />}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <AutoAwesome color="primary" fontSize="small" />
+                              <Typography fontWeight={700}>Gerar com IA</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {stage.currentVersion ? "refazer o conteúdo desta etapa" : "criar o primeiro conteúdo desta etapa"}
+                              </Typography>
+                            </Stack>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                            <Stack spacing={1}>
+                              <TextField
+                                label="Instruções para esta geração"
+                                placeholder="Ex.: use exemplos do cotidiano e linguagem adequada ao público."
+                                value={workspace.instructions[stage.id] ?? ""}
+                                disabled={busy || stage.status === ContentStageStatus.GENERATING}
+                                onChange={(event) =>
+                                  workspace.setInstructions((current) => ({
+                                    ...current,
+                                    [stage.id]: event.target.value,
+                                  }))
+                                }
+                                multiline
+                                minRows={2}
+                                inputProps={{
+                                  maxLength: REVISION_INSTRUCTIONS_MAX_LENGTH,
+                                  "data-testid": "content-studio-generation-instructions",
+                                }}
+                              />
+                              <Button
+                                data-testid="content-studio-generate-stage"
+                                variant="contained"
+                                startIcon={<AutoAwesome />}
+                                disabled={busy || dirty || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
+                                onClick={() => void workspace.handleRequestGeneration(stage)}
+                                sx={{ alignSelf: "flex-start", minHeight: 44 }}
+                              >
+                                {stage.currentVersion ? "Gerar novamente" : "Gerar conteúdo"}
+                              </Button>
+                            </Stack>
+                          </AccordionDetails>
+                        </Accordion>
                       )}
                       {conflict && (
-                        <Alert
-                          severity="warning"
-                          data-testid="content-studio-version-conflict"
-                        >
-                          Existe uma versão mais recente no servidor. Seu
-                          rascunho foi preservado. Copie o que deseja manter e
-                          descarte as alterações para carregar a versão atual
-                          antes de editar novamente.
+                        <Alert severity="warning" data-testid="content-studio-version-conflict">
+                          Existe uma versão mais recente no servidor. Seu rascunho foi preservado. Copie o que deseja manter e descarte as
+                          alterações para carregar a versão atual antes de editar novamente.
                         </Alert>
                       )}
                       <ContentStageEditor
                         key={stage.id}
                         stage={stage}
                         value={drafts[stage.id] ?? stageDraftValue(stage)}
-                        disabled={
-                          locked ||
-                          busy ||
-                          !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)
-                        }
-                        onChange={(value) =>
-                          workspace.handleDraftChange(stage.id, value)
-                        }
+                        disabled={locked || busy || !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)}
+                        onChange={(value) => workspace.handleDraftChange(stage.id, value)}
+                        packageId={contentPackage.id}
+                        fileBaseName={exportFileName(
+                          [contentPackage.theme, track.audienceName, CONTENT_STAGE_TYPE_LABELS[stage.stageType]],
+                          ExportFormat.PDF,
+                        ).replace(/\.pdf$/, "")}
+                        onSaveDocument={workspace.handleSaveDocument}
+                        onResetDocument={workspace.handleResetDocument}
+                        onDocumentDirtyChange={setDocumentDirty}
+                        fieldsDirty={dirty}
                       />
                       {!locked && (
                         <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
@@ -451,17 +337,8 @@ export function ContentPackageDetailPage() {
                             data-testid="content-studio-save-stage"
                             variant="outlined"
                             startIcon={<Save />}
-                            disabled={
-                              busy ||
-                              conflict ||
-                              !dirty ||
-                              !MANUAL_EDIT_ALLOWED_STATUSES.includes(
-                                stage.status,
-                              )
-                            }
-                            onClick={() =>
-                              void workspace.handleSaveContent(stage)
-                            }
+                            disabled={busy || conflict || !dirty || !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)}
+                            onClick={() => void workspace.handleSaveContent(stage)}
                             sx={{ minHeight: 44 }}
                           >
                             Salvar versão
@@ -472,15 +349,8 @@ export function ContentPackageDetailPage() {
                               color="inherit"
                               disabled={busy}
                               onClick={() => {
-                                if (
-                                  window.confirm(
-                                    "Descartar as alterações não salvas desta etapa?",
-                                  )
-                                )
-                                  workspace.handleDraftChange(
-                                    stage.id,
-                                    stageDraftValue(stage),
-                                  );
+                                if (window.confirm("Descartar as alterações não salvas desta etapa?"))
+                                  workspace.handleDraftChange(stage.id, stageDraftValue(stage));
                               }}
                               sx={{ minHeight: 44 }}
                             >
@@ -491,15 +361,8 @@ export function ContentPackageDetailPage() {
                             data-testid="content-studio-complete-stage"
                             variant="contained"
                             startIcon={<TaskAlt />}
-                            disabled={
-                              busy ||
-                              dirty ||
-                              !stage.currentVersionId ||
-                              stage.status !== ContentStageStatus.DRAFT
-                            }
-                            onClick={() =>
-                              void workspace.handleCompleteProduction(stage)
-                            }
+                            disabled={busy || dirty || !stage.currentVersionId || stage.status !== ContentStageStatus.DRAFT}
+                            onClick={() => void workspace.handleCompleteProduction(stage)}
                             sx={{ minHeight: 44 }}
                           >
                             Concluir produção
@@ -507,34 +370,21 @@ export function ContentPackageDetailPage() {
                         </Stack>
                       )}
                       {workspace.reviewEnabled &&
-                        [
-                          ContentPackageStatus.IN_REVIEW,
-                          ContentPackageStatus.CHANGES_REQUESTED,
-                        ].includes(contentPackage.status) &&
+                        [ContentPackageStatus.IN_REVIEW, ContentPackageStatus.CHANGES_REQUESTED].includes(contentPackage.status) &&
                         stage.status === ContentStageStatus.IN_REVIEW && (
-                          <Stack
-                            spacing={2}
-                            data-testid="content-studio-review-actions"
-                          >
+                          <Stack spacing={2} data-testid="content-studio-review-actions">
                             <TextField
                               label="Comentário para ajustes"
                               multiline
                               minRows={2}
                               value={workspace.changeMessages[stage.id] ?? ""}
-                              onChange={(event) =>
-                                workspace.handleChangeMessage(
-                                  stage.id,
-                                  event.target.value,
-                                )
-                              }
+                              onChange={(event) => workspace.handleChangeMessage(stage.id, event.target.value)}
                             />
                             <Stack direction="row" gap={1} flexWrap="wrap">
                               <Button
                                 variant="contained"
                                 disabled={busy}
-                                onClick={() =>
-                                  void workspace.handleApproveStage(stage)
-                                }
+                                onClick={() => void workspace.handleApproveStage(stage)}
                                 sx={{ minHeight: 44 }}
                               >
                                 Aprovar etapa
@@ -542,9 +392,7 @@ export function ContentPackageDetailPage() {
                               <Button
                                 variant="outlined"
                                 disabled={busy}
-                                onClick={() =>
-                                  void workspace.handleRequestChanges(stage)
-                                }
+                                onClick={() => void workspace.handleRequestChanges(stage)}
                                 sx={{ minHeight: 44 }}
                               >
                                 Solicitar ajustes
@@ -553,34 +401,19 @@ export function ContentPackageDetailPage() {
                           </Stack>
                         )}
                       {stage.reviewComments.length > 0 && (
-                        <Stack
-                          spacing={0.75}
-                          mt={1}
-                          data-testid={`content-studio-stage-comments-${stage.id}`}
-                        >
+                        <Stack spacing={0.75} mt={1} data-testid={`content-studio-stage-comments-${stage.id}`}>
                           {stage.reviewComments.map((comment) => (
                             <Alert
                               key={comment.id}
-                              severity={
-                                comment.status ===
-                                ContentReviewCommentStatus.OPEN
-                                  ? "warning"
-                                  : "success"
-                              }
+                              severity={comment.status === ContentReviewCommentStatus.OPEN ? "warning" : "success"}
                               data-testid={`content-studio-stage-comment-${comment.id}`}
                               action={
-                                comment.status ===
-                                ContentReviewCommentStatus.OPEN ? (
+                                comment.status === ContentReviewCommentStatus.OPEN ? (
                                   <Button
                                     color="inherit"
                                     size="small"
                                     disabled={busy}
-                                    onClick={() =>
-                                      void workspace.resolveComment(
-                                        comment.id,
-                                        stage.id,
-                                      )
-                                    }
+                                    onClick={() => void workspace.resolveComment(comment.id, stage.id)}
                                     data-testid={`content-studio-resolve-comment-${comment.id}`}
                                   >
                                     Resolver
@@ -589,15 +422,9 @@ export function ContentPackageDetailPage() {
                               }
                             >
                               {comment.message}
-                              <Typography
-                                component="div"
-                                variant="caption"
-                                mt={0.5}
-                              >
+                              <Typography component="div" variant="caption" mt={0.5}>
                                 Versão{" "}
-                                {stage.currentVersion?.id === comment.versionId
-                                  ? stage.currentVersion.versionNumber
-                                  : comment.versionId}
+                                {stage.currentVersion?.id === comment.versionId ? stage.currentVersion.versionNumber : comment.versionId}
                                 {" · "}
                                 {formatContentStudioDateTime(comment.createdAt)}
                               </Typography>
@@ -606,27 +433,14 @@ export function ContentPackageDetailPage() {
                         </Stack>
                       )}
                       {stage.reviewDecisions.length > 0 && (
-                        <Stack
-                          spacing={0.5}
-                          mt={1}
-                          data-testid={`content-studio-stage-review-history-${stage.id}`}
-                        >
+                        <Stack spacing={0.5} mt={1} data-testid={`content-studio-stage-review-history-${stage.id}`}>
                           <Typography variant="caption" fontWeight={700}>
                             Histórico de decisões
                           </Typography>
                           {stage.reviewDecisions.map((decision) => (
-                            <Typography
-                              key={decision.id}
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {decision.decision ===
-                              ContentReviewDecisionType.APPROVED
-                                ? "Aprovada"
-                                : "Ajustes solicitados"}{" "}
-                              · versão{" "}
-                              {decision.versionNumber ?? decision.versionId} ·{" "}
-                              {formatContentStudioDateTime(decision.decidedAt)}
+                            <Typography key={decision.id} variant="caption" color="text.secondary">
+                              {decision.decision === ContentReviewDecisionType.APPROVED ? "Aprovada" : "Ajustes solicitados"} · versão{" "}
+                              {decision.versionNumber ?? decision.versionId} · {formatContentStudioDateTime(decision.decidedAt)}
                             </Typography>
                           ))}
                         </Stack>

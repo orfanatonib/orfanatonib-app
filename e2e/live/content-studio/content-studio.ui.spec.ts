@@ -45,9 +45,11 @@ test("Estúdio: cria categoria, edita conteúdo, preserva rascunho e confirma pe
     expect(created.tracks).toHaveLength(1);
     expect(created.tracks[0].audience).toBe("ADULT");
     await expect(page.getByTestId("content-studio-active-stage")).toBeVisible();
+    await page.getByTestId("content-studio-edit-tab").click();
     await page.getByLabel("Título", { exact: true }).fill("Deus cuida de nós");
     await page.getByTestId("content-studio-stage-tab-LESSON").click();
     await page.getByTestId("content-studio-stage-tab-CANONICAL_BASE").click();
+    await page.getByTestId("content-studio-edit-tab").click();
     await expect(page.getByLabel("Título", { exact: true })).toHaveValue(
       "Deus cuida de nós",
     );

@@ -1,5 +1,6 @@
 import api from "@/config/axiosConfig";
 
+import type { ExportFormat } from "./types";
 import type {
   AiProviderResponse,
   ApproveReviewStagePayload,
@@ -15,6 +16,7 @@ import type {
   RequestStageChangesPayload,
   RequestStageGenerationPayload,
   SaveStageContentPayload,
+  StageDocumentResponse,
 } from "./types";
 
 export async function getContentStudioCatalog(
@@ -190,4 +192,34 @@ export async function cancelStageGeneration(
     `/content-studio/packages/${packageId}/stages/${stageId}/generations`,
   );
   return data;
+}
+
+export async function getStageDocument(packageId: string, stageId: string, signal?: AbortSignal): Promise<StageDocumentResponse> {
+  const { data } = await api.get<StageDocumentResponse>(`/content-studio/packages/${packageId}/stages/${stageId}/document`, { signal });
+  return data;
+}
+
+/** Caminho (relativo ao pacote) de cada exportação. */
+export const exportPath = {
+  stage: (stageId: string, format: ExportFormat) => `stages/${stageId}/export/${format}`,
+  track: (audience: string, format: ExportFormat) => `tracks/${audience}/export/${format}`,
+  all: (format: ExportFormat) => `export/${format}`,
+};
+
+export async function fetchExport(packageId: string, path: string, signal?: AbortSignal): Promise<Blob> {
+  const { data } = await api.get<Blob>(`/content-studio/packages/${packageId}/${path}`, { responseType: "blob", signal, skipGlobalError: true });
+  return data;
+}
+
+/** Baixa o arquivo gerado pela API com o nome que ela sugeriu. */
+export async function downloadExport(packageId: string, path: string, fileName: string): Promise<void> {
+  const blob = await fetchExport(packageId, path);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

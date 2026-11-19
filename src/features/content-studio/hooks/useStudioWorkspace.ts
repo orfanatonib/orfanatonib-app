@@ -16,6 +16,7 @@ import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import {
   ContentPackageStatus,
   ContentStageStatus,
+  type TiptapDocument,
   type ContentGenerationJobResponse,
   type ContentStageResponse,
 } from "../types";
@@ -272,6 +273,51 @@ export function useStudioWorkspace(id: string | undefined) {
     }
   };
 
+  /** Salva o documento rico como nova versão (os campos estruturados da versão atual seguem como estão). */
+  const handleSaveDocument = async (stage: ContentStageResponse, document: TiptapDocument): Promise<boolean> => {
+    if (!contentPackage) return false;
+    setFeedback(null);
+    try {
+      await saveStageContent(contentPackage.id, stage.id, {
+        structuredContent: stage.currentVersion?.structuredContent ?? {},
+        contentDocument: document,
+        templateVersion: contentPackage.templateCatalogVersion,
+      });
+      delete generationKeys.current[stage.id];
+      setFeedback({ severity: "success", message: "Documento salvo como nova versão." });
+      await reload();
+      return true;
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      setFeedback({
+        severity: "error",
+        message:
+          status === 400
+            ? "O documento não pôde ser salvo: confira se não há dados pessoais (documentos, telefones, nomes de acolhidos)."
+            : "Não foi possível salvar o documento desta etapa.",
+      });
+      return false;
+    }
+  };
+
+  /** Descarta as edições do documento: salva a versão só com os campos (o documento volta a ser montado deles). */
+  const handleResetDocument = async (stage: ContentStageResponse): Promise<boolean> => {
+    if (!contentPackage || !stage.currentVersion) return false;
+    setFeedback(null);
+    try {
+      await saveStageContent(contentPackage.id, stage.id, {
+        structuredContent: stage.currentVersion.structuredContent,
+        templateVersion: contentPackage.templateCatalogVersion,
+      });
+      setFeedback({ severity: "success", message: "Documento refeito a partir dos campos." });
+      await reload();
+      return true;
+    } catch {
+      setFeedback({ severity: "error", message: "Não foi possível refazer o documento." });
+      return false;
+    }
+  };
+
   const handleCompleteProduction = async (stage: ContentStageResponse) => {
     if (!contentPackage) return;
 
@@ -457,6 +503,8 @@ export function useStudioWorkspace(id: string | undefined) {
     handleRequestGeneration,
     handleCancelGeneration,
     handleSaveContent,
+    handleSaveDocument,
+    handleResetDocument,
     handleCompleteProduction,
     handleApproveStage,
     handleRequestChanges,

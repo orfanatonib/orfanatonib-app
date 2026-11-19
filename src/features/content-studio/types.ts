@@ -127,6 +127,8 @@ export interface ContentVersionResponse {
   stageId: string;
   versionNumber: number;
   structuredContent: Record<string, unknown>;
+  /** Documento rico editado à mão; `null` quando ninguém editou o documento (a prévia monta dos campos). */
+  contentDocument: TiptapDocument | null;
   contentChecksum: string;
   templateVersion: string;
   generationSnapshot: Record<string, unknown> | null;
@@ -214,6 +216,8 @@ export interface RequestStageGenerationPayload {
 
 export interface SaveStageContentPayload {
   structuredContent: Record<string, unknown>;
+  /** Documento rico editado à mão; omitido = a prévia/exportação voltam a ser montadas dos campos. */
+  contentDocument?: TiptapDocument;
   templateVersion?: string;
 }
 
@@ -342,4 +346,22 @@ export interface ContentStudioDashboardState {
   dashboard: ContentStudioDashboardResponse | null;
   loading: boolean;
   error: boolean;
+}
+
+/** Documento rico (TipTap/ProseMirror) de uma etapa: o que o editor do Estúdio lê e grava. */
+export interface TiptapDocument {
+  type: "doc";
+  content: Array<Record<string, unknown>>;
+}
+
+/** Documento de uma etapa para o editor (`edited` diz se foi editado à mão ou montado dos campos). */
+export interface StageDocumentResponse {
+  document: TiptapDocument;
+  edited: boolean;
+  versionId: string | null;
+}
+
+export enum ExportFormat {
+  DOCX = "docx",
+  PDF = "pdf",
 }
