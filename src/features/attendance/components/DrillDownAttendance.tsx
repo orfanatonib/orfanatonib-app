@@ -123,7 +123,9 @@ const DrillDownAttendance = memo(() => {
         }
         return prev;
       });
-    } catch {
+    } catch (err: unknown) {
+      // A seleção da equipe continua; sem a lista de membros a tela avisa em vez de parecer vazia.
+      setError(attendanceErrorMessage(err, 'Erro ao carregar os membros da equipe.'));
     }
   }, [loadTeamSchedules]);
 
