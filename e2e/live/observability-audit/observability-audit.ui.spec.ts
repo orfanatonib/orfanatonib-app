@@ -4,8 +4,8 @@ import { authHeaders, expect, loginAs, seedBrowserSession, test } from "../suppo
 
 /**
  * Painel `/adm/observabilidade-auditoria` (plano 12): só admin e só com a flag
- * `observability_audit` ligada. Com storage em arquivo (ambiente local) a API
- * responde `LOG_9101` e o painel explica em vez de listar. A flag volta ao
+ * `observability_audit` ligada. No ambiente local o storage é o DynamoDB Local
+ * (tabela própria do Orfanato) e o painel lista os registros. A flag volta ao
  * estado original ao final.
  */
 const FLAG = "observability_audit";
@@ -35,7 +35,7 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await closeDb();
   });
 
-  test("[observability-audit.get.adm-observabilidade-auditoria#feliz] admin com a flag ligada abre o painel e vê o aviso de storage em arquivo nas duas abas", async ({
+  test("[observability-audit.get.adm-observabilidade-auditoria#feliz] admin com a flag ligada abre o painel e consulta as duas abas no DynamoDB (sem o aviso de storage em arquivo)", async ({
     page,
     request,
   }) => {
@@ -44,10 +44,17 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
 
     await page.goto(ROUTE);
     await expect(page.getByTestId("observability-audit-page")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId("observability-records-unavailable")).toBeVisible({ timeout: 15_000 });
+    // A consulta terminou: tabela com linhas ou estado vazio — nunca o aviso de storage em arquivo.
+    await expect(
+      page.getByTestId("observability-records-table").or(page.getByTestId("observability-records-empty")),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("observability-records-unavailable")).toHaveCount(0);
 
     await page.getByTestId("observability-audit-tab-audit").click();
-    await expect(page.getByTestId("audit-records-unavailable")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("audit-records-table").or(page.getByTestId("audit-records-empty"))).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("audit-records-unavailable")).toHaveCount(0);
   });
 
   test("[observability-audit.get.adm-observabilidade-auditoria#flag-desligada] com a flag desligada a rota some e o admin volta para a home", async ({
@@ -83,7 +90,9 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
 
     await page.goto(ROUTE);
     await expect(page.getByTestId("observability-audit-page")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId("observability-records-unavailable")).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByTestId("observability-records-table").or(page.getByTestId("observability-records-empty")),
+    ).toBeVisible({ timeout: 15_000 });
 
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

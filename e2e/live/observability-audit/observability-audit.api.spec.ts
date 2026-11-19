@@ -67,16 +67,16 @@ test.describe.serial("Auditoria e observabilidade — API", () => {
       membro: "[observability-audit.get.log-records-audit#perfil-membro] membro recebe 403",
       desligada:
         "[observability-audit.get.log-records-audit#flag-desligada] admin com a flag desligada recebe 403 FEATURE_DISABLED",
-      arquivo:
-        "[observability-audit.get.log-records-audit#storage-arquivo] com a flag ligada e storage em arquivo responde 409 LOG_9101",
+      consulta:
+        "[observability-audit.get.log-records-audit#storage-consulta] com a flag ligada o admin consulta o storage (200, ou 409 LOG_9101 se o ambiente usa arquivo)",
     },
     observability: {
       anonimo: "[observability-audit.get.log-records-observability#perfil-anonimo] visitante recebe 401",
       membro: "[observability-audit.get.log-records-observability#perfil-membro] membro recebe 403",
       desligada:
         "[observability-audit.get.log-records-observability#flag-desligada] admin com a flag desligada recebe 403 FEATURE_DISABLED",
-      arquivo:
-        "[observability-audit.get.log-records-observability#storage-arquivo] com a flag ligada e storage em arquivo responde 409 LOG_9101",
+      consulta:
+        "[observability-audit.get.log-records-observability#storage-consulta] com a flag ligada o admin consulta o storage (200, ou 409 LOG_9101 se o ambiente usa arquivo)",
     },
   } as const;
 
@@ -99,11 +99,18 @@ test.describe.serial("Auditoria e observabilidade — API", () => {
       expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
     });
 
-    test(titles.arquivo, async ({ request }) => {
+    test(titles.consulta, async ({ request }) => {
       await setFlag(request, true);
       const res = await request.get(`${API_URL}/log-records/${kind}?${RANGE}`, { headers: authHeaders(admin) });
-      expect(res.status()).toBe(409);
-      expect(JSON.stringify(await res.json())).toContain("LOG_9101");
+      // DynamoDB Local (padrão do run.sh): 200 com envelope data+meta. Com storage em arquivo: 409 LOG_9101.
+      if (res.status() === 409) {
+        expect(JSON.stringify(await res.json())).toContain("LOG_9101");
+        return;
+      }
+      expect(res.status()).toBe(200);
+      const body = (await res.json()) as { data: unknown[]; meta: { page: number; limit: number; totalItems: number } };
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(body.meta).toMatchObject({ page: 1 });
     });
   }
 
@@ -138,14 +145,22 @@ test.describe.serial("Auditoria e observabilidade — API", () => {
     const requestId = res.headers()["x-request-id"];
     expect(requestId).toMatch(/^[0-9a-f-]{36}$/);
 
-    // A gravação é assíncrona (fila de entrega): espera o arquivo.
-    await expect
-      .poll(() => readAuditLines().some((line) => line.requestId === requestId), { timeout: 10_000 })
-      .toBe(true);
+    await setFlag(request, true);
+    // A gravação é assíncrona (fila de entrega): espera o evento aparecer.
+    const findEvent = async (): Promise<AuditLine | null> => {
+      const day = new Date().toISOString().slice(0, 10);
+      const query = `from=${day}T00:00:00.000Z&to=${day}T23:59:59.000Z&requestId=${requestId}`;
+      const api = await request.get(`${API_URL}/log-records/audit?${query}`, { headers: authHeaders(admin) });
+      if (api.status() === 409) return readAuditLines().find((line) => line.requestId === requestId) ?? null; // storage em arquivo
+      expect(api.status()).toBe(200);
+      const body = (await api.json()) as { data: AuditLine[] };
+      return body.data.find((line) => line.requestId === requestId) ?? null;
+    };
+    await expect.poll(async () => (await findEvent()) !== null, { timeout: 15_000 }).toBe(true);
 
-    const event = readAuditLines().find((line) => line.requestId === requestId) as AuditLine;
+    const event = (await findEvent()) as AuditLine;
     // O mesmo evento repetido dentro da janela de 60 s vira `audit_repeat` (sem duplicar a linha de auditoria).
-    expect(["audit", "audit_repeat"]).toContain(event.recordType);
+    expect(["audit", "audit_repeat"]).toContain(event.recordType ?? "audit");
     expect(event).toMatchObject({ actorType: "anonymous", actorId: null });
     expect(event).not.toHaveProperty("actorName");
 
