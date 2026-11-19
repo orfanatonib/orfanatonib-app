@@ -1,4 +1,5 @@
 import { API_URL } from "../../../playwright.live.config";
+import { expectNoRow, expectRow } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /**
@@ -52,7 +53,7 @@ test.describe.serial("Video Pages — API ao vivo", () => {
     expect(Array.isArray(body)).toBe(true);
   });
 
-  test("cria uma nova galeria de vídeos", async ({ request }) => {
+  test("[video-page.post.video-pages#feliz] cria uma nova galeria de vídeos", async ({ request }) => {
     const payload = {
       title: `Galeria de Vídeos E2E ${RUN_TAG}`,
       description: "Vídeos institucionais de teste",
@@ -86,13 +87,11 @@ test.describe.serial("Video Pages — API ao vivo", () => {
     expect(body.videos.length).toBe(1);
 
     createdPageId = body.id;
+    await expectRow("videos_pages", { id: createdPageId });
   });
 
   test("busca a galeria de vídeos recém-criada por ID", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     const response = await request.get(`${API_URL}/video-pages/${createdPageId}`);
     expect(response.status()).toBe(200);
@@ -100,11 +99,8 @@ test.describe.serial("Video Pages — API ao vivo", () => {
     expect(body.id).toBe(createdPageId);
   });
 
-  test("atualiza a galeria de vídeos", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+  test("[video-page.patch.video-pages-id#feliz] atualiza a galeria de vídeos", async ({ request }) => {
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     const payload = {
       id: createdPageId,
@@ -134,18 +130,17 @@ test.describe.serial("Video Pages — API ao vivo", () => {
     expect(response.status()).toBe(200);
     const body = (await response.json()) as VideoPageResponse;
     expect(body.title).toBe(payload.title);
+    await expectRow("videos_pages", { id: createdPageId });
   });
 
-  test("remove a galeria de vídeos", async ({ request }) => {
-    if (!createdPageId) {
-      test.skip();
-      return;
-    }
+  test("[video-page.delete.video-pages-id#feliz] remove a galeria de vídeos", async ({ request }) => {
+    expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
     const response = await request.delete(`${API_URL}/video-pages/${createdPageId}`, {
       headers: authHeaders(adminToken),
     });
 
     expect(response.status()).toBe(200);
+    await expectNoRow("videos_pages", { id: createdPageId });
   });
 });

@@ -404,7 +404,7 @@ export default function PageVideoView({ idToFetch }: VideoPageViewProps) {
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <Grid container spacing={{ xs: 2, md: 3 }}>
-                  {videoData.videos.map((video: any, index: number) => (
+                  {videoData.videos.map((video, index: number) => (
                     <Grid item xs={12} sm={6} md={4} key={video.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
