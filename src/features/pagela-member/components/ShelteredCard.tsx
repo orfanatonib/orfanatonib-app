@@ -16,6 +16,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 
 import { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import DecisionModal from "./DecisionModal";
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
 import IntegrationButton from "@/features/integration/components/IntegrationButton";
 
@@ -57,6 +58,7 @@ export default function ShelteredCard({
   onToggleStatus?: (id: string, active: boolean) => Promise<void>;
 }) {
   const theme = useTheme();
+  const decisionsEnabled = useIsFeatureEnabled(FeatureFlagKeys.ACCEPTED_CHRISTS);
   const colors = genderPastel(sheltered.name || sheltered.id, sheltered.gender);
   const initials = React.useMemo(() => {
     const parts = (sheltered.name || "").trim().split(/\s+/).slice(0, 2);
@@ -110,45 +112,47 @@ export default function ShelteredCard({
           },
         }}
       >
-        <Tooltip title={getTooltipText()}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              setModalOpen(true);
-            }}
-            sx={{
-              position: "absolute",
-              top: { xs: 6, sm: 8 },
-              left: { xs: 6, sm: 8 },
-              bgcolor: "background.paper",
-              border: "2px solid",
-              borderColor: hasAnyDecision ? getHeartColor() : "divider",
-              zIndex: 3,
-              boxShadow: hasAnyDecision ? 2 : 0,
-              width: { xs: 36, sm: 40 },
-              height: { xs: 36, sm: 40 },
-              transition: "all 0.2s ease",
-              "&:hover": { 
+        {decisionsEnabled && (
+          <Tooltip title={getTooltipText()}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalOpen(true);
+              }}
+              sx={{
+                position: "absolute",
+                top: { xs: 6, sm: 8 },
+                left: { xs: 6, sm: 8 },
                 bgcolor: "background.paper",
-                transform: "scale(1.1)",
-                boxShadow: 3,
-              },
-            }}
-          >
-            <FavoriteIcon 
-              sx={{ 
-                color: getHeartColor(),
-                fontSize: { xs: "1.1rem", sm: "1.3rem" },
-                animation: hasAnyDecision ? "heartbeat 1.5s ease-in-out infinite" : "none",
-                "@keyframes heartbeat": {
-                  "0%, 100%": { transform: "scale(1)" },
-                  "10%, 30%": { transform: "scale(0.9)" },
-                  "20%, 40%": { transform: "scale(1.1)" },
-                }
-              }} 
-            />
-          </IconButton>
-        </Tooltip>
+                border: "2px solid",
+                borderColor: hasAnyDecision ? getHeartColor() : "divider",
+                zIndex: 3,
+                boxShadow: hasAnyDecision ? 2 : 0,
+                width: { xs: 36, sm: 40 },
+                height: { xs: 36, sm: 40 },
+                transition: "all 0.2s ease",
+                "&:hover": { 
+                  bgcolor: "background.paper",
+                  transform: "scale(1.1)",
+                  boxShadow: 3,
+                },
+              }}
+            >
+              <FavoriteIcon 
+                sx={{ 
+                  color: getHeartColor(),
+                  fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                  animation: hasAnyDecision ? "heartbeat 1.5s ease-in-out infinite" : "none",
+                  "@keyframes heartbeat": {
+                    "0%, 100%": { transform: "scale(1)" },
+                    "10%, 30%": { transform: "scale(0.9)" },
+                    "20%, 40%": { transform: "scale(1.1)" },
+                  }
+                }} 
+              />
+            </IconButton>
+          </Tooltip>
+        )}
 
         {!!onEdit && (
           <Tooltip title="Editar acolhido">
@@ -362,6 +366,7 @@ export default function ShelteredCard({
           </CardContent>
         </CardActionArea>
       </Card>
+      {decisionsEnabled && (
       <DecisionModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -371,6 +376,7 @@ export default function ShelteredCard({
           handleCloseModal();
         }}
       />
+      )}
 
       <ConfirmDialog
         open={confirmToggleOpen}
