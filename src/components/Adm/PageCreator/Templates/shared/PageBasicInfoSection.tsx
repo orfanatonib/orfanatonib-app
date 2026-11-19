@@ -18,6 +18,9 @@ export default function PageBasicInfoSection({
   title,
   description,
   isPublic,
+  subtitle,
+  showPublicSwitch = true,
+  children,
   touched,
   onTitleChange,
   onDescriptionChange,
@@ -25,6 +28,7 @@ export default function PageBasicInfoSection({
   onTouchedChange,
 }: PageBasicInfoSectionProps) {
   const titleError = touched.title && !title.trim();
+  const subtitleError = Boolean(subtitle) && touched.subtitle && !subtitle?.value.trim();
   const descriptionError = touched.description && !description.trim();
 
   return (
@@ -43,7 +47,7 @@ export default function PageBasicInfoSection({
             label={titleLabel}
             required
             value={title}
-            inputProps={{ 'data-testid': `${testId}-${PAGE_FORM_TEST_IDS.TITLE}` }}
+            data-testid={`${testId}-${PAGE_FORM_TEST_IDS.TITLE}`}
             onChange={(e) => {
               onTitleChange(e.target.value);
               if (touched.title) onTouchedChange('title', false);
@@ -54,13 +58,32 @@ export default function PageBasicInfoSection({
             sx={PAGE_FIELD_SX}
           />
         </Grid>
+        {subtitle && (
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label={subtitle.label}
+              required
+              value={subtitle.value}
+              data-testid={`${testId}-${PAGE_FORM_TEST_IDS.SUBTITLE}`}
+              onChange={(e) => {
+                subtitle.onChange(e.target.value);
+                if (touched.subtitle) onTouchedChange('subtitle', false);
+              }}
+              onBlur={() => onTouchedChange('subtitle', true)}
+              error={subtitleError}
+              helperText={subtitleError ? REQUIRED_FIELD_MESSAGE : ''}
+              sx={PAGE_FIELD_SX}
+            />
+          </Grid>
+        )}
         <Grid item xs={12}>
           <TextField
             fullWidth
             label={descriptionLabel}
             required
             value={description}
-            inputProps={{ 'data-testid': `${testId}-${PAGE_FORM_TEST_IDS.DESCRIPTION}` }}
+            data-testid={`${testId}-${PAGE_FORM_TEST_IDS.DESCRIPTION}`}
             onChange={(e) => {
               onDescriptionChange(e.target.value);
               if (touched.description) onTouchedChange('description', false);
@@ -73,6 +96,7 @@ export default function PageBasicInfoSection({
             sx={PAGE_FIELD_SX}
           />
         </Grid>
+        {showPublicSwitch && (
         <Grid item xs={12}>
           <FormControlLabel
             control={
@@ -85,6 +109,8 @@ export default function PageBasicInfoSection({
             label={publicLabel}
           />
         </Grid>
+        )}
+        {children}
       </Grid>
     </Paper>
   );

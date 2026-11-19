@@ -29,14 +29,15 @@ export const CANCEL_LABEL = 'Cancelar';
 export const DESCRIPTION_ROWS = 4;
 
 export const PAGE_FORM_TEST_IDS = {
-  BACK: 'back-button',
+  BACK: 'back',
   HEADING: 'heading',
   BASIC_INFO: 'basic-info',
-  TITLE: 'title-input',
-  DESCRIPTION: 'description-input',
+  TITLE: 'title',
+  SUBTITLE: 'subtitle',
+  DESCRIPTION: 'description',
   PUBLIC: 'public-switch',
   ACTIONS: 'actions',
-  CANCEL: 'cancel-button',
-  SAVE: 'save-button',
+  CANCEL: 'cancel',
+  SAVE: 'save',
   FEEDBACK: 'feedback',
 } as const;

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { PageBasicInfoTouched } from './types';
 
-const UNTOUCHED: PageBasicInfoTouched = { title: false, description: false };
+const UNTOUCHED: PageBasicInfoTouched = { title: false, subtitle: false, description: false };
 
 /** Estado "tocado" dos campos comuns (título/descrição) do formulário. */
 export function useTouchedFields() {
@@ -11,7 +11,7 @@ export function useTouchedFields() {
     setTouched((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  const touchAll = useCallback(() => setTouched({ title: true, description: true }), []);
+  const touchAll = useCallback(() => setTouched({ title: true, subtitle: true, description: true }), []);
   const reset = useCallback(() => setTouched(UNTOUCHED), []);
 
   return { touched, setField, touchAll, reset };

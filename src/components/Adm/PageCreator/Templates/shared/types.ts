@@ -81,6 +81,7 @@ export interface PageFormActionsProps {
 
 export interface PageBasicInfoTouched {
   title: boolean;
+  subtitle: boolean;
   description: boolean;
 }
 
@@ -92,6 +93,12 @@ export interface PageBasicInfoSectionProps {
   title: string;
   description: string;
   isPublic: boolean;
+  /** Campo de subtítulo obrigatório (materiais de visita). */
+  subtitle?: { label: string; value: string; onChange: (value: string) => void };
+  /** Mostra o interruptor "Página pública" (padrão: sim). */
+  showPublicSwitch?: boolean;
+  /** Campos extras ao final do bloco (ex.: testamento). */
+  children?: ReactNode;
   touched: PageBasicInfoTouched;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
