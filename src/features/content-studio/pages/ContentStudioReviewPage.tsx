@@ -100,7 +100,7 @@ export function ContentStudioReviewPage() {
                       color={selected ? "primary" : highlight ? "warning" : "default"}
                       variant={selected ? "filled" : "outlined"}
                       onClick={() => patch({ view: item.view, page: 1 })}
-                      sx={{ fontWeight: 700, minHeight: 36, borderRadius: 2 }}
+                      sx={{ fontWeight: 700, minHeight: { xs: 44, sm: 36 }, borderRadius: 2 }}
                     />
                   );
                 })}

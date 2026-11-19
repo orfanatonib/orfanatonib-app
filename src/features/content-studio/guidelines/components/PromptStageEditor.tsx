@@ -116,7 +116,7 @@ export const PromptStageEditor: React.FC<PromptStageEditorProps> = (props) => {
               onClick={() => props.onInsertPreset(preset.text)}
               variant="outlined"
               disabled={props.resetting}
-              sx={{ fontWeight: 600, borderRadius: 2, minHeight: 36 }}
+              sx={{ fontWeight: 600, borderRadius: 2, minHeight: { xs: 44, sm: 36 } }}
             />
           ))}
         </Stack>

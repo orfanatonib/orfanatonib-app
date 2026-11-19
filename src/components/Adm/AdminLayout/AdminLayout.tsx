@@ -538,7 +538,8 @@ function AdminLayout() {
           minHeight: "calc(100vh - var(--app-header-h))",
         }}
       >
-        {isMobile && <Toolbar sx={{ minHeight: 0, p: 0 }} />}
+        {/* Espaço da barra "Administração", que é fixa: sem ele ela cobre o topo de toda página no celular. */}
+        {isMobile && <Toolbar data-testid="admin-mobile-bar-spacer" />}
         <Outlet />
       </Box>
     </Box>

@@ -35,7 +35,7 @@ export function PackageSummaryCard({
         <Stack spacing={2}>
           <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
             <Box>
-              <Typography component="h2" variant="h4" fontWeight={800}>
+              <Typography component="h2" variant="h4" fontWeight={800} sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" }, overflowWrap: "anywhere" }}>
                 {contentPackage.theme}
               </Typography>
               <Typography color="text.secondary">{contentPackage.biblicalReferences}</Typography>
@@ -44,6 +44,7 @@ export function PackageSummaryCard({
               label={CONTENT_PACKAGE_STATUS_LABELS[contentPackage.status]}
               color={statusColor}
               variant={statusColor === "default" ? "outlined" : "filled"}
+              sx={{ alignSelf: { xs: "flex-start", sm: "auto" }, flexShrink: 0 }}
             />
           </Stack>
           <Typography>{contentPackage.canonicalObjective}</Typography>

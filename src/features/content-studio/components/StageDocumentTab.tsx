@@ -111,7 +111,7 @@ export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, 
           />
           {dirty && <Chip size="small" color="warning" label="Alterações não salvas" data-testid="content-studio-doc-dirty" />}
         </Stack>
-        <Stack direction="row" spacing={1}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
           {data?.edited && !disabled && (
             <Button
               size="small"
@@ -121,6 +121,7 @@ export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, 
                 if (window.confirm("Descartar as edições do documento e voltar a montá-lo a partir dos campos?")) void onReset(stage);
               }}
               data-testid="content-studio-doc-reset"
+              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
             >
               Voltar aos campos
             </Button>
@@ -131,6 +132,7 @@ export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, 
             disabled={!dirty || saving}
             onClick={() => setDraft(data?.document ?? null)}
             data-testid="content-studio-doc-discard"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             Descartar alterações
           </Button>
@@ -141,17 +143,14 @@ export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, 
             disabled={!dirty || saving || disabled}
             onClick={() => void save()}
             data-testid="content-studio-doc-save"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             Salvar documento
           </Button>
         </Stack>
       </Stack>
 
-      {empty && (
-        <Alert severity="info">
-          Esta etapa ainda não tem conteúdo. Gere com a IA ou escreva aqui; ao salvar, o documento vira a versão da etapa.
-        </Alert>
-      )}
+      {empty && <Alert severity="info">Esta etapa ainda não tem conteúdo. Gere com a IA ou escreva aqui; ao salvar, o documento vira a versão da etapa.</Alert>}
       {disabled && <Alert severity="info">Esta etapa não pode ser editada agora (em revisão, aprovada ou publicada).</Alert>}
 
       <Box data-testid="content-studio-doc-editor-wrapper" sx={{ minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>

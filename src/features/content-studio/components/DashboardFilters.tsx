@@ -150,7 +150,7 @@ export function DashboardFilters({
                 color={selectedPreset === preset ? "primary" : "default"}
                 variant={selectedPreset === preset ? "filled" : "outlined"}
                 onClick={() => applyPreset(preset)}
-                sx={{ minHeight: 32 }}
+                sx={{ minHeight: { xs: 44, sm: 32 } }}
               />
             ))}
           </Stack>

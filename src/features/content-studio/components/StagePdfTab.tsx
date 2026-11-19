@@ -39,8 +39,8 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
         <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }}>
           Prévia do PDF da versão salva desta etapa.
         </Typography>
-        <Stack direction="row" spacing={1}>
-          <Button size="small" startIcon={<Refresh />} onClick={reload} disabled={loading}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          <Button size="small" startIcon={<Refresh />} onClick={reload} disabled={loading} sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}>
             Atualizar
           </Button>
           <Button
@@ -49,6 +49,7 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
             startIcon={<Download />}
             onClick={() => void download(ExportFormat.DOCX)}
             data-testid="content-studio-download-docx"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             Baixar DOCX
           </Button>
@@ -58,14 +59,13 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
             startIcon={<Download />}
             onClick={() => void download(ExportFormat.PDF)}
             data-testid="content-studio-download-pdf"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             Baixar PDF
           </Button>
         </Stack>
       </Stack>
-      {hasUnsavedChanges && (
-        <Alert severity="warning">Há alterações não salvas: a prévia mostra a versão já salva. Salve para vê-las aqui.</Alert>
-      )}
+      {hasUnsavedChanges && <Alert severity="warning">Há alterações não salvas: a prévia mostra a versão já salva. Salve para vê-las aqui.</Alert>}
       {downloadError && <Alert severity="error">Não foi possível baixar o arquivo agora.</Alert>}
       {error && (
         <Alert

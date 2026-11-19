@@ -71,6 +71,8 @@ export default function DayPickerField({
         enableAccessibleFieldDOMStructure={false}
         slotProps={{
           field: { clearable: true },
+          // Alvo de toque de 44 px para o ícone do calendário no celular.
+          openPickerButton: { sx: { minWidth: 44, minHeight: 44 } },
           textField: {
             fullWidth: true,
             size,

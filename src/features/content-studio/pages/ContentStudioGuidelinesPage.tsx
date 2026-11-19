@@ -246,26 +246,24 @@ export function ContentStudioGuidelinesPage() {
   return (
     <Box component="section" data-testid="content-studio-guidelines-page" sx={{ pb: { xs: 10, sm: 0 } }}>
       <Stack spacing={2}>
-        <Paper component="header" elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 4, border: "1px solid", borderColor: "divider" }}>
-          <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5}>
-            {/* O ponto que mais confunde: a personalização é de quem está logado, não do sistema. */}
-            <Alert data-testid="admin-prompts-personal-notice" severity="info" icon={<PersonOutline />} sx={{ borderRadius: 2.5, flex: 1 }}>
-              <AlertTitle sx={{ fontWeight: 800 }}>
-                {PROMPT_TEXTS.personalTitle}
-                {firstName(userName) ? `, ${firstName(userName)}` : ""}
-              </AlertTitle>
-              {PROMPT_TEXTS.personalBody}
-            </Alert>
-            {dirtyCount > 0 && (
-              <Chip
-                data-testid="admin-prompts-pending-count"
-                color="warning"
-                label={`${dirtyCount} ${dirtyCount === 1 ? "etapa com texto não salvo" : "etapas com texto não salvo"}`}
-                sx={{ fontWeight: 800, borderRadius: 2, flexShrink: 0 }}
-              />
-            )}
-          </Stack>
-        </Paper>
+        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5}>
+          {/* O ponto que mais confunde: a personalização é de quem está logado, não do sistema. */}
+          <Alert data-testid="admin-prompts-personal-notice" severity="info" icon={<PersonOutline />} sx={{ borderRadius: 2.5, flex: 1 }}>
+            <AlertTitle sx={{ fontWeight: 800 }}>
+              {PROMPT_TEXTS.personalTitle}
+              {firstName(userName) ? `, ${firstName(userName)}` : ""}
+            </AlertTitle>
+            {PROMPT_TEXTS.personalBody}
+          </Alert>
+          {dirtyCount > 0 && (
+            <Chip
+              data-testid="admin-prompts-pending-count"
+              color="warning"
+              label={`${dirtyCount} ${dirtyCount === 1 ? "etapa com texto não salvo" : "etapas com texto não salvo"}`}
+              sx={{ fontWeight: 800, borderRadius: 2, flexShrink: 0 }}
+            />
+          )}
+        </Stack>
 
         {catalogLoading && (
           <Stack data-testid="content-studio-guidelines-loading" alignItems="center" spacing={2} py={4}>
