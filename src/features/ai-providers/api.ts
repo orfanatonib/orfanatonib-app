@@ -1,11 +1,17 @@
 import apiAxios from '@/config/axiosConfig';
 import {
   AI_PROVIDER_SETTINGS_ENDPOINT,
+  AI_USAGE_ENDPOINT,
+  GEMINI_HEALTH_ENDPOINT,
+  OPENAI_HEALTH_ENDPOINT,
   GEMINI_MODELS_ENDPOINT,
   OPENAI_MODELS_ENDPOINT,
 } from './constants';
+import { LlmProviderType } from './types';
 import type {
+  AiProviderHealthResult,
   AiProviderSettings,
+  AiUsageResponse,
   GeminiModelsResponse,
   SaveAiProviderSettingsRequest,
   OpenAiModelsResponse,
@@ -41,4 +47,23 @@ export async function apiSaveAiProviderSettings(
       })
     ).data
   );
+}
+
+export async function apiCheckProviderHealth(
+  provider: LlmProviderType
+): Promise<AiProviderHealthResult> {
+  const endpoint =
+    provider === LlmProviderType.OPENAI ? OPENAI_HEALTH_ENDPOINT : GEMINI_HEALTH_ENDPOINT;
+  return (await apiAxios.post<AiProviderHealthResult>(endpoint, undefined, { skipGlobalError: true }))
+    .data;
+}
+
+export async function apiGetAiUsage(days: number, signal?: AbortSignal): Promise<AiUsageResponse> {
+  return (
+    await apiAxios.get<AiUsageResponse>(AI_USAGE_ENDPOINT, {
+      params: { days },
+      skipGlobalError: true,
+      signal,
+    })
+  ).data;
 }

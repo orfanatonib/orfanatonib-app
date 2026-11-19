@@ -103,6 +103,8 @@ import type {
   OpenAiSettingsForm,
 } from './types';
 
+import { ProviderDiagnosticsPanel } from './ProviderDiagnosticsPanel';
+
 export const AiProvidersConfigPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -732,6 +734,8 @@ export const AiProvidersConfigPage: React.FC = () => {
             : `Atualizar modelos disponíveis (${AI_PROVIDER_LABELS[form.llmProvider]})`}
         </Button>
       </Stack>
+
+      <ProviderDiagnosticsPanel provider={form.llmProvider} hasUnsavedChanges={isDirty} />
 
       {/* Painéis dos Provedores (1 coluna no mobile, 2 colunas no desktop) */}
       <Grid2 container spacing={2.5}>

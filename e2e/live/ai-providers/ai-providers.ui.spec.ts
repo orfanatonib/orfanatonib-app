@@ -46,3 +46,21 @@ test("membro não vê o painel", async ({ page, request }) => {
   await expect(page.getByText("Configurações da OpenAI")).toHaveCount(0);
   await expect(page).not.toHaveURL(/config-provedores-ia/);
 });
+
+test("testar conexão mostra o resultado sem vazar chave, e o uso de IA muda de período", async ({ page, request }) => {
+  await seedBrowserSession(page, await loginAs(request, "admin"));
+  await page.goto("/adm/config-provedores-ia");
+  await expect(page.getByTestId("ai-providers-diagnostics")).toBeVisible({ timeout: 20_000 });
+
+  await page.getByTestId("ai-providers-health-button").click();
+  const result = page.getByTestId("ai-providers-health-result");
+  await expect(result).toBeVisible({ timeout: 30_000 });
+  // Sem chave válida salva o teste nunca diz OK; com uma boa, diz.
+  await expect(result).toHaveAttribute("data-health-status", /OK|NO_KEY|FAILED|MODEL_MISSING|UNREADABLE_KEY/);
+  expect(await result.innerText()).not.toMatch(/sk-/);
+
+  await expect(page.getByTestId("ai-providers-usage-empty").or(page.getByTestId("ai-providers-usage-list"))).toBeVisible();
+  await page.getByTestId("ai-providers-diagnostics").getByRole("combobox").click();
+  await page.getByRole("option", { name: "Últimos 90 dias" }).click();
+  await expect(page.getByTestId("ai-providers-usage-empty").or(page.getByTestId("ai-providers-usage-list"))).toBeVisible();
+});

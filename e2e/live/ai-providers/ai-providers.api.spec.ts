@@ -131,4 +131,48 @@ test.describe.serial("Provedores de IA — painel", () => {
     expect(JSON.stringify(await put.json())).toContain("FEATURE_DISABLED");
     await setFlags(request, true);
   });
+
+  for (const provider of ["openai", "gemini"]) {
+    test(`POST ${provider}/health: só admin; sem chave devolve NO_KEY sem vazar nada`, async ({ request }) => {
+      const url = `${BASE}/${provider}/health`;
+      expect((await request.post(url)).status()).toBe(401);
+      expect((await request.post(url, { headers: authHeaders(member) })).status()).toBe(403);
+      expect((await request.post(url, { headers: authHeaders(leader) })).status()).toBe(403);
+      if (provider === "openai") await request.put(`${BASE}/openai/settings`, { headers: authHeaders(admin), data: { apiKey: "" } });
+      const res = await request.post(url, { headers: authHeaders(admin) });
+      expect(res.status()).toBe(201);
+      const body = (await res.json()) as { provider: string; ok: boolean; status: string; message: string; checkedAt: string };
+      expect(body.provider).toBe(provider);
+      if (provider === "openai") expect(body).toMatchObject({ ok: false, status: "NO_KEY" });
+      expect(typeof body.message).toBe("string");
+      expect(Number.isNaN(Date.parse(body.checkedAt))).toBe(false);
+      expect(JSON.stringify(body)).not.toContain(FAKE_KEY);
+    });
+  }
+
+  test("chave inválida salva ⇒ health FAILED com motivo, sem vazar a chave", async ({ request }) => {
+    await request.put(`${BASE}/settings`, { headers: authHeaders(admin), data: settingsBody({ apiKey: FAKE_KEY }) });
+    const res = await request.post(`${BASE}/openai/health`, { headers: authHeaders(admin) });
+    const body = (await res.json()) as { ok: boolean; status: string; message: string };
+    expect(body.ok).toBe(false);
+    expect(["FAILED", "MODEL_MISSING"]).toContain(body.status);
+    expect(JSON.stringify(body)).not.toContain(FAKE_KEY);
+    await request.put(`${BASE}/openai/settings`, { headers: authHeaders(admin), data: { apiKey: "" } });
+  });
+
+  test("GET ai-management/usage: só admin com a flag; valida a janela e devolve totais", async ({ request }) => {
+    const url = `${API_URL}/ai-management/usage`;
+    expect((await request.get(url)).status()).toBe(401);
+    expect((await request.get(url, { headers: authHeaders(member) })).status()).toBe(403);
+    expect((await request.get(`${url}?days=0`, { headers: authHeaders(admin) })).status()).toBe(400);
+    expect((await request.get(`${url}?days=9999`, { headers: authHeaders(admin) })).status()).toBe(400);
+    const ok = await request.get(`${url}?days=30`, { headers: authHeaders(admin) });
+    expect(ok.status()).toBe(200);
+    const body = (await ok.json()) as { days: number; generations: number; totalTokens: number; byModel: unknown[] };
+    expect(body.days).toBe(30);
+    expect(body.byModel.length >= 0 && body.generations >= 0 && body.totalTokens >= 0).toBe(true);
+    await setFlags(request, false);
+    expect((await request.get(url, { headers: authHeaders(admin) })).status()).toBe(403);
+    await setFlags(request, true);
+  });
 });

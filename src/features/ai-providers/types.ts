@@ -132,3 +132,37 @@ export interface AiProviderProfilePreset {
   gemini: GeminiSettings;
 }
 export type AiProviderPresetProfile = Exclude<AiProviderProfile, AiProviderProfile.CUSTOM>;
+
+export enum AiProviderHealthStatus {
+  OK = 'OK',
+  NO_KEY = 'NO_KEY',
+  UNREADABLE_KEY = 'UNREADABLE_KEY',
+  FAILED = 'FAILED',
+  MODEL_MISSING = 'MODEL_MISSING',
+}
+/** Resposta do "Testar conexão"; nunca traz a chave. */
+export interface AiProviderHealthResult {
+  provider: 'openai' | 'gemini';
+  status: AiProviderHealthStatus;
+  ok: boolean;
+  message: string;
+  missingModels: string[];
+  checkedAt: string;
+  durationMs: number;
+}
+export interface AiUsageByModel {
+  provider: string;
+  model: string;
+  generations: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  averageDurationMs: number;
+}
+export interface AiUsageResponse {
+  days: number;
+  since: string;
+  generations: number;
+  totalTokens: number;
+  byModel: AiUsageByModel[];
+}

@@ -193,3 +193,10 @@ export const AI_PROVIDER_PROFILE_ORDER: AiProviderPresetProfile[] = [
   AiProviderProfile.PRODUCTION,
 ];
 export const AI_PROVIDER_CUSTOM_PROFILE_LABEL = 'Personalizado (manual)';
+
+export const OPENAI_HEALTH_ENDPOINT = '/api/v1/lessons/providers/openai/health';
+export const GEMINI_HEALTH_ENDPOINT = '/api/v1/lessons/providers/gemini/health';
+export const AI_USAGE_ENDPOINT = '/ai-management/usage';
+export const AI_USAGE_PERIOD_OPTIONS = [7, 30, 90] as const;
+export const AI_USAGE_DEFAULT_DAYS = 30;
+export const AI_USAGE_STALE_TIME_MS = 60_000;

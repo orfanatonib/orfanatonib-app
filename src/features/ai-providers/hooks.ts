@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  apiCheckProviderHealth,
   apiGetAiProviderSettings,
+  apiGetAiUsage,
   apiGetGeminiModels,
   apiGetOpenAiModels,
   apiSaveAiProviderSettings,
@@ -8,14 +10,16 @@ import {
 import {
   AI_PROVIDER_MODELS_STALE_TIME_MS,
   AI_PROVIDER_SETTINGS_STALE_TIME_MS,
+  AI_USAGE_STALE_TIME_MS,
 } from './constants';
-import type { SaveAiProviderSettingsRequest } from './types';
+import type { LlmProviderType, SaveAiProviderSettingsRequest } from './types';
 
 export const useAiProvidersKeys = {
   all: ['ai-providers'] as const,
   settings: () => ['ai-providers', 'settings'] as const,
   openaiModels: () => ['ai-providers', 'openai-models'] as const,
   geminiModels: () => ['ai-providers', 'gemini-models'] as const,
+  usage: (days: number) => ['ai-providers', 'usage', days] as const,
 };
 
 export function useAiProviderSettings() {
@@ -53,5 +57,20 @@ export function useGeminiModels(enabled = true) {
     queryFn: ({ signal }) => apiGetGeminiModels(signal),
     enabled,
     staleTime: AI_PROVIDER_MODELS_STALE_TIME_MS,
+  });
+}
+
+export function useCheckProviderHealth() {
+  return useMutation({
+    gcTime: 0,
+    mutationFn: (provider: LlmProviderType) => apiCheckProviderHealth(provider),
+  });
+}
+
+export function useAiUsage(days: number) {
+  return useQuery({
+    queryKey: useAiProvidersKeys.usage(days),
+    queryFn: ({ signal }) => apiGetAiUsage(days, signal),
+    staleTime: AI_USAGE_STALE_TIME_MS,
   });
 }
