@@ -1,509 +1,141 @@
-import axios from 'axios';
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { Box, Container } from '@mui/material';
+import { FeatureFlagKeys, useIsFeatureEnabled } from '@/features/feature-flags';
+import {
+  FEED_CONTAINER_WIDTH,
+  FEED_CONTENT_MAX_WIDTH,
+  FEED_PAGE_MESSAGES,
+  FEED_PALETTE,
+  FEED_ROUTES,
+  FEED_TEST_IDS,
+} from '@/features/shelter-feed/constants';
+import type { ShelterFeedViewProps } from '@/features/shelter-feed/componentTypes';
+import { FeedControlBar } from '@/features/shelter-feed/components/FeedControlBar';
+import { FeedEmptyState, FeedErrorState, FeedLoadingSkeleton } from '@/features/shelter-feed/components/FeedStates';
+import { FeedFilterEmptyState, FeedPaginationFooter } from '@/features/shelter-feed/components/FeedListStates';
+import { FeedHeroBanner } from '@/features/shelter-feed/components/FeedHeroBanner';
+import { FeedLightboxDialog } from '@/features/shelter-feed/components/FeedLightboxDialog';
+import { FeedHighlightsCarousel } from '@/features/shelter-feed/components/FeedHighlightsCarousel';
+import { ShelterFeedContent } from '@/features/shelter-feed/components/ShelterFeedContent';
 import { resolveFeedPageId } from '@/features/shelter-feed/utils';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Typography,
-  Skeleton,
-  Paper,
-  Grid2,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-  Chip,
-} from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '@/config/axiosConfig';
-import { RootState, AppDispatch } from '@/store/slices';
-import { UserRole } from 'store/slices/auth/authSlice';
-import ShelterSectionImageView from './ShelterSectionImageView';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import {
-  setSectionData,
-  appendSections,
-  updatePagination,
-  PaginatedSectionResponse,
-} from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
-import ErrorState, { ErrorType } from '@/components/common/ErrorState';
-import { isRequestCanceled } from '@/utils/apiErrorMessage';
-import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
+import { useShelterFeedView } from '@/features/shelter-feed/useShelterFeedView';
+import type { RootState } from '@/store/slices';
+import { UserRole } from '@/store/slices/auth/authSlice';
 
-interface ShelterFeedViewProps {
-  idToFetch?: string;
-  feed?: boolean;
-}
-
-function SectionSkeleton() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          p: { xs: 3, md: 4 },
-          mt: { xs: 2, md: 3 },
-          mb: { xs: 3, md: 4 },
-          borderRadius: { xs: 3, md: 4 },
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
-          border: `2px solid ${theme.palette.success.main}20`,
-        }}
-      >
-        <Box textAlign="center" mb={3}>
-          <Skeleton 
-            variant="text" 
-            width={220} 
-            height={isMobile ? 24 : 32} 
-            sx={{ 
-              mx: 'auto', 
-              borderRadius: 2,
-            }} 
-          />
-          <Skeleton 
-            variant="text" 
-            width="60%" 
-            sx={{ 
-              mx: 'auto', 
-              mt: 1,
-              borderRadius: 1,
-            }} 
-          />
-          <Skeleton 
-            variant="text" 
-            width="50%" 
-            sx={{ 
-              mx: 'auto', 
-              mt: 1,
-              borderRadius: 1,
-            }} 
-          />
-          <Box 
-            mt={2} 
-            display="flex" 
-            flexDirection="column" 
-            alignItems={{ xs: 'center', md: 'flex-end' }}
-          >
-            <Skeleton variant="text" width={180} sx={{ borderRadius: 1 }} />
-            <Skeleton variant="text" width={220} sx={{ borderRadius: 1 }} />
-          </Box>
-        </Box>
-        <Skeleton
-          variant="rectangular"
-          sx={{ 
-            width: '100%', 
-            height: isMobile ? 200 : 400, 
-            borderRadius: { xs: 2, md: 3 },
-            mb: 2,
-          }}
-        />
-        <Grid2 container spacing={1} justifyContent="center">
-          {[...Array(6)].map((_, i) => (
-            <Grid2 size={{ xs: 4, sm: 2, md: 2 }} key={i}>
-              <Skeleton
-                variant="rectangular"
-                height={isMobile ? 60 : 80}
-                sx={{
-                  borderRadius: { xs: 2, md: 3 },
-                }}
-              />
-            </Grid2>
-          ))}
-        </Grid2>
-      </Paper>
-    </motion.div>
-  );
-}
-
+/** Tela do feed dos abrigos (`SHELTER_FEED_PATH`): só compõe; dados e regras ficam na feature. */
 export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [errorType, setErrorType] = useState<ErrorType>('generic');
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [retryTrigger, setRetryTrigger] = useState(0);
-
-  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const section = useSelector((state: RootState) => state.imageSectionPagination.section);
-
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const [searchParams] = useSearchParams();
-  const defaultSectionId = resolveFeedPageId(
-    searchParams.get('galeria'),
-    import.meta.env.VITE_FEED_MINISTERIO_ID,
-  );
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const photoUploadOn = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PHOTO_UPLOAD);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastSectionRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) setPage((prev) => prev + 1);
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loadingMore, hasMore]
-  );
+  const configuredId: string | undefined = import.meta.env.VITE_FEED_MINISTERIO_ID?.trim() || undefined;
+  const pageId = feed ? resolveFeedPageId(searchParams.get('galeria'), configuredId) : undefined;
+  const view = useShelterFeedView(pageId);
 
-  const sectionsList = useMemo(() => section?.sections ?? [], [section?.sections]);
+  const canUploadPhotos = isAuthenticated && photoUploadOn;
+  const canManageFeed = isAuthenticated && user?.role === UserRole.ADMIN;
+  const goHome = () => navigate(FEED_ROUTES.HOME);
+  const goUpload = () => navigate(FEED_ROUTES.UPLOAD_PHOTOS);
+  const refresh = () => void view.refreshFeed();
 
-  useEffect(() => {
-    dispatch(setSectionData(null));
-    setInitialLoadComplete(false);
-    setPage(1);
-    setHasMore(true);
-  }, [dispatch]);
+  const rootSx = { minHeight: '100vh', bgcolor: FEED_PALETTE.canvas, pb: { xs: 5, md: 8 }, overflowX: 'clip' } as const;
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchSectionData = async () => {
-      try {
-        setHasError(false);
-        if (page === 1) {
-          setLoading(true);
-        } else {
-          setLoadingMore(true);
-        }
-
-        const sectionId = feed ? defaultSectionId : undefined;
-        if (!sectionId) throw new Error('Nenhum ID de seção fornecido.');
-
-        const { data } = await api.get<PaginatedSectionResponse>(
-          `/image-pages/${sectionId}/sections?page=${page}&limit=2`,
-          { signal: controller.signal }
-        );
-
-        if (page === 1) {
-          dispatch(setSectionData(data));
-          setLoading(false);
-          setInitialLoadComplete(true);
-        } else {
-          dispatch(appendSections(data.sections));
-          dispatch(updatePagination({ page: data.page, total: data.total }));
-          setLoadingMore(false);
-        }
-
-        setHasMore(data.page * data.limit < data.total);
-      } catch (err: unknown) {
-        if (!isRequestCanceled(err)) {
-          let type: ErrorType = 'generic';
-          const status = axios.isAxiosError(err) ? err.response?.status : undefined;
-
-          if (status === 404) {
-            type = '404';
-          } else if (status === 500) {
-            type = '500';
-          } else if (!axios.isAxiosError(err) || err.code === 'ERR_NETWORK' || !err.response) {
-            type = 'network';
-          }
-
-          setErrorType(type);
-          setHasError(true);
-          if (page === 1) {
-            setLoading(false);
-            setInitialLoadComplete(true);
-          } else {
-            setLoadingMore(false);
-          }
-        }
-      }
-    };
-
-    fetchSectionData();
-
-    return () => controller.abort();
-  }, [page, defaultSectionId, dispatch, feed, retryTrigger]);
-
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  return (
-    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            p: { xs: 3, md: 4 },
-            mb: 4,
-            borderRadius: { xs: 3, md: 4 },
-            background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -50,
-              right: -50,
-              width: 200,
-              height: 200,
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              zIndex: 0,
-            }}
-          />
-
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              mb={2}
-              flexWrap="wrap"
-              gap={2}
-            >
-              <Box display="flex" alignItems="center" gap={2}>
-                <IconButton
-                  onClick={handleBack}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'rgba(255,255,255,0.3)',
-                    },
-                  }}
-                >
-                  <ArrowBackIcon />
-                </IconButton>
-                <PhotoLibraryIcon sx={{ fontSize: { xs: '2rem', md: '2.5rem' } }} />
-              </Box>
-
-              {feed && isAuthenticated && (
-                <Button
-                  component={Link}
-                  to={MEMBER_SUBPAGE_PATHS.photos}
-                  variant="contained"
-                  startIcon={!isMobile && <PhotoCameraIcon />}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.95)',
-                    color: '#2e7d32',
-                    fontWeight: 'bold',
-                    px: { xs: 2, sm: 2.5, md: 3.5 },
-                    py: { xs: 1, sm: 1.25, md: 1.5 },
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    border: '2px solid',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    whiteSpace: { xs: 'nowrap', sm: 'normal' },
-                    minWidth: { xs: 'auto', sm: 'auto' },
-                    '&:hover': {
-                      bgcolor: 'rgba(255,255,255,1)',
-                      boxShadow: '0 6px 16px rgba(0,0,0,0.3)',
-                      transform: 'translateY(-2px)',
-                      borderColor: 'rgba(255,255,255,0.5)',
-                    },
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {isMobile ? (
-                    <>
-                      <PhotoCameraIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />
-                      Enviar Fotos
-                    </>
-                  ) : (
-                    'Envie fotos do seu Abrigo'
-                  )}
-                </Button>
-              )}
-            </Box>
-
-            <Typography
-              variant="h3"
-              fontWeight="bold"
-              sx={{
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem' },
-                mb: 1,
-                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-              }}
-            >
-              📰 Feed do Ministério de Orfanatos NIB
-            </Typography>
-
-            <Typography
-              variant="h5"
-              fontWeight="600"
-              sx={{
-                fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
-                mb: 2,
-                opacity: 0.95,
-                textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-              }}
-            >
-              Acompanhe tudo o que acontece nos abrigos assistidos pelo nosso ministério
-            </Typography>
-
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              mt={3}
-              flexWrap="wrap"
-            >
-              <Chip
-                label={`${sectionsList.length} ${sectionsList.length === 1 ? 'Seção' : 'Seções'}`}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}
-              />
-            </Box>
-          </Box>
-        </Paper>
-      </motion.div>
-
-      {!initialLoadComplete ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          {[...Array(2)].map((_, i) => (
-            <SectionSkeleton key={i} />
-          ))}
-        </motion.div>
-      ) : hasError ? (
-        <ErrorState
-          type={errorType}
-          onRetry={() => {
-            setHasError(false);
-            setInitialLoadComplete(false);
-            setPage(1);
-            setRetryTrigger(prev => prev + 1);
-          }}
+  if (!pageId || view.initialErrorMessage) {
+    return (
+      <Box data-testid={FEED_TEST_IDS.PAGE_ROOT} sx={rootSx}>
+        <FeedErrorState
+          message={!pageId ? FEED_PAGE_MESSAGES.MISSING_CONFIG : (view.initialErrorMessage ?? FEED_PAGE_MESSAGES.LOAD_ERROR)}
+          isRetrying={view.isRefreshing}
+          onRetry={refresh}
+          onNavigateHome={goHome}
         />
-      ) : !section ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: 6,
-              textAlign: 'center',
-              borderRadius: { xs: 3, md: 4 },
-            }}
-          >
-            <Typography
-              variant="h5"
-              color="text.secondary"
-              sx={{
-                fontSize: { xs: '1.3rem', md: '1.5rem' },
-                mb: 2,
-              }}
-            >
-              📸 Nenhuma página de imagens encontrada
-            </Typography>
-            <Typography color="text.secondary">
-              A página de imagens solicitada não existe ou foi removida.
-            </Typography>
-          </Paper>
-        </motion.div>
-      ) : (
-        <AnimatePresence>
-          {sectionsList.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              {sectionsList.map((sectionItem, index) => (
-                <motion.div
-                  key={sectionItem.id}
-                  ref={index === sectionsList.length - 1 ? lastSectionRef : null}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  style={{
-                    marginBottom: index < sectionsList.length - 1 ? theme.spacing(2) : 0
-                  }}
-                >
-                  <ShelterSectionImageView
-                    id={sectionItem.id}
-                    author={sectionItem.author}
-                    celebrationCount={sectionItem.celebrationCount}
-                    celebratedByMe={sectionItem.celebratedByMe}
-                    commentCount={sectionItem.commentCount}
-                    caption={sectionItem.caption}
-                    description={sectionItem.description}
-                    mediaItems={sectionItem.mediaItems}
-                    createdAt={sectionItem.createdAt ? new Date(sectionItem.createdAt) : undefined}
-                    updatedAt={sectionItem.updatedAt ? new Date(sectionItem.updatedAt) : undefined}
-                  />
-                </motion.div>
-              ))}
+      </Box>
+    );
+  }
 
-              {loadingMore && (
-                <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  py={4}
-                >
-                  <CircularProgress size={40} />
-                </Box>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: { xs: 3, md: 4 },
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  color="text.secondary"
-                  sx={{ mb: 2 }}
-                >
-                  📸 Nenhuma seção disponível
-                </Typography>
-                <Typography color="text.secondary">
-                  As seções de imagens ainda não foram publicadas.
-                </Typography>
-              </Paper>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+  if (view.isInitialLoading) {
+    return (
+      <Box data-testid={FEED_TEST_IDS.PAGE_ROOT} sx={rootSx}>
+        <FeedLoadingSkeleton />
+      </Box>
+    );
+  }
 
-    </Container>
+  const hasSections = view.sections.length > 0;
+  return (
+    <Box data-testid={FEED_TEST_IDS.PAGE_ROOT} sx={rootSx}>
+      <FeedHeroBanner
+        title={FEED_PAGE_MESSAGES.DEFAULT_TITLE}
+        description={view.pageMeta?.description || FEED_PAGE_MESSAGES.DEFAULT_SUBTITLE}
+        totalSections={view.totalSections}
+        canUploadPhotos={canUploadPhotos}
+        canManageFeed={canManageFeed}
+        isRefreshing={view.isRefreshing}
+        onNavigateHome={goHome}
+        onNavigateUpload={goUpload}
+        onNavigateManage={() => navigate(FEED_ROUTES.ADMIN_MEDIA)}
+        onRefresh={refresh}
+      />
+      <Container
+        data-testid={FEED_TEST_IDS.CONTENT}
+        maxWidth={false}
+        disableGutters
+        sx={{ width: FEED_CONTAINER_WIDTH, maxWidth: FEED_CONTENT_MAX_WIDTH, mx: 'auto' }}
+      >
+        {!hasSections ? (
+          <Box sx={{ pt: { xs: 4, md: 6 } }}>
+            <FeedEmptyState
+              canUploadPhotos={canUploadPhotos}
+              isRefreshing={view.isRefreshing}
+              onRefresh={refresh}
+              onNavigateUpload={goUpload}
+            />
+          </Box>
+        ) : (
+          <>
+            <FeedHighlightsCarousel
+              sections={view.sections}
+              viewedStoryIds={view.viewedStoryIds}
+              onSelectStory={(section) => view.openLightbox(section, 0)}
+            />
+            <FeedControlBar
+              viewMode={view.viewMode}
+              searchQuery={view.searchQuery}
+              visibleCount={view.visibleSections.length}
+              loadedCount={view.sections.length}
+              totalPhotosCount={view.visiblePhotos.length}
+              onViewModeChange={view.setViewMode}
+              onSearchChange={view.setSearchQuery}
+              onClearSearch={() => view.setSearchQuery('')}
+            />
+            {view.visibleSections.length === 0 ? (
+              <FeedFilterEmptyState onClear={() => view.setSearchQuery('')} />
+            ) : (
+              <ShelterFeedContent
+                view={view}
+                canUploadPhotos={canUploadPhotos}
+                onNavigateUpload={goUpload}
+              />
+            )}
+            <FeedPaginationFooter
+              hasNextPage={view.hasNextPage}
+              isFetchingNextPage={view.isFetchingNextPage}
+              nextPageErrorMessage={view.nextPageErrorMessage}
+              showEnd={!view.hasNextPage && !view.hasSearchFilter && view.visibleSections.length > 0}
+              sentinelRef={view.sentinelRef}
+              onLoadMore={view.loadNextPage}
+            />
+          </>
+        )}
+      </Container>
+      <FeedLightboxDialog
+        activeState={view.activeLightbox}
+        isCopied={view.activeLightbox !== null && view.copiedSectionId === view.activeLightbox.section.id}
+        onShare={(section, mediaIndex) => void view.shareSection(section, mediaIndex)}
+        onClose={view.closeLightbox}
+      />
+    </Box>
   );
 }
