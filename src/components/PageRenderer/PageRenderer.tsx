@@ -4,6 +4,7 @@ import PageVideoView from 'pages/PageView/VideoViewPage/PageVideoView';
 import VisitMaterialsPageView from 'pages/PageView/VisitMaterialViewPage/VisitMaterialsPageView';
 import ShelterPageView from 'pages/PageView/ShelterPageView/ShelterPageView';
 import React from 'react';
+import NotFoundPage from '@/pages/NotFound/NotFoundPage';
 import { FeatureFlagKeys, FeatureFlagRoute } from '@/features/feature-flags';
 import { MediaTargetType } from 'store/slices/types';
 
@@ -33,7 +34,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({ entityType, idToFetch }) =>
         </FeatureFlagRoute>
       );
     default:
-      return <div>Tipo de página desconhecido: {entityType}</div>;
+      // Tipo que o front não conhece: 404, nunca um texto técnico na tela.
+      return <NotFoundPage />;
   }
 };
 
