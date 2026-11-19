@@ -1,11 +1,16 @@
 import api from '@/config/axiosConfig';
 import type { MeditationData } from '@/store/slices/meditation/meditationSlice';
 
+/** Item da listagem: a API devolve a meditação aninhada em `meditation`. */
+interface MeditationListItem {
+  meditation?: Partial<MeditationData> & { media?: Partial<MeditationData['media']> };
+}
+
 export async function listMeditations(search?: string): Promise<MeditationData[]> {
-  const res = await api.get('/meditations', {
+  const res = await api.get<MeditationListItem[]>('/meditations', {
     params: search?.trim() ? { search: search.trim() } : undefined,
   });
-  return (res.data || []).map((item: any) => ({
+  return (res.data || []).map((item) => ({
     ...item.meditation,
     media: {
       ...item.meditation?.media,
