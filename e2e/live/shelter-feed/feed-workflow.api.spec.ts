@@ -109,10 +109,12 @@ test.describe.serial("Feed v2 — fluxo completo (enviar, aprovar, comentar, cel
     });
     expect(res.status(), await res.text()).toBe(200);
     for (const token of [undefined, tokens.leader, tokens.member, tokens.admin]) expect(await feedIds(request, token)).toContain(sectionId);
-    // Autor: só para quem tem sessão ("Fulano E." — primeiro nome e inicial); visitante não vê.
-    const asLeader = (await readFeed(request, pageId, tokens.leader)).find((section) => section.id === sectionId)!;
-    expect(asLeader.author?.displayName).toMatch(/\w\.$/);
-    expect((await readFeed(request, pageId)).find((section) => section.id === sectionId)!.author).toBeNull();
+    // Quem publicou aparece para TODOS (visitante inclusive) com o nome completo, como no feed do Clubinho.
+    const memberName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = ?", [memberId]))!.name.trim().replace(/\s+/g, " ");
+    for (const token of [undefined, tokens.leader]) {
+      const section = (await readFeed(request, pageId, token)).find((item) => item.id === sectionId)!;
+      expect(section.author?.displayName).toBe(memberName);
+    }
     expect(await countRows("media_items", { targetId: sectionId, mediaType: "video" })).toBe(1);
   });
 

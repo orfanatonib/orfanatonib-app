@@ -2,14 +2,7 @@ import { API_URL } from "../../../playwright.live.config";
 import { RUN_TAG } from "../support/factory";
 import { closeDb, countRows, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import {
-  createFeedSection,
-  createGallery,
-  readFeed,
-  removeGallery,
-  removeSection,
-  setFlag,
-} from "./feed-fixtures";
+import { createFeedSection, createGallery, readFeed, removeGallery, removeSection, setFlag } from "./feed-fixtures";
 import { approveAllPending, commentBody } from "./comments-moderation-helpers";
 
 /**
@@ -48,8 +41,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
     memberId = m.userId;
     leaderId = l.userId;
     for (const key of FLAGS) {
-      flagBefore[key] =
-        ((await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 1) === 1;
+      flagBefore[key] = ((await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 1) === 1;
     }
     const gallery = await createGallery(request, admin, `${RUN_TAG} galeria feed`, `${RUN_TAG} legada`);
     pageId = gallery.pageId;
@@ -87,26 +79,27 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
     expect(feed.find((s) => s.id === legacyId)?.author).toBeNull();
   });
 
-  test("[shelter-feed.author#logado] logado vê só o nome público (primeiro nome + inicial), nunca e-mail/telefone", async ({ request }) => {
+  test("[shelter-feed.author#logado] logado vê o nome completo de quem publicou (como no Clubinho), nunca e-mail/telefone", async ({ request }) => {
     const response = await request.get(`${API_URL}/image-pages/${pageId}/sections?page=1&limit=50`, {
       headers: authHeaders(leader),
     });
     const text = await response.text();
-    const section = (JSON.parse(text) as { sections: Array<{ id: string; author: { displayName: string } | null }> }).sections.find(
-      (s) => s.id === publicId,
-    );
-    expect(section?.author?.displayName).toMatch(/^\S+( \S\.)?$/);
+    const section = (JSON.parse(text) as { sections: Array<{ id: string; author: { displayName: string } | null }> }).sections.find((s) => s.id === publicId);
+    const expectedName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = ?", [memberId]))!.name.trim().replace(/\s+/g, " ");
+    expect(section?.author?.displayName).toBe(expectedName);
     expect(text).not.toContain("e2e.member@orfanatonib.test");
     expect(text).not.toMatch(/"(email|phone|password)"/);
   });
 
-  test("[shelter-feed.author#anonimo] visitante só vê públicas e sem autoria/comentários", async ({ request }) => {
+  test("[shelter-feed.author#anonimo] visitante só vê as públicas, COM o nome de quem publicou, mas sem comentários nem celebração própria", async ({ request }) => {
     const feed = await readFeed(request, pageId);
     const ids = feed.map((s) => s.id);
     expect(ids).toContain(publicId);
     expect(ids).not.toContain(privateId);
+    const published = feed.find((s) => s.id === publicId)!;
+    expect(published.author?.displayName).toBeTruthy(); // quem publicou aparece para todos
+    expect(JSON.stringify(feed)).not.toMatch(/"(email|phone|password)"/);
     for (const section of feed) {
-      expect(section.author).toBeNull();
       expect(section.commentCount).toBe(0);
       expect(section.celebratedByMe).toBe(false);
     }
@@ -131,9 +124,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
           caption: `${RUN_TAG} pendente`,
           description: "d",
           public: false,
-          mediaItems: [
-            { title: "t", uploadType: "link", mediaType: "image", isLocalFile: false, url: "https://example.com/p.png", platformType: "googledrive" },
-          ],
+          mediaItems: [{ title: "t", uploadType: "link", mediaType: "image", isLocalFile: false, url: "https://example.com/p.png", platformType: "googledrive" }],
         }),
       },
     });
@@ -279,8 +270,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
   });
 
   test("[shelter-feed.comment#remover] outro usuário: 403 (nada muda); autor remove o seu; admin remove qualquer um", async ({ request }) => {
-    const mk = async (token: string, content: string) =>
-      ((await (await request.post(comments(publicId), { headers: authHeaders(token), data: commentBody(content) })).json()) as { id: string }).id;
+    const mk = async (token: string, content: string) => ((await (await request.post(comments(publicId), { headers: authHeaders(token), data: commentBody(content) })).json()) as { id: string }).id;
     const mine = await mk(member, `${RUN_TAG} do membro`);
     const others = await mk(leader, `${RUN_TAG} do líder`);
     const url = (id: string) => `${API_URL}/feed-section-comments/${id}`;
@@ -301,10 +291,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
   test("[shelter-feed.comment#flag] flag desligada: 403 FEATURE_DISABLED em listar/criar e nada grava", async ({ request }) => {
     await setFlag(request, admin, "shelter_feed_comments", false);
     const before = await countRows("image_section_comments", { sectionId: publicId });
-    for (const res of [
-      await request.get(comments(publicId), { headers: authHeaders(member) }),
-      await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody("oi") }),
-    ]) {
+    for (const res of [await request.get(comments(publicId), { headers: authHeaders(member) }), await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody("oi") })]) {
       expect(res.status()).toBe(403);
       expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
     }
