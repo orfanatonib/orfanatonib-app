@@ -14,6 +14,7 @@ import Description from "@mui/icons-material/Description";
 import EventAvailable from "@mui/icons-material/EventAvailable";
 import EventNote from "@mui/icons-material/EventNote";
 import Favorite from "@mui/icons-material/Favorite";
+import Forum from "@mui/icons-material/Forum";
 import Group from "@mui/icons-material/Group";
 import Groups from "@mui/icons-material/Groups";
 import HomeWork from "@mui/icons-material/HomeWork";
@@ -30,6 +31,7 @@ import SupervisorAccount from "@mui/icons-material/SupervisorAccount";
 import VideoLibrary from "@mui/icons-material/VideoLibrary";
 
 import { FeatureFlagKeys } from "@/features/feature-flags/types";
+import { FEED_COMMENTS_ADMIN_ROUTE } from "@/features/feed-comments/constants";
 
 import {
   AdminNavigationItemId,
@@ -203,6 +205,18 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
         icon: Description,
         allowedRoles: ADMIN_AND_LEADER_ROLES,
         requiredFeatureFlag: FeatureFlagKeys.PAGELAS,
+      },
+      {
+        id: AdminNavigationItemId.FEED_COMMENTS,
+        label: "Comentários do Feed",
+        description: "Aprove ou reprove os comentários do feed dos abrigos.",
+        path: FEED_COMMENTS_ADMIN_ROUTE,
+        icon: Forum,
+        allowedRoles: ADMIN_ONLY_ROLES,
+        requiredFeatureFlags: [
+          FeatureFlagKeys.SHELTER_FEED,
+          FeatureFlagKeys.SHELTER_FEED_COMMENTS,
+        ],
       },
     ],
   },

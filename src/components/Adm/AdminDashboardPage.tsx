@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
+import { FeedCommentsPendingBadge } from "@/features/feed-comments";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
@@ -33,6 +34,7 @@ import {
   ADMIN_NAVIGATION_FILTER_ALL_ID,
   ADMIN_NAVIGATION_FILTERS,
   ADMIN_NAVIGATION_TEST_IDS,
+  AdminNavigationItemId,
   type AdminNavigationFilterId,
   filterAdminNavigationSections,
   getVisibleAdminNavigationSections,
@@ -223,7 +225,13 @@ export default function AdminDashboardPage() {
                       sx={{ minHeight: 44 }}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>
-                        <ItemIcon color="primary" />
+                        {item.id === AdminNavigationItemId.FEED_COMMENTS ? (
+                          <FeedCommentsPendingBadge>
+                            <ItemIcon color="primary" />
+                          </FeedCommentsPendingBadge>
+                        ) : (
+                          <ItemIcon color="primary" />
+                        )}
                       </ListItemIcon>
                       <ListItemText
                         primary={
@@ -339,7 +347,13 @@ export default function AdminDashboardPage() {
               >
                 <Box sx={{ mb: 2 }}>
                   <Box sx={{ mb: 1.5 }}>
-                    <ItemIcon fontSize="large" color="primary" />
+                    {item.id === AdminNavigationItemId.FEED_COMMENTS ? (
+                      <FeedCommentsPendingBadge>
+                        <ItemIcon fontSize="large" color="primary" />
+                      </FeedCommentsPendingBadge>
+                    ) : (
+                      <ItemIcon fontSize="large" color="primary" />
+                    )}
                   </Box>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     {item.label}

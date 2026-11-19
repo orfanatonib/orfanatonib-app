@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -12,7 +12,12 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 import { FEED_COMMENT_MAX_LENGTH, FEED_MESSAGES, FEED_MIN_TOUCH_TARGET_PX } from '../constants';
-import { useCreateFeedComment, useDeleteFeedComment, useFeedComments } from '../hooks';
+import { useDeleteFeedComment, useFeedComments } from '../hooks';
+import { FeedCommentStatusChip } from '@/features/feed-comments/components/FeedCommentStatusChip';
+import { FEED_COMMENTS_MESSAGES, FEED_COMMENTS_TEST_IDS } from '@/features/feed-comments/constants';
+import { useMyFeedComments, useSubmitFeedComment } from '@/features/feed-comments/hooks';
+import { isAwaitingOrRejected, newRequestId } from '@/features/feed-comments/utils';
+import { FeedCommentStatus } from '@/features/feed-comments/types';
 import type { CommentDraftError } from '../types';
 import { formatCommentDate, validateCommentDraft } from '../utils';
 
@@ -26,18 +31,32 @@ export default function FeedPhotoComments({ sectionId, viewerId }: FeedPhotoComm
   const [draft, setDraft] = useState('');
   const [draftError, setDraftError] = useState<CommentDraftError | null>(null);
   const comments = useFeedComments(sectionId, viewerId, true);
-  const create = useCreateFeedComment(sectionId, viewerId);
+  const mine = useMyFeedComments(sectionId, viewerId, true);
+  const create = useSubmitFeedComment(sectionId, viewerId);
   const remove = useDeleteFeedComment(sectionId, viewerId);
+  const [sent, setSent] = useState(false);
+  // Um id por tentativa: reenviar após falha de rede não duplica o comentário.
+  const requestId = useRef(newRequestId());
 
   const items = comments.data?.pages.flatMap((page) => page.items) ?? [];
+  const ownAwaiting = (mine.data?.pages.flatMap((page) => page.items) ?? []).filter((comment) =>
+    isAwaitingOrRejected(comment.status),
+  );
 
   const submit = () => {
     const error = validateCommentDraft(draft);
     setDraftError(error);
     if (error) return;
-    create.mutate(draft.trim(), {
-      onSuccess: () => setDraft(''),
-    });
+    create.mutate(
+      { content: draft.trim(), requestId: requestId.current },
+      {
+        onSuccess: () => {
+          setDraft('');
+          setSent(true);
+          requestId.current = newRequestId();
+        },
+      },
+    );
   };
 
   return (
@@ -55,6 +74,7 @@ export default function FeedPhotoComments({ sectionId, viewerId }: FeedPhotoComm
           onChange={(event) => {
             setDraft(event.target.value);
             if (draftError) setDraftError(null);
+            if (sent) setSent(false);
           }}
           multiline
           minRows={2}
@@ -85,6 +105,11 @@ export default function FeedPhotoComments({ sectionId, viewerId }: FeedPhotoComm
             {create.isPending ? FEED_MESSAGES.commentSubmitting : FEED_MESSAGES.commentSubmit}
           </Button>
         </Box>
+        {sent && (
+          <Alert data-testid={FEED_COMMENTS_TEST_IDS.PENDING_NOTICE} severity="success">
+            {FEED_COMMENTS_MESSAGES.pendingNotice} {FEED_COMMENTS_MESSAGES.pendingNoticeDetail}
+          </Alert>
+        )}
         {create.isError && (
           <Alert data-testid="shelter-feed-comment-create-error" severity="error">
             {getApiErrorMessage(create.error, FEED_MESSAGES.commentCreateError)}
@@ -96,6 +121,56 @@ export default function FeedPhotoComments({ sectionId, viewerId }: FeedPhotoComm
           </Alert>
         )}
       </Stack>
+
+      {ownAwaiting.length > 0 && (
+        <Box component="section" aria-label={FEED_COMMENTS_MESSAGES.mineTitle} sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            {FEED_COMMENTS_MESSAGES.mineTitle}
+          </Typography>
+          <Stack
+            component="ul"
+            data-testid={FEED_COMMENTS_TEST_IDS.MINE_LIST}
+            spacing={1}
+            sx={{ listStyle: 'none', p: 0, m: 0 }}
+          >
+            {ownAwaiting.map((comment) => (
+              <Box
+                component="li"
+                key={comment.id}
+                data-testid={FEED_COMMENTS_TEST_IDS.MINE_ITEM}
+                data-comment-id={comment.id}
+                sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}
+              >
+                <Box flex={1} minWidth={0}>
+                  <FeedCommentStatusChip status={comment.status} data-testid={FEED_COMMENTS_TEST_IDS.MINE_STATUS} />
+                  <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                    {comment.content}
+                  </Typography>
+                  {comment.status === FeedCommentStatus.REJECTED && comment.moderationReason && (
+                    <Typography
+                      data-testid={FEED_COMMENTS_TEST_IDS.MINE_REASON}
+                      variant="caption"
+                      color="error"
+                      sx={{ display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}
+                    >
+                      {FEED_COMMENTS_MESSAGES.rejectedReasonLabel}: {comment.moderationReason}
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton
+                  data-testid={FEED_COMMENTS_TEST_IDS.MINE_DELETE}
+                  aria-label={FEED_COMMENTS_MESSAGES.deleteMineAria}
+                  onClick={() => remove.mutate(comment.id)}
+                  disabled={remove.isPending}
+                  sx={{ width: FEED_MIN_TOUCH_TARGET_PX, height: FEED_MIN_TOUCH_TARGET_PX }}
+                >
+                  <DeleteOutlineIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      )}
 
       {comments.isLoading && (
         <Box display="flex" justifyContent="center" py={2} data-testid="shelter-feed-comments-loading">

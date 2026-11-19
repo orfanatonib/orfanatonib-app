@@ -9,6 +9,7 @@ import { closeDb, queryAll, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 import { setFlag } from "./feed-fixtures";
 import { makePng } from "./png";
+import { approveComment, commentBody } from "./comments-moderation-helpers";
 
 /**
  * MASSA DE DADOS do feed, criada só pela API (fotos de verdade, vários autores, celebrações e comentários).
@@ -140,9 +141,13 @@ test.describe.serial("Massa do feed", () => {
       for (let n = 0; n < 1 + (index % 3); n += 1) {
         const res = await request.post(`${API_URL}/feed-sections/${id}/comments`, {
           headers: authHeaders(authors[(index + n) % 3]),
-          data: { content: COMMENTS[(index + n) % COMMENTS.length] },
+          data: commentBody(COMMENTS[(index + n) % COMMENTS.length]),
         });
-        if (res.ok()) comments += 1;
+        if (res.ok()) {
+          comments += 1;
+          // A massa de demonstração aparece publicada: o admin aprova cada comentário novo.
+          await approveComment(request, admin, ((await res.json()) as { id: string }).id);
+        }
       }
     }
 

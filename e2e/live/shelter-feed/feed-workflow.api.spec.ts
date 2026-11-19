@@ -9,6 +9,7 @@ import { closeDb, countRows, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 import { createGallery, readFeed, removeGallery, setFlag } from "./feed-fixtures";
 import { makePng } from "./png";
+import { approveAllPending, commentBody } from "./comments-moderation-helpers";
 
 /**
  * Fluxo completo do feed v2, só pela API e com ARQUIVOS REAIS:
@@ -129,7 +130,7 @@ test.describe.serial("Feed v2 — fluxo completo (enviar, aprovar, comentar, cel
   });
 
   test("6. comentar: qualquer usuário logado comenta; visitante 401; telefone/e-mail/link recusados (400)", async ({ request }) => {
-    const post = (content: string, token?: string) => request.post(`${BASE}/feed-sections/${sectionId}/comments`, { headers: token ? authHeaders(token) : {}, data: { content } });
+    const post = (content: string, token?: string) => request.post(`${BASE}/feed-sections/${sectionId}/comments`, { headers: token ? authHeaders(token) : {}, data: commentBody(content) });
     expect((await post("sem login")).status()).toBe(401);
     for (const [content, token] of [
       ["Que lindo, parabéns!", tokens.admin],
@@ -140,6 +141,9 @@ test.describe.serial("Feed v2 — fluxo completo (enviar, aprovar, comentar, cel
     }
     for (const bad of ["me liga 11 99999-1234", "fale em teste@exemplo.com", "veja https://exemplo.com/foto"]) expect((await post(bad, tokens.member)).status()).toBe(400);
     expect(await countRows("image_section_comments", { sectionId })).toBe(3);
+    // Nascem pendentes: só depois da aprovação do admin aparecem para todos e contam no feed.
+    expect((await readFeed(request, pageId, tokens.leader)).find((section) => section.id === sectionId)!.commentCount).toBe(0);
+    expect(await approveAllPending(request, tokens.admin, sectionId)).toBe(3);
     const list = await request.get(`${BASE}/feed-sections/${sectionId}/comments`, { headers: authHeaders(tokens.leader) });
     expect(list.status()).toBe(200);
     const feed = (await readFeed(request, pageId, tokens.leader)).find((section) => section.id === sectionId)!;

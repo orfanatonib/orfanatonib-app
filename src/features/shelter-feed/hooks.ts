@@ -1,12 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  apiCreateFeedComment,
   apiDeleteFeedComment,
   apiListFeedComments,
   apiToggleCelebration,
 } from './api';
 import { FEED_COMMENT_PAGE_SIZE, SHELTER_FEED_QUERY_ROOT } from './constants';
-import type { CelebrationState, FeedComment, PaginatedFeedComments } from './types';
+import type { CelebrationState, PaginatedFeedComments } from './types';
 import { applyOptimisticToggle } from './utils';
 
 /** Chaves de cache: sempre com o usuário (o estado "celebrado" é por pessoa) e a publicação. */
@@ -66,15 +65,6 @@ export function useFeedComments(sectionId: string, viewerId: string, enabled: bo
     initialPageParam: 1,
     getNextPageParam: (last) => (last.page * last.limit < last.total ? last.page + 1 : undefined),
     enabled,
-  });
-}
-
-export function useCreateFeedComment(sectionId: string, viewerId: string) {
-  const queryClient = useQueryClient();
-  return useMutation<FeedComment, Error, string>({
-    mutationFn: (content) => apiCreateFeedComment(sectionId, { content }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: shelterFeedKeys.comments(viewerId, sectionId) }),
   });
 }
 

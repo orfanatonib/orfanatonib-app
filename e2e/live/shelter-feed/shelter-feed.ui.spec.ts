@@ -127,7 +127,7 @@ test.describe.serial("Feed v2 — tela", () => {
     }
   });
 
-  test("[shelter-feed.ui#comentarios] comentar, validar dado pessoal, ver na lista, remover; tudo provado no banco", async ({ page }) => {
+  test("[shelter-feed.ui#comentarios] comentar (nasce pendente), validar dado pessoal, ver o aviso e o pendente, remover; tudo provado no banco", async ({ page }) => {
     await seedBrowserSession(page, memberTokens);
     await openFeed(page);
     await card(page).getByTestId("shelter-feed-comments-toggle").click();
@@ -141,19 +141,20 @@ test.describe.serial("Feed v2 — tela", () => {
 
     await input.fill(`${RUN_TAG} que bênção!`);
     await card(page).getByTestId("shelter-feed-comment-submit").click();
-    const item = card(page).getByTestId("shelter-feed-comment-item");
-    await expect(item).toHaveCount(1);
-    await expect(item.getByTestId("shelter-feed-comment-content")).toHaveText(`${RUN_TAG} que bênção!`);
-    await expect(item.getByTestId("shelter-feed-comment-author")).toContainText("E2E");
-    await expect(card(page).getByTestId("shelter-feed-comments-toggle")).toContainText("(1)");
-    expect(await countRows("image_section_comments", { sectionId, authorId: memberTokens.userId })).toBe(1);
-
-    await item.getByTestId("shelter-feed-comment-delete").click();
+    // Pendente: avisa o autor e só ele vê o comentário (na lista "Seus comentários"); a lista pública segue vazia.
+    await expect(card(page).getByTestId("feed-comments-pending-notice")).toBeVisible();
+    const mine = card(page).getByTestId("feed-comments-mine-item");
+    await expect(mine).toHaveCount(1);
+    await expect(mine.getByTestId("feed-comments-mine-status")).toHaveAttribute("data-status", "pending");
     await expect(card(page).getByTestId("shelter-feed-comment-item")).toHaveCount(0);
-    await expect.poll(() => countRows("image_section_comments", { sectionId })).toBe(0);
     await expect(card(page).getByTestId("shelter-feed-comments-toggle")).toContainText("(0)");
   });
 
+    expect(await countRows("image_section_comments", { sectionId, authorId: memberTokens.userId, status: "pending" })).toBe(1);
+
+    await mine.getByTestId("feed-comments-mine-delete").click();
+    await expect(card(page).getByTestId("feed-comments-mine-item")).toHaveCount(0);
+    await expect.poll(() => countRows("image_section_comments", { sectionId })).toBe(0);
   test("[shelter-feed.ui#mobile] @mobile 375×812: sem rolagem horizontal e alvos de toque ≥ 44px", async ({ page }) => {
     await seedBrowserSession(page, memberTokens);
     await openFeed(page);

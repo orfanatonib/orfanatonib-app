@@ -10,6 +10,7 @@ import {
   removeSection,
   setFlag,
 } from "./feed-fixtures";
+import { approveAllPending, commentBody } from "./comments-moderation-helpers";
 
 /**
  * Feed v2 (plano 36): autoria, celebrar e comentários nas fotos — API + MySQL reais.
@@ -219,16 +220,16 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
 
   test("[shelter-feed.comment#perfil-anonimo] visitante não lê nem comenta: 401", async ({ request }) => {
     expect((await request.get(comments(publicId))).status()).toBe(401);
-    const res = await request.post(comments(publicId), { data: { content: "oi" } });
+    const res = await request.post(comments(publicId), { data: commentBody("oi") });
     expect(res.status()).toBe(401);
     expect(await countRows("image_section_comments", { sectionId: publicId })).toBe(0);
   });
 
   test("[shelter-feed.comment#criar] membro comenta: 201, autor da sessão no banco, só nome público na resposta", async ({ request }) => {
-    const res = await request.post(comments(publicId), { headers: authHeaders(member), data: { content: `  ${RUN_TAG} que lindo!  ` } });
+    const res = await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody(`  ${RUN_TAG} que lindo!  `) });
     expect(res.status()).toBe(201);
     const body = await res.json();
-    expect(body).toMatchObject({ content: `${RUN_TAG} que lindo!`, isMine: true, canDelete: true, authorId: null });
+    expect(body).toMatchObject({ content: `${RUN_TAG} que lindo!`, status: "pending", isMine: true, canDelete: true, authorId: null });
     expect(JSON.stringify(body)).not.toContain("e2e.member@");
     const row = await queryOne<{ authorId: string; content: string }>("SELECT authorId, content FROM image_section_comments WHERE id = ?", [body.id]);
     expect(row).toMatchObject({ authorId: memberId, content: `${RUN_TAG} que lindo!` });
@@ -238,17 +239,18 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
     const before = await countRows("image_section_comments", { sectionId: publicId });
     const bad = ["   ", "a".repeat(501), "escreva para ana@igreja.org", "ligue 11 99999-1234", "veja https://x.com/foto"];
     for (const content of bad) {
-      const res = await request.post(comments(publicId), { headers: authHeaders(member), data: { content } });
+      const res = await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody(content) });
       expect(res.status(), content.slice(0, 20)).toBe(400);
     }
     expect((await request.post(comments(publicId), { headers: authHeaders(member), data: {} })).status()).toBe(400);
     expect(await countRows("image_section_comments", { sectionId: publicId })).toBe(before);
-    const edge = await request.post(comments(publicId), { headers: authHeaders(member), data: { content: "b".repeat(500) } });
+    const edge = await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody("b".repeat(500)) });
     expect(edge.status()).toBe(201);
   });
 
-  test("[shelter-feed.comment#listar] paginação, ordem recente primeiro, limites de query e total", async ({ request }) => {
-    const total = await countRows("image_section_comments", { sectionId: publicId });
+  test("[shelter-feed.comment#listar] paginação, ordem recente primeiro, limites de query e total (só aprovados)", async ({ request }) => {
+    await approveAllPending(request, admin, publicId); // o fluxo novo nasce pendente (comments-moderation-*.spec.ts)
+    const total = await countRows("image_section_comments", { sectionId: publicId, status: "approved" });
     const first = await (await request.get(`${comments(publicId)}?page=1&limit=1`, { headers: authHeaders(leader) })).json();
     expect(first).toMatchObject({ page: 1, limit: 1, total });
     expect(first.items).toHaveLength(1);
@@ -264,21 +266,21 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
     expect(asAdmin.items.every((c: { authorId: string | null; canDelete: boolean }) => c.authorId === memberId && c.canDelete)).toBe(true);
   });
 
-  test("[shelter-feed.comment#contagem-no-feed] commentCount do feed = linhas do banco (só para logado)", async ({ request }) => {
-    const total = await countRows("image_section_comments", { sectionId: publicId });
+  test("[shelter-feed.comment#contagem-no-feed] commentCount do feed = linhas aprovadas do banco (só para logado)", async ({ request }) => {
+    const total = await countRows("image_section_comments", { sectionId: publicId, status: "approved" });
     const feed = await readFeed(request, pageId, member);
     expect(feed.find((s) => s.id === publicId)?.commentCount).toBe(total);
   });
 
   test("[shelter-feed.comment#publicacao-oculta] seção inexistente/pendente: 404; privada é visível a logado", async ({ request }) => {
     expect((await request.get(comments(NIL), { headers: authHeaders(member) })).status()).toBe(404);
-    expect((await request.post(comments(NIL), { headers: authHeaders(member), data: { content: "oi" } })).status()).toBe(404);
+    expect((await request.post(comments(NIL), { headers: authHeaders(member), data: commentBody("oi") })).status()).toBe(404);
     expect((await request.get(comments("nao-uuid"), { headers: authHeaders(member) })).status()).toBe(400);
   });
 
   test("[shelter-feed.comment#remover] outro usuário: 403 (nada muda); autor remove o seu; admin remove qualquer um", async ({ request }) => {
     const mk = async (token: string, content: string) =>
-      ((await (await request.post(comments(publicId), { headers: authHeaders(token), data: { content } })).json()) as { id: string }).id;
+      ((await (await request.post(comments(publicId), { headers: authHeaders(token), data: commentBody(content) })).json()) as { id: string }).id;
     const mine = await mk(member, `${RUN_TAG} do membro`);
     const others = await mk(leader, `${RUN_TAG} do líder`);
     const url = (id: string) => `${API_URL}/feed-section-comments/${id}`;
@@ -301,7 +303,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
     const before = await countRows("image_section_comments", { sectionId: publicId });
     for (const res of [
       await request.get(comments(publicId), { headers: authHeaders(member) }),
-      await request.post(comments(publicId), { headers: authHeaders(member), data: { content: "oi" } }),
+      await request.post(comments(publicId), { headers: authHeaders(member), data: commentBody("oi") }),
     ]) {
       expect(res.status()).toBe(403);
       expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
@@ -312,7 +314,7 @@ test.describe.serial("Feed v2 — autoria, celebrar e comentários", () => {
 
   test("[shelter-feed.comment#cascata] apagar a publicação remove celebrações e comentários", async ({ request }) => {
     await toggle(request, privateId, member);
-    await request.post(comments(privateId), { headers: authHeaders(member), data: { content: `${RUN_TAG} cascata` } });
+    await request.post(comments(privateId), { headers: authHeaders(member), data: commentBody(`${RUN_TAG} cascata`) });
     expect(await countRows("image_section_celebrations", { sectionId: privateId })).toBe(1);
     expect(await countRows("image_section_comments", { sectionId: privateId })).toBe(1);
     await removeSection(request, admin, privateId);

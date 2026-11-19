@@ -58,6 +58,7 @@ describe("admin navigation", () => {
       AdminNavigationItemId.ATTENDANCE,
       AdminNavigationItemId.VISIT_REPORTS,
       AdminNavigationItemId.PAGELAS,
+      AdminNavigationItemId.FEED_COMMENTS,
     ]);
   });
 

@@ -112,6 +112,10 @@ import UsersManager from "./features/users/UsersManager";
 import InformativeBannerLManager from "./features/informatives/InformativeBannerLManager";
 import ImageSectionManager from "./features/image-sections/ImageSectionManager";
 import ImagePageManager from "./features/image-pages/ImagePageManager";
+import {
+  FEED_COMMENTS_ADMIN_PATH,
+  FeedCommentsManager,
+} from "./features/feed-comments";
 import IdeasSectionManager from "./features/ideas-sections/IdeasSectionManager";
 import IdeasSectionPage from "./pages/MemberArea/IdeasSection/IdeasSectionPage";
 import DocumentsManager from "./features/documents/DocumentsManager";
@@ -616,6 +620,20 @@ function App() {
                           <ImageSectionManager />
                         </FeatureFlagRoute>
                       }
+                    <Route
+                      path={FEED_COMMENTS_ADMIN_PATH}
+                      element={
+                        <FeatureFlagRoute
+                          featureKey={FeatureFlagKeys.SHELTER_FEED}
+                        >
+                          <FeatureFlagRoute
+                            featureKey={FeatureFlagKeys.SHELTER_FEED_COMMENTS}
+                          >
+                            <FeedCommentsManager />
+                          </FeatureFlagRoute>
+                        </FeatureFlagRoute>
+                      }
+                    />
                     />
                     <Route
                       path="ideias-compartilhadas"

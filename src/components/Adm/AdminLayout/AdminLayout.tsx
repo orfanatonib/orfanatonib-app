@@ -29,6 +29,7 @@ import { useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
+import { FeedCommentsPendingBadge } from "@/features/feed-comments";
 import { RootState } from "@/store/slices";
 
 import {
@@ -41,6 +42,7 @@ import {
   ADMIN_NAVIGATION_TEST_IDS,
   ADMIN_OVERVIEW_ITEM,
   type AdminNavigationFilterId,
+  AdminNavigationItemId,
   AdminNavigationSectionId,
   getAdminNavigationSectionForPath,
   getVisibleAdminNavigationSections,
@@ -421,7 +423,13 @@ function AdminLayout() {
                           justifyContent: "center",
                         }}
                       >
-                        <ItemIcon />
+                        {item.id === AdminNavigationItemId.FEED_COMMENTS ? (
+                          <FeedCommentsPendingBadge>
+                            <ItemIcon />
+                          </FeedCommentsPendingBadge>
+                        ) : (
+                          <ItemIcon />
+                        )}
                       </ListItemIcon>
                       {(isMobile || desktopOpen) && (
                         <ListItemText primary={item.label} />
