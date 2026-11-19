@@ -8,7 +8,7 @@
  *   node scripts/check-scenario-coverage.mjs --unit=team     # exige 100% da unidade
  *   node scripts/check-scenario-coverage.mjs --strict        # exige 100% de todas
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
@@ -21,6 +21,21 @@ const scenarios = new Map(); // id -> unit
 for (const file of readdirSync(scenarioDir).filter((f) => f.endsWith(".json"))) {
   const data = JSON.parse(readFileSync(join(scenarioDir, file), "utf8"));
   for (const id of data.scenarios) scenarios.set(id, data.unit);
+}
+
+// Cenários de atomicidade (falha injetada + rollback) são testes de integração da API, escritos no repositório da API.
+// No CI do app o repositório irmão não existe: ali esses IDs não são exigidos (só quando a API está ao lado,
+// como no desenvolvimento local, onde a conta fecha em 100%).
+const API_INTEGRATION_CASE = /#(falha-do-colaborador-sem-efeito-parcial|rollback-de-transacao)$/;
+if (!existsSync(join(root, "../orfanatonib-api/src"))) {
+  let skipped = 0;
+  for (const id of [...scenarios.keys()]) {
+    if (API_INTEGRATION_CASE.test(id)) {
+      scenarios.delete(id);
+      skipped += 1;
+    }
+  }
+  if (skipped) console.log(`(repositório da API ausente: ${skipped} cenários de integração da API não são exigidos aqui)\n`);
 }
 
 function walk(dir, acc = []) {

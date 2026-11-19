@@ -39,6 +39,9 @@ jobs:
       - name: Coverage da lógica pura (piso 100%)
         run: npm run test:coverage
 
+      - name: Matriz de cenários do Estúdio (100% dos IDs com teste)
+        run: npm run check:scenarios:studio
+
       - name: Build
         run: npm run build
       

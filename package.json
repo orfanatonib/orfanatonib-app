@@ -32,6 +32,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "check:scenarios": "node scripts/check-scenario-coverage.mjs",
+    "check:scenarios:studio": "node scripts/check-scenario-coverage.mjs --unit=content-studio",
     "check:routes": "node scripts/check-route-coverage.mjs"
   },
   "dependencies": {
