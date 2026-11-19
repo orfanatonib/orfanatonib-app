@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Tooltip, Box } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material/styles";
 import GroupIcon from "@mui/icons-material/Group";
 import { useNavigate } from "react-router-dom";
 
@@ -9,7 +10,7 @@ interface IntegrationButtonProps {
   size?: "small" | "medium" | "large";
   variant?: "contained" | "outlined" | "text";
   fullWidth?: boolean;
-  sx?: any;
+  sx?: SxProps<Theme>;
 }
 
 export default function IntegrationButton({

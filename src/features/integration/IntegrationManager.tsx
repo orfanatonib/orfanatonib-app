@@ -123,16 +123,16 @@ export default function IntegrationManager() {
     }
   }, [deleting, handleDelete, showSnack]);
 
-  const handleCreateSubmit = React.useCallback(async (data: CreateIntegrationDto, files?: File[]) => {
-    await handleCreate(data, files, () => {
+  const handleCreateSubmit = React.useCallback(async (data: CreateIntegrationDto | UpdateIntegrationDto, files?: File[]) => {
+    await handleCreate(data as CreateIntegrationDto, files, () => {
       showSnack("Integração criada com sucesso!", "success");
       setCreating(false);
     });
   }, [handleCreate, showSnack]);
 
-  const handleEditSubmit = React.useCallback(async (data: UpdateIntegrationDto, files?: File[]) => {
+  const handleEditSubmit = React.useCallback(async (data: CreateIntegrationDto | UpdateIntegrationDto, files?: File[]) => {
     if (!editing) return;
-    await handleUpdate(editing.id, data, files, () => {
+    await handleUpdate(editing.id, data as UpdateIntegrationDto, files, () => {
       showSnack("Integração atualizada com sucesso!", "success");
       setEditing(null);
     });
@@ -555,7 +555,7 @@ export default function IntegrationManager() {
       <IntegrationFormDialog
         open={creating}
         onClose={handleCloseDialogs}
-        onSubmit={handleCreateSubmit as any}
+        onSubmit={handleCreateSubmit}
         loading={dialogLoading}
         error={dialogError}
       />
@@ -563,7 +563,7 @@ export default function IntegrationManager() {
       <IntegrationFormDialog
         open={!!editing}
         onClose={handleCloseDialogs}
-        onSubmit={handleEditSubmit as any}
+        onSubmit={handleEditSubmit}
         editing={editing}
         loading={dialogLoading}
         error={dialogError}
