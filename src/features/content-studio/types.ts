@@ -382,3 +382,51 @@ export enum ExportFormat {
   DOCX = "docx",
   PDF = "pdf",
 }
+
+/** Estado da publicação do material como página de materiais para visita (espelha a API). */
+export enum ContentPublicationStatus {
+  PENDING = "PENDING",
+  PUBLISHING = "PUBLISHING",
+  PUBLISHED = "PUBLISHED",
+  FAILED = "FAILED",
+  UNCERTAIN = "UNCERTAIN",
+}
+
+/** Testamento da página publicada (espelha `TestamentType` da API). */
+export enum PublicationTestament {
+  OLD_TESTAMENT = "OLD_TESTAMENT",
+  NEW_TESTAMENT = "NEW_TESTAMENT",
+}
+
+export interface PublishContentPackagePayload {
+  idempotencyKey: string;
+  testament: PublicationTestament;
+}
+
+export interface ContentPublicationResponse {
+  id: string;
+  packageId: string;
+  status: ContentPublicationStatus;
+  targetType: string;
+  visitMaterialPageId: string | null;
+  /** Caminho público da página (sem barra inicial); `null` se ainda não existe. */
+  visitMaterialPagePath: string | null;
+  publishedAt: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+export enum PublicationPhase {
+  IDLE = "IDLE",
+  PUBLISHING = "PUBLISHING",
+  PUBLISHED = "PUBLISHED",
+  FAILED = "FAILED",
+}
+
+export interface PublicationState {
+  phase: PublicationPhase;
+  publication: ContentPublicationResponse | null;
+  /** Texto em português já pronto para a tela (falha ou resultado incerto). */
+  message: string | null;
+}

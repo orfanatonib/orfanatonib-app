@@ -6,6 +6,7 @@ import type { StudioWorkspace } from "../../hooks/useStudioWorkspace";
 import { PACKAGE_STATUS_COLORS } from "../../period.utils";
 import type { ContentPackageResponse, ContentTrackResponse } from "../../types";
 import { PackageExportMenu } from "../PackageExportMenu";
+import { PackagePublication } from "./PackagePublication";
 
 interface PackageSummaryCardProps {
   contentPackage: ContentPackageResponse;
@@ -74,6 +75,12 @@ export function PackageSummaryCard({
                 Enviar para revisão
               </Button>
             )}
+            <PackagePublication
+              packageId={contentPackage.id}
+              status={contentPackage.status}
+              disabled={busy || hasUnsavedWork}
+              onChanged={workspace.reload}
+            />
             {workspace.canArchive && (
               <Button
                 startIcon={<Archive />}

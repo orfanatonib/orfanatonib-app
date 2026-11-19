@@ -1,5 +1,6 @@
 import api from "@/config/axiosConfig";
 
+import { PUBLISH_REQUEST_TIMEOUT_MS } from "./publication.constants";
 import { parseSseText } from "./sse.utils";
 import type { ExportFormat } from "./types";
 import type {
@@ -8,6 +9,8 @@ import type {
   ContentGenerationJobResponse,
   ContentPackageListItemResponse,
   ContentPackageResponse,
+  ContentPublicationResponse,
+  PublishContentPackagePayload,
   ContentStudioCatalogResponse,
   ContentStudioDashboardResponse,
   ContentStudioDashboardQuery,
@@ -293,4 +296,29 @@ export async function streamPackageGenerations(
       },
     },
   );
+}
+
+/** Publica o material aprovado como página de materiais para visita (idempotente pela chave). */
+export async function publishContentPackage(
+  packageId: string,
+  payload: PublishContentPackagePayload,
+): Promise<ContentPublicationResponse> {
+  const { data } = await api.post<ContentPublicationResponse>(
+    `/content-studio/packages/${packageId}/publish`,
+    payload,
+    { timeout: PUBLISH_REQUEST_TIMEOUT_MS },
+  );
+  return data;
+}
+
+/** Última publicação do material; `null` se nunca houve (a API responde 204). */
+export async function getContentPackagePublication(
+  packageId: string,
+  signal?: AbortSignal,
+): Promise<ContentPublicationResponse | null> {
+  const { data } = await api.get<ContentPublicationResponse | "">(
+    `/content-studio/packages/${packageId}/publication`,
+    { signal },
+  );
+  return data || null;
 }
