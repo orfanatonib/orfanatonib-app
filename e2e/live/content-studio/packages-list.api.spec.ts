@@ -83,3 +83,16 @@ test.describe("listagem: ordenação, arquivados e segmentos", () => {
     expect((await request.get(`${API_URL}/content-studio/packages?order=SIDEWAYS`, { headers: authHeaders(admin) })).status()).toBe(400);
   });
 });
+
+test("filtro por várias situações (`statuses`) soma as situações e recusa valor inválido", async ({ request }) => {
+  const admin = (await loginAs(request, "admin")).accessToken;
+  const get = (query: string) => request.get(`${API_URL}/content-studio/packages?${query}`, { headers: authHeaders(admin) });
+  const body = (await (await get("limit=100&statuses=IN_REVIEW,PACKAGE_READY")).json()) as { data: Array<{ status: string }>; total: number };
+  expect(body.data.every((p) => ["IN_REVIEW", "PACKAGE_READY"].includes(p.status))).toBe(true);
+  const rows = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status IN ('IN_REVIEW','PACKAGE_READY')"))?.n ?? 0;
+  expect(body.total).toBe(rows);
+  // Publicados só aparecem pedindo explicitamente.
+  const published = (await (await get("limit=100&statuses=PUBLISHED")).json()) as { data: Array<{ status: string }> };
+  expect(published.data.every((p) => p.status === "PUBLISHED")).toBe(true);
+  expect((await get("statuses=NAO_EXISTE")).status()).toBe(400);
+});

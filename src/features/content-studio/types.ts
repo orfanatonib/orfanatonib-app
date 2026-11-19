@@ -205,6 +205,8 @@ export interface QueryContentPackagesParams {
   limit?: number;
   search?: string;
   status?: ContentPackageStatus;
+  /** Várias situações de uma vez (a API recebe separadas por vírgula). */
+  statuses?: readonly ContentPackageStatus[];
   reviewQueue?: boolean;
   audience?: ContentAudience;
   startDate?: string;

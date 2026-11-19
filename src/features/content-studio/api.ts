@@ -46,9 +46,13 @@ export async function getContentPackages(
   params: QueryContentPackagesParams,
   signal?: AbortSignal,
 ): Promise<PaginatedContentPackagesResponse> {
+  const { statuses, ...rest } = params;
   const { data } = await api.get<PaginatedContentPackagesResponse>(
     "/content-studio/packages",
-    { params, signal },
+    {
+      params: { ...rest, ...(statuses?.length ? { statuses: statuses.join(",") } : {}) },
+      signal,
+    },
   );
   return data;
 }

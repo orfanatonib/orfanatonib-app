@@ -1,86 +1,83 @@
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import FactCheck from "@mui/icons-material/FactCheck";
-import Refresh from "@mui/icons-material/Refresh";
-import Visibility from "@mui/icons-material/Visibility";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  Select,
-  Stack,
-  TablePagination,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { useMemo, useState, type FormEvent } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import AutoAwesome from "@mui/icons-material/AutoAwesome";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Grid2, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
-import {
-  CONTENT_PACKAGE_STATUS_LABELS,
-  CONTENT_STUDIO_REVIEW_CHECKLIST,
-} from "../constants";
-import { ContentAudience, ContentPackageStatus } from "../types";
-import { useContentPackages } from "../hooks/useContentPackages";
-import { formatContentStudioDateTime } from "../utils";
+import { ListingLayout, ListingToolbar } from "@/components/common/listing";
+import type { ListingFilter } from "@/components/common/listing";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
+import { ReviewPackageCard } from "../components/ReviewPackageCard";
+import { CONTENT_STUDIO_REVIEW_CHECKLIST } from "../constants";
+import { useContentPackages } from "../hooks/useContentPackages";
+import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
+import { useContentStudioDashboard } from "../hooks/useContentStudioDashboard";
+import { PRODUCTION_SEARCH_DEBOUNCE_MS } from "../production-list.constants";
+import { REVIEW_DEFAULT_PAGE_SIZE, REVIEW_EMPTY_TEXTS, REVIEW_PAGE_SIZE_OPTIONS, REVIEW_QUEUE_VIEWS, REVIEW_TEXTS } from "../review-list.constants";
+import { readReviewListState, reviewQueueCounts, reviewViewStatuses, writeReviewListState, type ReviewListState } from "../review-list.utils";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
+import type { ContentAudience } from "../types";
 
+/**
+ * Fila de revisão (`/adm/estudio/revisao`).
+ *
+ * A fila é dividida em recortes — o que espera o revisor, o que está pronto para publicar, o que voltou à produção
+ * e o que já saiu — cada um com a sua contagem. Recorte, faixa, busca e página moram na URL.
+ */
 export function ContentStudioReviewPage() {
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<ContentPackageStatus | "">("");
-  const [audience, setAudience] = useState<ContentAudience | "">("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const dateRangeInvalid = Boolean(startDate && endDate && startDate > endDate);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const state = useMemo(() => readReviewListState(searchParams), [searchParams]);
+  const [pageSize, setPageSize] = useState(REVIEW_DEFAULT_PAGE_SIZE);
+  const [search, setSearch] = useState(state.search);
+
+  const patch = useCallback(
+    (changes: Partial<ReviewListState>) => setSearchParams((current) => writeReviewListState(current, { ...readReviewListState(current), ...changes }), { replace: true }),
+    [setSearchParams],
+  );
+
+  const debouncedSearch = useDebouncedValue(search, PRODUCTION_SEARCH_DEBOUNCE_MS);
+  useEffect(() => {
+    if (debouncedSearch.trim() !== state.search) patch({ search: debouncedSearch, page: 1 });
+    // `state.search` só é lido para comparar; reagir a ele desfaria a digitação.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, patch]);
+
+  const { catalog } = useContentStudioCatalog();
+  const audiences = catalog?.audiences ?? [];
+  const dashboard = useContentStudioDashboard();
+  const counts = useMemo(() => reviewQueueCounts(dashboard.dashboard?.packages.byStatus), [dashboard.dashboard]);
+
   const query = useMemo(
     () => ({
-      page,
-      limit: 10,
-      reviewQueue: true,
-      ...(search ? { search } : {}),
-      ...(status ? { status } : {}),
-      ...(audience ? { audience } : {}),
-      ...(!dateRangeInvalid && startDate ? { startDate } : {}),
-      ...(!dateRangeInvalid && endDate ? { endDate } : {}),
+      page: state.page,
+      limit: pageSize,
+      statuses: reviewViewStatuses(state.view),
+      audience: state.audience || undefined,
+      search: state.search.trim() || undefined,
+      sort: "updatedAt" as const,
+      order: "DESC" as const,
     }),
-    [page, search, status, audience, startDate, endDate, dateRangeInvalid],
+    [state, pageSize],
   );
-  const { packages, total, limit, loading, error, reload } =
-    useContentPackages(query);
-  const applySearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setPage(1);
-    setSearch(searchInput.trim());
-  };
-  const clearFilters = () => {
-    setSearchInput("");
-    setSearch("");
-    setStatus("");
-    setAudience("");
-    setStartDate("");
-    setEndDate("");
-    setPage(1);
-  };
+  const { packages, total, loading, error, reload } = useContentPackages(query);
+
+  const filters: ListingFilter[] = [
+    {
+      id: "audience",
+      label: "Faixa etária",
+      value: state.audience,
+      options: audiences.map((item) => ({ value: item.audience, label: item.name })),
+      onChange: (value) => patch({ audience: (value as ContentAudience | "") || "", page: 1 }),
+    },
+  ];
 
   return (
-    <Box
-      component="section"
-      data-testid="content-studio-review-page"
-      sx={CONTENT_STUDIO_PAGE_SX}
-    >
-      <Stack spacing={3}>
+    <Box component="section" data-testid="content-studio-review-page" sx={CONTENT_STUDIO_PAGE_SX}>
+      <Stack spacing={2}>
         <ContentStudioPageHeader
           title="Revisão editorial"
           description="Confira segurança, fidelidade e adequação antes de aprovar uma versão."
@@ -88,281 +85,102 @@ export function ContentStudioReviewPage() {
           backLabel="Voltar à visão geral"
         />
 
-        <Card variant="outlined" data-testid="content-studio-review-queue">
-          <CardContent>
-            <Stack spacing={2}>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                spacing={1}
-              >
-                <Box>
-                  <Typography component="h2" variant="h6" fontWeight={700}>
-                    Fila de revisão
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {total} pacote{total === 1 ? "" : "s"} na fila de revisão.
-                  </Typography>
-                </Box>
-                <Button
-                  onClick={() => void reload()}
-                  startIcon={<Refresh />}
-                  sx={{ minHeight: 44 }}
-                >
-                  Atualizar
-                </Button>
+        <ListingLayout
+          data-testid="content-studio-review-queue"
+          title={REVIEW_TEXTS.listTitle}
+          summary={REVIEW_TEXTS.listSummary}
+          toolbar={
+            <Stack gap={1.5}>
+              <Stack direction="row" flexWrap="wrap" gap={1} role="tablist" aria-label="Recortes da fila de revisão" data-testid="content-studio-review-views">
+                {REVIEW_QUEUE_VIEWS.map((item) => {
+                  const selected = item.view === state.view;
+                  const count = counts[item.view];
+                  const highlight = Boolean(item.urgent) && count > 0;
+                  return (
+                    <Chip
+                      key={item.view}
+                      role="tab"
+                      aria-selected={selected}
+                      data-testid={`content-studio-review-view-${item.view}`}
+                      label={dashboard.dashboard ? `${item.label} · ${count}` : item.label}
+                      color={selected ? "primary" : highlight ? "warning" : "default"}
+                      variant={selected ? "filled" : "outlined"}
+                      onClick={() => patch({ view: item.view, page: 1 })}
+                      sx={{ fontWeight: 700, minHeight: 36, borderRadius: 2 }}
+                    />
+                  );
+                })}
               </Stack>
-
-              <Box
-                component="form"
-                onSubmit={applySearch}
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    sm: "repeat(2, 1fr)",
-                    lg: "repeat(3, 1fr)",
-                  },
-                  gap: 1.5,
+              <ListingToolbar
+                searchValue={search}
+                searchPlaceholder={REVIEW_TEXTS.searchPlaceholder}
+                onSearchChange={setSearch}
+                filters={filters}
+                onRefresh={() => {
+                  void reload();
+                  void dashboard.reload();
                 }}
-                data-testid="content-studio-review-filters"
-              >
-                <TextField
-                  label="Buscar tema ou referência"
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  inputProps={{ "data-testid": "content-studio-review-search" }}
-                />
-                <FormControl>
-                  <InputLabel id="content-studio-review-status-label">
-                    Status
-                  </InputLabel>
-                  <Select
-                    labelId="content-studio-review-status-label"
-                    label="Status"
-                    value={status}
-                    onChange={(event) => {
-                      setStatus(
-                        event.target.value as ContentPackageStatus | "",
-                      );
-                      setPage(1);
-                    }}
-                    inputProps={{
-                      "data-testid": "content-studio-review-status",
-                    }}
-                  >
-                    <MenuItem value="">Todos na fila</MenuItem>
-                    {[
-                      ContentPackageStatus.PACKAGE_READY,
-                      ContentPackageStatus.IN_REVIEW,
-                      ContentPackageStatus.CHANGES_REQUESTED,
-                      ContentPackageStatus.READY_FOR_PUBLICATION,
-                    ].map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {CONTENT_PACKAGE_STATUS_LABELS[value]}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <InputLabel id="content-studio-review-audience-label">
-                    Faixa
-                  </InputLabel>
-                  <Select
-                    labelId="content-studio-review-audience-label"
-                    label="Faixa"
-                    value={audience}
-                    onChange={(event) => {
-                      setAudience(event.target.value as ContentAudience | "");
-                      setPage(1);
-                    }}
-                    inputProps={{
-                      "data-testid": "content-studio-review-audience",
-                    }}
-                  >
-                    <MenuItem value="">Todas as faixas</MenuItem>
-                    <MenuItem value={ContentAudience.BABY}>Bebês</MenuItem>
-                    <MenuItem value={ContentAudience.CHILD}>Crianças</MenuItem>
-                    <MenuItem value={ContentAudience.TEEN}>
-                      Adolescentes
-                    </MenuItem>
-                    <MenuItem value={ContentAudience.ADULT}>Adultos</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="Criado de"
-                  type="date"
-                  value={startDate}
-                  onChange={(event) => {
-                    setStartDate(event.target.value);
-                    setPage(1);
-                  }}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    "data-testid": "content-studio-review-start-date",
-                  }}
-                />
-                <TextField
-                  label="Criado até"
-                  type="date"
-                  value={endDate}
-                  onChange={(event) => {
-                    setEndDate(event.target.value);
-                    setPage(1);
-                  }}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    "data-testid": "content-studio-review-end-date",
-                  }}
-                  error={dateRangeInvalid}
-                  helperText={
-                    dateRangeInvalid
-                      ? "A data final deve ser igual ou posterior à inicial."
-                      : undefined
-                  }
-                />
-                <Stack direction="row" spacing={1}>
+                onClearFilters={() => {
+                  setSearch("");
+                  patch({ audience: "", search: "", page: 1 });
+                }}
+                action={
                   <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={dateRangeInvalid}
-                    sx={{ minHeight: 44 }}
+                    variant="outlined"
+                    startIcon={<AutoAwesome />}
+                    onClick={() => navigate("/adm/estudio/producao")}
+                    sx={{ borderRadius: 2.5, fontWeight: 700, textTransform: "none", minHeight: 44 }}
                   >
-                    Aplicar
+                    Ir para a produção
                   </Button>
-                  <Button onClick={clearFilters} sx={{ minHeight: 44 }}>
-                    Limpar
-                  </Button>
-                </Stack>
-              </Box>
-
-              {loading && (
-                <Stack
-                  alignItems="center"
-                  justifyContent="center"
-                  minHeight={120}
-                  spacing={2}
-                >
-                  <CircularProgress />
-                  <Typography color="text.secondary">
-                    Carregando fila…
-                  </Typography>
-                </Stack>
-              )}
-
-              {!loading && error && (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button
-                      color="inherit"
-                      onClick={() => void reload()}
-                      sx={{ minHeight: 44 }}
-                    >
-                      Tentar novamente
-                    </Button>
-                  }
-                >
-                  Não foi possível carregar a fila de revisão.
-                </Alert>
-              )}
-
-              {!loading && !error && packages.length === 0 && (
-                <Alert
-                  severity="info"
-                  data-testid="content-studio-review-empty"
-                >
-                  Nenhum pacote está pronto para revisão no momento.
-                </Alert>
-              )}
-
-              {!loading && !error && packages.length > 0 && (
-                <Stack spacing={1.5}>
-                  {packages.map((contentPackage) => (
-                    <Card key={contentPackage.id} variant="outlined">
-                      <CardContent>
-                        <Stack spacing={1.5}>
-                          <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            justifyContent="space-between"
-                            spacing={1}
-                          >
-                            <Box>
-                              <Typography
-                                component="h3"
-                                variant="subtitle1"
-                                fontWeight={700}
-                              >
-                                {contentPackage.theme}
-                              </Typography>
-                              <Typography color="text.secondary">
-                                {contentPackage.biblicalReferences}
-                              </Typography>
-                            </Box>
-                            <Chip
-                              label={
-                                CONTENT_PACKAGE_STATUS_LABELS[
-                                  contentPackage.status
-                                ]
-                              }
-                            />
-                          </Stack>
-                          <Typography color="text.secondary" variant="body2">
-                            {contentPackage.approvedStagesCount} de{" "}
-                            {contentPackage.requiredStagesCount} etapas
-                            obrigatórias aprovadas. Atualizado em{" "}
-                            {formatContentStudioDateTime(
-                              contentPackage.updatedAt,
-                            )}
-                            .
-                          </Typography>
-                          <Button
-                            component={RouterLink}
-                            to={`/adm/estudio/pacotes/${contentPackage.id}`}
-                            startIcon={<Visibility />}
-                            sx={{ alignSelf: "flex-start", minHeight: 44 }}
-                          >
-                            Revisar pacote
-                          </Button>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Stack>
-              )}
-              {!loading && !error && total > limit && (
-                <TablePagination
-                  component="div"
-                  count={total}
-                  page={page - 1}
-                  rowsPerPage={limit}
-                  rowsPerPageOptions={[10]}
-                  onPageChange={(_, nextPage) => setPage(nextPage + 1)}
-                  onRowsPerPageChange={() => undefined}
-                  labelRowsPerPage="Pacotes por página"
-                />
-              )}
+                }
+              />
             </Stack>
-          </CardContent>
-        </Card>
+          }
+          loading={loading}
+          error={error ? REVIEW_TEXTS.loadError : undefined}
+          itemCount={packages.length}
+          emptyTitle={REVIEW_EMPTY_TEXTS[state.view].title}
+          emptySubtitle={REVIEW_EMPTY_TEXTS[state.view].subtitle}
+          pagination={{
+            page: state.page,
+            pageSize,
+            total,
+            onPageChange: (page) => patch({ page }),
+            onPageSizeChange: (size) => {
+              setPageSize(size);
+              patch({ page: 1 });
+            },
+          }}
+          pageSizeOptions={REVIEW_PAGE_SIZE_OPTIONS}
+        >
+          {packages.map((item) => (
+            <Grid2 key={item.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+              <ReviewPackageCard item={item} audiences={audiences} onOpen={(packageId) => navigate(`/adm/estudio/pacotes/${packageId}`)} />
+            </Grid2>
+          ))}
+        </ListingLayout>
 
-        <Card variant="outlined" data-testid="content-studio-review-checklist">
-          <CardContent>
-            <Typography component="h2" variant="h6" fontWeight={700}>
-              Checklist mínimo
-            </Typography>
-            <List>
+        <Accordion variant="outlined" disableGutters data-testid="content-studio-review-checklist" sx={{ borderRadius: 3, "&:before": { display: "none" } }}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <FactCheck color="primary" fontSize="small" />
+              <Typography fontWeight={700}>O que conferir antes de aprovar</Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <List dense disablePadding>
               {CONTENT_STUDIO_REVIEW_CHECKLIST.map((item) => (
                 <ListItem key={item} disableGutters alignItems="flex-start">
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <FactCheck color="primary" />
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <FactCheck color="primary" fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary={item} />
                 </ListItem>
               ))}
             </List>
-          </CardContent>
-        </Card>
+          </AccordionDetails>
+        </Accordion>
       </Stack>
     </Box>
   );
