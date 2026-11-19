@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Button, Paper, Stack } from '@mui/material';
 
-import api from '@/config/axiosConfig';
+import { submitImageSection } from '@/features/image-sections/api';
 import { setData, clearData, SectionData } from '@/store/slices/image-section/imageSectionSlice';
 import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
 import { RootState } from '@/store/slices';
@@ -92,9 +92,7 @@ export default function ImageSectionPage() {
   }, [sectionData]);
 
   const saveSection = async (formData: FormData) => {
-    await api.post('/image-sections', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    await submitImageSection(formData);
 
     setNotification({
       open: true,

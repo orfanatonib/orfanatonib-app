@@ -24,3 +24,9 @@ export async function listMeditations(search?: string): Promise<MeditationData[]
 export async function deleteMeditation(id: string): Promise<void> {
   await api.delete(`/meditations/${id}`);
 }
+
+/** Meditação de um dia da semana (a API a devolve aninhada em `meditation`). */
+export async function getMeditationOfDay(id: string): Promise<MeditationData | null> {
+  const { data } = await api.get<{ meditation?: MeditationData }>(`/meditations/${id}`);
+  return data?.meditation ?? null;
+}

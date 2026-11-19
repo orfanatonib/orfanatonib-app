@@ -11,17 +11,17 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import MediaDocumentPreviewModal from '@/utils/MediaDocumentPreviewModal';
 import { AppDispatch, RootState } from '@/store/slices';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   setMeditationData,
-  MeditationData,
   WeekDayLabel,
 } from '@/store/slices/meditation/meditationSlice';
 import { MediaType, MediaUploadType } from '@/store/slices/types';
-import api from '@/config/axiosConfig';
+import { getMeditationOfDay } from '@/features/meditations/api';
 import { motion } from 'framer-motion';
 
 export default function MemberMeditationBanner() {
@@ -31,6 +31,7 @@ export default function MemberMeditationBanner() {
 
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const currentMeditation = useSelector(
     (state: RootState) => state.meditation.meditationData
@@ -54,12 +55,15 @@ export default function MemberMeditationBanner() {
   const handleOpenPreview = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/meditations/${meditationDay?.idToFetch}`);
-      if (response.data?.meditation) {
-        dispatch(setMeditationData(response.data.meditation as MeditationData));
+      setLoadError(false);
+      const meditation = await getMeditationOfDay(String(meditationDay?.idToFetch));
+      if (meditation) {
+        dispatch(setMeditationData(meditation));
         setOpenModal(true);
       }
     } catch {
+      // Antes o erro era engolido: a pessoa clicava e nada acontecia, sem aviso.
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -92,6 +96,11 @@ export default function MemberMeditationBanner() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
+      {loadError && (
+        <Alert severity="error" data-testid="member-meditation-error" onClose={() => setLoadError(false)} sx={{ mb: 1 }}>
+          Não foi possível abrir a meditação agora. Tente novamente.
+        </Alert>
+      )}
       <Paper
         elevation={6}
         sx={{
