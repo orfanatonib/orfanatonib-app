@@ -34,10 +34,13 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
-import type { SectionData } from 'store/slices/image/imageSlice';
+import type { FeedSectionData } from '@/features/shelter-feed/types';
+import { FeedAuthorLine, FeedSectionActions } from '@/features/shelter-feed';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/slices';
 import { motion } from 'framer-motion';
 
-export interface SectionItemProps extends Omit<SectionData, 'id' | 'public'> {}
+export interface SectionItemProps extends Omit<FeedSectionData, 'public'> {}
 
 const formatDateTime = (value: string | Date) => {
   const date = new Date(value);
@@ -106,6 +109,11 @@ const ImageWithSkeleton: React.FC<{ src: string; alt: string; sx?: SxProps<Theme
 };
 
 const ShelterSectionImageView: React.FC<SectionItemProps> = ({
+  id,
+  author,
+  celebrationCount,
+  celebratedByMe,
+  commentCount,
   caption,
   description,
   mediaItems,
@@ -118,6 +126,7 @@ const ShelterSectionImageView: React.FC<SectionItemProps> = ({
   const [hoveredImage, setHoveredImage] = useState<number | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
   if (!mediaItems || mediaItems.length === 0) return null;
 
@@ -134,6 +143,8 @@ const ShelterSectionImageView: React.FC<SectionItemProps> = ({
 
   return (
     <motion.div
+      data-testid="shelter-feed-section"
+      data-section-id={id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
@@ -240,6 +251,7 @@ const ShelterSectionImageView: React.FC<SectionItemProps> = ({
                 )}
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 2 }}>
+                  {isAuthenticated && <FeedAuthorLine author={author} />}
                   {created && (
                     <Box display="flex" alignItems="center" gap={1}>
                       <ScheduleIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
@@ -431,6 +443,8 @@ const ShelterSectionImageView: React.FC<SectionItemProps> = ({
             )}
           </CardContent>
         )}
+
+        <FeedSectionActions section={{ id, celebrationCount, celebratedByMe, commentCount }} />
 
         <Modal
           open={openModal}

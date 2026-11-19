@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { SectionData } from '../image-section/imageSectionSlice';
+import type { FeedSectionData as SectionData } from '@/features/shelter-feed/types';
 
 export interface PaginatedSectionResponse {
   id: string;

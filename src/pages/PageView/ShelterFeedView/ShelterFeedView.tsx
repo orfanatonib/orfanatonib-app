@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { resolveFeedPageId } from '@/features/shelter-feed/utils';
 import {
   Box,
   Button,
@@ -143,7 +144,11 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   const section = useSelector((state: RootState) => state.imageSectionPagination.section);
 
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const defaultSectionId = import.meta.env.VITE_FEED_MINISTERIO_ID;
+  const [searchParams] = useSearchParams();
+  const defaultSectionId = resolveFeedPageId(
+    searchParams.get('galeria'),
+    import.meta.env.VITE_FEED_MINISTERIO_ID,
+  );
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastSectionRef = useCallback(
@@ -444,6 +449,11 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
                   }}
                 >
                   <ShelterSectionImageView
+                    id={sectionItem.id}
+                    author={sectionItem.author}
+                    celebrationCount={sectionItem.celebrationCount}
+                    celebratedByMe={sectionItem.celebratedByMe}
+                    commentCount={sectionItem.commentCount}
                     caption={sectionItem.caption}
                     description={sectionItem.description}
                     mediaItems={sectionItem.mediaItems}

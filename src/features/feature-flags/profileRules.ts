@@ -19,6 +19,8 @@ export const FEATURE_PROFILE_RULES: Readonly<
   contact_form: [],
   events_section: [],
   shelter_feed: [],
+  shelter_feed_celebrations: [],
+  shelter_feed_comments: [],
   home_comments: [],
   public_galleries: [],
   public_videos: [],

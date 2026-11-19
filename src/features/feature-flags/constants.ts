@@ -18,6 +18,8 @@ export const DEFAULT_FEATURE_FLAGS_MAP: FeatureFlagsMap = {
   contact_form: true,
   events_section: true,
   shelter_feed: true,
+  shelter_feed_celebrations: true,
+  shelter_feed_comments: true,
   home_comments: true,
   public_galleries: true,
   public_videos: true,
