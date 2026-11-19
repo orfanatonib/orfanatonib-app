@@ -35,7 +35,7 @@ export function PackageSummaryCard({
         <Stack spacing={2}>
           <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
             <Box>
-              <Typography component="h1" variant="h4" fontWeight={800}>
+              <Typography component="h2" variant="h4" fontWeight={800}>
                 {contentPackage.theme}
               </Typography>
               <Typography color="text.secondary">{contentPackage.biblicalReferences}</Typography>

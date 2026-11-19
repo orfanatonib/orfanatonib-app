@@ -1,9 +1,8 @@
-import ArrowBack from "@mui/icons-material/ArrowBack";
 import Add from "@mui/icons-material/Add";
 import Settings from "@mui/icons-material/Settings";
 import { Alert, Box, Button, CircularProgress, Grid2, Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { ListingLayout, ListingToolbar } from "@/components/common/listing";
 import type { ListingFilter } from "@/components/common/listing";
@@ -28,7 +27,6 @@ import {
 } from "../production-list.constants";
 import { productionQuery, readProductionListState, writeProductionListState, type ProductionListState } from "../production-list.utils";
 import { formatMaterialsCount } from "../production.utils";
-import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 import { ContentAudience, ContentPackageStatus, ExportFormat, type ContentPackageListItemResponse } from "../types";
 
 /**
@@ -127,12 +125,8 @@ export function ContentStudioProductionPage() {
   };
 
   return (
-    <Box component="section" data-testid="content-studio-production-page" sx={CONTENT_STUDIO_PAGE_SX}>
+    <Box component="section" data-testid="content-studio-production-page">
       <Stack spacing={2}>
-        <Button component={RouterLink} to="/adm/estudio" startIcon={<ArrowBack />} sx={{ alignSelf: "flex-start", minHeight: 44, fontWeight: 700, textTransform: "none" }}>
-          Voltar à visão geral
-        </Button>
-
         {catalogLoading && (
           <Stack data-testid="content-studio-production-loading" alignItems="center" justifyContent="center" minHeight={120} spacing={2}>
             <CircularProgress />
@@ -154,6 +148,8 @@ export function ContentStudioProductionPage() {
         )}
 
         <ListingLayout
+          hideTitle
+          embedded
           data-testid="content-studio-packages-list"
           title={PRODUCTION_LIST_TEXTS.title}
           summary={`${formatMaterialsCount(total)} ${state.status ? "nesta situação" : "no estúdio (arquivados à parte)"}`}

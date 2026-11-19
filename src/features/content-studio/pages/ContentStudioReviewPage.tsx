@@ -1,10 +1,9 @@
-import ArrowBack from "@mui/icons-material/ArrowBack";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FactCheck from "@mui/icons-material/FactCheck";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Grid2, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { ListingLayout, ListingToolbar } from "@/components/common/listing";
 import type { ListingFilter } from "@/components/common/listing";
@@ -17,8 +16,8 @@ import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
 import { useContentStudioDashboard } from "../hooks/useContentStudioDashboard";
 import { PRODUCTION_SEARCH_DEBOUNCE_MS } from "../production-list.constants";
 import { REVIEW_DEFAULT_PAGE_SIZE, REVIEW_EMPTY_TEXTS, REVIEW_PAGE_SIZE_OPTIONS, REVIEW_QUEUE_VIEWS, REVIEW_TEXTS } from "../review-list.constants";
+import { formatMaterialsCount } from "../production.utils";
 import { readReviewListState, reviewQueueCounts, reviewViewStatuses, writeReviewListState, type ReviewListState } from "../review-list.utils";
-import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 import type { ContentAudience } from "../types";
 
 /**
@@ -76,16 +75,14 @@ export function ContentStudioReviewPage() {
   ];
 
   return (
-    <Box component="section" data-testid="content-studio-review-page" sx={CONTENT_STUDIO_PAGE_SX}>
+    <Box component="section" data-testid="content-studio-review-page">
       <Stack spacing={2}>
-        <Button component={RouterLink} to="/adm/estudio" startIcon={<ArrowBack />} sx={{ alignSelf: "flex-start", minHeight: 44, fontWeight: 700, textTransform: "none" }}>
-          Voltar à visão geral
-        </Button>
-
         <ListingLayout
+          hideTitle
+          embedded
           data-testid="content-studio-review-queue"
           title={REVIEW_TEXTS.listTitle}
-          summary={REVIEW_TEXTS.listSummary}
+          summary={`${formatMaterialsCount(total)} neste recorte`}
           toolbar={
             <Stack gap={1.5}>
               <Stack direction="row" flexWrap="wrap" gap={1} role="tablist" aria-label="Recortes da fila de revisão" data-testid="content-studio-review-views">

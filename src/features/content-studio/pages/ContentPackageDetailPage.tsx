@@ -4,7 +4,6 @@ import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, T
 import { CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
 import { ContentStageStatus } from "../types";
-import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { ContentStageEditor } from "../components/ContentStageEditor";
 import { PackageSummaryCard } from "../components/detail/PackageSummaryCard";
@@ -14,7 +13,6 @@ import { StageReviewSection } from "../components/detail/StageReviewSection";
 import { StageStatusAlerts } from "../components/detail/StageStatusAlerts";
 import { exportFileName } from "../export.utils";
 import { ExportFormat } from "../types";
-import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 import { MANUAL_EDIT_ALLOWED_STATUSES, PACKAGE_PRODUCTION_LOCKED_STATUSES } from "../workspace.constants";
 import { stageDraftValue } from "../workspace.utils";
 
@@ -59,14 +57,8 @@ export function ContentPackageDetailPage() {
   ).length;
 
   return (
-    <Box component="section" data-testid="content-studio-package-detail-page" sx={CONTENT_STUDIO_PAGE_SX}>
+    <Box component="section" data-testid="content-studio-package-detail-page">
       <Stack spacing={3}>
-        <ContentStudioPageHeader
-          title="Material para visita"
-          description="Gere, escreva e revise cada etapa; veja o PDF e baixe em DOCX."
-          backTo="/adm/estudio/producao"
-          backLabel="Voltar aos materiais"
-        />
         {loading && !contentPackage && (
           <Stack data-testid="content-studio-detail-loading" alignItems="center" py={6}>
             <CircularProgress />

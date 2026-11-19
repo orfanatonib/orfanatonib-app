@@ -33,6 +33,10 @@ interface Props extends TestIdProps {
   children: React.ReactNode;
   /** Diálogos da tela, fora da grade. */
   overlays?: React.ReactNode;
+  /** O título já é mostrado por quem hospeda a listagem (ex.: a casca do Estúdio). */
+  hideTitle?: boolean;
+  /** Sem margens, fundo e altura mínima próprios: quem hospeda cuida do espaço da página. */
+  embedded?: boolean;
 }
 
 /** Quantos esqueletos aparecem enquanto a primeira página carrega. */
@@ -60,26 +64,32 @@ export default function ListingLayout({
   pageSizeOptions,
   children,
   overlays,
+  hideTitle = false,
+  embedded = false,
 }: Props) {
   const showSkeletons = loading && itemCount === 0;
   const showEmpty = !loading && !error && itemCount === 0;
 
   return (
     <Box data-testid={testId}
-      sx={{
-        px: { xs: 2, md: 0 },
-        pb: 4,
-        display: "flex",
-        flexDirection: "column",
-        flexGrow: 1,
-        minHeight: "calc(100vh - var(--app-header-h, 64px) - var(--app-footer-h, 88px) - 80px)",
-        "@supports (min-height: 100dvh)": {
-          minHeight: "calc(100dvh - var(--app-header-h, 64px) - var(--app-footer-h, 88px) - 80px)",
-        },
-        bgcolor: "#f9fafb",
-      }}
+      sx={
+        embedded
+          ? { display: "flex", flexDirection: "column", flexGrow: 1 }
+          : {
+              px: { xs: 2, md: 0 },
+              pb: 4,
+              display: "flex",
+              flexDirection: "column",
+              flexGrow: 1,
+              minHeight: "calc(100vh - var(--app-header-h, 64px) - var(--app-footer-h, 88px) - 80px)",
+              "@supports (min-height: 100dvh)": {
+                minHeight: "calc(100dvh - var(--app-header-h, 64px) - var(--app-footer-h, 88px) - 80px)",
+              },
+              bgcolor: "#f9fafb",
+            }
+      }
     >
-      <BackHeader title={title} mobileFontSize="1.05rem" />
+      {hideTitle ? null : <BackHeader title={title} mobileFontSize="1.05rem" />}
 
       {summary ? (
         // `div`, e não `p`: o resumo pode ser um texto simples ou um conjunto

@@ -74,6 +74,7 @@ import { ObservabilityAuditPage } from "./features/observability-audit";
 import {
   ContentPackageDetailPage,
   ContentStudioHomePage,
+  ContentStudioShell,
   ContentStudioProductionPage,
   ContentStudioGuidelinesPage,
   ContentStudioReviewPage,
@@ -657,35 +658,35 @@ function App() {
                           <FeatureFlagRoute
                             featureKey={FeatureFlagKeys.CONTENT_STUDIO}
                           >
-                            <ContentStudioHomePage />
+                            <ContentStudioShell />
                           </FeatureFlagRoute>
                         </RequireAdmin>
                       }
-                    />
-                    <Route
-                      path="estudio/producao"
-                      element={
-                        <RequireAdmin>
+                    >
+                      <Route index element={<ContentStudioHomePage />} />
+                      <Route
+                        path="producao"
+                        element={<ContentStudioProductionPage />}
+                      />
+                      <Route
+                        path="pacotes/:id"
+                        element={<ContentPackageDetailPage />}
+                      />
+                      <Route
+                        path="orientacoes"
+                        element={<ContentStudioGuidelinesPage />}
+                      />
+                      <Route
+                        path="revisao"
+                        element={
                           <FeatureFlagRoute
-                            featureKey={FeatureFlagKeys.CONTENT_STUDIO}
+                            featureKey={FeatureFlagKeys.CONTENT_STUDIO_REVIEW}
                           >
-                            <ContentStudioProductionPage />
+                            <ContentStudioReviewPage />
                           </FeatureFlagRoute>
-                        </RequireAdmin>
-                      }
-                    />
-                    <Route
-                      path="estudio/pacotes/:id"
-                      element={
-                        <RequireAdmin>
-                          <FeatureFlagRoute
-                            featureKey={FeatureFlagKeys.CONTENT_STUDIO}
-                          >
-                            <ContentPackageDetailPage />
-                          </FeatureFlagRoute>
-                        </RequireAdmin>
-                      }
-                    />
+                        }
+                      />
+                    </Route>
                     <Route
                       path="config-provedores-ia"
                       element={
@@ -717,34 +718,6 @@ function App() {
                     <Route
                       path="estudio/config"
                       element={<Navigate to="/adm/config-provedores-ia" replace />}
-                    />
-                    <Route
-                      path="estudio/orientacoes"
-                      element={
-                        <RequireAdmin>
-                          <FeatureFlagRoute
-                            featureKey={FeatureFlagKeys.CONTENT_STUDIO}
-                          >
-                            <ContentStudioGuidelinesPage />
-                          </FeatureFlagRoute>
-                        </RequireAdmin>
-                      }
-                    />
-                    <Route
-                      path="estudio/revisao"
-                      element={
-                        <RequireAdmin>
-                          <FeatureFlagRoute
-                            featureKey={FeatureFlagKeys.CONTENT_STUDIO}
-                          >
-                            <FeatureFlagRoute
-                              featureKey={FeatureFlagKeys.CONTENT_STUDIO_REVIEW}
-                            >
-                              <ContentStudioReviewPage />
-                            </FeatureFlagRoute>
-                          </FeatureFlagRoute>
-                        </RequireAdmin>
-                      }
                     />
                     <Route
                       path="usuarios"

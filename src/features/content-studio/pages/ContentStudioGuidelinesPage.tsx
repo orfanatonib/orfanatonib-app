@@ -33,7 +33,6 @@ import { useStudioUnsavedChanges } from "@/features/ai-lessons/useStudioUnsavedC
 import type { RootState } from "@/store/slices";
 import { getHttpStatus } from "@/utils/apiError";
 
-import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { CONTENT_STUDIO_SAFETY_GUIDELINES, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import { PromptResetDialog } from "../guidelines/components/PromptResetDialog";
 import { PromptStageEditor } from "../guidelines/components/PromptStageEditor";
@@ -62,16 +61,8 @@ import {
   type PromptPreference,
   type SavePromptVariables,
 } from "../guidelines/types";
-import {
-  firstName,
-  isClearingSavedPrompt,
-  promptCustomisationSummary,
-  promptSavedLabel,
-  promptSummaryLabel,
-  promptValidationMessage,
-} from "../guidelines/utils";
+import { firstName, isClearingSavedPrompt, promptCustomisationSummary, promptSavedLabel, promptSummaryLabel, promptValidationMessage } from "../guidelines/utils";
 import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
-import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 import { ContentAudience, ContentStageType } from "../types";
 import { formatAudienceAgeRange } from "../utils";
 
@@ -98,8 +89,7 @@ export function ContentStudioGuidelinesPage() {
   const [stage, setStage] = useState<ContentStageType>(ContentStageType.LESSON);
   const [audienceDrafts, setAudienceDrafts] = useState<PromptAudienceDrafts>({});
   const drafts = audienceDrafts[audience] ?? {};
-  const setDrafts = (update: (current: PromptLocalDrafts) => PromptLocalDrafts) =>
-    setAudienceDrafts((all) => ({ ...all, [audience]: update(all[audience] ?? {}) }));
+  const setDrafts = (update: (current: PromptLocalDrafts) => PromptLocalDrafts) => setAudienceDrafts((all) => ({ ...all, [audience]: update(all[audience] ?? {}) }));
   const [resetOpen, setResetOpen] = useState(false);
   const [feedback, setFeedback] = useState<PromptFeedback | null>(null);
 
@@ -254,10 +244,8 @@ export function ContentStudioGuidelinesPage() {
   };
 
   return (
-    <Box component="section" data-testid="content-studio-guidelines-page" sx={{ ...CONTENT_STUDIO_PAGE_SX, pb: { xs: 12, sm: 4 } }}>
+    <Box component="section" data-testid="content-studio-guidelines-page" sx={{ pb: { xs: 10, sm: 0 } }}>
       <Stack spacing={2}>
-        <ContentStudioPageHeader title={PROMPT_TEXTS.title} description={PROMPT_TEXTS.subtitle} backTo="/adm/estudio" backLabel="Voltar à visão geral" />
-
         <Paper component="header" elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 4, border: "1px solid", borderColor: "divider" }}>
           <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5}>
             {/* O ponto que mais confunde: a personalização é de quem está logado, não do sistema. */}

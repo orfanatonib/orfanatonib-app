@@ -25,11 +25,9 @@ import type { ContentAudience } from "../types";
 import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
 import { useContentStudioDashboard } from "../hooks/useContentStudioDashboard";
 import { formatContentStudioDateTime } from "../utils";
-import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { DashboardFilters } from "../components/DashboardFilters";
 import { DashboardMetrics, DashboardMetricsSkeleton } from "../components/DashboardMetrics";
 import { PACKAGE_STATUS_COLORS } from "../period.utils";
-import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 
 export function ContentStudioHomePage() {
   const [startDate, setStartDate] = useState("");
@@ -57,17 +55,8 @@ export function ContentStudioHomePage() {
   const hasFilters = !!(startDate || endDate || audience);
 
   return (
-    <Box
-      component="section"
-      data-testid="content-studio-home-page"
-      sx={CONTENT_STUDIO_PAGE_SX}
-    >
+    <Box component="section" data-testid="content-studio-home-page">
       <Stack spacing={3}>
-        <ContentStudioPageHeader
-          eyebrow="Painel editorial"
-          title="Estúdio Orfanato"
-          description="Acompanhe o fluxo editorial, identifique pendências e acesse rapidamente produção e revisão."
-        />
 
         {catalogLoading && (
           <Stack
