@@ -11,6 +11,8 @@ export function useMediaUpload(options: UseMediaUploadOptions): UseMediaUploadRe
   const [selections, setSelections] = useState<MediaSelection[]>([]);
   const [error, setError] = useState<string | null>(null);
   const created = useRef<Set<string>>(new Set());
+  const selectionsRef = useRef<MediaSelection[]>([]);
+  selectionsRef.current = selections;
 
   const revoke = useCallback((url: string) => {
     if (created.current.delete(url)) URL.revokeObjectURL(url);
@@ -65,6 +67,14 @@ export function useMediaUpload(options: UseMediaUploadOptions): UseMediaUploadRe
     [revoke],
   );
 
+  /** Entrega a seleção a quem vai usá-la: não revoga a URL nem a rastreia mais. */
+  const detachAll = useCallback((): MediaSelection[] => {
+    const detached = selectionsRef.current;
+    detached.forEach((item) => created.current.delete(item.previewUrl));
+    setSelections([]);
+    return detached;
+  }, []);
+
   const clear = useCallback(() => {
     setSelections((prev) => {
       prev.forEach((item) => revoke(item.previewUrl));
@@ -73,5 +83,5 @@ export function useMediaUpload(options: UseMediaUploadOptions): UseMediaUploadRe
     setError(null);
   }, [revoke]);
 
-  return { selections, error, accept: getAcceptAttribute(kind), selectFiles, removeAt, clear };
+  return { selections, error, accept: getAcceptAttribute(kind), selectFiles, removeAt, clear, detachAll };
 }

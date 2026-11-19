@@ -85,4 +85,19 @@ describe('useMediaUpload', () => {
     expect(result.current.selections).toEqual([]);
     expect(result.current.error).toBeNull();
   });
+
+  it('detachAll entrega a seleção sem revogar e sem revogar ao desmontar', () => {
+    const { result, unmount } = renderHook(() => useMediaUpload({ kind: MediaFileKind.VIDEO }));
+    act(() => {
+      result.current.selectFiles([makeFile('a.mp4', 'video/mp4')]);
+    });
+    let detached: ReturnType<typeof result.current.detachAll> = [];
+    act(() => {
+      detached = result.current.detachAll();
+    });
+    expect(detached).toHaveLength(1);
+    expect(result.current.selections).toEqual([]);
+    unmount();
+    expect(revokeUrl).not.toHaveBeenCalled();
+  });
 });

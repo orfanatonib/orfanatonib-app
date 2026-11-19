@@ -2,88 +2,77 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Box,
   Button,
-  Container,
-  TextField,
-  Typography,
-  FormControlLabel,
-  Switch,
-  CircularProgress,
-  Snackbar,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Paper,
-  IconButton,
-  Grid,
 } from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
 import api from '@/config/axiosConfig';
 import { AppDispatch, RootState } from '@/store/slices';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
 import { clearVideoData } from '@/store/slices/video/videoSlice';
-import { validateMediaURL } from '@/utils/validateMediaURL';
+import { MediaItem, MediaPlatform, MediaType, MediaUploadType } from 'store/slices/types';
 import VideoForm from './VideoForm';
 import VideoList from './VideoList';
-import { MediaItem, MediaType, MediaUploadType, MediaPlatform } from 'store/slices/types';
+import {
+  UPLOAD_SIMULATED_DELAY_MS,
+  VIDEO_PAGES_ENDPOINT,
+  VIDEO_PAGE_MESSAGES,
+  VIDEO_PAGE_TEST_ID,
+  GALLERY_FALLBACK_PATH,
+} from './constants';
+import { SnackbarKind, VideoFieldErrors } from './types';
+import {
+  NO_VIDEO_ERRORS,
+  buildVideoFormData,
+  createEmptyVideo,
+  validateNewVideo,
+  validateVideoPage,
+  videoToEditable,
+} from './utils';
+import PageFormBase from '../shared/PageFormBase';
+import PageBasicInfoSection from '../shared/PageBasicInfoSection';
+import PageFormActions from '../shared/PageFormActions';
+import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
+import { MediaFileKind } from '../shared/types';
+import { useMediaUpload } from '../shared/useMediaUpload';
+import { useTouchedFields } from '../shared/useTouchedFields';
 
 interface VideoProps {
   fromTemplatePage?: boolean;
 }
 
-function videoToEditable(video: MediaItem): MediaItem {
-  return { ...video, file: undefined };
-}
+const MULTIPART_HEADERS = { 'Content-Type': 'multipart/form-data' };
 
 export default function VideoPageCreator({ fromTemplatePage = false }: VideoProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const videoData = useSelector((state: RootState) => state.video.videoData);
+  const upload = useMediaUpload({ kind: MediaFileKind.VIDEO });
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [videos, setVideos] = useState<MediaItem[]>([]);
-  const [newVideo, setNewVideo] = useState<MediaItem>({
-    title: '',
-    description: '',
-    uploadType: MediaUploadType.LINK,
-    platformType: MediaPlatform.YOUTUBE,
-    url: '',
-    isLocalFile: false,
-    mediaType: MediaType.VIDEO,
-  });
+  const [newVideo, setNewVideo] = useState<MediaItem>(createEmptyVideo);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [errors, setErrors] = useState({
-    pageTitle: false,
-    pageDescription: false,
-    newVideoTitle: false,
-    newVideoDescription: false,
-    newVideoSrc: false,
-    newVideoURL: false,
-  });
-  const [touched, setTouched] = useState({
-    pageTitle: false,
-    pageDescription: false,
-  });
+  const [errors, setErrors] = useState<VideoFieldErrors>(NO_VIDEO_ERRORS);
+  const { touched, setField, touchAll } = useTouchedFields();
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<SnackbarKind>(SnackbarKind.SUCCESS);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [videoToDeleteIndex, setVideoToDeleteIndex] = useState<number | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!videoData && !fromTemplatePage) {
-      navigate('/feed-abrigos');
+      navigate(GALLERY_FALLBACK_PATH);
       return;
     }
-
     if (fromTemplatePage) {
       dispatch(clearVideoData());
       setTitle('');
@@ -100,115 +89,59 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
 
   const areUploadsComplete = () => Object.values(uploadProgress).every((v) => v !== false);
 
-  const validate = (): boolean => {
-    if (!title.trim()) return showError('O título da galeria é obrigatório.', 'pageTitle');
-    if (!description.trim())
-      return showError('A descrição da galeria é obrigatória.', 'pageDescription');
-    if (videos.length === 0) return showError('Adicione pelo menos um vídeo.');
-    if (!fromTemplatePage && !videoData?.id)
-      return showError('ID da página é obrigatório no modo de edição.');
-    if (!areUploadsComplete())
-      return showError('Aguarde o upload de todos os vídeos antes de salvar.');
-    return true;
-  };
-
-  const showError = (msg: string, field?: keyof typeof errors) => {
-    if (field) setErrors((prev) => ({ ...prev, [field]: true }));
-    setSnackbarMessage(msg);
-    setSnackbarSeverity('error');
+  const notify = (message: string, kind: SnackbarKind) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(kind);
     setSnackbarOpen(true);
-    return false;
   };
+  const showError = (message: string) => notify(message, SnackbarKind.ERROR);
 
   const handleSavePage = async () => {
-    setTouched({ pageTitle: true, pageDescription: true });
-    if (!validate()) return;
+    touchAll();
+    const problem = validateVideoPage({
+      title,
+      description,
+      hasId: Boolean(videoData?.id),
+      fromTemplatePage,
+      videoCount: videos.length,
+      uploadsComplete: areUploadsComplete(),
+    });
+    if (problem) return showError(problem);
 
     setLoading(true);
     try {
-      const formData = new FormData();
-
-      const videosPayload = videos.map((video, index) => {
-        const fieldKey = `video-${index}`;
-        if (video.uploadType === MediaUploadType.UPLOAD && video.file && !video.id) {
-          formData.append(fieldKey, video.file);
-        }
-
-        return {
-          id: !fromTemplatePage && video.id ? video.id : undefined,
-          title: video.title,
-          description: video.description,
-          uploadType: video.uploadType,
-          isLocalFile: video.uploadType === MediaUploadType.UPLOAD,
-          url:
-            video.uploadType === MediaUploadType.LINK ||
-              (video.uploadType === MediaUploadType.UPLOAD && video.id)
-              ? video.url
-              : undefined,
-          platformType: video.uploadType === MediaUploadType.LINK ? video.platformType : undefined,
-          originalName: video.file?.name,
-          mediaType: MediaType.VIDEO,
-          fieldKey: video.uploadType === MediaUploadType.UPLOAD && !video.id ? fieldKey : undefined,
-        };
-      });
-
-      const payload = {
-        ...(fromTemplatePage ? {} : { id: videoData?.id }),
-        public: isPublic,
+      const formData = buildVideoFormData({
+        videos,
         title,
         description,
-        videos: videosPayload,
-      };
-
-      formData.append('videosPageData', JSON.stringify(payload));
-
+        isPublic,
+        fromTemplatePage,
+        existingId: videoData?.id,
+      });
       const response = fromTemplatePage
-        ? await api.post('/video-pages', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-        : await api.patch(`/video-pages/${videoData!.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        ? await api.post(VIDEO_PAGES_ENDPOINT, formData, { headers: MULTIPART_HEADERS })
+        : await api.patch(`${VIDEO_PAGES_ENDPOINT}/${videoData!.id}`, formData, {
+          headers: MULTIPART_HEADERS,
         });
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
-      setSnackbarMessage(
-        fromTemplatePage ? 'Página criada com sucesso!' : 'Página atualizada com sucesso!'
+      notify(
+        fromTemplatePage ? VIDEO_PAGE_MESSAGES.CREATED : VIDEO_PAGE_MESSAGES.UPDATED,
+        SnackbarKind.SUCCESS,
       );
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
     } catch {
-      showError('Erro ao salvar a página. Tente novamente.');
+      showError(VIDEO_PAGE_MESSAGES.SAVE_ERROR);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddVideo = () => {
-    const hasError =
-      !newVideo.title ||
-      !newVideo.description ||
-      (newVideo.uploadType === MediaUploadType.LINK && !newVideo.url) ||
-      (newVideo.uploadType === MediaUploadType.UPLOAD && !newVideo.file && editingIndex === null);
-
-    const isValidURL =
-      newVideo.uploadType === MediaUploadType.LINK && newVideo.platformType
-        ? validateMediaURL(newVideo.url, newVideo.platformType)
-        : true;
-
-    setErrors((prev) => ({
-      ...prev,
-      newVideoTitle: !newVideo.title,
-      newVideoDescription: !newVideo.description,
-      newVideoSrc:
-        newVideo.uploadType === MediaUploadType.LINK
-          ? !newVideo.url
-          : !newVideo.file && editingIndex === null,
-      newVideoURL: newVideo.uploadType === MediaUploadType.LINK && !isValidURL,
-    }));
-
-    if (hasError || !isValidURL) {
-      if (!isValidURL) showError('URL inválida para a plataforma selecionada.');
+    const validation = validateNewVideo(newVideo, editingIndex !== null);
+    setErrors(validation.errors);
+    if (validation.hasError || !validation.isValidUrl) {
+      if (!validation.isValidUrl) showError(VIDEO_PAGE_MESSAGES.INVALID_URL);
       return;
     }
 
@@ -229,21 +162,9 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
     if (newVideo.uploadType === MediaUploadType.UPLOAD && newVideo.file) {
       setUploadProgress((prev) => ({ ...prev, [newVideo.file!.name]: true }));
     }
-
-    setNewVideo({
-      title: '',
-      description: '',
-      uploadType: MediaUploadType.LINK,
-      platformType: MediaPlatform.YOUTUBE,
-      url: '',
-      isLocalFile: false,
-      mediaType: MediaType.VIDEO,
-    });
-  };
-
-  const handleOpenDeleteDialog = (index: number) => {
-    setVideoToDeleteIndex(index);
-    setDeleteDialogOpen(true);
+    // O vídeo adicionado passa a ser dono da URL de pré-visualização.
+    upload.detachAll();
+    setNewVideo(createEmptyVideo());
   };
 
   const handleConfirmDelete = () => {
@@ -251,35 +172,23 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       setVideos((prev) => prev.filter((_, i) => i !== videoToDeleteIndex));
       if (editingIndex === videoToDeleteIndex) {
         setEditingIndex(null);
-        setNewVideo({
-          title: '',
-          description: '',
-          uploadType: MediaUploadType.LINK,
-          platformType: MediaPlatform.YOUTUBE,
-          url: '',
-          isLocalFile: false,
-          mediaType: MediaType.VIDEO,
-        });
+        setNewVideo(createEmptyVideo());
       }
-      setSnackbarMessage('Vídeo removido com sucesso!');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
+      notify(VIDEO_PAGE_MESSAGES.VIDEO_REMOVED, SnackbarKind.SUCCESS);
     }
     setDeleteDialogOpen(false);
     setVideoToDeleteIndex(null);
   };
 
   const handleEditVideo = (index: number) => {
-    const videoToEdit = videos[index];
-    setNewVideo({ ...videoToEdit, file: undefined });
+    setNewVideo({ ...videos[index], file: undefined });
     setEditingIndex(index);
   };
 
   const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const previewUrl = URL.createObjectURL(file);
+    const [selection] = upload.selectFiles(e.target.files);
+    if (!selection) return;
+    const { file, previewUrl } = selection;
 
     setUploadProgress((prev) => ({ ...prev, [file.name]: false }));
     setNewVideo((prev) => ({
@@ -290,203 +199,60 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       uploadType: MediaUploadType.UPLOAD,
       platformType: undefined,
     }));
-
     setTimeout(() => {
       setUploadProgress((prev) => ({ ...prev, [file.name]: true }));
-    }, 1000);
+    }, UPLOAD_SIMULATED_DELAY_MS);
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        py: { xs: 2, md: 4 },
-      }}
+    <PageFormBase
+      testId={VIDEO_PAGE_TEST_ID}
+      heading={fromTemplatePage ? VIDEO_PAGE_MESSAGES.CREATE_HEADING : VIDEO_PAGE_MESSAGES.EDIT_HEADING}
+      onBack={() => navigate(-1)}
     >
-      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
-        <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
-          <IconButton
-            onClick={() => navigate(-1)}
-            sx={{
-              bgcolor: 'background.paper',
-              boxShadow: 2,
-              '&:hover': {
-                bgcolor: 'action.hover',
-                transform: 'scale(1.05)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-            {fromTemplatePage ? '🎥 Criar Galeria de Vídeos' : '✏️ Editar Galeria de Vídeos'}
-          </Typography>
-        </Box>
+      <PageBasicInfoSection
+        testId={VIDEO_PAGE_TEST_ID}
+        titleLabel={VIDEO_PAGE_MESSAGES.TITLE_LABEL}
+        descriptionLabel={VIDEO_PAGE_MESSAGES.DESCRIPTION_LABEL}
+        title={title}
+        description={description}
+        isPublic={isPublic}
+        touched={touched}
+        onTitleChange={setTitle}
+        onDescriptionChange={setDescription}
+        onPublicChange={setIsPublic}
+        onTouchedChange={setField}
+      />
 
-        <Paper
-          elevation={2}
-          sx={{
-            p: { xs: 3, md: 4 },
-            mb: 4,
-            borderRadius: 3,
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
-            Informações Básicas
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Título da Galeria"
-                required
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  if (touched.pageTitle) setTouched((prev) => ({ ...prev, pageTitle: false }));
-                }}
-                onBlur={() => setTouched((prev) => ({ ...prev, pageTitle: true }))}
-                error={touched.pageTitle && errors.pageTitle}
-                helperText={touched.pageTitle && errors.pageTitle ? 'Campo obrigatório' : ''}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover:not(.Mui-error)': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    marginLeft: 0,
-                    marginTop: 1,
-                    fontSize: '0.75rem',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descrição da Galeria"
-                required
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value);
-                  if (touched.pageDescription) setTouched((prev) => ({ ...prev, pageDescription: false }));
-                }}
-                onBlur={() => setTouched((prev) => ({ ...prev, pageDescription: true }))}
-                error={touched.pageDescription && errors.pageDescription}
-                helperText={touched.pageDescription && errors.pageDescription ? 'Campo obrigatório' : ''}
-                multiline
-                rows={4}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover:not(.Mui-error)': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    marginLeft: 0,
-                    marginTop: 1,
-                    fontSize: '0.75rem',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
-                label="Página pública"
-              />
-            </Grid>
-          </Grid>
-        </Paper>
+      <VideoForm
+        newVideo={newVideo}
+        errors={errors}
+        setNewVideo={setNewVideo}
+        handleUploadFile={handleUploadFile}
+        handleAddVideo={handleAddVideo}
+        isEditing={editingIndex !== null}
+        uploadProgress={uploadProgress}
+      />
 
-        <VideoForm
-          newVideo={newVideo}
-          errors={errors}
-          setNewVideo={setNewVideo}
-          handleUploadFile={handleUploadFile}
-          handleAddVideo={handleAddVideo}
-          isEditing={editingIndex !== null}
-          uploadProgress={uploadProgress}
-        />
+      <VideoList
+        videos={videos}
+        handleRemoveVideo={(index) => {
+          setVideoToDeleteIndex(index);
+          setDeleteDialogOpen(true);
+        }}
+        handleEditVideo={handleEditVideo}
+      />
 
-        <VideoList
-          videos={videos}
-          handleRemoveVideo={handleOpenDeleteDialog}
-          handleEditVideo={handleEditVideo}
-        />
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => navigate(-1)}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-              borderWidth: 2,
-              '&:hover': {
-                borderWidth: 2,
-                transform: 'translateY(-2px)',
-                boxShadow: 2,
-                bgcolor: 'action.hover',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            size="large"
-            onClick={handleSavePage}
-            disabled={loading || !areUploadsComplete()}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-              '&:hover:not(:disabled)': {
-                transform: 'translateY(-2px)',
-                boxShadow: 4,
-              },
-              '&:disabled': {
-                opacity: 0.6,
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {loading ? 'Salvando...' : 'Salvar Página'}
-          </Button>
-        </Box>
-      </Container>
+      <PageFormActions
+        testId={VIDEO_PAGE_TEST_ID}
+        saveLabel={VIDEO_PAGE_MESSAGES.SAVE}
+        savingLabel={VIDEO_PAGE_MESSAGES.SAVING}
+        isSaving={loading}
+        saveDisabled={!areUploadsComplete()}
+        savingSpinner
+        onCancel={() => navigate(-1)}
+        onSave={handleSavePage}
+      />
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
@@ -505,11 +271,13 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={5000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Box>
+      <PageFeedbackSnackbar
+        testId={`${VIDEO_PAGE_TEST_ID}-feedback`}
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
+    </PageFormBase>
   );
 }

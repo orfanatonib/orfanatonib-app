@@ -13,17 +13,11 @@ import {
 } from '@mui/material';
 import { Dispatch, Fragment, SetStateAction, useState } from 'react';
 import { MediaItem, MediaPlatform, MediaUploadType } from 'store/slices/types';
+import { VideoFieldErrors } from './types';
 
 interface VideoFormProps {
   newVideo: MediaItem;
-  errors: {
-    pageTitle: boolean;
-    pageDescription: boolean;
-    newVideoTitle: boolean;
-    newVideoDescription: boolean;
-    newVideoSrc: boolean;
-    newVideoURL: boolean;
-  };
+  errors: VideoFieldErrors;
   setNewVideo: Dispatch<SetStateAction<MediaItem>>;
   handleUploadFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddVideo: () => void;

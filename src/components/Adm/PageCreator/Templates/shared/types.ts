@@ -46,6 +46,8 @@ export interface UseMediaUploadResult {
   selectFiles: (files: FileList | File[] | null | undefined) => MediaSelection[];
   removeAt: (index: number) => void;
   clear: () => void;
+  /** Entrega a seleção atual sem revogar as URLs de pré-visualização. */
+  detachAll: () => MediaSelection[];
 }
 
 export interface PageFormBaseProps {
