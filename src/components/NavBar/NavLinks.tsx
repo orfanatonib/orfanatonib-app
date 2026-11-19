@@ -6,6 +6,7 @@ import { RootState } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { useLogout } from './useLogout';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { visiblePublicNavItems } from './publicNav';
 
 interface Props {
   closeMenu?: () => void;
@@ -21,6 +22,16 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_MANAGEMENT);
+  const feedEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_FEED);
+  const aboutEnabled = useIsFeatureEnabled(FeatureFlagKeys.ABOUT_PAGE);
+  const eventsEnabled = useIsFeatureEnabled(FeatureFlagKeys.EVENTS_SECTION);
+  const contactEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTACT_FORM);
+  const publicEnabled: Partial<Record<FeatureFlagKeys, boolean>> = {
+    [FeatureFlagKeys.SHELTER_FEED]: feedEnabled,
+    [FeatureFlagKeys.ABOUT_PAGE]: aboutEnabled,
+    [FeatureFlagKeys.EVENTS_SECTION]: eventsEnabled,
+    [FeatureFlagKeys.CONTACT_FORM]: contactEnabled,
+  };
 
   const handleClick = () => closeMenu?.();
 
@@ -76,11 +87,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
       mt={isMobile ? 6 : 0}
       sx={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}
     >
-      {renderLink('/', 'Início')}
-      {renderLink('/feed-abrigos', 'Feed')}
-      {renderLink('/sobre', 'Sobre')}
-      {renderLink('/eventos', 'Eventos')}
-      {renderLink('/contato', 'Contato')}
+      {visiblePublicNavItems((flag) => publicEnabled[flag] === true).map((item) => renderLink(item.to, item.label))}
     </Stack>
   );
 };

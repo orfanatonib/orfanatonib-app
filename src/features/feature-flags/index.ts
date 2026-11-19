@@ -8,3 +8,5 @@ export * from './hooks/useFeatureFlags';
 export * from './hooks/useFeatureFlagsManagement';
 export * from './types';
 export * from './utils/featureFlagUtils';
+export { ROUTE_TYPE_FLAG, filterVisibleRoutes, isRouteTypeEnabled } from './routeTypeFlags';
+export { useVisibleRoutes } from './hooks/useVisibleRoutes';

@@ -1,0 +1,8 @@
+{
+ "unit": "app-shell",
+ "scenarios": [
+  "app-shell.get.menu-publico#flag-desligada",
+  "app-shell.get.menu-publico#mobile",
+  "app-shell.get.rota-inexistente#nao-encontrado"
+ ]
+}

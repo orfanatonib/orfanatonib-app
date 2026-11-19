@@ -8,6 +8,8 @@ export interface MemberContentProps {
 }
 
 export interface IdeasSharingBannerProps {
+  variant?: 'full' | 'compact';
+  forceColumnLayout?: boolean;
 }
 
 export interface InformativeBannerProps {
@@ -27,3 +29,7 @@ export interface MemberAreaState {
 
 export * from './navigation';
 export * from './gallery';
+
+export interface MemberQuickActionsProps {
+  references: readonly string[];
+}

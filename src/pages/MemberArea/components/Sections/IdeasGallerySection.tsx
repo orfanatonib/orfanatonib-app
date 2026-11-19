@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React, { useMemo } from 'react';
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -15,7 +16,8 @@ const ACCENT = MEMBER_NAV_ITEMS.find((item) => item.id === MemberNavItemId.Ideas
 
 const IdeasGallerySection: React.FC = () => {
   const navigate = useNavigate();
-  const { routes, loading } = useSelector((state: RootState) => state.routes);
+  const routes = useVisibleRoutes();
+  const loading = useSelector((state: RootState) => state.routes.loading);
 
   const ideaRoutes = useMemo(
     () => routes.filter((route) => route.entityType === MediaTargetType.IdeasPage),

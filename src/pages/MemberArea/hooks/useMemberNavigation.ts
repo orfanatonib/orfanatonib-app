@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -17,7 +18,7 @@ export interface MemberNavigationState {
 export function useMemberNavigation(): MemberNavigationState {
   const { pathname } = useLocation();
   const { isAdminOrLeader } = useAuthRole();
-  const dynamicRoutes = useSelector((state: RootState) => state.routes.routes);
+  const dynamicRoutes = useVisibleRoutes();
 
   const navItems = useMemo(
     () => filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader }),

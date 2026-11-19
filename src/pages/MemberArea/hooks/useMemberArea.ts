@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
@@ -5,7 +6,7 @@ import { MediaTargetType } from 'store/slices/types';
 
 export const useMemberArea = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 500);

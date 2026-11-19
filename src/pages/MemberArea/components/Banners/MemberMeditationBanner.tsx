@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import { Fragment, useState } from 'react';
 import {
   Box,
@@ -35,7 +36,7 @@ export default function MemberMeditationBanner() {
     (state: RootState) => state.meditation.meditationData
   );
 
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
 
   const today = new Date();
   const weekdayName = today.toLocaleDateString('en-US', { weekday: 'long' });

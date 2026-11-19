@@ -1,7 +1,5 @@
 import React from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/slices';
 import {
   BannerSection,
   InformativeBanner,
@@ -12,11 +10,10 @@ import { useMemberArea } from './hooks';
 import { MEMBER_HOME_QUICK_ACTIONS } from './constants/navigation';
 
 /**
- * Home enxuta: só avisos, banners da semana, atalho de ajuda e o conteúdo de boas-vindas.
+ * Home: avisos, preparação da semana, acesso rápido, guia e mural.
  * Documentos, ideias, vídeos e demais áreas são subpáginas (sidebar) dentro da casca.
  */
 const MemberArea: React.FC = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
   const { loading, showWeek, showMeditation } = useMemberArea();
 
   return (
@@ -44,7 +41,7 @@ const MemberArea: React.FC = () => {
           </Typography>
         </Box>
       ) : (
-        <MemberContent userName={user?.name} />
+        <MemberContent />
       )}
     </Box>
   );

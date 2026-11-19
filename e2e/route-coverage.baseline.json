@@ -21,7 +21,6 @@
     "/cadastrar-google",
     "/eventos",
     "/feed-abrigos",
-    "/login",
     "/presenca",
     "/recuperar-senha/:token",
     "/verificar-email",

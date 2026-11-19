@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React, { useMemo, useState } from 'react';
 import { Alert, Box } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,7 +17,7 @@ const ACCENT = MEMBER_NAV_ITEMS.find((item) => item.id === MemberNavItemId.Docum
 const DocumentsSection: React.FC = () => {
   const dispatch = useDispatch();
   const documentData = useSelector((state: RootState) => state.document.documentData);
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
   const [openModal, setOpenModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

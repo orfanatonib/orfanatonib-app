@@ -4,6 +4,7 @@ import { Box, CircularProgress } from '@mui/material';
 import { MEMBER_SHELL_LAYOUT } from '../../constants/navigation';
 import { useMemberNavigation } from '../../hooks/useMemberNavigation';
 import type { MemberAreaShellProps } from '../../types/navigation';
+import { memberAreaColors } from '@/theme/memberArea';
 import MemberAreaHeader from './MemberAreaHeader';
 import MemberAreaSidebar from './MemberAreaSidebar';
 import MemberPageHeader from './MemberPageHeader';
@@ -28,7 +29,7 @@ const MemberAreaShell: React.FC<MemberAreaShellProps> = ({ children }) => {
         width: '100%',
         flex: 1,
         pb: 8,
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 50%, #ffffff 100%)',
+        background: memberAreaColors.background,
       }}
     >
       <Box data-testid="member-area-frame" sx={{ width: MEMBER_SHELL_LAYOUT.width, mx: 'auto', pt: { xs: 0, md: 3 } }}>

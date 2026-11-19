@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React from 'react';
 import { gradients } from '@/theme';
 import { useSelector } from 'react-redux';
@@ -11,7 +12,7 @@ import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 const VisitMaterialsBanner: React.FC = () => {
   return null;
 
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
   const { user } = useSelector((state: RootState) => state.auth);
   const currentVisitRoute = routes.find(
     (route) => route.entityType === MediaTargetType.VisitMaterialsPage && route.current === true

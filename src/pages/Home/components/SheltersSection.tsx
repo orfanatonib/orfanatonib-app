@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Container, IconButton, Typography } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -28,18 +29,18 @@ interface ShelterCard {
 
 const AUTO_PLAY_INTERVAL = 3000;
 
-const FALLBACK_SHELTER_IMAGE = (import.meta as any).env?.VITE_SHELTER_FALLBACK_IMAGE_URL;
+const FALLBACK_SHELTER_IMAGE: string | undefined = import.meta.env.VITE_SHELTER_FALLBACK_IMAGE_URL;
 
 const SheltersSection: React.FC = () => {
   const navigate = useNavigate();
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   const shelterCards = useMemo(() => {
     return (routes || []).filter(
-      (card: any) => card?.public && card?.entityType === MediaTargetType.ShelterPage
-    ) as ShelterCard[];
+      (card) => card.public && card.entityType === MediaTargetType.ShelterPage
+    ) as unknown as ShelterCard[];
   }, [routes]);
 
   const [currentIndex, setCurrentIndex] = useState(0);

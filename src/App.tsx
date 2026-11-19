@@ -19,6 +19,7 @@ import Footer from "./components/Footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import RequireAdmin from "./components/RequireAdmin/RequireAdmin";
 import AppBootScreen from "./components/AppBoot/AppBootScreen";
+import NotFoundPage from "./pages/NotFound/NotFoundPage";
 import PageRenderer from "./components/PageRenderer/PageRenderer";
 import GlobalErrorBoundary from "./components/common/GlobalErrorBoundary";
 import GlobalNotification from "./components/GlobalNotification/GlobalNotification";
@@ -66,6 +67,7 @@ import { fetchFeatureFlags } from "./store/slices/feature-flags/featureFlagsSlic
 import {
   FeatureFlagKeys,
   FeatureFlagRoute,
+  useVisibleRoutes,
   FeatureFlagsPage,
 } from "./features/feature-flags";
 import { ObservabilityAuditPage } from "./features/observability-audit";
@@ -128,9 +130,8 @@ const BOOT_TIMEOUT_MS = 15_000;
 
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
-  const dynamicRoutes = useSelector(
-    (state: RootStateType) => state.routes.routes,
-  );
+  // Página de tipo desligado (flag) não vira rota: cai no 404.
+  const dynamicRoutes = useVisibleRoutes();
   const { initialized, loadingUser, isAuthenticated, user } = useSelector(
     (state: RootStateType) => state.auth,
   );
@@ -985,7 +986,7 @@ function App() {
                     />
                   );
                 })}
-                <Route path="*" element={<Home />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </GlobalErrorBoundary>
           </Box>

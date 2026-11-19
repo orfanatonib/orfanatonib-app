@@ -33,8 +33,8 @@ export const MEMBER_SUBPAGE_PATHS = {
   integrations: `${MEMBER_AREA_HOME_PATH}/integracoes`,
 } as const;
 
-/** Atalhos que só existem no corpo da Home (eventos e ajuda ficam fora do menu lateral). */
-export const MEMBER_HOME_QUICK_ACTIONS: readonly string[] = ['events', 'help'];
+/** Ferramentas de preparação e contato em destaque na Home. */
+export const MEMBER_HOME_QUICK_ACTIONS: readonly string[] = ['materials', 'photos', 'training', 'rate', 'events', 'help'];
 
 /** Endereços antigos (antes do padrão `/area-do-membro/<slug>`); redirecionam para os novos. */
 export const MEMBER_LEGACY_PATH_REDIRECTS: Readonly<Record<string, string>> = {

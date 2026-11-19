@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Container, Grid, Card, CardContent, CardMedia } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -7,7 +8,7 @@ import { MediaTargetType } from 'store/slices/types';
 import { CardsSectionProps } from './types';
 
 const CardsSection: React.FC = () => {
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
   const [cards, setCards] = useState<any[]>([]);
 
   useEffect(() => {
