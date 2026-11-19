@@ -113,7 +113,7 @@ export function FeatureFlagsPage() {
   return (
     <Box
       data-testid="feature-flags-page"
-      sx={{ width: '100%', p: { xs: 2, sm: 3 }, maxWidth: 1440, mx: 'auto' }}
+      sx={{ width: { xs: '98%', md: '95%' }, py: { xs: 2, sm: 3 }, mx: 'auto' }}
     >
       <Stack
         direction={{ xs: 'column', md: 'row' }}
