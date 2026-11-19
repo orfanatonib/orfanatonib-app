@@ -10,6 +10,11 @@ import {
   Chip,
   CircularProgress,
   FormHelperText,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Stack,
   TablePagination,
   TextField,
@@ -21,27 +26,24 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { createContentPackage } from "../api";
 import {
-  CONTENT_PACKAGE_STATUS_LABELS,
-  CONTENT_STAGE_TYPE_LABELS,
-} from "../constants";
+  STUDIO_PAGE_SIZE as PAGE_SIZE,
+  EMPTY_STUDIO_FORM as EMPTY_FORM,
+} from "../workspace.constants";
+import { CONTENT_PACKAGE_STATUS_LABELS } from "../constants";
 import { useContentPackages } from "../hooks/useContentPackages";
 import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
-import type { CreateContentPackagePayload } from "../types";
+import {
+  ContentAudience,
+  ContentPackageStatus,
+  type CreateContentPackagePayload,
+} from "../types";
 import { formatAudienceAgeRange, formatContentStudioDateTime } from "../utils";
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
 
-const PAGE_SIZE = 10;
-
-const EMPTY_FORM: CreateContentPackagePayload = {
-  theme: "",
-  biblicalReferences: "",
-  canonicalObjective: "",
-  canonicalNotes: "",
-};
-
 export function ContentStudioProductionPage() {
   const navigate = useNavigate();
+  const [createOpen, setCreateOpen] = useState(false);
   const {
     catalog,
     loading: catalogLoading,
@@ -54,14 +56,22 @@ export function ContentStudioProductionPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [audienceFilter, setAudienceFilter] = useState<ContentAudience | "">(
+    "",
+  );
+  const [statusFilter, setStatusFilter] = useState<ContentPackageStatus | "">(
+    "",
+  );
 
   const packagesQuery = useMemo(
     () => ({
       page,
       limit: PAGE_SIZE,
       search: search || undefined,
+      audience: audienceFilter || undefined,
+      status: statusFilter || undefined,
     }),
-    [page, search],
+    [page, search, audienceFilter, statusFilter],
   );
 
   const {
@@ -84,6 +94,7 @@ export function ContentStudioProductionPage() {
     setSubmitError("");
 
     const payload: CreateContentPackagePayload = {
+      audience: form.audience,
       theme: form.theme.trim(),
       biblicalReferences: form.biblicalReferences.trim(),
       canonicalObjective: form.canonicalObjective.trim(),
@@ -122,6 +133,8 @@ export function ContentStudioProductionPage() {
   const resetSearch = () => {
     setSearchInput("");
     setSearch("");
+    setAudienceFilter("");
+    setStatusFilter("");
     setPage(1);
   };
 
@@ -134,7 +147,7 @@ export function ContentStudioProductionPage() {
       <Stack spacing={3}>
         <ContentStudioPageHeader
           title="Produção"
-          description="Crie pacotes multifaixa e acompanhe a estrutura editorial persistida."
+          description="Crie materiais para baby, crianças, adolescentes e adultos."
           backTo="/adm/estudio"
           backLabel="Voltar à visão geral"
         />
@@ -174,161 +187,151 @@ export function ContentStudioProductionPage() {
 
         {!catalogLoading && catalog && (
           <>
-            <Alert
-              severity="info"
-              data-testid="content-studio-production-catalog-status"
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setCreateOpen(true)}
+              data-testid="content-studio-new-material"
+              sx={{ minHeight: 44, alignSelf: "flex-start" }}
             >
-              Catálogo {catalog.version}. Cada pacote cria bebê, criança,
-              adolescente e adulto.
-            </Alert>
-
-            <Card
-              variant="outlined"
-              component="form"
-              onSubmit={handleCreate}
-              data-testid="content-studio-package-form"
-            >
-              <CardContent>
-                <Stack spacing={2}>
-                  <Typography component="h2" variant="h6" fontWeight={700}>
-                    Novo pacote
-                  </Typography>
-                  {submitError && <Alert severity="error">{submitError}</Alert>}
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                      gap: 2,
-                    }}
-                  >
-                    <TextField
-                      label="Tema"
-                      value={form.theme}
-                      onChange={handleFieldChange("theme")}
-                      inputProps={{
-                        maxLength: 180,
-                        "data-testid": "content-studio-theme-input",
-                      }}
-                      required
-                    />
-                    <TextField
-                      label="Referências bíblicas"
-                      value={form.biblicalReferences}
-                      onChange={handleFieldChange("biblicalReferences")}
-                      inputProps={{
-                        maxLength: 500,
-                        "data-testid": "content-studio-references-input",
-                      }}
-                      required
-                    />
-                  </Box>
-                  <TextField
-                    label="Objetivo canônico"
-                    value={form.canonicalObjective}
-                    onChange={handleFieldChange("canonicalObjective")}
-                    inputProps={{
-                      "data-testid": "content-studio-objective-input",
-                    }}
-                    multiline
-                    minRows={3}
-                    required
-                  />
-                  <TextField
-                    label="Notas canônicas"
-                    value={form.canonicalNotes ?? ""}
-                    onChange={handleFieldChange("canonicalNotes")}
-                    inputProps={{ "data-testid": "content-studio-notes-input" }}
-                    multiline
-                    minRows={2}
-                  />
-                  <FormHelperText>
-                    Não inclua nomes, contatos, históricos ou outros dados
-                    pessoais de pessoas acolhidas.
-                  </FormHelperText>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1}
-                    alignItems={{ sm: "center" }}
-                  >
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={
-                        submitting ? (
-                          <CircularProgress color="inherit" size={18} />
-                        ) : (
-                          <Add />
-                        )
-                      }
-                      disabled={submitting}
-                      data-testid="content-studio-create-package"
-                      sx={{ minHeight: 44 }}
-                    >
-                      Criar pacote
-                    </Button>
-                    {!catalog.capabilities.generation && (
-                      <Typography color="text.secondary" variant="body2">
-                        Você pode criar e editar pacotes manualmente; a geração
-                        por IA está desabilitada.
-                      </Typography>
-                    )}
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            <Box
-              data-testid="content-studio-production-audiences"
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
-                gap: 2,
+              Novo material
+            </Button>
+            <Dialog
+              open={createOpen}
+              onClose={() => {
+                if (!submitting) setCreateOpen(false);
               }}
+              fullWidth
+              maxWidth="md"
+              data-testid="content-studio-create-dialog"
             >
-              {catalog.audiences.map((audience) => (
-                <Card key={audience.audience} variant="outlined">
+              <DialogTitle>Novo material</DialogTitle>
+              <DialogContent>
+                <Card
+                  variant="outlined"
+                  component="form"
+                  onSubmit={handleCreate}
+                  data-testid="content-studio-package-form"
+                >
                   <CardContent>
                     <Stack spacing={2}>
-                      <Box>
-                        <Typography
-                          component="h2"
-                          variant="h6"
-                          fontWeight={700}
-                        >
-                          {audience.name}
-                        </Typography>
-                        <Typography color="text.secondary">
-                          {formatAudienceAgeRange(audience)}
-                        </Typography>
-                      </Box>
-                      <Stack spacing={1}>
-                        {audience.stages.map((stage) => (
-                          <Stack
-                            key={stage.type}
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            spacing={1}
+                      <Typography component="h2" variant="h6" fontWeight={700}>
+                        Prepare o encontro
+                      </Typography>
+                      {submitError && (
+                        <Alert severity="error">{submitError}</Alert>
+                      )}
+                      <TextField
+                        select
+                        label="Categoria"
+                        value={form.audience}
+                        onChange={handleFieldChange("audience")}
+                        data-testid="content-studio-create-audience"
+                      >
+                        {catalog.audiences.map((audience) => (
+                          <MenuItem
+                            key={audience.audience}
+                            value={audience.audience}
                           >
-                            <Typography>
-                              {stage.position}.{" "}
-                              {CONTENT_STAGE_TYPE_LABELS[stage.type]}
-                            </Typography>
-                            <Chip
-                              label={
-                                stage.required ? "Obrigatória" : "Opcional"
-                              }
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Stack>
+                            {audience.name} · {formatAudienceAgeRange(audience)}
+                          </MenuItem>
                         ))}
+                      </TextField>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                          gap: 2,
+                        }}
+                      >
+                        <TextField
+                          label="Tema"
+                          value={form.theme}
+                          onChange={handleFieldChange("theme")}
+                          inputProps={{
+                            maxLength: 180,
+                            "data-testid": "content-studio-theme-input",
+                          }}
+                          required
+                        />
+                        <TextField
+                          label="Referências bíblicas"
+                          value={form.biblicalReferences}
+                          onChange={handleFieldChange("biblicalReferences")}
+                          inputProps={{
+                            maxLength: 500,
+                            "data-testid": "content-studio-references-input",
+                          }}
+                          required
+                        />
+                      </Box>
+                      <TextField
+                        label="Objetivo do encontro"
+                        value={form.canonicalObjective}
+                        onChange={handleFieldChange("canonicalObjective")}
+                        inputProps={{
+                          "data-testid": "content-studio-objective-input",
+                        }}
+                        multiline
+                        minRows={3}
+                        required
+                      />
+                      <TextField
+                        label="Orientações adicionais"
+                        value={form.canonicalNotes ?? ""}
+                        onChange={handleFieldChange("canonicalNotes")}
+                        inputProps={{
+                          "data-testid": "content-studio-notes-input",
+                        }}
+                        multiline
+                        minRows={2}
+                      />
+                      <FormHelperText>
+                        Não inclua nomes, contatos, históricos ou outros dados
+                        pessoais de pessoas acolhidas.
+                      </FormHelperText>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                        alignItems={{ sm: "center" }}
+                      >
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          startIcon={
+                            submitting ? (
+                              <CircularProgress color="inherit" size={18} />
+                            ) : (
+                              <Add />
+                            )
+                          }
+                          disabled={submitting}
+                          data-testid="content-studio-create-package"
+                          sx={{ minHeight: 44 }}
+                        >
+                          Criar material
+                        </Button>
+                        {!catalog.capabilities.generation && (
+                          <Typography color="text.secondary" variant="body2">
+                            Você pode criar e editar pacotes manualmente; a
+                            geração por IA está desabilitada.
+                          </Typography>
+                        )}
                       </Stack>
                     </Stack>
                   </CardContent>
                 </Card>
-              ))}
-            </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  disabled={submitting}
+                  onClick={() => setCreateOpen(false)}
+                  sx={{ minHeight: 44 }}
+                >
+                  Cancelar
+                </Button>
+              </DialogActions>
+            </Dialog>
           </>
         )}
 
@@ -342,7 +345,7 @@ export function ContentStudioProductionPage() {
               >
                 <Box>
                   <Typography component="h2" variant="h6" fontWeight={700}>
-                    Pacotes criados
+                    Seus materiais
                   </Typography>
                   <Typography color="text.secondary">
                     {total} pacote{total === 1 ? "" : "s"} encontrado
@@ -384,6 +387,57 @@ export function ContentStudioProductionPage() {
                 </Stack>
               </Stack>
 
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                data-testid="content-studio-production-filters"
+              >
+                <TextField
+                  select
+                  label="Categoria"
+                  value={audienceFilter}
+                  sx={{ minWidth: 180 }}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAudienceFilter(
+                      Object.values(ContentAudience).find(
+                        (item) => item === value,
+                      ) ?? "",
+                    );
+                    setPage(1);
+                  }}
+                >
+                  <MenuItem value="">Todas as categorias</MenuItem>
+                  {catalog?.audiences.map((item) => (
+                    <MenuItem key={item.audience} value={item.audience}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  label="Situação"
+                  value={statusFilter}
+                  sx={{ minWidth: 180 }}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setStatusFilter(
+                      Object.values(ContentPackageStatus).find(
+                        (item) => item === value,
+                      ) ?? "",
+                    );
+                    setPage(1);
+                  }}
+                >
+                  <MenuItem value="">Todas as situações</MenuItem>
+                  {Object.values(ContentPackageStatus).map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {CONTENT_PACKAGE_STATUS_LABELS[status]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
+
               {packagesLoading && (
                 <Stack
                   alignItems="center"
@@ -409,7 +463,7 @@ export function ContentStudioProductionPage() {
                   severity="info"
                   data-testid="content-studio-packages-empty"
                 >
-                  Nenhum pacote criado ainda.
+                  Você ainda não criou nenhum material. Comece em Novo material.
                 </Alert>
               )}
 
@@ -461,7 +515,7 @@ export function ContentStudioProductionPage() {
                             sx={{ alignSelf: "flex-start", minHeight: 44 }}
                             data-testid={`content-studio-package-${contentPackage.id}`}
                           >
-                            Abrir pacote
+                            Continuar produção
                           </Button>
                         </Stack>
                       </CardContent>

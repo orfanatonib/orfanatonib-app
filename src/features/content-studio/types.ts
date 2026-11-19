@@ -197,6 +197,7 @@ export interface QueryContentPackagesParams {
 }
 
 export interface CreateContentPackagePayload {
+  audience?: ContentAudience;
   theme: string;
   biblicalReferences: string;
   canonicalObjective: string;
@@ -204,6 +205,7 @@ export interface CreateContentPackagePayload {
 }
 
 export interface RequestStageGenerationPayload {
+  revisionInstructions?: string;
   capability: AiGenerationCapability;
   idempotencyKey: string;
 }

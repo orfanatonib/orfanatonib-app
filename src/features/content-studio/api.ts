@@ -170,3 +170,13 @@ export async function archiveContentPackage(
   );
   return data;
 }
+
+export async function cancelStageGeneration(
+  packageId: string,
+  stageId: string,
+): Promise<ContentGenerationJobResponse> {
+  const { data } = await api.delete<ContentGenerationJobResponse>(
+    `/content-studio/packages/${packageId}/stages/${stageId}/generations`,
+  );
+  return data;
+}

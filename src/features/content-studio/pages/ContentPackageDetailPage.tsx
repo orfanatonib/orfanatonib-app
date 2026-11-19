@@ -1,8 +1,12 @@
-import Archive from "@mui/icons-material/Archive";
-import AutoAwesome from "@mui/icons-material/AutoAwesome";
-import Refresh from "@mui/icons-material/Refresh";
-import Save from "@mui/icons-material/Save";
-import TaskAlt from "@mui/icons-material/TaskAlt";
+import { useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import {
+  Archive,
+  AutoAwesome,
+  Refresh,
+  Save,
+  TaskAlt,
+} from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -11,361 +15,103 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Divider,
+  LinearProgress,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-
-import {
-  approveReviewStage,
-  archiveContentPackage,
-  completeProductionStage,
-  requestStageGeneration,
-  requestStageChanges,
-  resolveReviewComment,
-  saveStageContent,
-  submitPackageReview,
-} from "../api";
 import {
   CONTENT_PACKAGE_STATUS_LABELS,
   CONTENT_STAGE_STATUS_LABELS,
   CONTENT_STAGE_TYPE_LABELS,
 } from "../constants";
-import { useContentPackage } from "../hooks/useContentPackage";
-import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
+import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
 import {
-  AiGenerationCapability,
   ContentPackageStatus,
   ContentReviewCommentStatus,
   ContentReviewDecisionType,
   ContentStageStatus,
-  ContentStageType,
-  type ContentStageResponse,
 } from "../types";
 import { formatContentStudioDateTime } from "../utils";
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
+import { ContentStageNavigation } from "../components/ContentStageNavigation";
+import { ContentStageEditor } from "../components/ContentStageEditor";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
-
-type FeedbackState = {
-  readonly severity: "success" | "error";
-  readonly message: string;
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function capabilityForStage(
-  stage: ContentStageResponse,
-): AiGenerationCapability {
-  if (stage.stageType === ContentStageType.VISUAL) {
-    return AiGenerationCapability.IMAGE_GENERATION;
-  }
-
-  return AiGenerationCapability.TEXT_STRUCTURED;
-}
-
-function stageDraftValue(stage: ContentStageResponse): string {
-  const content = stage.currentVersion?.structuredContent ?? {
-    stageType: stage.stageType,
-    blocks: [{ type: "paragraph", text: "" }],
-  };
-
-  return JSON.stringify(content, null, 2);
-}
-
-const GENERATION_ALLOWED_STATUSES: readonly ContentStageStatus[] = [
-  ContentStageStatus.NOT_STARTED,
-  ContentStageStatus.DRAFT,
-  ContentStageStatus.FAILED,
-  ContentStageStatus.STALE,
-  ContentStageStatus.CHANGES_REQUESTED,
-];
-
-const MANUAL_EDIT_ALLOWED_STATUSES: readonly ContentStageStatus[] = [
-  ContentStageStatus.NOT_STARTED,
-  ContentStageStatus.GENERATING,
-  ContentStageStatus.DRAFT,
-  ContentStageStatus.PRODUCER_APPROVED,
-  ContentStageStatus.FAILED,
-  ContentStageStatus.STALE,
-  ContentStageStatus.CHANGES_REQUESTED,
-  ContentStageStatus.APPROVED,
-];
-
-const PACKAGE_PRODUCTION_LOCKED_STATUSES: readonly ContentPackageStatus[] = [
-  ContentPackageStatus.IN_REVIEW,
-  ContentPackageStatus.PUBLISHING,
-  ContentPackageStatus.PUBLISHED,
-  ContentPackageStatus.ARCHIVED,
-];
+import {
+  GENERATION_ALLOWED_STATUSES,
+  MANUAL_EDIT_ALLOWED_STATUSES,
+  PACKAGE_PRODUCTION_LOCKED_STATUSES,
+  REVISION_INSTRUCTIONS_MAX_LENGTH,
+} from "../workspace.constants";
+import { stageDraftValue } from "../workspace.utils";
 
 export function ContentPackageDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { contentPackage, loading, error, reload } = useContentPackage(id);
-  const reviewEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.CONTENT_STUDIO_REVIEW,
-  );
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [changeMessages, setChangeMessages] = useState<Record<string, string>>(
-    {},
-  );
-  const [busyStageId, setBusyStageId] = useState<string | null>(null);
-  const [packageBusy, setPackageBusy] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
-  const generationKeys = useRef<Record<string, string>>({});
-  const knownVersionIds = useRef<Record<string, string | null>>({});
-  const generationEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.CONTENT_STUDIO_GENERATION,
-  );
-
+  const [params, setParams] = useSearchParams();
+  const workspace = useStudioWorkspace(id);
+  const {
+    contentPackage,
+    loading,
+    error,
+    reload,
+    feedback,
+    drafts,
+    busyStageId,
+    packageBusy,
+  } = workspace;
+  const dirtyIds =
+    contentPackage?.tracks
+      .flatMap((track) => track.stages)
+      .filter(
+        (stage) =>
+          drafts[stage.id] !== undefined &&
+          drafts[stage.id] !== stageDraftValue(stage),
+      )
+      .map((stage) => stage.id) ?? [];
+  const hasDrafts = dirtyIds.length > 0;
   useEffect(() => {
-    if (!contentPackage) return;
-
-    const stages = contentPackage.tracks.flatMap((track) => track.stages);
-    setDrafts((current) => {
-      const next = { ...current };
-      for (const stage of stages) {
-        if (
-          !(stage.id in next) ||
-          knownVersionIds.current[stage.id] !== stage.currentVersionId
-        ) {
-          next[stage.id] = stageDraftValue(stage);
-        }
-        knownVersionIds.current[stage.id] = stage.currentVersionId;
-      }
-      return next;
-    });
-  }, [contentPackage]);
-
-  const handleDraftChange = (stageId: string, value: string) => {
-    setDrafts((current) => ({ ...current, [stageId]: value }));
-  };
-
-  const handleChangeMessage = (stageId: string, value: string) => {
-    setChangeMessages((current) => ({ ...current, [stageId]: value }));
-  };
-
-  const handleSubmitReview = async () => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setPackageBusy(true);
-    try {
-      await submitPackageReview(contentPackage.id);
-      setFeedback({
-        severity: "success",
-        message: "Pacote enviado para revisão.",
-      });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível enviar o pacote para revisão.",
-      });
-    } finally {
-      setPackageBusy(false);
-    }
-  };
-
-  const handleRequestGeneration = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      const idempotencyKey =
-        generationKeys.current[stage.id] ?? crypto.randomUUID();
-      generationKeys.current[stage.id] = idempotencyKey;
-      await requestStageGeneration(contentPackage.id, stage.id, {
-        capability: capabilityForStage(stage),
-        idempotencyKey,
-      });
-      setFeedback({
-        severity: "success",
-        message: "Job de geração registrado.",
-      });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível solicitar geração para esta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const handleSaveContent = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      const parsed = JSON.parse(drafts[stage.id] ?? "{}") as unknown;
-      if (!isRecord(parsed)) {
-        setFeedback({
-          severity: "error",
-          message: "O conteúdo estruturado precisa ser um objeto JSON.",
-        });
-        return;
-      }
-
-      await saveStageContent(contentPackage.id, stage.id, {
-        structuredContent: parsed,
-        templateVersion: contentPackage.templateCatalogVersion,
-      });
-      delete generationKeys.current[stage.id];
-      setFeedback({ severity: "success", message: "Nova versão salva." });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível salvar o JSON desta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const handleCompleteProduction = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      await completeProductionStage(contentPackage.id, stage.id);
-      setFeedback({
-        severity: "success",
-        message: "Etapa concluída para revisão.",
-      });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível concluir esta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const handleApproveStage = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      if (!stage.currentVersionId || !stage.currentVersion) {
-        setFeedback({
-          severity: "error",
-          message: "A etapa não possui versão atual para aprovar.",
-        });
-        return;
-      }
-      await approveReviewStage(contentPackage.id, stage.id, {
-        versionId: stage.currentVersionId,
-        lockVersion: stage.lockVersion,
-        contentChecksum: stage.currentVersion.contentChecksum,
-      });
-      setFeedback({ severity: "success", message: "Etapa aprovada." });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível aprovar esta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const handleRequestChanges = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    const message = changeMessages[stage.id]?.trim();
-    if (!message) {
-      setFeedback({
-        severity: "error",
-        message: "Informe o comentário de ajuste antes de solicitar mudanças.",
-      });
-      return;
-    }
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      if (!stage.currentVersionId || !stage.currentVersion) {
-        setFeedback({
-          severity: "error",
-          message: "A etapa não possui versão atual para solicitar ajustes.",
-        });
-        return;
-      }
-      await requestStageChanges(contentPackage.id, stage.id, {
-        versionId: stage.currentVersionId,
-        lockVersion: stage.lockVersion,
-        contentChecksum: stage.currentVersion.contentChecksum,
-        message,
-      });
-      setFeedback({ severity: "success", message: "Ajustes solicitados." });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível solicitar ajustes nesta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const canSubmitReview =
-    reviewEnabled &&
-    contentPackage !== null &&
+    if (!hasDrafts) return;
+    const preventLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", preventLeave);
+    return () => window.removeEventListener("beforeunload", preventLeave);
+  }, [hasDrafts]);
+  const track =
+    contentPackage?.tracks.find(
+      (item) => item.audience === params.get("audience"),
+    ) ?? contentPackage?.tracks[0];
+  const stage =
+    track?.stages.find((item) => item.stageType === params.get("stage")) ??
+    track?.stages[0];
+  const busy = busyStageId !== null || packageBusy;
+  const locked =
+    !!contentPackage &&
+    PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(contentPackage.status);
+  const conflict = !!stage && workspace.conflictingDraftIds.includes(stage.id);
+  const dirty = !!stage && dirtyIds.includes(stage.id);
+  const dependenciesReady =
+    !!stage &&
+    stage.dependencies.every((dependency) =>
+      track?.stages.some(
+        (item) =>
+          item.stageType === dependency &&
+          [
+            ContentStageStatus.DRAFT,
+            ContentStageStatus.PRODUCER_APPROVED,
+            ContentStageStatus.APPROVED,
+          ].includes(item.status),
+      ),
+    );
+  const allStages = contentPackage?.tracks.flatMap((item) => item.stages) ?? [];
+  const completeCount = allStages.filter((item) =>
     [
-      ContentPackageStatus.PACKAGE_READY,
-      ContentPackageStatus.CHANGES_REQUESTED,
-    ].includes(contentPackage.status);
-
-  const canArchive =
-    contentPackage !== null &&
-    contentPackage.tracks.some((track) =>
-      track.stages.some((stage) => stage.currentVersionId !== null),
-    ) &&
-    ![ContentPackageStatus.PUBLISHING, ContentPackageStatus.ARCHIVED].includes(
-      contentPackage.status,
-    );
-
-  const handleArchive = async () => {
-    if (!contentPackage) return;
-
-    const confirmed = window.confirm(
-      "Tem certeza de que deseja arquivar este pacote? Esta ação não pode ser desfeita facilmente.",
-    );
-    if (!confirmed) return;
-
-    setFeedback(null);
-    setPackageBusy(true);
-    try {
-      await archiveContentPackage(contentPackage.id);
-      setFeedback({
-        severity: "success",
-        message: "Pacote arquivado com sucesso.",
-      });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível arquivar o pacote.",
-      });
-    } finally {
-      setPackageBusy(false);
-    }
-  };
+      ContentStageStatus.PRODUCER_APPROVED,
+      ContentStageStatus.APPROVED,
+    ].includes(item.status),
+  ).length;
 
   return (
     <Box
@@ -375,62 +121,55 @@ export function ContentPackageDetailPage() {
     >
       <Stack spacing={3}>
         <ContentStudioPageHeader
-          title="Detalhe do pacote"
-          description="Acompanhe versões, etapas por faixa etária e decisões editoriais."
+          title="Estúdio Orfanato"
+          description="Produza, confira e revise cada etapa do material."
           backTo="/adm/estudio/producao"
           backLabel="Voltar à produção"
         />
-
-        {loading && (
+        {loading && !contentPackage && (
           <Stack
+            data-testid="content-studio-detail-loading"
             alignItems="center"
-            justifyContent="center"
-            minHeight={240}
-            spacing={2}
+            py={6}
           >
             <CircularProgress />
-            <Typography color="text.secondary">Carregando pacote…</Typography>
           </Stack>
         )}
-
-        {!loading && error && (
+        {error && (
           <Alert
             severity="error"
+            data-testid="content-studio-detail-error"
             action={
-              <Button
-                color="inherit"
-                onClick={() => void reload()}
-                sx={{ minHeight: 44 }}
-              >
-                Tentar novamente
-              </Button>
+              <Button onClick={() => void reload()}>Tentar novamente</Button>
             }
           >
-            Não foi possível carregar este pacote.
+            Não foi possível atualizar este material.
           </Alert>
         )}
-
-        {!loading && contentPackage && (
+        {feedback && (
+          <Alert
+            data-testid="content-studio-feedback"
+            severity={feedback.severity}
+            onClose={() => workspace.setFeedback(null)}
+          >
+            {feedback.message}
+          </Alert>
+        )}
+        {contentPackage && (
           <>
-            {feedback && (
-              <Alert
-                severity={feedback.severity}
-                onClose={() => setFeedback(null)}
-              >
-                {feedback.message}
-              </Alert>
-            )}
-
-            <Card variant="outlined">
+            <Card
+              variant="outlined"
+              data-testid="content-studio-production-header"
+            >
               <CardContent>
                 <Stack spacing={2}>
                   <Stack
-                    direction={{ xs: "column", md: "row" }}
+                    direction={{ xs: "column", sm: "row" }}
                     justifyContent="space-between"
-                    spacing={1}
+                    spacing={2}
                   >
                     <Box>
-                      <Typography component="h2" variant="h5" fontWeight={700}>
+                      <Typography component="h1" variant="h4" fontWeight={800}>
                         {contentPackage.theme}
                       </Typography>
                       <Typography color="text.secondary">
@@ -443,419 +182,459 @@ export function ContentPackageDetailPage() {
                       }
                     />
                   </Stack>
-                  <Divider />
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-                      gap: 2,
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Catálogo
-                      </Typography>
-                      <Typography>
-                        {contentPackage.templateCatalogVersion}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Criado em
-                      </Typography>
-                      <Typography>
-                        {formatContentStudioDateTime(contentPackage.createdAt)}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Atualizado em
-                      </Typography>
-                      <Typography>
-                        {formatContentStudioDateTime(contentPackage.updatedAt)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Objetivo canônico
-                    </Typography>
-                    <Typography>{contentPackage.canonicalObjective}</Typography>
-                  </Box>
-                  {contentPackage.canonicalNotes && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Notas canônicas
-                      </Typography>
-                      <Typography>{contentPackage.canonicalNotes}</Typography>
-                    </Box>
-                  )}
-                  <Button
-                    onClick={() => void reload()}
-                    startIcon={<Refresh />}
-                    sx={{ alignSelf: "flex-start", minHeight: 44 }}
-                  >
-                    Atualizar
-                  </Button>
-                  {canArchive && (
+                  <Typography>{contentPackage.canonicalObjective}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {completeCount} de {allStages.length} etapas concluídas
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={
+                      allStages.length
+                        ? (completeCount / allStages.length) * 100
+                        : 0
+                    }
+                    aria-label="Progresso do material"
+                    sx={{ height: 8, borderRadius: 2 }}
+                  />
+                  <Stack direction="row" flexWrap="wrap" gap={1}>
                     <Button
-                      onClick={() => void handleArchive()}
-                      disabled={packageBusy}
-                      startIcon={<Archive />}
-                      color="inherit"
-                      sx={{ alignSelf: "flex-start", minHeight: 44 }}
+                      startIcon={<Refresh />}
+                      disabled={busy}
+                      onClick={() => void reload()}
+                      sx={{ minHeight: 44 }}
                     >
-                      Arquivar pacote
+                      Atualizar
                     </Button>
-                  )}
-                  {canSubmitReview && (
-                    <Button
-                      onClick={() => void handleSubmitReview()}
-                      disabled={packageBusy}
-                      startIcon={<TaskAlt />}
-                      sx={{ alignSelf: "flex-start", minHeight: 44 }}
-                      variant="contained"
-                    >
-                      Enviar para revisão
-                    </Button>
-                  )}
+                    {workspace.canSubmitReview && (
+                      <Button
+                        data-testid="content-studio-submit-review"
+                        variant="contained"
+                        startIcon={<TaskAlt />}
+                        disabled={busy || hasDrafts}
+                        onClick={() => void workspace.handleSubmitReview()}
+                        sx={{ minHeight: 44 }}
+                      >
+                        Enviar para revisão
+                      </Button>
+                    )}
+                    {workspace.canArchive && (
+                      <Button
+                        startIcon={<Archive />}
+                        disabled={busy}
+                        color="inherit"
+                        onClick={() => void workspace.handleArchive()}
+                        sx={{ minHeight: 44 }}
+                      >
+                        Arquivar material
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
               </CardContent>
             </Card>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
-                gap: 2,
+            {hasDrafts && (
+              <Alert
+                severity="warning"
+                data-testid="content-studio-unsaved-notice"
+              >
+                Há alterações não salvas. Salve a etapa antes de concluir a
+                produção.
+              </Alert>
+            )}
+            {workspace.draftStorageFailed && (
+              <Alert severity="warning">
+                Não foi possível guardar o rascunho neste navegador. Salve antes
+                de sair.
+              </Alert>
+            )}
+            <Tabs
+              value={track?.audience ?? false}
+              variant="scrollable"
+              scrollButtons="auto"
+              aria-label="Categorias do material"
+              data-testid="content-studio-audience-tabs"
+              onChange={(_, audience: string) => {
+                const next = new URLSearchParams(params);
+                next.set("audience", audience);
+                next.delete("stage");
+                setParams(next);
               }}
             >
-              {contentPackage.tracks.map((track) => (
-                <Card key={track.id} variant="outlined">
+              {contentPackage.tracks.map((item) => (
+                <Tab
+                  key={item.id}
+                  value={item.audience}
+                  label={item.audienceName}
+                  data-testid={`content-studio-audience-${item.audience}`}
+                />
+              ))}
+            </Tabs>
+            {track && stage ? (
+              <Stack
+                direction={{ xs: "column", lg: "row" }}
+                spacing={3}
+                alignItems="flex-start"
+              >
+                <ContentStageNavigation
+                  track={track}
+                  selectedId={stage.id}
+                  dirtyIds={dirtyIds}
+                  onSelect={(stageId) => {
+                    const next = new URLSearchParams(params);
+                    const selected = track.stages.find(
+                      (item) => item.id === stageId,
+                    );
+                    if (selected) next.set("stage", selected.stageType);
+                    setParams(next);
+                  }}
+                />
+                <Card
+                  variant="outlined"
+                  sx={{ flex: 1, minWidth: 0, width: "100%" }}
+                  data-testid="content-studio-active-stage"
+                >
                   <CardContent>
-                    <Stack spacing={2}>
-                      <Box>
-                        <Typography
-                          component="h2"
-                          variant="h6"
-                          fontWeight={700}
-                        >
-                          {track.audienceName}
-                        </Typography>
-                        <Typography color="text.secondary">
-                          {track.minimumAge}
-                          {track.maximumAge === null
-                            ? "+ anos"
-                            : ` a ${track.maximumAge} anos`}
-                        </Typography>
-                      </Box>
-                      <Stack spacing={1.5}>
-                        {track.stages.map((stage) => (
-                          <Box key={stage.id}>
-                            <Stack spacing={1.5}>
-                              <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                justifyContent="space-between"
-                                spacing={1}
-                              >
-                                <Box>
-                                  <Typography fontWeight={700}>
-                                    {stage.position}.{" "}
-                                    {CONTENT_STAGE_TYPE_LABELS[stage.stageType]}
-                                  </Typography>
-                                  <Typography
-                                    color="text.secondary"
-                                    variant="body2"
-                                  >
-                                    Dependências:{" "}
-                                    {stage.dependencies.length === 0
-                                      ? "nenhuma"
-                                      : stage.dependencies
-                                          .map(
-                                            (dependency) =>
-                                              CONTENT_STAGE_TYPE_LABELS[
-                                                dependency
-                                              ],
-                                          )
-                                          .join(", ")}
-                                  </Typography>
-                                  {stage.currentVersion && (
-                                    <Typography
-                                      color="text.secondary"
-                                      variant="body2"
-                                    >
-                                      Versão atual{" "}
-                                      {stage.currentVersion.versionNumber}.
-                                    </Typography>
-                                  )}
-                                  {stage.reviewComments.length > 0 && (
-                                    <Stack
-                                      spacing={0.75}
-                                      mt={1}
-                                      data-testid={`content-studio-stage-comments-${stage.id}`}
-                                    >
-                                      {stage.reviewComments.map((comment) => (
-                                        <Alert
-                                          key={comment.id}
-                                          severity={
-                                            comment.status ===
-                                            ContentReviewCommentStatus.OPEN
-                                              ? "warning"
-                                              : "success"
-                                          }
-                                          data-testid={`content-studio-stage-comment-${comment.id}`}
-                                          action={
-                                            comment.status ===
-                                            ContentReviewCommentStatus.OPEN ? (
-                                              <Button
-                                                color="inherit"
-                                                size="small"
-                                                disabled={
-                                                  busyStageId === stage.id
-                                                }
-                                                onClick={async () => {
-                                                  setFeedback(null);
-                                                  setBusyStageId(stage.id);
-                                                  try {
-                                                    await resolveReviewComment(
-                                                      contentPackage.id,
-                                                      comment.id,
-                                                    );
-                                                    setFeedback({
-                                                      severity: "success",
-                                                      message:
-                                                        "Comentário resolvido.",
-                                                    });
-                                                    await reload();
-                                                  } catch {
-                                                    setFeedback({
-                                                      severity: "error",
-                                                      message:
-                                                        "Não foi possível resolver o comentário.",
-                                                    });
-                                                  } finally {
-                                                    setBusyStageId(null);
-                                                  }
-                                                }}
-                                                data-testid={`content-studio-resolve-comment-${comment.id}`}
-                                              >
-                                                Resolver
-                                              </Button>
-                                            ) : null
-                                          }
-                                        >
-                                          {comment.message}
-                                          <Typography
-                                            component="div"
-                                            variant="caption"
-                                            mt={0.5}
-                                          >
-                                            Versão{" "}
-                                            {stage.currentVersion?.id ===
-                                            comment.versionId
-                                              ? stage.currentVersion
-                                                  .versionNumber
-                                              : comment.versionId}
-                                            {" · "}
-                                            {formatContentStudioDateTime(
-                                              comment.createdAt,
-                                            )}
-                                          </Typography>
-                                        </Alert>
-                                      ))}
-                                    </Stack>
-                                  )}
-                                  {stage.reviewDecisions.length > 0 && (
-                                    <Stack
-                                      spacing={0.5}
-                                      mt={1}
-                                      data-testid={`content-studio-stage-review-history-${stage.id}`}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        fontWeight={700}
-                                      >
-                                        Histórico de decisões
-                                      </Typography>
-                                      {stage.reviewDecisions.map((decision) => (
-                                        <Typography
-                                          key={decision.id}
-                                          variant="caption"
-                                          color="text.secondary"
-                                        >
-                                          {decision.decision ===
-                                          ContentReviewDecisionType.APPROVED
-                                            ? "Aprovada"
-                                            : "Ajustes solicitados"}{" "}
-                                          · versão{" "}
-                                          {decision.versionNumber ??
-                                            decision.versionId}{" "}
-                                          ·{" "}
-                                          {formatContentStudioDateTime(
-                                            decision.decidedAt,
-                                          )}
-                                        </Typography>
-                                      ))}
-                                    </Stack>
-                                  )}
-                                </Box>
-                                <Chip
-                                  label={
-                                    CONTENT_STAGE_STATUS_LABELS[stage.status]
-                                  }
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              </Stack>
-                              <TextField
-                                label="Conteúdo estruturado"
-                                value={drafts[stage.id] ?? ""}
-                                onChange={(event) =>
-                                  handleDraftChange(
-                                    stage.id,
-                                    event.target.value,
-                                  )
-                                }
-                                inputProps={{
-                                  "data-testid": `content-studio-stage-content-${stage.id}`,
-                                }}
-                                disabled={PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(
-                                  contentPackage.status,
-                                )}
-                                multiline
-                                minRows={5}
-                                spellCheck={false}
-                              />
-                              <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                spacing={1}
-                              >
-                                {generationEnabled &&
-                                  !PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(
-                                    contentPackage.status,
-                                  ) &&
-                                  GENERATION_ALLOWED_STATUSES.includes(
-                                    stage.status,
-                                  ) &&
-                                  stage.dependencies.every((dependency) => {
-                                    const dependencyStage = track.stages.find(
-                                      (candidate) =>
-                                        candidate.stageType === dependency,
-                                    );
-                                    return (
-                                      dependencyStage !== undefined &&
-                                      [
-                                        ContentStageStatus.DRAFT,
-                                        ContentStageStatus.PRODUCER_APPROVED,
-                                        ContentStageStatus.APPROVED,
-                                      ].includes(dependencyStage.status)
-                                    );
-                                  }) && (
-                                    <Button
-                                      onClick={() =>
-                                        void handleRequestGeneration(stage)
-                                      }
-                                      disabled={busyStageId === stage.id}
-                                      startIcon={<AutoAwesome />}
-                                      sx={{ minHeight: 44 }}
-                                    >
-                                      Solicitar geração
-                                    </Button>
-                                  )}
-                                <Button
-                                  onClick={() => void handleSaveContent(stage)}
-                                  disabled={
-                                    busyStageId === stage.id ||
-                                    !MANUAL_EDIT_ALLOWED_STATUSES.includes(
-                                      stage.status,
-                                    ) ||
-                                    PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(
-                                      contentPackage.status,
-                                    )
-                                  }
-                                  startIcon={<Save />}
-                                  sx={{ minHeight: 44 }}
-                                  variant="outlined"
-                                >
-                                  Salvar versão
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    void handleCompleteProduction(stage)
-                                  }
-                                  disabled={
-                                    busyStageId === stage.id ||
-                                    !stage.currentVersionId ||
-                                    stage.status !== ContentStageStatus.DRAFT ||
-                                    PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(
-                                      contentPackage.status,
-                                    )
-                                  }
-                                  startIcon={<TaskAlt />}
-                                  sx={{ minHeight: 44 }}
-                                  variant="contained"
-                                >
-                                  Concluir produção
-                                </Button>
-                              </Stack>
-                              {reviewEnabled &&
-                                [
-                                  ContentPackageStatus.IN_REVIEW,
-                                  ContentPackageStatus.CHANGES_REQUESTED,
-                                ].includes(contentPackage.status) &&
-                                stage.status ===
-                                  ContentStageStatus.IN_REVIEW && (
-                                  <Stack spacing={1}>
-                                    <TextField
-                                      label="Comentário para ajustes"
-                                      value={changeMessages[stage.id] ?? ""}
-                                      onChange={(event) =>
-                                        handleChangeMessage(
-                                          stage.id,
-                                          event.target.value,
-                                        )
-                                      }
-                                      multiline
-                                      minRows={2}
-                                    />
-                                    <Stack
-                                      direction={{ xs: "column", sm: "row" }}
-                                      spacing={1}
-                                    >
-                                      <Button
-                                        onClick={() =>
-                                          void handleApproveStage(stage)
-                                        }
-                                        disabled={busyStageId === stage.id}
-                                        startIcon={<TaskAlt />}
-                                        sx={{ minHeight: 44 }}
-                                        variant="contained"
-                                      >
-                                        Aprovar etapa
-                                      </Button>
-                                      <Button
-                                        onClick={() =>
-                                          void handleRequestChanges(stage)
-                                        }
-                                        disabled={busyStageId === stage.id}
-                                        sx={{ minHeight: 44 }}
-                                        variant="outlined"
-                                      >
-                                        Solicitar ajustes
-                                      </Button>
-                                    </Stack>
-                                  </Stack>
-                                )}
-                            </Stack>
-                            <Divider sx={{ mt: 1.5 }} />
-                          </Box>
-                        ))}
+                    <Stack spacing={3}>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        justifyContent="space-between"
+                        spacing={1}
+                      >
+                        <Box>
+                          <Typography
+                            component="h2"
+                            variant="h5"
+                            fontWeight={800}
+                          >
+                            {stage.position}.{" "}
+                            {CONTENT_STAGE_TYPE_LABELS[stage.stageType]}
+                          </Typography>
+                          <Typography color="text.secondary">
+                            {track.audienceName} · {track.minimumAge}
+                            {track.maximumAge === null
+                              ? "+ anos"
+                              : ` a ${track.maximumAge} anos`}
+                            {stage.currentVersion &&
+                              ` · Versão ${stage.currentVersion.versionNumber}`}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={CONTENT_STAGE_STATUS_LABELS[stage.status]}
+                          variant="outlined"
+                        />
                       </Stack>
+                      {stage.status === ContentStageStatus.GENERATING && (
+                        <Alert
+                          icon={<CircularProgress size={20} />}
+                          data-testid="content-studio-generation-progress"
+                          action={
+                            workspace.generationEnabled && !locked ? (
+                              <Button
+                                disabled={busy}
+                                onClick={() =>
+                                  void workspace.handleCancelGeneration(stage)
+                                }
+                                sx={{ minHeight: 44 }}
+                              >
+                                Cancelar geração
+                              </Button>
+                            ) : undefined
+                          }
+                        >
+                          Gerando conteúdo. Você pode acompanhar outras etapas
+                          enquanto aguarda.
+                        </Alert>
+                      )}
+                      {stage.status === ContentStageStatus.STALE && (
+                        <Alert severity="warning">
+                          Uma etapa anterior mudou. Confira e atualize este
+                          conteúdo antes de concluir.
+                        </Alert>
+                      )}
+                      {stage.status === ContentStageStatus.FAILED && (
+                        <Alert severity="error">
+                          A geração não foi concluída. Tente novamente ou edite
+                          o conteúdo manualmente.
+                        </Alert>
+                      )}
+                      {!dependenciesReady && stage.dependencies.length > 0 && (
+                        <Alert severity="info">
+                          Prepare primeiro:{" "}
+                          {stage.dependencies
+                            .map(
+                              (dependency) =>
+                                CONTENT_STAGE_TYPE_LABELS[dependency],
+                            )
+                            .join(", ")}
+                          .
+                        </Alert>
+                      )}
+                      {workspace.generationEnabled && !locked && (
+                        <Stack spacing={1}>
+                          <TextField
+                            label="Instruções para esta geração"
+                            placeholder="Ex.: use exemplos do cotidiano e linguagem adequada ao público."
+                            value={workspace.instructions[stage.id] ?? ""}
+                            disabled={
+                              busy ||
+                              stage.status === ContentStageStatus.GENERATING
+                            }
+                            onChange={(event) =>
+                              workspace.setInstructions((current) => ({
+                                ...current,
+                                [stage.id]: event.target.value,
+                              }))
+                            }
+                            multiline
+                            minRows={2}
+                            inputProps={{
+                              maxLength: REVISION_INSTRUCTIONS_MAX_LENGTH,
+                              "data-testid":
+                                "content-studio-generation-instructions",
+                            }}
+                          />
+                          <Button
+                            data-testid="content-studio-generate-stage"
+                            variant="contained"
+                            startIcon={<AutoAwesome />}
+                            disabled={
+                              busy ||
+                              dirty ||
+                              !dependenciesReady ||
+                              !GENERATION_ALLOWED_STATUSES.includes(
+                                stage.status,
+                              )
+                            }
+                            onClick={() =>
+                              void workspace.handleRequestGeneration(stage)
+                            }
+                            sx={{ alignSelf: "flex-start", minHeight: 44 }}
+                          >
+                            {stage.currentVersion
+                              ? "Gerar novamente"
+                              : "Gerar conteúdo"}
+                          </Button>
+                        </Stack>
+                      )}
+                      {conflict && (
+                        <Alert
+                          severity="warning"
+                          data-testid="content-studio-version-conflict"
+                        >
+                          Existe uma versão mais recente no servidor. Seu
+                          rascunho foi preservado. Copie o que deseja manter e
+                          descarte as alterações para carregar a versão atual
+                          antes de editar novamente.
+                        </Alert>
+                      )}
+                      <ContentStageEditor
+                        key={stage.id}
+                        stage={stage}
+                        value={drafts[stage.id] ?? stageDraftValue(stage)}
+                        disabled={
+                          locked ||
+                          busy ||
+                          !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)
+                        }
+                        onChange={(value) =>
+                          workspace.handleDraftChange(stage.id, value)
+                        }
+                      />
+                      {!locked && (
+                        <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
+                          <Button
+                            data-testid="content-studio-save-stage"
+                            variant="outlined"
+                            startIcon={<Save />}
+                            disabled={
+                              busy ||
+                              conflict ||
+                              !dirty ||
+                              !MANUAL_EDIT_ALLOWED_STATUSES.includes(
+                                stage.status,
+                              )
+                            }
+                            onClick={() =>
+                              void workspace.handleSaveContent(stage)
+                            }
+                            sx={{ minHeight: 44 }}
+                          >
+                            Salvar versão
+                          </Button>
+                          {dirty && (
+                            <Button
+                              data-testid="content-studio-discard-stage"
+                              color="inherit"
+                              disabled={busy}
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    "Descartar as alterações não salvas desta etapa?",
+                                  )
+                                )
+                                  workspace.handleDraftChange(
+                                    stage.id,
+                                    stageDraftValue(stage),
+                                  );
+                              }}
+                              sx={{ minHeight: 44 }}
+                            >
+                              Descartar alterações
+                            </Button>
+                          )}
+                          <Button
+                            data-testid="content-studio-complete-stage"
+                            variant="contained"
+                            startIcon={<TaskAlt />}
+                            disabled={
+                              busy ||
+                              dirty ||
+                              !stage.currentVersionId ||
+                              stage.status !== ContentStageStatus.DRAFT
+                            }
+                            onClick={() =>
+                              void workspace.handleCompleteProduction(stage)
+                            }
+                            sx={{ minHeight: 44 }}
+                          >
+                            Concluir produção
+                          </Button>
+                        </Stack>
+                      )}
+                      {workspace.reviewEnabled &&
+                        [
+                          ContentPackageStatus.IN_REVIEW,
+                          ContentPackageStatus.CHANGES_REQUESTED,
+                        ].includes(contentPackage.status) &&
+                        stage.status === ContentStageStatus.IN_REVIEW && (
+                          <Stack
+                            spacing={2}
+                            data-testid="content-studio-review-actions"
+                          >
+                            <TextField
+                              label="Comentário para ajustes"
+                              multiline
+                              minRows={2}
+                              value={workspace.changeMessages[stage.id] ?? ""}
+                              onChange={(event) =>
+                                workspace.handleChangeMessage(
+                                  stage.id,
+                                  event.target.value,
+                                )
+                              }
+                            />
+                            <Stack direction="row" gap={1} flexWrap="wrap">
+                              <Button
+                                variant="contained"
+                                disabled={busy}
+                                onClick={() =>
+                                  void workspace.handleApproveStage(stage)
+                                }
+                                sx={{ minHeight: 44 }}
+                              >
+                                Aprovar etapa
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                disabled={busy}
+                                onClick={() =>
+                                  void workspace.handleRequestChanges(stage)
+                                }
+                                sx={{ minHeight: 44 }}
+                              >
+                                Solicitar ajustes
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        )}
+                      {stage.reviewComments.length > 0 && (
+                        <Stack
+                          spacing={0.75}
+                          mt={1}
+                          data-testid={`content-studio-stage-comments-${stage.id}`}
+                        >
+                          {stage.reviewComments.map((comment) => (
+                            <Alert
+                              key={comment.id}
+                              severity={
+                                comment.status ===
+                                ContentReviewCommentStatus.OPEN
+                                  ? "warning"
+                                  : "success"
+                              }
+                              data-testid={`content-studio-stage-comment-${comment.id}`}
+                              action={
+                                comment.status ===
+                                ContentReviewCommentStatus.OPEN ? (
+                                  <Button
+                                    color="inherit"
+                                    size="small"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      void workspace.resolveComment(
+                                        comment.id,
+                                        stage.id,
+                                      )
+                                    }
+                                    data-testid={`content-studio-resolve-comment-${comment.id}`}
+                                  >
+                                    Resolver
+                                  </Button>
+                                ) : null
+                              }
+                            >
+                              {comment.message}
+                              <Typography
+                                component="div"
+                                variant="caption"
+                                mt={0.5}
+                              >
+                                Versão{" "}
+                                {stage.currentVersion?.id === comment.versionId
+                                  ? stage.currentVersion.versionNumber
+                                  : comment.versionId}
+                                {" · "}
+                                {formatContentStudioDateTime(comment.createdAt)}
+                              </Typography>
+                            </Alert>
+                          ))}
+                        </Stack>
+                      )}
+                      {stage.reviewDecisions.length > 0 && (
+                        <Stack
+                          spacing={0.5}
+                          mt={1}
+                          data-testid={`content-studio-stage-review-history-${stage.id}`}
+                        >
+                          <Typography variant="caption" fontWeight={700}>
+                            Histórico de decisões
+                          </Typography>
+                          {stage.reviewDecisions.map((decision) => (
+                            <Typography
+                              key={decision.id}
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {decision.decision ===
+                              ContentReviewDecisionType.APPROVED
+                                ? "Aprovada"
+                                : "Ajustes solicitados"}{" "}
+                              · versão{" "}
+                              {decision.versionNumber ?? decision.versionId} ·{" "}
+                              {formatContentStudioDateTime(decision.decidedAt)}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      )}
                     </Stack>
                   </CardContent>
                 </Card>
-              ))}
-            </Box>
+              </Stack>
+            ) : (
+              <Alert data-testid="content-studio-stage-empty" severity="info">
+                Este material ainda não possui etapas.
+              </Alert>
+            )}
           </>
         )}
       </Stack>
