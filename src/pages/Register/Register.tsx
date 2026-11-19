@@ -13,17 +13,20 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller, type Resolver, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-import api from '@/config/axiosConfig';
+import { apiListShelterTeams, apiRegister } from '@/features/auth/api';
+import { cacheGoogleUser, clearGoogleUserCache, getGoogleUserCache } from '@/features/auth/googleUserCache';
+import { getRegisterSchema, type RegisterRoleChoice } from '@/features/auth/registerSchema';
+import type { ShelterTeamOption } from '@/features/auth/types';
 import { RootState } from '@/store/slices';
 import { digitsOnly, maskPhoneBR } from '@/utils/masks';
-import { isValidEmail, normalizeEmail } from '@/utils/validators';
+import { normalizeEmail } from '@/utils/validators';
 import { normalizeName } from '@/utils/textUtils';
+import { logger } from '@/utils/logger';
 import {
   REGISTER_ERROR_MESSAGES,
   REGISTER_SUCCESS_MESSAGES,
@@ -35,7 +38,7 @@ interface RegisterProps {
   commonUser: boolean;
 }
 
-type RoleChoice = '' | 'member' | 'leader';
+type RoleChoice = RegisterRoleChoice;
 
 interface FormData {
   name: string;
@@ -47,95 +50,6 @@ interface FormData {
   role: RoleChoice;
   teamId?: string;
 }
-
-interface ShelterTeamOption {
-  id: string;
-  shelterId: string;
-  label: string;
-  teamNumber: number;
-  shelterName: string;
-}
-
-interface GoogleUserCache {
-  name: string;
-  email: string;
-  timestamp: number;
-}
-
-const GOOGLE_USER_CACHE_KEY = 'google_user_register_cache';
-const CACHE_DURATION = REGISTER_VALIDATION.CACHE_DURATION_MS;
-
-const getSchema = (commonUser: boolean) =>
-  Yup.object({
-    name: Yup.string()
-      .required(REGISTER_VALIDATION_MESSAGES.NAME_REQUIRED)
-      .min(REGISTER_VALIDATION.MIN_NAME_LENGTH, REGISTER_VALIDATION_MESSAGES.NAME_MIN_LENGTH),
-    email: Yup.string()
-      .required(REGISTER_VALIDATION_MESSAGES.EMAIL_REQUIRED)
-      .test('valid-email', REGISTER_VALIDATION_MESSAGES.EMAIL_INVALID, (val) => isValidEmail(val)),
-    ...(commonUser && {
-      confirmEmail: Yup.string()
-        .required(REGISTER_VALIDATION_MESSAGES.CONFIRM_EMAIL_REQUIRED)
-        .test('emails-match', REGISTER_VALIDATION_MESSAGES.EMAILS_NOT_MATCH, function (val) {
-          const email = (this.parent as any)?.email;
-          return normalizeEmail(val) === normalizeEmail(email);
-        }),
-      password: Yup.string()
-        .min(REGISTER_VALIDATION.MIN_PASSWORD_LENGTH, REGISTER_VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH)
-        .required(REGISTER_VALIDATION_MESSAGES.PASSWORD_REQUIRED),
-      confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password')], REGISTER_VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH)
-        .required(REGISTER_VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED),
-    }),
-    phone: Yup.string()
-      .test('len', REGISTER_VALIDATION_MESSAGES.PHONE_INVALID, (val) => {
-        const digits = digitsOnly(val);
-        if (digits.startsWith("55")) return digits.length === 12 || digits.length === 13;
-        return digits.length === 10 || digits.length === 11;
-      })
-      .required(REGISTER_VALIDATION_MESSAGES.PHONE_REQUIRED),
-    role: (Yup.mixed<RoleChoice>()
-      .oneOf(['member', 'leader'])
-      .required(REGISTER_VALIDATION_MESSAGES.ROLE_REQUIRED)) as any,
-  });
-
-const cacheGoogleUser = (name: string, email: string): void => {
-  try {
-    const cache: GoogleUserCache = {
-      name,
-      email,
-      timestamp: Date.now(),
-    };
-    sessionStorage.setItem(GOOGLE_USER_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-  }
-};
-
-const getGoogleUserCache = (): GoogleUserCache | null => {
-  try {
-    const cached = sessionStorage.getItem(GOOGLE_USER_CACHE_KEY);
-    if (!cached) return null;
-
-    const cache: GoogleUserCache = JSON.parse(cached);
-
-    const isExpired = Date.now() - cache.timestamp > CACHE_DURATION;
-    if (isExpired) {
-      sessionStorage.removeItem(GOOGLE_USER_CACHE_KEY);
-      return null;
-    }
-
-    return cache;
-  } catch {
-    return null;
-  }
-};
-
-const clearGoogleUserCache = (): void => {
-  try {
-    sessionStorage.removeItem(GOOGLE_USER_CACHE_KEY);
-  } catch {
-  }
-};
 
 const mapApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -162,7 +76,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     watch,
     formState: { errors, isValid },
   } = useForm<FormData>({
-    resolver: yupResolver(getSchema(commonUser)) as any,
+    resolver: yupResolver(getRegisterSchema(commonUser)) as unknown as Resolver<FormData>,
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -191,13 +105,12 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       try {
         if (cancelled) return;
         setLoadingTeams(true);
-        const response = await api.get<ShelterTeamOption[]>('/shelters/list-teams', {
-          params: {},
-        });
+        const options = await apiListShelterTeams();
         if (!cancelled) {
-          setTeams(response.data || []);
+          setTeams(options);
         }
-      } catch {
+      } catch (error: unknown) {
+        logger.warn('Não foi possível carregar as equipes no cadastro', { feature: 'register' }, error);
         if (!cancelled) {
           setTeams([]);
         }
@@ -247,10 +160,8 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
     setLoading(true);
     setGlobalError(null);
 
-    const endpoint = commonUser ? '/auth/register' : '/auth/complete-register';
-
     try {
-      const response = await api.post(endpoint, {
+      const response = await apiRegister(commonUser, {
         name: normalizeName(data.name),
         email: normalizeEmail(data.email),
         phone: digitsOnly(data.phone),
@@ -259,7 +170,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
         teamId: isMemberSelected && data.role === 'member' ? data.teamId || undefined : undefined,
       });
 
-      if (response.data?.emailVerification?.verificationEmailSent) {
+      if (response.emailVerification?.verificationEmailSent) {
         setEmailVerificationSent(true);
       }
 
@@ -279,6 +190,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
   const renderSuccessScreen = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: { xs: 1, md: 2 }, gap: { xs: 2, md: 2.5 } }}>
       <Alert
+        data-testid="register-success"
         severity="success"
         sx={{
           fontSize: { xs: '0.9rem', md: '1.1rem' },
@@ -328,6 +240,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
           </Typography>
 
           <Button
+            data-testid="register-verify-instructions"
             variant="contained"
             color="info"
             fullWidth
@@ -345,6 +258,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       )}
 
       <Button
+        data-testid="register-back-to-login"
         variant="contained"
         color="primary"
         fullWidth
@@ -362,7 +276,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
   );
 
   const renderForm = () => (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form data-testid="register-form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Controller
         name="name"
         control={control}
@@ -370,6 +284,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
           <TextField
             {...field}
             label="Nome"
+            inputProps={{ 'data-testid': 'register-name' }}
             fullWidth
             margin="normal"
             error={!!errors.name}
@@ -386,6 +301,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
           <TextField
             {...field}
             label="Email"
+            inputProps={{ 'data-testid': 'register-email' }}
             type="email"
             fullWidth
             margin="normal"
@@ -408,6 +324,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             <TextField
               {...field}
               label="Confirmar Email"
+            inputProps={{ 'data-testid': 'register-confirm-email' }}
               type="email"
               fullWidth
               margin="normal"
@@ -425,6 +342,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
           <TextField
             {...field}
             label="Telefone"
+            inputProps={{ 'data-testid': 'register-phone' }}
             fullWidth
             margin="normal"
             error={!!errors.phone}
@@ -445,6 +363,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             {...field}
             select
             label="Você é"
+            inputProps={{ 'data-testid': 'register-role' }}
             fullWidth
             margin="normal"
             error={!!errors.role}
@@ -522,6 +441,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       )}
 
       <Button
+        data-testid="register-submit"
         type="submit"
         variant="contained"
         fullWidth
@@ -543,6 +463,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
       </Button>
 
       <Button
+        data-testid="register-login-link"
         variant="outlined"
         fullWidth
         onClick={handleBackToLogin}
@@ -587,7 +508,7 @@ const Register: React.FC<RegisterProps> = ({ commonUser }) => {
             </Typography>
 
             {globalError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert data-testid="register-error" severity="error" sx={{ mb: 2 }}>
                 {globalError}
               </Alert>
             )}

@@ -14,13 +14,13 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import api from '@/config/axiosConfig';
+import { apiResetPassword, apiValidateResetToken } from '@/features/auth/api';
+import { protectResetToken } from '@/features/auth/resetTokenPrivacy';
 import {
     AUTH_ERROR_MESSAGES,
     AUTH_SUCCESS_MESSAGES,
     AUTH_VALIDATION
 } from '@/constants/errors';
-import type { ValidateTokenResponse, ResetPasswordResponse } from '@/types/api/auth';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ResetPassword: React.FC = () => {
@@ -39,6 +39,9 @@ const ResetPassword: React.FC = () => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
+    // O token fica só em memória: sem `Referer` e fora da barra de endereço/histórico.
+    useEffect(() => protectResetToken(), []);
+
     useEffect(() => {
         if (!token) {
             setValidationError(AUTH_ERROR_MESSAGES.TOKEN_NOT_PROVIDED);
@@ -48,10 +51,10 @@ const ResetPassword: React.FC = () => {
 
         const validateToken = async () => {
             try {
-                const response = await api.get<ValidateTokenResponse>(`/auth/reset-password/validate?token=${token}`);
-                if (response.data.valid) {
+                const data = await apiValidateResetToken(token);
+                if (data.valid) {
                     setIsValidToken(true);
-                    setUserEmail(response.data.email || '');
+                    setUserEmail(data.email || '');
                 } else {
                     setValidationError(AUTH_ERROR_MESSAGES.TOKEN_INVALID);
                 }
@@ -80,7 +83,7 @@ const ResetPassword: React.FC = () => {
         setSubmitError(null);
 
         try {
-            await api.post<ResetPasswordResponse>('/auth/reset-password', { token, newPassword });
+            await apiResetPassword(token as string, newPassword);
             setSuccess(true);
             setTimeout(() => navigate('/login'), AUTH_VALIDATION.REDIRECT_DELAY_MS);
         } catch (error: unknown) {
@@ -111,7 +114,7 @@ const ResetPassword: React.FC = () => {
                 }}
             >
                 <Container maxWidth="sm">
-                    <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2, textAlign: 'center' }}>
+                    <Paper data-testid="reset-password-invalid" elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2, textAlign: 'center' }}>
                         <Typography variant="h5" component="h1" gutterBottom color="error.main" fontWeight="bold">
                             Link Inválido ou Expirado
                         </Typography>
@@ -120,6 +123,7 @@ const ResetPassword: React.FC = () => {
                             Por favor, solicite uma nova redefinição de senha.
                         </Typography>
                         <Button
+                            data-testid="reset-password-request-new"
                             variant="contained"
                             color="primary"
                             size="large"
@@ -146,7 +150,7 @@ const ResetPassword: React.FC = () => {
             }}
         >
             <Container maxWidth="sm">
-                <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
+                <Paper data-testid="reset-password-page" elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
                     <Typography variant="h5" component="h1" gutterBottom align="center">
                         Redefinir Senha
                     </Typography>
@@ -155,14 +159,15 @@ const ResetPassword: React.FC = () => {
                     </Typography>
 
                     {success ? (
-                        <Alert severity="success">
+                        <Alert severity="success" data-testid="reset-password-success">
                             {AUTH_SUCCESS_MESSAGES.PASSWORD_CHANGED}
                         </Alert>
                     ) : (
-                        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {submitError && <Alert severity="error">{submitError}</Alert>}
+                        <Box component="form" data-testid="reset-password-form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {submitError && <Alert severity="error" data-testid="reset-password-error">{submitError}</Alert>}
 
                             <TextField
+                                inputProps={{ 'data-testid': 'reset-password-new' }}
                                 label="Nova Senha"
                                 type={showPassword ? 'text' : 'password'}
                                 fullWidth
@@ -181,6 +186,7 @@ const ResetPassword: React.FC = () => {
                             />
 
                             <TextField
+                                inputProps={{ 'data-testid': 'reset-password-confirm' }}
                                 label="Confirmar Nova Senha"
                                 type={showPassword ? 'text' : 'password'}
                                 fullWidth
@@ -196,6 +202,7 @@ const ResetPassword: React.FC = () => {
                             />
 
                             <Button
+                                data-testid="reset-password-submit"
                                 type="submit"
                                 variant="contained"
                                 fullWidth

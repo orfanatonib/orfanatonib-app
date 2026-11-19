@@ -11,13 +11,7 @@ import {
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '@/config/axiosConfig';
-
-interface VerifyEmailResponse {
-  verified: boolean;
-  email: string;
-  message: string;
-}
+import { apiVerifyEmail } from '@/features/auth/api';
 
 type Status = 'checking' | 'confirmed' | 'failed';
 
@@ -40,12 +34,10 @@ const ConfirmEmail: React.FC = () => {
 
     const confirm = async (): Promise<void> => {
       try {
-        const response = await api.post<VerifyEmailResponse>('/auth/verify-email', {
-          token,
-        });
+        const data = await apiVerifyEmail(token);
         if (!active) return;
         setStatus('confirmed');
-        setMessage(response.data.message);
+        setMessage(data.message);
       } catch (error) {
         if (!active) return;
         setStatus('failed');
@@ -76,7 +68,7 @@ const ConfirmEmail: React.FC = () => {
       }}
     >
       <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2, textAlign: 'center' }}>
+        <Paper data-testid={`confirm-email-${status}`} elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2, textAlign: 'center' }}>
           {status === 'checking' && (
             <>
               <CircularProgress />
@@ -94,7 +86,7 @@ const ConfirmEmail: React.FC = () => {
                 {message} A coordenação ainda precisa aprovar sua conta; você recebe um
                 aviso por e-mail quando o acesso for liberado.
               </Alert>
-              <Button variant="contained" onClick={() => navigate('/login')}>
+              <Button data-testid="confirm-email-login" variant="contained" onClick={() => navigate('/login')}>
                 Ir para o login
               </Button>
             </>
@@ -109,7 +101,7 @@ const ConfirmEmail: React.FC = () => {
               <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
                 {message}
               </Alert>
-              <Button variant="contained" onClick={() => navigate('/verificar-email')}>
+              <Button data-testid="confirm-email-resend" variant="contained" onClick={() => navigate('/verificar-email')}>
                 Reenviar o link
               </Button>
             </>

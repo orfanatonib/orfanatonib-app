@@ -11,12 +11,7 @@ import {
 } from '@mui/material';
 import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined';
 import { useNavigate } from 'react-router-dom';
-import api from '@/config/axiosConfig';
-
-interface ResendResponse {
-  verificationEmailSent: boolean;
-  message?: string;
-}
+import { apiResendVerification } from '@/features/auth/api';
 
 /**
  * Instruções de confirmação de e-mail.
@@ -41,11 +36,9 @@ const EmailVerificationInstructions: React.FC = () => {
     setError(null);
 
     try {
-      const response = await api.post<ResendResponse>('/auth/resend-verification', {
-        email: email.trim(),
-      });
+      const data = await apiResendVerification(email.trim());
       setFeedback(
-        response.data.message ??
+        data.message ??
           'Se houver uma conta com este e-mail pendente de confirmação, enviamos um novo link.',
       );
     } catch {
@@ -67,7 +60,7 @@ const EmailVerificationInstructions: React.FC = () => {
       }}
     >
       <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
+        <Paper data-testid="verify-email-instructions" elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <MarkEmailReadOutlinedIcon sx={{ fontSize: 56, color: 'primary.main' }} />
             <Typography variant="h5" component="h1" sx={{ mt: 1 }}>
@@ -98,8 +91,9 @@ const EmailVerificationInstructions: React.FC = () => {
             Não recebeu? Reenviar o link:
           </Typography>
 
-          <Box component="form" onSubmit={handleResend} sx={{ display: 'flex', gap: 1, mb: 2 }}>
+          <Box component="form" data-testid="verify-email-form" onSubmit={handleResend} sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <TextField
+              inputProps={{ 'data-testid': 'verify-email-email' }}
               fullWidth
               size="small"
               type="email"
@@ -109,23 +103,23 @@ const EmailVerificationInstructions: React.FC = () => {
               required
               disabled={sending}
             />
-            <Button type="submit" variant="contained" disabled={sending || !email.trim()}>
+            <Button data-testid="verify-email-submit" type="submit" variant="contained" disabled={sending || !email.trim()}>
               {sending ? <CircularProgress size={22} /> : 'Reenviar'}
             </Button>
           </Box>
 
           {feedback && (
-            <Alert severity="success" sx={{ mb: 2 }}>
+            <Alert severity="success" sx={{ mb: 2 }} data-testid="verify-email-feedback">
               {feedback}
             </Alert>
           )}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2 }} data-testid="verify-email-error">
               {error}
             </Alert>
           )}
 
-          <Button fullWidth variant="text" onClick={() => navigate('/login')}>
+          <Button data-testid="verify-email-login" fullWidth variant="text" onClick={() => navigate('/login')}>
             Voltar para o login
           </Button>
         </Paper>

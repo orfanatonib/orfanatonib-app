@@ -10,14 +10,13 @@ import {
     CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import api from '@/config/axiosConfig';
+import { apiForgotPassword } from '@/features/auth/api';
 import {
     AuthErrorStatus,
     AUTH_ERROR_MESSAGES,
     AUTH_SUCCESS_MESSAGES,
     AUTH_VALIDATION
 } from '@/constants/errors';
-import type { ForgotPasswordResponse } from '@/types/api/auth';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ForgotPassword: React.FC = () => {
@@ -47,13 +46,13 @@ const ForgotPassword: React.FC = () => {
         setErrorMessage(null);
 
         try {
-            const response = await api.post<ForgotPasswordResponse>('/auth/forgot-password', { email });
+            const data = await apiForgotPassword(email);
 
-            if (response.data.status === AuthErrorStatus.VERIFICATION_EMAIL_SENT) {
+            if (data.status === AuthErrorStatus.VERIFICATION_EMAIL_SENT) {
                 setErrorMessage(null);
                 setSuccessMessage(AUTH_SUCCESS_MESSAGES.SES_NOT_VERIFIED);
             } else {
-                setSuccessMessage(response.data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
+                setSuccessMessage(data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
             }
             setCooldown(AUTH_VALIDATION.COOLDOWN_SECONDS);
         } catch (error: unknown) {
@@ -76,7 +75,7 @@ const ForgotPassword: React.FC = () => {
             }}
         >
             <Container maxWidth="sm">
-                <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
+                <Paper data-testid="forgot-password-page" elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
                     <Typography variant="h5" component="h1" gutterBottom align="center">
                         Recuperar Senha
                     </Typography>
@@ -85,7 +84,7 @@ const ForgotPassword: React.FC = () => {
                     </Typography>
 
                     {successMessage && (
-                        <Alert severity="success" sx={{ mb: 2 }}>
+                        <Alert severity="success" sx={{ mb: 2 }} data-testid="forgot-password-success">
                             {successMessage}
                             {successMessage.includes('verificado na AWS') && (
                                 <Button
@@ -99,10 +98,11 @@ const ForgotPassword: React.FC = () => {
                             )}
                         </Alert>
                     )}
-                    {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
+                    {errorMessage && <Alert severity="error" sx={{ mb: 2 }} data-testid="forgot-password-error">{errorMessage}</Alert>}
 
-                    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box component="form" data-testid="forgot-password-form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <TextField
+                            inputProps={{ 'data-testid': 'forgot-password-email' }}
                             label="Email"
                             type="email"
                             fullWidth
@@ -112,6 +112,7 @@ const ForgotPassword: React.FC = () => {
                             disabled={loading || cooldown > 0}
                         />
                         <Button
+                            data-testid="forgot-password-submit"
                             type="submit"
                             variant="contained"
                             fullWidth
@@ -127,6 +128,7 @@ const ForgotPassword: React.FC = () => {
                             )}
                         </Button>
                         <Button
+                            data-testid="forgot-password-back"
                             variant="text"
                             onClick={() => navigate('/login')}
                             fullWidth
