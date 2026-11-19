@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,6 +15,9 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { MediaItem, MediaPlatform, MediaUploadType, MediaType } from 'store/slices/types';
+import { useMediaUpload } from '../shared/useMediaUpload';
+import { MediaFileKind } from '../shared/types';
+import { splitCommaSeparatedUrls } from '../shared/mediaUtils';
 
 interface AddImageModalProps {
   isOpen: boolean;
@@ -24,26 +27,16 @@ interface AddImageModalProps {
 
 export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps) {
   const [mode, setMode] = useState<MediaUploadType>(MediaUploadType.UPLOAD);
-  const [files, setFiles] = useState<File[]>([]);
-  const [tempUrls, setTempUrls] = useState<string[]>([]);
+  const upload = useMediaUpload({ kind: MediaFileKind.IMAGE, multiple: true });
+  const files = upload.selections.map((item) => item.file);
+  const tempUrls = upload.selections.map((item) => item.previewUrl);
   const [urlInput, setUrlInput] = useState('');
   const [platformType, setPlatformType] = useState<MediaPlatform>(MediaPlatform.ANY);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
-  useEffect(() => {
-    if (files.length > 0) {
-      const urls = files.map((file) => URL.createObjectURL(file));
-      setTempUrls(urls);
-      return () => urls.forEach((url) => URL.revokeObjectURL(url));
-    } else {
-      setTempUrls([]);
-    }
-  }, [files]);
-
   const reset = () => {
-    setFiles([]);
-    setTempUrls([]);
+    upload.clear();
     setUrlInput('');
     setTitle('');
     setDescription('');
@@ -51,10 +44,7 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
     setMode(MediaUploadType.UPLOAD);
   };
 
-  const handleRemoveImage = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setTempUrls((prev) => prev.filter((_, i) => i !== index));
-  };
+  const handleRemoveImage = (index: number) => upload.removeAt(index);
 
   const handleSubmit = () => {
     const base: Partial<MediaItem> = {
@@ -78,7 +68,7 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
     }
 
     if (mode === MediaUploadType.LINK && urlInput.trim()) {
-      const urls = urlInput.split(',').map((url) => url.trim());
+      const urls = splitCommaSeparatedUrls(urlInput);
       medias = urls.map((url) => ({
         ...base,
         url,
@@ -119,11 +109,10 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
               <input
                 hidden
                 type="file"
-                accept="image/*"
+                accept={upload.accept}
                 multiple
                 onChange={(e) => {
-                  const selectedFiles = Array.from(e.target.files || []);
-                  setFiles((prev) => [...prev, ...selectedFiles]);
+                  upload.selectFiles(e.target.files);
                 }}
               />
             </Button>
