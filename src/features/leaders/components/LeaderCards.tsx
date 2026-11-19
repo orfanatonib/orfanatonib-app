@@ -173,6 +173,8 @@ export default function LeaderCards(props: Props) {
                     aria-label={expanded ? "Recolher" : "Expandir"}
                     data-testid={`leader-card-toggle-${c.id}`}
                     sx={{
+                      minHeight: 44,
+                      minWidth: 44,
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
                       py: 0.5,

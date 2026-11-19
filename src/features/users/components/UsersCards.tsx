@@ -204,6 +204,8 @@ export default function UsersCards(props: Props) {
                     onClick={() => toggle(u.id)}
                     aria-label={expanded ? "Recolher" : "Expandir"}
                     sx={{
+                      minHeight: 44,
+                      minWidth: 44,
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
                       py: 0.5,
@@ -312,7 +314,10 @@ export default function UsersCards(props: Props) {
                               color: "text.secondary",
                               whiteSpace: "nowrap",
                               overflow: "hidden",
-                              textOverflow: "ellipsis"
+                              textOverflow: "ellipsis",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              minHeight: 44
                             }}
                           >
                             {u.phone}

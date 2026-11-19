@@ -169,6 +169,8 @@ export default function SheltersCards(props: Props) {
                     onClick={() => toggle(c.id)}
                     aria-label={expanded ? "Recolher" : "Expandir"}
                     sx={{
+                      minHeight: 44,
+                      minWidth: 44,
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
                       py: 0.5,

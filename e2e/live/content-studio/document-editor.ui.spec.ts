@@ -65,7 +65,8 @@ test("escrever no documento, salvar, ver o PDF e baixar", async ({ page, request
 
   // PDF real na aba PDF.
   await page.getByTestId("content-studio-pdf-tab-button").click();
-  await expect(page.getByTestId("content-studio-pdf-frame")).toBeVisible({ timeout: 60_000 });
+  // Com visualizador de PDF no navegador a prévia entra na página; sem ele (Chromium de teste) aparece "Abrir PDF".
+  await expect(page.getByTestId("content-studio-pdf-frame").or(page.getByTestId("content-studio-pdf-open"))).toBeVisible({ timeout: 60_000 });
 
   // Downloads.
   const [docx] = await Promise.all([page.waitForEvent("download"), page.getByTestId("content-studio-download-docx").click()]);

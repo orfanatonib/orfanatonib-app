@@ -215,6 +215,8 @@ export default function MemberCards({
                     onClick={() => toggle(t.id)}
                     aria-label={expanded ? "Recolher" : "Expandir"}
                     sx={{
+                      minHeight: 44,
+                      minWidth: 44,
                       borderRadius: 2,
                       px: { xs: 0.75, sm: 1 },
                       py: 0.5,
