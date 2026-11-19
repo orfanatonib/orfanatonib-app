@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { SHELTER_FEED_PATH } from "../../../src/features/shelter-feed/routes";
+
 import { RUN_TAG } from "../support/factory";
 import { closeDb, countRows, queryOne } from "../support/db";
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
@@ -8,7 +10,7 @@ import { createFeedSection, createGallery, removeGallery, removeSection, setFlag
 /**
  * Feed v2 na tela (plano 36): autoria, celebrar (otimista com rollback) e
  * comentários. Galeria e publicação próprias, criadas pela API; a tela abre a
- * galeria por `/feed-abrigos?galeria=<id>`.
+ * galeria por `SHELTER_FEED_PATH?galeria=<id>`.
  */
 test.describe.serial("Feed v2 — tela", () => {
   let admin: string;
@@ -19,7 +21,7 @@ test.describe.serial("Feed v2 — tela", () => {
 
   const card = (page: Page) => page.locator(`[data-testid="shelter-feed-section"][data-section-id="${sectionId}"]`);
   const openFeed = async (page: Page) => {
-    await page.goto(`/feed-abrigos?galeria=${pageId}`);
+    await page.goto(`${SHELTER_FEED_PATH}?galeria=${pageId}`);
     await expect(card(page)).toBeVisible({ timeout: 20_000 });
   };
 
@@ -44,9 +46,9 @@ test.describe.serial("Feed v2 — tela", () => {
     await closeDb();
   });
 
-  test("[shelter-feed.ui#visitante] visitante vê a publicação e a contagem, sem autoria nem comentários nem botão de celebrar", async ({ page }) => {
+  test("[shelter-feed.ui#visitante] visitante vê a publicação, o autor e a contagem, sem comentários nem botão de celebrar", async ({ page }) => {
     await openFeed(page);
-    await expect(card(page).getByTestId("shelter-feed-author")).toHaveCount(0);
+    await expect(card(page).getByTestId("shelter-feed-author")).toHaveText(/^Por \S+/);
     await expect(card(page).getByTestId("shelter-feed-celebration-readonly")).toBeVisible();
     await expect(card(page).getByTestId("shelter-feed-celebrate-button")).toHaveCount(0);
     await expect(card(page).getByTestId("shelter-feed-comments-toggle")).toHaveCount(0);
@@ -148,13 +150,13 @@ test.describe.serial("Feed v2 — tela", () => {
     await expect(mine.getByTestId("feed-comments-mine-status")).toHaveAttribute("data-status", "pending");
     await expect(card(page).getByTestId("shelter-feed-comment-item")).toHaveCount(0);
     await expect(card(page).getByTestId("shelter-feed-comments-toggle")).toContainText("(0)");
-  });
-
     expect(await countRows("image_section_comments", { sectionId, authorId: memberTokens.userId, status: "pending" })).toBe(1);
 
     await mine.getByTestId("feed-comments-mine-delete").click();
     await expect(card(page).getByTestId("feed-comments-mine-item")).toHaveCount(0);
     await expect.poll(() => countRows("image_section_comments", { sectionId })).toBe(0);
+  });
+
   test("[shelter-feed.ui#mobile] @mobile 375×812: sem rolagem horizontal e alvos de toque ≥ 44px", async ({ page }) => {
     await seedBrowserSession(page, memberTokens);
     await openFeed(page);

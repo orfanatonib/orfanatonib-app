@@ -109,6 +109,7 @@ export function FeedControlBar({
             '& .MuiOutlinedInput-root': {
               minHeight: FEED_MIN_TOUCH_TARGET_PX,
               pr: 0.5,
+              '& input': { boxSizing: 'border-box', minHeight: FEED_MIN_TOUCH_TARGET_PX, py: 0 },
               borderRadius: 2,
               bgcolor: FEED_PALETTE.canvasElevated,
               fontSize: '0.85rem',
