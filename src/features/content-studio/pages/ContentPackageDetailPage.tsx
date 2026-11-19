@@ -1,43 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Archive, AutoAwesome, ExpandMore, Refresh, Save, TaskAlt } from "@mui/icons-material";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  LinearProgress,
-  Stack,
-  Tab,
-  Tabs,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { CONTENT_PACKAGE_STATUS_LABELS, CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
+import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
-import { ContentPackageStatus, ContentReviewCommentStatus, ContentReviewDecisionType, ContentStageStatus } from "../types";
-import { formatContentStudioDateTime } from "../utils";
-import { generationErrorMessage, generationStatusLabel } from "../generation.utils";
+import { ContentStageStatus } from "../types";
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { ContentStageEditor } from "../components/ContentStageEditor";
-import { PACKAGE_STATUS_COLORS } from "../period.utils";
-import { PackageExportMenu } from "../components/PackageExportMenu";
+import { PackageSummaryCard } from "../components/detail/PackageSummaryCard";
+import { StageActionsBar } from "../components/detail/StageActionsBar";
+import { StageGenerationPanel } from "../components/detail/StageGenerationPanel";
+import { StageReviewSection } from "../components/detail/StageReviewSection";
+import { StageStatusAlerts } from "../components/detail/StageStatusAlerts";
 import { exportFileName } from "../export.utils";
 import { ExportFormat } from "../types";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
-import {
-  GENERATION_ALLOWED_STATUSES,
-  MANUAL_EDIT_ALLOWED_STATUSES,
-  PACKAGE_PRODUCTION_LOCKED_STATUSES,
-  REVISION_INSTRUCTIONS_MAX_LENGTH,
-} from "../workspace.constants";
+import { MANUAL_EDIT_ALLOWED_STATUSES, PACKAGE_PRODUCTION_LOCKED_STATUSES } from "../workspace.constants";
 import { stageDraftValue } from "../workspace.utils";
 
 export function ContentPackageDetailPage() {
@@ -110,60 +88,15 @@ export function ContentPackageDetailPage() {
         )}
         {contentPackage && (
           <>
-            <Card variant="outlined" data-testid="content-studio-production-header">
-              <CardContent>
-                <Stack spacing={2}>
-                  <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
-                    <Box>
-                      <Typography component="h1" variant="h4" fontWeight={800}>
-                        {contentPackage.theme}
-                      </Typography>
-                      <Typography color="text.secondary">{contentPackage.biblicalReferences}</Typography>
-                    </Box>
-                    <Chip label={CONTENT_PACKAGE_STATUS_LABELS[contentPackage.status]} />
-                  </Stack>
-                  <Typography>{contentPackage.canonicalObjective}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {completeCount} de {allStages.length} etapas concluídas
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={allStages.length ? (completeCount / allStages.length) * 100 : 0}
-                    aria-label="Progresso do material"
-                    sx={{ height: 8, borderRadius: 2 }}
-                  />
-                  <Stack direction="row" flexWrap="wrap" gap={1}>
-                    <Button startIcon={<Refresh />} disabled={busy} onClick={() => void reload()} sx={{ minHeight: 44 }}>
-                      Atualizar
-                    </Button>
-                    <PackageExportMenu packageId={contentPackage.id} theme={contentPackage.theme} track={track} disabled={busy} />
-                    {workspace.canSubmitReview && (
-                      <Button
-                        data-testid="content-studio-submit-review"
-                        variant="contained"
-                        startIcon={<TaskAlt />}
-                        disabled={busy || hasDrafts || documentDirty}
-                        onClick={() => void workspace.handleSubmitReview()}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Enviar para revisão
-                      </Button>
-                    )}
-                    {workspace.canArchive && (
-                      <Button
-                        startIcon={<Archive />}
-                        disabled={busy}
-                        color="inherit"
-                        onClick={() => void workspace.handleArchive()}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Arquivar material
-                      </Button>
-                    )}
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
+            <PackageSummaryCard
+              contentPackage={contentPackage}
+              track={track}
+              workspace={workspace}
+              busy={busy}
+              completeCount={completeCount}
+              totalStages={allStages.length}
+              hasUnsavedWork={hasDrafts || documentDirty}
+            />
             {hasDrafts && (
               <Alert severity="warning" data-testid="content-studio-unsaved-notice">
                 Há alterações não salvas. Salve a etapa antes de concluir a produção.
@@ -223,97 +156,22 @@ export function ContentPackageDetailPage() {
                         </Box>
                         <Chip label={CONTENT_STAGE_STATUS_LABELS[stage.status]} variant="outlined" />
                       </Stack>
-                      {stage.status === ContentStageStatus.GENERATING && (
-                        <Alert
-                          icon={<CircularProgress size={20} />}
-                          data-testid="content-studio-generation-progress"
-                          action={
-                            workspace.generationEnabled && !locked ? (
-                              <Button disabled={busy} onClick={() => void workspace.handleCancelGeneration(stage)} sx={{ minHeight: 44 }}>
-                                Cancelar geração
-                              </Button>
-                            ) : undefined
-                          }
-                        >
-                          {workspace.generationJobs[stage.id]
-                            ? generationStatusLabel(workspace.generationJobs[stage.id].status)
-                            : "Gerando conteúdo."}{" "}
-                          Você pode acompanhar outras etapas enquanto aguarda.
-                          {workspace.generationJobs[stage.id]?.attempts > 1 &&
-                            ` (tentativa ${workspace.generationJobs[stage.id].attempts})`}
-                        </Alert>
-                      )}
-                      {stage.status === ContentStageStatus.STALE && (
-                        <Alert severity="warning">Uma etapa anterior mudou. Confira e atualize este conteúdo antes de concluir.</Alert>
-                      )}
-                      {stage.status === ContentStageStatus.FAILED && (
-                        <Alert severity="error" data-testid="content-studio-generation-error">
-                          {generationErrorMessage(workspace.generationJobs[stage.id] ?? null)} Tente novamente ou edite o conteúdo
-                          manualmente.
-                        </Alert>
-                      )}
-                      {!dependenciesReady && stage.dependencies.length > 0 && (
-                        <Alert severity="info">
-                          Prepare primeiro: {stage.dependencies.map((dependency) => CONTENT_STAGE_TYPE_LABELS[dependency]).join(", ")}.
-                        </Alert>
-                      )}
+                      <StageStatusAlerts
+                        stage={stage}
+                        workspace={workspace}
+                        busy={busy}
+                        locked={locked}
+                        dependenciesReady={dependenciesReady}
+                        conflict={conflict}
+                      />
                       {workspace.generationEnabled && !locked && (
-                        <Accordion
-                          key={`gen-${stage.id}`}
-                          defaultExpanded={!stage.currentVersion}
-                          disableGutters
-                          variant="outlined"
-                          sx={{ borderRadius: 2, "&:before": { display: "none" } }}
-                          data-testid="content-studio-generation-panel"
-                        >
-                          <AccordionSummary expandIcon={<ExpandMore />}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <AutoAwesome color="primary" fontSize="small" />
-                              <Typography fontWeight={700}>Gerar com IA</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {stage.currentVersion ? "refazer o conteúdo desta etapa" : "criar o primeiro conteúdo desta etapa"}
-                              </Typography>
-                            </Stack>
-                          </AccordionSummary>
-                          <AccordionDetails>
-                            <Stack spacing={1}>
-                              <TextField
-                                label="Instruções para esta geração"
-                                placeholder="Ex.: use exemplos do cotidiano e linguagem adequada ao público."
-                                value={workspace.instructions[stage.id] ?? ""}
-                                disabled={busy || stage.status === ContentStageStatus.GENERATING}
-                                onChange={(event) =>
-                                  workspace.setInstructions((current) => ({
-                                    ...current,
-                                    [stage.id]: event.target.value,
-                                  }))
-                                }
-                                multiline
-                                minRows={2}
-                                inputProps={{
-                                  maxLength: REVISION_INSTRUCTIONS_MAX_LENGTH,
-                                  "data-testid": "content-studio-generation-instructions",
-                                }}
-                              />
-                              <Button
-                                data-testid="content-studio-generate-stage"
-                                variant="contained"
-                                startIcon={<AutoAwesome />}
-                                disabled={busy || dirty || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
-                                onClick={() => void workspace.handleRequestGeneration(stage)}
-                                sx={{ alignSelf: "flex-start", minHeight: 44 }}
-                              >
-                                {stage.currentVersion ? "Gerar novamente" : "Gerar conteúdo"}
-                              </Button>
-                            </Stack>
-                          </AccordionDetails>
-                        </Accordion>
-                      )}
-                      {conflict && (
-                        <Alert severity="warning" data-testid="content-studio-version-conflict">
-                          Existe uma versão mais recente no servidor. Seu rascunho foi preservado. Copie o que deseja manter e descarte as
-                          alterações para carregar a versão atual antes de editar novamente.
-                        </Alert>
+                        <StageGenerationPanel
+                          stage={stage}
+                          workspace={workspace}
+                          busy={busy}
+                          dirty={dirty}
+                          dependenciesReady={dependenciesReady}
+                        />
                       )}
                       <ContentStageEditor
                         key={stage.id}
@@ -331,120 +189,8 @@ export function ContentPackageDetailPage() {
                         onDocumentDirtyChange={setDocumentDirty}
                         fieldsDirty={dirty}
                       />
-                      {!locked && (
-                        <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
-                          <Button
-                            data-testid="content-studio-save-stage"
-                            variant="outlined"
-                            startIcon={<Save />}
-                            disabled={busy || conflict || !dirty || !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)}
-                            onClick={() => void workspace.handleSaveContent(stage)}
-                            sx={{ minHeight: 44 }}
-                          >
-                            Salvar versão
-                          </Button>
-                          {dirty && (
-                            <Button
-                              data-testid="content-studio-discard-stage"
-                              color="inherit"
-                              disabled={busy}
-                              onClick={() => {
-                                if (window.confirm("Descartar as alterações não salvas desta etapa?"))
-                                  workspace.handleDraftChange(stage.id, stageDraftValue(stage));
-                              }}
-                              sx={{ minHeight: 44 }}
-                            >
-                              Descartar alterações
-                            </Button>
-                          )}
-                          <Button
-                            data-testid="content-studio-complete-stage"
-                            variant="contained"
-                            startIcon={<TaskAlt />}
-                            disabled={busy || dirty || !stage.currentVersionId || stage.status !== ContentStageStatus.DRAFT}
-                            onClick={() => void workspace.handleCompleteProduction(stage)}
-                            sx={{ minHeight: 44 }}
-                          >
-                            Concluir produção
-                          </Button>
-                        </Stack>
-                      )}
-                      {workspace.reviewEnabled &&
-                        [ContentPackageStatus.IN_REVIEW, ContentPackageStatus.CHANGES_REQUESTED].includes(contentPackage.status) &&
-                        stage.status === ContentStageStatus.IN_REVIEW && (
-                          <Stack spacing={2} data-testid="content-studio-review-actions">
-                            <TextField
-                              label="Comentário para ajustes"
-                              multiline
-                              minRows={2}
-                              value={workspace.changeMessages[stage.id] ?? ""}
-                              onChange={(event) => workspace.handleChangeMessage(stage.id, event.target.value)}
-                            />
-                            <Stack direction="row" gap={1} flexWrap="wrap">
-                              <Button
-                                variant="contained"
-                                disabled={busy}
-                                onClick={() => void workspace.handleApproveStage(stage)}
-                                sx={{ minHeight: 44 }}
-                              >
-                                Aprovar etapa
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                disabled={busy}
-                                onClick={() => void workspace.handleRequestChanges(stage)}
-                                sx={{ minHeight: 44 }}
-                              >
-                                Solicitar ajustes
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        )}
-                      {stage.reviewComments.length > 0 && (
-                        <Stack spacing={0.75} mt={1} data-testid={`content-studio-stage-comments-${stage.id}`}>
-                          {stage.reviewComments.map((comment) => (
-                            <Alert
-                              key={comment.id}
-                              severity={comment.status === ContentReviewCommentStatus.OPEN ? "warning" : "success"}
-                              data-testid={`content-studio-stage-comment-${comment.id}`}
-                              action={
-                                comment.status === ContentReviewCommentStatus.OPEN ? (
-                                  <Button
-                                    color="inherit"
-                                    size="small"
-                                    disabled={busy}
-                                    onClick={() => void workspace.resolveComment(comment.id, stage.id)}
-                                    data-testid={`content-studio-resolve-comment-${comment.id}`}
-                                  >
-                                    Resolver
-                                  </Button>
-                                ) : null
-                              }
-                            >
-                              {comment.message}
-                              <Typography component="div" variant="caption" mt={0.5}>
-                                Versão{" "}
-                                {stage.currentVersion?.id === comment.versionId ? stage.currentVersion.versionNumber : comment.versionId}
-                                {" · "}
-                                {formatContentStudioDateTime(comment.createdAt)}
-                              </Typography>
-                            </Alert>
-                          ))}
-                        </Stack>
-                      )}
-                      {stage.reviewDecisions.length > 0 && (
-                        <Stack spacing={0.5} mt={1} data-testid={`content-studio-stage-review-history-${stage.id}`}>
-                          <Typography variant="caption" fontWeight={700}>
-                            Histórico de decisões
-                          </Typography>
-                          {stage.reviewDecisions.map((decision) => (
-                            <Typography key={decision.id} variant="caption" color="text.secondary">
-                              {decision.decision === ContentReviewDecisionType.APPROVED ? "Aprovada" : "Ajustes solicitados"} · versão{" "}
-                              {decision.versionNumber ?? decision.versionId} · {formatContentStudioDateTime(decision.decidedAt)}
-                            </Typography>
-                          ))}
-                        </Stack>
-                      )}
+                      {!locked && <StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />}
+                      <StageReviewSection contentPackage={contentPackage} stage={stage} workspace={workspace} busy={busy} />
                     </Stack>
                   </CardContent>
                 </Card>

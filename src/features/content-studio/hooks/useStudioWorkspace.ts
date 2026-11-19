@@ -628,3 +628,6 @@ export function useStudioWorkspace(id: string | undefined) {
     resolveComment,
   };
 }
+
+/** Tipo do retorno do hook, para os componentes da página de detalhe. */
+export type StudioWorkspace = ReturnType<typeof useStudioWorkspace>;
