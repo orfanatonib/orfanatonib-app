@@ -58,10 +58,8 @@ test.describe.serial("Perfis de Líderes — API ao vivo", () => {
   });
 
   test("administrador consegue consultar o detalhe de um perfil de líder", async ({ request }) => {
-    if (!firstLeaderId) {
-      test.skip();
-      return;
-    }
+    // O banco do E2E sempre tem o perfil do líder de teste: sem ele o cenário não existe.
+    expect(firstLeaderId, "ao menos um perfil de líder no banco do E2E").toBeTruthy();
 
     const response = await request.get(`${API_URL}/leader-profiles/${firstLeaderId}`, {
       headers: authHeaders(adminToken),
