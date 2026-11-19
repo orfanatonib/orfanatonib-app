@@ -57,6 +57,36 @@ test.describe.serial("Observabilidade e auditoria — painel", () => {
     await expect(page.getByTestId("audit-records-unavailable")).toHaveCount(0);
   });
 
+  test("[observability-audit.get.adm-observabilidade-auditoria#rodape] o link no rodapé aparece só para o admin com a flag ligada e abre o painel", async ({
+    page,
+    request,
+  }) => {
+    await setFlag(request, true);
+    await seedBrowserSession(page, await loginAs(request, "admin"));
+    await page.goto("/");
+    const link = page.getByTestId("footer-observability-audit-link");
+    await expect(link).toBeVisible({ timeout: 20_000 });
+    await link.click();
+    await expect(page).toHaveURL(/\/adm\/observabilidade-auditoria$/);
+    await expect(page.getByTestId("observability-audit-page")).toBeVisible({ timeout: 20_000 });
+
+    await setFlag(request, false);
+    await page.goto("/");
+    await expect(page.getByTestId("footer-feature-flags-link")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("footer-observability-audit-link")).toHaveCount(0);
+  });
+
+  test("[observability-audit.get.adm-observabilidade-auditoria#rodape-membro] membro não vê o link no rodapé", async ({
+    page,
+    request,
+  }) => {
+    await setFlag(request, true);
+    await seedBrowserSession(page, await loginAs(request, "member"));
+    await page.goto("/");
+    await expect(page.locator("footer")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("footer-observability-audit-link")).toHaveCount(0);
+  });
+
   test("[observability-audit.get.adm-observabilidade-auditoria#flag-desligada] com a flag desligada a rota some e o admin volta para a home", async ({
     page,
     request,

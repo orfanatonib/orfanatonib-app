@@ -12,11 +12,25 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import { Link as RouterLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
+import {
+  OBSERVABILITY_AUDIT_ROUTE,
+  OBSERVABILITY_AUDIT_TEST_IDS,
+} from "@/features/observability-audit/constants";
 import type { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
+
+const FOOTER_ADMIN_LINK_SX = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 0.5,
+  minHeight: 44,
+  fontSize: "0.75rem",
+} as const;
 
 const Footer: React.FC = () => {
   const theme = useTheme();
@@ -24,6 +38,8 @@ const Footer: React.FC = () => {
   const isAdmin = useSelector(
     (state: RootState) => state.auth.user?.role === UserRole.ADMIN,
   );
+
+  const auditEnabled = useIsFeatureEnabled(FeatureFlagKeys.OBSERVABILITY_AUDIT);
 
   return (
     <Box
@@ -49,21 +65,70 @@ const Footer: React.FC = () => {
         flexWrap="wrap"
         textAlign="center"
       >
-        <Stack direction="row" spacing={3} justifyContent="center" flexWrap="wrap">
-          <Link href="/" underline="hover" color="inherit" fontWeight="medium">Início</Link>
-          <Link href="/sobre" underline="hover" color="inherit" fontWeight="medium">Sobre</Link>
-          <Link href="/eventos" underline="hover" color="inherit" fontWeight="medium">Eventos</Link>
-          <Link href="/contato" underline="hover" color="inherit" fontWeight="medium">Contato</Link>
+        <Stack
+          direction="row"
+          spacing={3}
+          justifyContent="center"
+          flexWrap="wrap"
+        >
+          <Link href="/" underline="hover" color="inherit" fontWeight="medium">
+            Início
+          </Link>
+          <Link
+            href="/sobre"
+            underline="hover"
+            color="inherit"
+            fontWeight="medium"
+          >
+            Sobre
+          </Link>
+          <Link
+            href="/eventos"
+            underline="hover"
+            color="inherit"
+            fontWeight="medium"
+          >
+            Eventos
+          </Link>
+          <Link
+            href="/contato"
+            underline="hover"
+            color="inherit"
+            fontWeight="medium"
+          >
+            Contato
+          </Link>
         </Stack>
 
         <Stack direction="row" spacing={2} justifyContent="center">
-          <IconButton aria-label="Facebook" component="a" href="https://facebook.com" target="_blank" rel="noopener noreferrer" color="inherit">
+          <IconButton
+            aria-label="Facebook"
+            component="a"
+            href="https://facebook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="inherit"
+          >
             <FacebookIcon fontSize="small" />
           </IconButton>
-          <IconButton aria-label="Instagram" component="a" href="https://instagram.com" target="_blank" rel="noopener noreferrer" color="inherit">
+          <IconButton
+            aria-label="Instagram"
+            component="a"
+            href="https://instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="inherit"
+          >
             <InstagramIcon fontSize="small" />
           </IconButton>
-          <IconButton aria-label="YouTube" component="a" href="https://youtube.com" target="_blank" rel="noopener noreferrer" color="inherit">
+          <IconButton
+            aria-label="YouTube"
+            component="a"
+            href="https://youtube.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="inherit"
+          >
             <YouTubeIcon fontSize="small" />
           </IconButton>
         </Stack>
@@ -74,28 +139,49 @@ const Footer: React.FC = () => {
           </Typography>
           <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
             Desenvolvido por{" "}
-            <Link href="https://rodolfo-silva.com" target="_blank" rel="noopener noreferrer" color="inherit" fontWeight="bold" underline="hover">
+            <Link
+              href="https://rodolfo-silva.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              fontWeight="bold"
+              underline="hover"
+            >
               Diego Seven System
             </Link>
           </Typography>
           {isAdmin ? (
-            <Link
-              component={RouterLink}
-              to="/adm/feature-flags"
-              color="inherit"
-              underline="hover"
-              data-testid="footer-feature-flags-link"
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.5,
-                minHeight: 44,
-                fontSize: "0.75rem",
-              }}
+            <Stack
+              direction="row"
+              spacing={2}
+              flexWrap="wrap"
+              justifyContent="center"
             >
-              <FlagOutlinedIcon sx={{ fontSize: "0.9rem" }} />
-              Feature flags
-            </Link>
+              <Link
+                component={RouterLink}
+                to="/adm/feature-flags"
+                color="inherit"
+                underline="hover"
+                data-testid="footer-feature-flags-link"
+                sx={FOOTER_ADMIN_LINK_SX}
+              >
+                <FlagOutlinedIcon sx={{ fontSize: "0.9rem" }} />
+                Feature flags
+              </Link>
+              {auditEnabled ? (
+                <Link
+                  component={RouterLink}
+                  to={OBSERVABILITY_AUDIT_ROUTE}
+                  color="inherit"
+                  underline="hover"
+                  data-testid={OBSERVABILITY_AUDIT_TEST_IDS.footerLink}
+                  sx={FOOTER_ADMIN_LINK_SX}
+                >
+                  <FactCheckOutlinedIcon sx={{ fontSize: "0.9rem" }} />
+                  Auditoria e observabilidade
+                </Link>
+              ) : null}
+            </Stack>
           ) : null}
         </Stack>
       </Stack>
