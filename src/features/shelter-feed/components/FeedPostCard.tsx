@@ -9,6 +9,7 @@ import type { FeedPostCardProps } from '../componentTypes';
 import { FEED_MIN_TOUCH_TARGET_PX, FEED_PAGE_MESSAGES, FEED_PALETTE, FEED_TEST_IDS } from '../constants';
 import { formatCountLabel } from '../feedLayout.utils';
 import { AdaptiveMediaCollage } from './AdaptiveMediaCollage';
+import { shouldRenderSinglePlayer } from '../feedLayout.utils';
 import FeedAuthorLine from './FeedAuthorLine';
 import FeedSectionActions from './FeedSectionActions';
 import { FeedVideoPlayer } from './FeedVideoPlayer';
@@ -102,7 +103,7 @@ export function FeedPostCard({ section, isCopied, onShare, onOpenLightbox }: Fee
       </Box>
       {section.mediaCount > 0 && (
         <Box ref={mediaRef} sx={{ px: { xs: 1, sm: 1.5 } }}>
-          {section.isVideo ? (
+          {shouldRenderSinglePlayer(section.mediaItems) ? (
             <FeedVideoPlayer src={section.mediaItems[0].originalUrl} title={section.caption} />
           ) : (
             <AdaptiveMediaCollage

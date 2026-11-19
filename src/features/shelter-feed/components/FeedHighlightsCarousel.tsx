@@ -1,3 +1,4 @@
+import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import { useMemo } from 'react';
 import { Box, ButtonBase, IconButton, Stack, Typography, useMediaQuery } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
@@ -128,7 +129,13 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
                     }}
                   >
                     <Box sx={{ width: 66, height: 66, borderRadius: '19px', overflow: 'hidden', border: '2.5px solid #ffffff', bgcolor: FEED_PALETTE.canvasSubtle }}>
-                      <Box component="img" src={section.coverUrl} alt="" loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      {section.coverUrl ? (
+                        <Box component="img" src={section.coverUrl} alt="" loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      ) : (
+                        <Box data-testid="shelter-feed-highlight-video-cover" sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: FEED_PALETTE.inkMuted }}>
+                          <VideocamOutlinedIcon />
+                        </Box>
+                      )}
                     </Box>
                   </Box>
                   <Typography sx={{ width: '100%', fontSize: '0.73rem', fontWeight: isViewed ? 600 : 700, color: isViewed ? FEED_PALETTE.inkMuted : FEED_PALETTE.inkPrimary, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

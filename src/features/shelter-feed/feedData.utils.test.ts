@@ -82,6 +82,12 @@ describe('toFeedSectionViewModel', () => {
     expect(vm.celebrationCount).toBe(2);
     expect(vm.commentCount).toBe(1);
   });
+  it('capa é a primeira FOTO, mesmo com o vídeo vindo antes; só vídeo => sem capa', () => {
+    const photo = media({ mediaType: MediaType.IMAGE, url: 'https://x.test/foto.png' });
+    const video = media({ mediaType: MediaType.VIDEO, url: 'https://x.test/visita.mp4' });
+    expect(toFeedSectionViewModel(section('m', { mediaItems: [video, photo] })).coverUrl).toBe('https://x.test/foto.png');
+    expect(toFeedSectionViewModel(section('v', { mediaItems: [video] })).coverUrl).toBe('');
+  });
   it('detecta vídeo e data inválida', () => {
     const vm = toFeedSectionViewModel(section('v', { createdAt: 'x', mediaItems: [media({ mediaType: MediaType.VIDEO })] }));
     expect(vm.isVideo).toBe(true);

@@ -45,6 +45,11 @@ describe('selectMonthHighlights', () => {
     expect(selectMonthHighlights(list, ref, 10).map((s) => s.id)).toEqual(['a', 'd', 'e']);
     expect(selectMonthHighlights([vm('x', null)], ref, 5)).toEqual([]);
   });
+  it('post só de vídeo (sem foto de capa) continua sendo destaque; sem capa e sem vídeo, não', () => {
+    const onlyVideo = { ...vm('v', mar(8), ''), isVideo: true } as FeedSectionViewModel;
+    const empty = vm('e', mar(9), '');
+    expect(selectMonthHighlights([onlyVideo, empty], ref, 5).map((s) => s.id)).toEqual(['v']);
+  });
   it('rótulo do mês', () => {
     expect(formatHighlightsMonthLabel(ref)).toBe('março de 2026');
   });

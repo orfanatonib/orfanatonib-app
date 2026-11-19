@@ -163,7 +163,8 @@ export function toFeedSectionViewModel(dto: FeedSectionData, referenceDate: Date
     relativeDate: formatRelativeFeedDate(dto.createdAt, referenceDate),
     createdAtIso: created.isValid ? (dto.createdAt ?? null) : null,
     mediaItems,
-    coverUrl: mediaItems[0]?.previewUrl ?? '',
+    // Capa = primeira FOTO (a URL de um .mp4 não serve de imagem); só com vídeos a capa fica vazia.
+    coverUrl: mediaItems.find((item) => item.mediaType !== MediaType.VIDEO)?.previewUrl ?? '',
     mediaCount: mediaItems.length,
     author: dto.author ?? null,
     celebrationCount: dto.celebrationCount ?? 0,

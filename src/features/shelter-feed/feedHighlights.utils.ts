@@ -22,7 +22,8 @@ export function selectMonthHighlights(
   max: number,
 ): FeedSectionViewModel[] {
   return sections
-    .filter((section) => Boolean(section.coverUrl) && isInSameLocalMonth(section.createdAtIso, reference))
+    // Post só de vídeo não tem foto de capa, mas continua sendo destaque (o carrossel mostra um ícone de vídeo).
+    .filter((section) => (Boolean(section.coverUrl) || section.isVideo === true) && isInSameLocalMonth(section.createdAtIso, reference))
     .slice(0, Math.max(0, max));
 }
 

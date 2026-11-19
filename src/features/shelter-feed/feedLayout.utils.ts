@@ -84,3 +84,12 @@ export function parseSectionAnchorHash(hash: string): string | null {
     ? raw
     : null;
 }
+
+
+/**
+ * O cartão toca o vídeo direto (player) só quando o post é UM vídeo e mais nada; post com fotos (ou com várias
+ * mídias) usa a colagem, em que o vídeo é um dos quadros e abre no lightbox.
+ */
+export function shouldRenderSinglePlayer(mediaItems: ReadonlyArray<{ mediaType: string }>): boolean {
+  return mediaItems.length === 1 && mediaItems[0].mediaType === 'video';
+}

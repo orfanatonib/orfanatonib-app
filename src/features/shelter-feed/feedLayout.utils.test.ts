@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CollageLayoutKind } from './types';
+import { shouldRenderSinglePlayer } from './feedLayout.utils';
 import {
   buildSectionAnchorId,
   buildSectionShareUrl,
@@ -52,5 +53,17 @@ describe('deep link e compartilhamento', () => {
     expect(parseSharedMediaIndex('')).toBeNull();
     expect(stripSharedMediaParam('?galeria=g&midia=3')).toBe('?galeria=g');
     expect(stripSharedMediaParam('?midia=3')).toBe('');
+  });
+});
+
+
+describe('shouldRenderSinglePlayer', () => {
+  it('só um vídeo e mais nada: toca no cartão', () => {
+    expect(shouldRenderSinglePlayer([{ mediaType: 'video' }])).toBe(true);
+  });
+  it('foto + vídeo, várias mídias ou só foto: colagem (o vídeo abre no lightbox)', () => {
+    expect(shouldRenderSinglePlayer([{ mediaType: 'image' }, { mediaType: 'video' }])).toBe(false);
+    expect(shouldRenderSinglePlayer([{ mediaType: 'video' }, { mediaType: 'video' }])).toBe(false);
+    expect(shouldRenderSinglePlayer([{ mediaType: 'image' }])).toBe(false);
   });
 });
