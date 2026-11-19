@@ -12,6 +12,11 @@ export function normalizeName(s?: string | null): string {
     .join(" ");
 }
 
+/**
+ * Chave de BUSCA: minúsculas e sem acento. Nunca para exibir nem para salvar.
+ * Contrato dos três normalizadores: `normalizeName` (exibição: Primeira Maiúscula),
+ * `normalize` (busca: sem caixa/acento) e `normalizeEmail` em `validators.ts` (e-mail: trim + minúsculas).
+ */
 export function normalize(s?: string | null) {
   return (s ?? "")
     .toLowerCase()

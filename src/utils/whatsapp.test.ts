@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildIdeasWhatsappLink, buildTeamLinkingWhatsappLink, buildWhatsappLink, justDigits, SUPPORT_CONTACTS } from "./whatsapp";
+import { buildIdeasWhatsappLink, buildTeamLinkingWhatsappLink, buildWhatsappLink, phoneDigits, SUPPORT_CONTACTS } from "./whatsapp";
 
-describe("justDigits", () => {
+describe("phoneDigits", () => {
   it.each([["(61) 98254-9780", "61982549780"], [null, ""], [undefined, ""], ["", ""], [0, ""], [5592, "5592"]])(
     "%s → %s",
-    (input, expected) => expect(justDigits(input as never)).toBe(expected),
+    (input, expected) => expect(phoneDigits(input as never)).toBe(expected),
   );
 });
 
@@ -32,6 +32,12 @@ describe("links do WhatsApp", () => {
     const text = decodeURIComponent(buildIdeasWhatsappLink("Ana Maria", "Jogo da memória", "11999999999")!.split("text=")[1]);
     expect(text).toContain("Olá Ana!");
     expect(text).toContain('"Jogo da memória"');
+  });
+
+  it("ideias sem nome nem título usam os padrões", () => {
+    const text = decodeURIComponent(buildIdeasWhatsappLink(undefined, undefined, "11999999999")!.split("text=")[1]);
+    expect(text).toContain("Olá usuário!");
+    expect(text).toContain("sua ideia");
   });
 
   it("vínculo de equipe usa o telefone como veio", () => {

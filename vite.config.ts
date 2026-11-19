@@ -63,6 +63,18 @@ export default defineConfig(() => ({
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}", "e2e/live/support/**/*.test.ts"],
-    css: false
+    css: false,
+    // Piso de cobertura da lógica pura compartilhada (plano 03): 100% nos 5 utils.
+    coverage: {
+      provider: "v8",
+      include: [
+        "src/utils/dateUtils.ts",
+        "src/utils/masks.ts",
+        "src/utils/textUtils.ts",
+        "src/utils/validators.ts",
+        "src/utils/whatsapp.ts",
+      ],
+      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
+    },
   }
 }));

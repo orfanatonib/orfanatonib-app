@@ -108,6 +108,11 @@ describe("idade e tempo (relógio fixo)", () => {
     expect(timeDifference("2024-09-15T12:00:00-04:00")).toBe("2 anos");
     expect(timeDifference("2024-06-15T12:00:00-04:00")).toBe("2 anos e 3 meses");
     expect(timeDifference("2025-08-15T12:00:00-04:00")).toBe("1 ano e 1 mês");
+    // mês de nascimento "à frente" do mês atual: empresta 12 meses do ano
+    expect(timeDifference("2025-11-15T12:00:00-04:00")).toBe("10 meses");
+    expect(timeDifference("2024-11-15T12:00:00-04:00")).toBe("1 ano e 10 meses");
+    // data futura não tem diferença
+    expect(timeDifference("2030-01-01T12:00:00-04:00")).toBeNull();
     expect(timeDifference(null)).toBeNull();
     expect(timeDifference("lixo")).toBeNull();
     expect(timeDifference("2027-01-01T12:00:00-04:00")).toBeNull();
@@ -124,7 +129,7 @@ describe("datas brasileiras", () => {
     ["01/09/2026", true], ["29/02/2024", true],
     ["29/02/2023", false], ["31/04/2020", false], ["32/01/2020", false],
     ["00/01/2020", false], ["01/13/2020", false], ["1/9/2020", false],
-    ["01-09-2020", false], ["", false], ["01/01/1899", false], ["01/01/2999", false],
+    ["01-09-2020", false], ["", false], ["01/09/2/26", false], ["ab/09/2020", false], ["01/ab/2020", false], ["01/09/abcd", false], ["01/01/1899", false], ["01/01/2999", false],
   ])("isValidBRDate(%s) = %s", (value, expected) => {
     expect(isValidBRDate(value)).toBe(expected);
   });
@@ -159,5 +164,7 @@ describe("formatDayBR (dia puro do banco)", () => {
     expect(formatDayBR(null)).toBe("Data a definir");
     expect(formatDayBR("", "—")).toBe("—");
     expect(formatDayBR("lixo")).toBe("Data inválida");
+    // fora do formato ISO: converte como instante
+    expect(formatDayBR("September 1, 2026 12:00:00")).toBe("01/09/2026");
   });
 });

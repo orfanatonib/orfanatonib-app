@@ -36,6 +36,9 @@ jobs:
       - name: Run unit tests (Vitest)
         run: npm run test:unit
 
+      - name: Coverage da lógica pura (piso 100%)
+        run: npm run test:coverage
+
       - name: Build
         run: npm run build
       

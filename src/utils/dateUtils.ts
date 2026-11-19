@@ -40,8 +40,8 @@ export function summaryLabel(from?: string, to?: string) {
   if (f && t && f === t) return fmtBR(f);
   if (f && t) return `${fmtBR(f)} — ${fmtBR(t)}`;
   if (f && !t) return `${fmtBR(f)} — `;
-  if (!f && t) return `— ${fmtBR(t)}`;
-  return "";
+  // Sobrou só `to` (os casos sem nenhum, iguais, ambos e só `from` já retornaram).
+  return `— ${fmtBR(t)}`;
 }
 
 const WEEKDAY_PT: Record<string, string> = {
@@ -117,9 +117,8 @@ export const isValidBRDate = (brDate: string): boolean => {
   const parts = brDate.split('/');
   if (parts.length !== 3) return false;
 
+  // Com `/` nas posições 2 e 5 e 10 caracteres, dia e mês têm 2 dígitos e o ano 4.
   const [dayStr, monthStr, yearStr] = parts;
-
-  if (dayStr.length !== 2 || monthStr.length !== 2 || yearStr.length !== 4) return false;
 
   const day = Number(dayStr);
   const month = Number(monthStr);

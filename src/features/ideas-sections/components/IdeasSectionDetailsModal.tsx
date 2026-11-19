@@ -6,7 +6,7 @@ import { useTheme, alpha } from '@mui/material/styles';
 import { Close, Download, PlayArrow, Image as ImageIcon, AudioFile, VideoFile, PictureAsPdf, Person, Email, Phone, ContentCopy, WhatsApp } from '@mui/icons-material';
 import { IdeasSection } from '../types';
 import { formatDatePtBr, getMediaTypeIcon, getMediaTypeLabel, formatFileSize } from '../utils';
-import { buildIdeasWhatsappLink, justDigits } from '@/utils/whatsapp';
+import { buildIdeasWhatsappLink, phoneDigits } from '@/utils/whatsapp';
 
 interface Props {
   section: IdeasSection | null;
