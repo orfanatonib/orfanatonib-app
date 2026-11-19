@@ -480,16 +480,25 @@ function App() {
                       </FeatureFlagRoute>
                     }
                   />
+                  {/* A API é admin/líder (403 para membro): a rota também. */}
                   <Route
-                    path="/integracao"
                     element={
-                      <FeatureFlagRoute
-                        featureKey={FeatureFlagKeys.INTEGRATION}
-                      >
-                        <IntegrationShelteredPage />
-                      </FeatureFlagRoute>
+                      <ProtectedRoute
+                        requiredRole={[UserRole.ADMIN, UserRole.LEADER]}
+                      />
                     }
-                  />
+                  >
+                    <Route
+                      path="/integracao"
+                      element={
+                        <FeatureFlagRoute
+                          featureKey={FeatureFlagKeys.INTEGRATION}
+                        >
+                          <IntegrationShelteredPage />
+                        </FeatureFlagRoute>
+                      }
+                    />
+                  </Route>
                 </Route>
 
                 {/* Endereços antigos da Área do Membro (e Integrações FM, que saiu do /adm) redirecionam. */}
