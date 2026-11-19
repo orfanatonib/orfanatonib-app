@@ -114,18 +114,18 @@ test.describe.serial("Acesso e escopo — API ao vivo", () => {
   });
 
   test("[feature-flags.get.feature-flags-check-key#perfil-anonimo] check de flag interna não vaza estado a anônimo", async ({ request }) => {
-    const res = await request.get(`${API_URL}/feature-flags/check/email-delivery`);
+    const res = await request.get(`${API_URL}/feature-flags/check/email_delivery`);
     expect(res.status()).toBe(200);
-    expect(await res.json()).toEqual({ key: "email-delivery", enabled: false });
+    expect(await res.json()).toEqual({ key: "email_delivery", enabled: false });
   });
 
   test("[feature-flags.delete.feature-flags-key#perfil-admin] flag de fábrica não pode ser removida nem renomeada", async ({ request }) => {
-    const before = await countRows("feature_flags", { key: "shelter-management" });
-    const del = await request.delete(`${API_URL}/feature-flags/shelter-management`, { headers: authHeaders(admin) });
+    const before = await countRows("feature_flags", { key: "shelter_management" });
+    const del = await request.delete(`${API_URL}/feature-flags/shelter_management`, { headers: authHeaders(admin) });
     expect(del.status()).toBe(400);
-    const ren = await request.patch(`${API_URL}/feature-flags/shelter-management`, { headers: authHeaders(admin), data: { key: "outro-nome" } });
+    const ren = await request.patch(`${API_URL}/feature-flags/shelter_management`, { headers: authHeaders(admin), data: { key: "outro-nome" } });
     expect(ren.status()).toBe(400);
-    expect(await countRows("feature_flags", { key: "shelter-management" })).toBe(before);
+    expect(await countRows("feature_flags", { key: "shelter_management" })).toBe(before);
   });
 
   test("[visit-report.get.visit-reports#perfil-lider] líder com filtro de equipe alheia recebe lista vazia", async ({ request }) => {

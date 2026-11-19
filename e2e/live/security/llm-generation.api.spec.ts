@@ -14,7 +14,7 @@ type Stage = { id: string; stageType: string; status: string };
 type Pkg = { id: string; tracks: Array<{ stages: Stage[] }> };
 
 let admin: string;
-const FLAGS = ["content-studio", "content-studio-generation"];
+const FLAGS = ["content_studio", "content_studio_generation"];
 
 async function setFlags(request: import("@playwright/test").APIRequestContext, enabled: boolean): Promise<void> {
   for (const key of FLAGS) {
