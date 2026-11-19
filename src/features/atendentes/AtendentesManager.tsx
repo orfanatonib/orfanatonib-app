@@ -35,6 +35,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SortingState } from "@tanstack/react-table";
+import { apiGetAtendente } from "./api";
 import { useAtendentes, useAtendenteMutations } from "./hooks";
 import type {
   AtendenteFilters,
@@ -123,6 +124,19 @@ export default function AtendentesManager() {
   const [deleting, setDeleting] = React.useState<AtendenteResponseDto | null>(null);
   const [showTop, setShowTop] = React.useState(false);
   const [pdfPreviewMedia, setPdfPreviewMedia] = React.useState<MediaItem | null>(null);
+
+  /**
+   * O PDF de antecedente é privado: a URL da lista é assinada e vale poucos minutos. Ao abrir, busca uma URL nova
+   * (a da lista pode ter vencido se a tela ficou aberta); se a busca falhar, usa a que já tinha.
+   */
+  const openPdfPreview = async (atendenteId: string, scope: "estadual" | "federal", fallback: AtendentePdf) => {
+    try {
+      const fresh = await apiGetAtendente(atendenteId);
+      setPdfPreviewMedia(pdfToMediaItem((scope === "estadual" ? fresh.pdfEstadual : fresh.pdfFederal) ?? fallback, scope));
+    } catch {
+      setPdfPreviewMedia(pdfToMediaItem(fallback, scope));
+    }
+  };
 
   const {
     dialogLoading,
@@ -436,9 +450,7 @@ export default function AtendentesManager() {
                                         size="small"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setPdfPreviewMedia(
-                                            pdfToMediaItem(atendente.pdfEstadual!, "estadual")
-                                          );
+                                          void openPdfPreview(atendente.id, "estadual", atendente.pdfEstadual!);
                                         }}
                                         sx={{ p: 0.25 }}
                                         aria-label="Visualizar PDF"
@@ -469,9 +481,7 @@ export default function AtendentesManager() {
                                         size="small"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setPdfPreviewMedia(
-                                            pdfToMediaItem(atendente.pdfFederal!, "federal")
-                                          );
+                                          void openPdfPreview(atendente.id, "federal", atendente.pdfFederal!);
                                         }}
                                         sx={{ p: 0.25 }}
                                         aria-label="Visualizar PDF"
