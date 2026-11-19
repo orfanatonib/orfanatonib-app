@@ -6,6 +6,22 @@ export async function apiGetComments() {
   return data;
 }
 
+/** Depoimentos já publicados (rota pública, sem perfil). */
+export async function apiGetPublishedComments() {
+  const { data } = await api.get<CommentData[]>("/comments/published");
+  return data;
+}
+
+/** Envio de um depoimento por qualquer pessoa autenticada; fica na fila de moderação. */
+export async function apiSubmitComment(payload: {
+  name: string;
+  comment: string;
+  shelter: string;
+  neighborhood: string;
+}) {
+  await api.post("/comments", payload);
+}
+
 export async function apiDeleteComment(id: string) {
   await api.delete(`/comments/${id}`);
 }

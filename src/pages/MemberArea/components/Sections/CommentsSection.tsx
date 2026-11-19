@@ -30,7 +30,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SendIcon from '@mui/icons-material/Send';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import api from '@/config/axiosConfig';
+import { apiGetPublishedComments, apiSubmitComment } from '@/features/comments/api';
 import { setComments } from 'store/slices/comment/commentsSlice';
 
 const CommentsSection: React.FC = () => {
@@ -63,8 +63,7 @@ const CommentsSection: React.FC = () => {
 
   const fetchComments = useCallback(async () => {
     try {
-      const response = await api.get('/comments/published');
-      dispatch(setComments(response.data));
+      dispatch(setComments(await apiGetPublishedComments()));
     } catch {
       setErrorSnackbarOpen(true);
     }
@@ -87,7 +86,7 @@ const CommentsSection: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.post('/comments', formData);
+      await apiSubmitComment(formData);
       setFormData({ name: '', comment: '', shelter: '', neighborhood: '' });
       setErrors({ name: false, comment: false, shelter: false, neighborhood: false });
       setFormOpen(false);
