@@ -7,9 +7,6 @@ export interface MemberContentProps {
   userName?: string;
 }
 
-export interface SpecialFamilyCalloutProps {
-}
-
 export interface IdeasSharingBannerProps {
 }
 

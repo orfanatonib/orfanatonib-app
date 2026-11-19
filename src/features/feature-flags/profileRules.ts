@@ -24,7 +24,6 @@ export const FEATURE_PROFILE_RULES: Readonly<
   public_videos: [],
   shelter_pages: [],
   about_page: [],
-  special_family_day: [],
   shelter_address: [],
   member_area: [ADMIN, LEADER, MEMBER],
   visit_materials: [ADMIN, LEADER, MEMBER],

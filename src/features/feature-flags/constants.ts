@@ -23,7 +23,6 @@ export const DEFAULT_FEATURE_FLAGS_MAP: FeatureFlagsMap = {
   public_videos: true,
   shelter_pages: true,
   about_page: true,
-  special_family_day: false,
   shelter_address: true,
   member_area: true,
   visit_materials: true,

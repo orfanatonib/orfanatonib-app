@@ -7,7 +7,6 @@ src/pages/MemberArea/
 ├── components/
 │   ├── Banners/           # Todos os banners
 │   │   ├── IdeasSharingBanner.tsx
-│   │   ├── SpecialFamilyCallout.tsx
 │   │   ├── MemberWeekBanner.tsx
 │   │   ├── MemberMeditationBanner.tsx
 │   │   ├── InformativeBanner.tsx
@@ -52,7 +51,6 @@ src/pages/MemberArea/
 
 ### Banners
 - **IdeasSharingBanner**: Banner para compartilhar ideias
-- **SpecialFamilyCallout**: Banner para eventos especiais da família
 - **MemberWeekBanner**: Banner dos materiais da semana
 - **MemberMeditationBanner**: Banner de meditação diária
 - **InformativeBanner**: Banner informativo geral

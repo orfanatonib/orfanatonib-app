@@ -37,11 +37,6 @@ export const SECTION_DATA = [
 ];
 
 export const BANNER_STYLES = {
-  specialFamily: {
-    background: 'linear-gradient(135deg, #66BB6A 0%, #388E3C 100%)',
-    borderRadius: 4,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-  },
   ideasSharing: {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     borderRadius: '20px',
