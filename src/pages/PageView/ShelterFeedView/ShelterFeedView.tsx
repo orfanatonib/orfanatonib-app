@@ -161,7 +161,7 @@ export default function ShelterFeedView({ feed = true }: ShelterFeedViewProps) {
   const sectionsList = useMemo(() => section?.sections ?? [], [section?.sections]);
 
   useEffect(() => {
-    dispatch(setSectionData(null as any));
+    dispatch(setSectionData(null));
     setInitialLoadComplete(false);
     setPage(1);
     setHasMore(true);

@@ -26,7 +26,7 @@ const imageSectionPaginationSlice = createSlice({
   name: 'imageSectionPagination',
   initialState,
   reducers: {
-    setSectionData(state, action: PayloadAction<PaginatedSectionResponse>) {
+    setSectionData(state, action: PayloadAction<PaginatedSectionResponse | null>) {
       state.section = action.payload;
     },
     appendSections(state, action: PayloadAction<SectionData[]>) {

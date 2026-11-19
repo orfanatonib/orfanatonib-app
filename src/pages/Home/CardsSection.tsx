@@ -9,7 +9,7 @@ import { CardsSectionProps } from './types';
 
 const CardsSection: React.FC = () => {
   const routes = useVisibleRoutes();
-  const [cards, setCards] = useState<any[]>([]);
+  const [cards, setCards] = useState<ReturnType<typeof useVisibleRoutes>>([]);
 
   useEffect(() => {
     const feedImageGalleryId = import.meta.env.VITE_FEED_MINISTERIO_ID;

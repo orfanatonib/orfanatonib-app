@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { SxProps, Theme } from "@mui/material/styles";
 import { 
   Box, 
   Typography, 
@@ -69,7 +70,7 @@ const getPlatformIcon = (platform?: MediaPlatform | string) => {
   }
 };
 
-const ImageWithSkeleton: React.FC<{ src: string; alt: string; sx?: any; onClick?: () => void }> = ({
+const ImageWithSkeleton: React.FC<{ src: string; alt: string; sx?: SxProps<Theme>; onClick?: () => void }> = ({
   src,
   alt,
   sx,
@@ -368,7 +369,7 @@ const ShelterSectionImageView: React.FC<SectionItemProps> = ({
                               backdropFilter: 'blur(4px)',
                             }}
                           >
-                            {getPlatformIcon((item as any).platformType)}
+                            {getPlatformIcon(item.platformType)}
                           </Box>
                         </motion.div>
 
