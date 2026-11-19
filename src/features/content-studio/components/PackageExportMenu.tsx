@@ -29,9 +29,7 @@ export function PackageExportMenu({ packageId, theme, track, disabled }: Package
     } catch (failure: unknown) {
       const status = (failure as { response?: { status?: number } })?.response?.status;
       setError(
-        status === 422
-          ? "Ainda não há conteúdo salvo para exportar. Gere ou escreva ao menos uma etapa."
-          : "Não foi possível exportar agora. Tente novamente.",
+        status === 422 ? "Ainda não há conteúdo salvo para exportar. Gere ou escreva ao menos uma etapa." : "Não foi possível exportar agora. Tente novamente.",
       );
     }
   };
@@ -79,19 +77,13 @@ export function PackageExportMenu({ packageId, theme, track, disabled }: Package
         <Typography variant="overline" color="text.secondary" sx={{ px: 2 }}>
           Material completo
         </Typography>
-        <MenuItem
-          onClick={() => void run(exportPath.all(ExportFormat.PDF), "completo", ExportFormat.PDF)}
-          data-testid="content-studio-export-all-pdf"
-        >
+        <MenuItem onClick={() => void run(exportPath.all(ExportFormat.PDF), "completo", ExportFormat.PDF)} data-testid="content-studio-export-all-pdf">
           <ListItemIcon>
             <PictureAsPdf fontSize="small" />
           </ListItemIcon>
           <ListItemText>PDF com todas as faixas</ListItemText>
         </MenuItem>
-        <MenuItem
-          onClick={() => void run(exportPath.all(ExportFormat.DOCX), "completo", ExportFormat.DOCX)}
-          data-testid="content-studio-export-all-docx"
-        >
+        <MenuItem onClick={() => void run(exportPath.all(ExportFormat.DOCX), "completo", ExportFormat.DOCX)} data-testid="content-studio-export-all-docx">
           <ListItemIcon>
             <Description fontSize="small" />
           </ListItemIcon>

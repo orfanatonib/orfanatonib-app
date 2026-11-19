@@ -1,5 +1,5 @@
 import { API_URL } from "../../../playwright.live.config";
-import { closeDb, queryOne } from "../support/db";
+import { closeDb, queryAll, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /**
@@ -34,7 +34,7 @@ const list = async (request: import("@playwright/test").APIRequestContext, query
 };
 
 test("percorrendo as páginas de 3 em 3 vem todo pacote uma única vez, e cada página está cheia", async ({ request }) => {
-  const total = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages"))?.n ?? 0;
+  const total = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status <> 'ARCHIVED'"))?.n ?? 0;
   test.skip(total < 4, "precisa de pelo menos 4 pacotes no banco do E2E");
 
   const seen: string[] = [];
@@ -58,4 +58,28 @@ test("filtro por faixa etária e por situação respondem 200 e só devolvem o q
   const archived = await list(request, "page=1&limit=50&status=ARCHIVED");
   const rows = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status = 'ARCHIVED'"))?.n ?? 0;
   expect(archived.total).toBe(rows);
+});
+
+test.describe("listagem: ordenação, arquivados e segmentos", () => {
+  test("sem filtro de situação os arquivados ficam de fora; com `status=ARCHIVED` só eles", async ({ request }) => {
+    const admin = (await loginAs(request, "admin")).accessToken;
+    const all = (await (await request.get(`${API_URL}/content-studio/packages?limit=100`, { headers: authHeaders(admin) })).json()) as { data: Array<{ status: string }> };
+    expect(all.data.some((p) => p.status === "ARCHIVED")).toBe(false);
+    const archived = (await (await request.get(`${API_URL}/content-studio/packages?limit=100&status=ARCHIVED`, { headers: authHeaders(admin) })).json()) as {
+      data: Array<{ status: string }>;
+    };
+    expect(archived.data.every((p) => p.status === "ARCHIVED")).toBe(true);
+  });
+
+  test("ordenação por tema respeita a direção e valores inválidos dão 400; itens trazem os segmentos de etapas", async ({ request }) => {
+    const admin = (await loginAs(request, "admin")).accessToken;
+    const asc = (await (await request.get(`${API_URL}/content-studio/packages?limit=100&sort=theme&order=ASC`, { headers: authHeaders(admin) })).json()) as {
+      data: Array<{ theme: string; stagesCount: number; stageSegments: unknown[] }>;
+    };
+    const expected = await queryAll<{ theme: string }>("SELECT theme FROM content_packages WHERE status <> 'ARCHIVED' ORDER BY theme ASC, id ASC LIMIT 100");
+    expect(asc.data.map((p) => p.theme)).toEqual(expected.map((row) => row.theme));
+    for (const item of asc.data) expect(item.stageSegments).toHaveLength(item.stagesCount);
+    expect((await request.get(`${API_URL}/content-studio/packages?sort=senha`, { headers: authHeaders(admin) })).status()).toBe(400);
+    expect((await request.get(`${API_URL}/content-studio/packages?order=SIDEWAYS`, { headers: authHeaders(admin) })).status()).toBe(400);
+  });
 });

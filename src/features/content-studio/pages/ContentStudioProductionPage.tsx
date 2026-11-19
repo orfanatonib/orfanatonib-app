@@ -1,84 +1,134 @@
 import Add from "@mui/icons-material/Add";
-import Inventory2 from "@mui/icons-material/Inventory2";
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Skeleton, Stack, TablePagination, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Settings from "@mui/icons-material/Settings";
+import { Alert, Box, Button, CircularProgress, Grid2, Stack, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { ListingLayout, ListingToolbar } from "@/components/common/listing";
+import type { ListingFilter } from "@/components/common/listing";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { STUDIO_PAGE_SIZE as PAGE_SIZE } from "../workspace.constants";
-import { useContentPackages } from "../hooks/useContentPackages";
-import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
-import { displayedRowsLabel, formatMaterialsCount } from "../production.utils";
-import type { ContentAudience, ContentPackageStatus } from "../types";
-import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
+import { getErrorMessage } from "@/utils/apiError";
+
+import { archiveContentPackage, downloadExport, exportPath } from "../api";
+import { PackageArchiveDialog } from "../components/PackageArchiveDialog";
 import { PackageCard } from "../components/PackageCard";
 import { PackageFormDialog } from "../components/PackageFormDialog";
-import { PackagesToolbar } from "../components/PackagesToolbar";
+import { useContentPackages } from "../hooks/useContentPackages";
+import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
+import { exportFileName } from "../export.utils";
+import {
+  PRODUCTION_DEFAULT_PAGE_SIZE,
+  PRODUCTION_DEFAULT_SORT,
+  PRODUCTION_LIST_TEXTS,
+  PRODUCTION_PAGE_SIZE_OPTIONS,
+  PRODUCTION_SEARCH_DEBOUNCE_MS,
+  PRODUCTION_SORT_OPTIONS,
+  PRODUCTION_STATUS_FILTER_OPTIONS,
+} from "../production-list.constants";
+import { productionQuery, readProductionListState, writeProductionListState, type ProductionListState } from "../production-list.utils";
+import { formatMaterialsCount } from "../production.utils";
 import { CONTENT_STUDIO_PAGE_SX } from "../styles";
+import { ContentAudience, ContentPackageStatus, ExportFormat, type ContentPackageListItemResponse } from "../types";
+import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 
-function PackagesSkeleton() {
-  return (
-    <Stack spacing={1.5} data-testid="content-studio-packages-loading">
-      {[0, 1, 2].map((key) => (
-        <Card key={key} variant="outlined">
-          <CardContent>
-            <Skeleton width="45%" height={28} />
-            <Skeleton width="30%" />
-            <Skeleton variant="rounded" height={8} sx={{ my: 2 }} />
-            <Skeleton width="60%" />
-          </CardContent>
-        </Card>
-      ))}
-    </Stack>
-  );
-}
-
+/**
+ * Produção de materiais para visita (`/adm/estudio/producao`).
+ *
+ * Filtros, busca, ordem e página moram na URL: voltar de um material devolve a lista como estava.
+ * Sem filtro de situação, os arquivados ficam de fora.
+ */
 export function ContentStudioProductionPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const state = useMemo(() => readProductionListState(searchParams), [searchParams]);
+
   const [createOpen, setCreateOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebouncedValue(searchInput.trim());
-  const [page, setPage] = useState(1);
-  const [audienceFilter, setAudienceFilter] = useState<ContentAudience | "">("");
-  const [statusFilter, setStatusFilter] = useState<ContentPackageStatus | "">("");
+  const [pageSize, setPageSize] = useState(PRODUCTION_DEFAULT_PAGE_SIZE);
+  const [search, setSearch] = useState(state.search);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ContentPackageListItemResponse | null>(null);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
+
+  const patch = useCallback(
+    (changes: Partial<ProductionListState>) =>
+      setSearchParams((current) => writeProductionListState(current, { ...readProductionListState(current), ...changes }), { replace: true }),
+    [setSearchParams],
+  );
+
+  // A busca digitada chega à URL já com a espera, e volta para a página 1.
+  const debouncedSearch = useDebouncedValue(search, PRODUCTION_SEARCH_DEBOUNCE_MS);
+  useEffect(() => {
+    if (debouncedSearch.trim() !== state.search) patch({ search: debouncedSearch, page: 1 });
+    // `state.search` só é lido para comparar; reagir a ele desfaria a digitação.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, patch]);
 
   const { catalog, loading: catalogLoading, error: catalogError, reload: reloadCatalog } = useContentStudioCatalog();
+  const query = useMemo(() => productionQuery(state, pageSize), [state, pageSize]);
+  const { packages, total, loading, error, reload } = useContentPackages(query);
+  const audiences = catalog?.audiences ?? [];
 
-  const packagesQuery = useMemo(
-    () => ({
-      page,
-      limit: PAGE_SIZE,
-      search: search || undefined,
-      audience: audienceFilter || undefined,
-      status: statusFilter || undefined,
-    }),
-    [page, search, audienceFilter, statusFilter],
-  );
-  const {
-    packages,
-    total,
-    limit,
-    loading: packagesLoading,
-    error: packagesError,
-    reload: reloadPackages,
-  } = useContentPackages(packagesQuery);
+  const handleDownload = async (item: ContentPackageListItemResponse) => {
+    if (downloadingId) return;
+    setDownloadingId(item.id);
+    setFeedbackError("");
+    try {
+      await downloadExport(item.id, exportPath.all(ExportFormat.PDF), exportFileName([item.theme, "completo"], ExportFormat.PDF));
+    } catch {
+      setFeedbackError("Não foi possível baixar o PDF agora. Confira se alguma etapa já tem conteúdo salvo.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
-  // Buscar de novo volta para a primeira página.
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+  const handleArchiveConfirm = async () => {
+    if (!archiveTarget) return;
+    setArchiving(true);
+    try {
+      await archiveContentPackage(archiveTarget.id);
+      setArchiveTarget(null);
+      void reload();
+    } catch (failure: unknown) {
+      setArchiveError(getErrorMessage(failure, "Não foi possível arquivar o material."));
+    } finally {
+      setArchiving(false);
+    }
+  };
 
-  const hasFilters = !!(searchInput || audienceFilter || statusFilter);
+  const filters: ListingFilter[] = [
+    {
+      id: "status",
+      label: "Situação",
+      value: state.status,
+      options: PRODUCTION_STATUS_FILTER_OPTIONS.map(({ value, label }) => ({ value, label })),
+      onChange: (value) => patch({ status: (value as ContentPackageStatus | "") || "", page: 1 }),
+    },
+    {
+      id: "audience",
+      label: "Faixa etária",
+      value: state.audience,
+      options: audiences.map((item) => ({ value: item.audience, label: item.name })),
+      onChange: (value) => patch({ audience: (value as ContentAudience | "") || "", page: 1 }),
+    },
+    {
+      id: "sort",
+      label: "Ordenar por",
+      value: state.sort,
+      options: PRODUCTION_SORT_OPTIONS.map(({ value, label }) => ({ value, label })),
+      onChange: (value) => patch({ sort: value || PRODUCTION_DEFAULT_SORT, page: 1 }),
+    },
+  ];
+
   const clearFilters = () => {
-    setSearchInput("");
-    setAudienceFilter("");
-    setStatusFilter("");
-    setPage(1);
+    setSearch("");
+    patch({ status: "", audience: "", sort: PRODUCTION_DEFAULT_SORT, search: "", page: 1 });
   };
 
   return (
     <Box component="section" data-testid="content-studio-production-page" sx={CONTENT_STUDIO_PAGE_SX}>
-      <Stack spacing={3}>
+      <Stack spacing={2}>
         <ContentStudioPageHeader
           title="Materiais para visita"
           description="Produza o material de cada visita para bebês, crianças, adolescentes e adultos: gere, revise e aprove etapa por etapa."
@@ -87,12 +137,11 @@ export function ContentStudioProductionPage() {
         />
 
         {catalogLoading && (
-          <Stack data-testid="content-studio-production-loading" alignItems="center" justifyContent="center" minHeight={160} spacing={2}>
+          <Stack data-testid="content-studio-production-loading" alignItems="center" justifyContent="center" minHeight={120} spacing={2}>
             <CircularProgress />
             <Typography color="text.secondary">Carregando catálogo editorial…</Typography>
           </Stack>
         )}
-
         {!catalogLoading && catalogError && (
           <Alert
             severity="error"
@@ -107,112 +156,96 @@ export function ContentStudioProductionPage() {
           </Alert>
         )}
 
-        {!catalogLoading && catalog && (
-          <>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<Add />}
-              onClick={() => setCreateOpen(true)}
-              data-testid="content-studio-new-material"
-              sx={{ minHeight: 48, alignSelf: "flex-start" }}
-            >
-              Novo material para visita
-            </Button>
-            <PackageFormDialog
-              open={createOpen}
-              catalog={catalog}
-              onClose={() => setCreateOpen(false)}
-              onCreated={(packageId) => navigate(`/adm/estudio/pacotes/${packageId}`)}
-            />
-          </>
-        )}
-
-        <Card variant="outlined" data-testid="content-studio-packages-list">
-          <CardContent>
-            <Stack spacing={2.5}>
-              <Box>
-                <Typography component="h2" variant="h6" fontWeight={700}>
-                  Seus materiais para visita
-                </Typography>
-                <Typography color="text.secondary" aria-live="polite">
-                  {packagesLoading ? "Carregando…" : `${formatMaterialsCount(total)} ${hasFilters ? "com esses filtros" : ""}`.trim()}
-                </Typography>
-              </Box>
-
-              <PackagesToolbar
-                search={searchInput}
-                status={statusFilter}
-                audience={audienceFilter}
-                audiences={catalog?.audiences ?? []}
-                hasFilters={hasFilters}
-                onSearchChange={setSearchInput}
-                onStatusChange={(value) => {
-                  setStatusFilter(value);
-                  setPage(1);
-                }}
-                onAudienceChange={(value) => {
-                  setAudienceFilter(value);
-                  setPage(1);
-                }}
-                onClear={clearFilters}
-                onRefresh={() => void reloadPackages()}
-              />
-
-              {packagesLoading && <PackagesSkeleton />}
-
-              {!packagesLoading && packagesError && (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button color="inherit" onClick={() => void reloadPackages()} sx={{ minHeight: 44 }}>
-                      Tentar novamente
-                    </Button>
-                  }
+        <ListingLayout
+          data-testid="content-studio-packages-list"
+          title={PRODUCTION_LIST_TEXTS.title}
+          summary={`${formatMaterialsCount(total)} ${state.status ? "nesta situação" : "no estúdio (arquivados à parte)"}`}
+          toolbar={
+            <Stack gap={1.5}>
+              {/* As ações ficam fora da barra de filtros: junto delas a busca ficava estreita. */}
+              <Stack direction={{ xs: "column", sm: "row" }} justifyContent="flex-end" gap={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Settings />}
+                  onClick={() => navigate("/adm/estudio/orientacoes")}
+                  sx={{ minHeight: 44, borderRadius: 2.5, fontWeight: 600, textTransform: "none" }}
                 >
-                  Não foi possível carregar os materiais.
-                </Alert>
-              )}
-
-              {!packagesLoading && !packagesError && packages.length === 0 && (
-                <Stack alignItems="center" spacing={1.5} textAlign="center" sx={{ py: 4 }} data-testid="content-studio-packages-empty">
-                  <Inventory2 color="disabled" sx={{ fontSize: 48 }} />
-                  <Typography fontWeight={600}>
-                    {hasFilters ? "Nenhum material encontrado com esses filtros." : "Você ainda não criou nenhum material para visita."}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {hasFilters ? "Tente outra busca ou limpe os filtros." : "Comece pelo botão Novo material para visita."}
-                  </Typography>
-                  {hasFilters && <Button onClick={clearFilters}>Limpar filtros</Button>}
-                </Stack>
-              )}
-
-              {!packagesLoading && !packagesError && packages.length > 0 && (
-                <Stack spacing={1.5}>
-                  {packages.map((item) => (
-                    <PackageCard key={item.id} item={item} audiences={catalog?.audiences ?? []} />
-                  ))}
-                </Stack>
-              )}
-
-              {total > limit && (
-                <TablePagination
-                  component="div"
-                  count={total}
-                  page={Math.max(0, page - 1)}
-                  rowsPerPage={limit}
-                  onPageChange={(_event, nextPage) => setPage(nextPage + 1)}
-                  rowsPerPageOptions={[PAGE_SIZE]}
-                  labelRowsPerPage="Por página"
-                  labelDisplayedRows={displayedRowsLabel}
-                  getItemAriaLabel={(type) =>
-                    ({ first: "Primeira página", last: "Última página", next: "Próxima página", previous: "Página anterior" })[type]
-                  }
+                  Orientações
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  disabled={!catalog}
+                  onClick={() => setCreateOpen(true)}
+                  data-testid="content-studio-new-material"
+                  sx={{ minHeight: 44, borderRadius: 2.5, fontWeight: 700, textTransform: "none" }}
+                >
+                  Novo material para visita
+                </Button>
+              </Stack>
+              <ListingToolbar
+                searchValue={search}
+                searchPlaceholder={PRODUCTION_LIST_TEXTS.searchPlaceholder}
+                onSearchChange={setSearch}
+                filters={filters}
+                onRefresh={() => void reload()}
+                onClearFilters={clearFilters}
+              />
+            </Stack>
+          }
+          loading={loading}
+          error={feedbackError || (error ? "Erro ao carregar os materiais." : undefined)}
+          onDismissError={() => setFeedbackError("")}
+          itemCount={packages.length}
+          emptyTitle={PRODUCTION_LIST_TEXTS.emptyTitle}
+          emptySubtitle={PRODUCTION_LIST_TEXTS.emptySubtitle}
+          pagination={{
+            page: state.page,
+            pageSize,
+            total,
+            onPageChange: (page) => patch({ page }),
+            onPageSizeChange: (size) => {
+              setPageSize(size);
+              patch({ page: 1 });
+            },
+          }}
+          pageSizeOptions={PRODUCTION_PAGE_SIZE_OPTIONS}
+          overlays={
+            <>
+              {catalog && (
+                <PackageFormDialog
+                  open={createOpen}
+                  catalog={catalog}
+                  onClose={() => setCreateOpen(false)}
+                  onCreated={(packageId) => navigate(`/adm/estudio/pacotes/${packageId}`)}
                 />
               )}
-            </Stack>
-          </CardContent>
-        </Card>
+              <PackageArchiveDialog
+                item={archiveTarget}
+                pending={archiving}
+                error={archiveError}
+                onCancel={() => setArchiveTarget(null)}
+                onConfirm={() => void handleArchiveConfirm()}
+              />
+            </>
+          }
+        >
+          {packages.map((item) => (
+            <Grid2 key={item.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+              <PackageCard
+                item={item}
+                audiences={audiences}
+                downloadingId={downloadingId}
+                onOpen={(packageId) => navigate(`/adm/estudio/pacotes/${packageId}`)}
+                onDownload={(target) => void handleDownload(target)}
+                onArchive={(target) => {
+                  setArchiveError(null);
+                  setArchiveTarget(target);
+                }}
+              />
+            </Grid2>
+          ))}
+        </ListingLayout>
       </Stack>
     </Box>
   );

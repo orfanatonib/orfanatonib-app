@@ -177,8 +177,19 @@ export interface ContentPackageListItemResponse {
   stagesCount: number;
   requiredStagesCount: number;
   approvedStagesCount: number;
+  stagesWithContentCount: number;
+  generatingStagesCount: number;
+  failedStagesCount: number;
+  /** Uma etapa por segmento (faixa da mais nova à mais velha, etapas na ordem de produção). */
+  stageSegments: ContentStageSegment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ContentStageSegment {
+  audience: ContentAudience;
+  stageType: ContentStageType;
+  status: ContentStageStatus;
 }
 
 export interface PaginatedContentPackagesResponse {
@@ -198,7 +209,11 @@ export interface QueryContentPackagesParams {
   audience?: ContentAudience;
   startDate?: string;
   endDate?: string;
+  sort?: ContentPackageSort;
+  order?: "ASC" | "DESC";
 }
+
+export type ContentPackageSort = "updatedAt" | "createdAt" | "theme";
 
 export interface CreateContentPackagePayload {
   audience?: ContentAudience;
