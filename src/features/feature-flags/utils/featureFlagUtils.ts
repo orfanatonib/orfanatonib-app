@@ -1,4 +1,5 @@
 import { FEATURE_FLAG_AUDIENCE_OPTIONS } from '../constants';
+import { FEATURE_PROFILE_RULES } from '../profileRules';
 import type {
   CreateFeatureFlagRequest,
   FeatureFlagAudience,
@@ -145,4 +146,38 @@ export function parseFeatureFlagSort(value: string): {
       ? sort
       : 'name';
   return { sort: field, order: order === 'DESC' ? 'DESC' : 'ASC' };
+}
+
+const ROLE_LABELS: Record<FeatureFlagTargetRole, string> = {
+  [FeatureFlagTargetRole.ADMIN]: 'administradores',
+  [FeatureFlagTargetRole.LEADER]: 'líderes',
+  [FeatureFlagTargetRole.MEMBER]: 'membros',
+};
+
+/**
+ * Avisa quando o público escolhido contradiz o perfil do recurso
+ * (`FEATURE_PROFILE_RULES`). Só orienta: o guard de perfil continua soberano.
+ * Retorna `null` quando nada a avisar ou quando a chave não está no catálogo.
+ */
+export function audienceWarning(
+  key: string,
+  audience: FeatureFlagAudience,
+): string | null {
+  const expected = FEATURE_PROFILE_RULES[key];
+  if (!expected) return null;
+  const chosen = AUDIENCE_ROLES[audience];
+
+  if (expected.length === 0) {
+    return chosen.length === 0
+      ? null
+      : 'Este recurso é público: restringir o público esconde-o de visitantes sem login.';
+  }
+  if (chosen.length === 0) {
+    return 'O público escolhido é mais amplo que o perfil do recurso; o acesso continua limitado pelo perfil.';
+  }
+  const hidden = expected.filter((role) => !chosen.includes(role));
+  if (hidden.length === 0) return null;
+  return `Este recurso é usado por ${hidden
+    .map((role) => ROLE_LABELS[role])
+    .join(' e ')}; com este público ele ficará escondido deles.`;
 }

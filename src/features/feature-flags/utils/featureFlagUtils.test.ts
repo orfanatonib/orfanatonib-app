@@ -6,6 +6,7 @@ import {
   hasFeatureFlagFormErrors,
   isValidMetadataJson,
   parseFeatureFlagSort,
+  audienceWarning,
   rolesOfAudience,
   toCreateFeatureFlagRequest,
   toFeatureFlagFormValues,
@@ -79,5 +80,28 @@ describe('feature flag management utilities', () => {
       sort: 'name',
       order: 'DESC',
     });
+  });
+});
+
+describe('audienceWarning', () => {
+  it('não avisa quando o público coincide com o perfil', () => {
+    expect(audienceWarning('shelter_management', 'ADMIN_LEADER')).toBeNull();
+    expect(audienceWarning('contact_form', 'EVERYONE')).toBeNull();
+  });
+
+  it('avisa quando restringir um recurso público', () => {
+    expect(audienceWarning('contact_form', 'ADMIN')).toMatch(/público/);
+  });
+
+  it('avisa quando o público esconde um perfil que usa o recurso', () => {
+    expect(audienceWarning('member_area', 'ADMIN')).toMatch(/líderes e membros/);
+  });
+
+  it('avisa que público mais amplo não amplia o acesso', () => {
+    expect(audienceWarning('member_area', 'EVERYONE')).toMatch(/mais amplo/);
+  });
+
+  it('ignora chaves fora do catálogo', () => {
+    expect(audienceWarning('custom_flag', 'ADMIN')).toBeNull();
   });
 });

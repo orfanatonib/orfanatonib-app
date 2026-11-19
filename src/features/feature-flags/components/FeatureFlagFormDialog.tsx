@@ -30,6 +30,7 @@ import type {
 } from '../types';
 import {
   audienceInfo,
+  audienceWarning,
   hasFeatureFlagFormErrors,
   isFeatureFlagKeyUsedByApp,
   toFeatureFlagFormValues,
@@ -91,6 +92,7 @@ export function FeatureFlagFormDialog({
   };
 
   const selectedAudience = audienceInfo(values.audience);
+  const audienceNotice = audienceWarning(values.key, values.audience);
   const renamingUsedKey = Boolean(
     flag &&
       flag.key !== values.key &&
@@ -206,6 +208,16 @@ export function FeatureFlagFormDialog({
           <Alert severity="warning" sx={{ mt: 1 }}>
             Esta chave é consultada pela aplicação. Renomeá-la desliga o
             recurso até o código passar a usar a nova chave.
+          </Alert>
+        ) : null}
+
+        {audienceNotice ? (
+          <Alert
+            severity="warning"
+            sx={{ mt: 1 }}
+            data-testid="feature-flags-form-audience-warning"
+          >
+            {audienceNotice}
           </Alert>
         ) : null}
 
