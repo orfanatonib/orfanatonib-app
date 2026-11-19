@@ -17,7 +17,7 @@ describe("apiCreateAcceptedChrist", () => {
   });
 
   it("propaga o erro da API (o chamador decide a mensagem)", async () => {
-    post.mockRejectedValue(new Error("403"));
+    post.mockImplementation(() => Promise.reject(new Error("403")));
     await expect(apiCreateAcceptedChrist({ shelteredId: "s1" } as never)).rejects.toThrow("403");
   });
 });
