@@ -14,7 +14,6 @@ import commentsReducer from './comment/commentsSlice';
 import documentReducer from './documents/documentSlice';
 import ideasReducer from './ideas/ideasSlice';
 import informativeBannerReducer from './informative/informativeBannerSlice';
-import imageSectionPaginationReducer from './image-section-pagination/imageSectionPaginationSlice';
 import feedbackReducer from './feedback/feedbackSlice';
 import featureFlagsReducer from './feature-flags/featureFlagsSlice';
 import notificationReducer from './notification/notificationSlice';
@@ -38,7 +37,6 @@ const rootReducer = combineReducers({
   document: documentReducer,
   ideas: ideasReducer,
   informativeBanner: informativeBannerReducer,
-  imageSectionPagination: imageSectionPaginationReducer,
   feedback: feedbackReducer,
   featureFlags: featureFlagsReducer,
   notification: notificationReducer,

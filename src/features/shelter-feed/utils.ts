@@ -15,7 +15,7 @@ export function applyOptimisticToggle(state: CelebrationState): CelebrationState
   };
 }
 
-/** "Autor: Maria L." ou o rótulo neutro para itens antigos. */
+/** "Autor" ou o rótulo neutro para itens antigos. */
 export function formatAuthorLabel(author: FeedAuthor | null | undefined): string {
   return author?.displayName ? `Por ${author.displayName}` : FEED_AUTHOR_UNKNOWN_LABEL;
 }

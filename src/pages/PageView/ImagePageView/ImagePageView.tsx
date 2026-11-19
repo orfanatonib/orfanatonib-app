@@ -1,4 +1,3 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -6,8 +5,6 @@ import {
   Container,
   Typography,
   Alert,
-  Tooltip,
-  Fab,
   Skeleton,
   Paper,
   Grid,
@@ -15,25 +12,16 @@ import {
   useTheme,
   useMediaQuery,
   Chip,
-  Stack,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '@/config/axiosConfig';
-import { RootState, AppDispatch } from '@/store/slices';
-import { fetchRoutes } from '@/store/slices/route/routeSlice';
-import { UserRole } from 'store/slices/auth/authSlice';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/slices';
+import { useShelterFeedSections } from '@/features/shelter-feed/useShelterFeedSections';
+import { useFeedSentinel } from '@/features/shelter-feed/useFeedSentinel';
 import SectionImagePageView from './SectionImagePageView';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { FofinhoButton } from './../../MemberArea/components';
-import {
-  setSectionData,
-  appendSections,
-  updatePagination,
-  PaginatedSectionResponse,
-} from '@/store/slices/image-section-pagination/imageSectionPaginationSlice';
-import { isRequestCanceled } from '@/utils/apiErrorMessage';
 
 interface PageSectionProps {
   idToFetch?: string;
@@ -127,76 +115,22 @@ function SectionSkeleton() {
 }
 
 export default function PageSectionView({ idToFetch, feed }: PageSectionProps) {
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const section = useSelector((state: RootState) => state.imageSectionPagination.section);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const defaultSectionId = import.meta.env.VITE_FEED_MINISTERIO_ID;
+  const pageId = feed ? import.meta.env.VITE_FEED_MINISTERIO_ID : idToFetch;
+  const {
+    pageMeta: section,
+    rawSections: sectionsList,
+    isInitialLoading: loading,
+    isFetchingNextPage: loadingMore,
+    initialErrorMessage: error,
+    hasNextPage,
+    loadNextPage,
+  } = useShelterFeedSections(pageId);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastSectionRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) setPage((prev) => prev + 1);
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loadingMore, hasMore]
-  );
-
-  const sectionsList = useMemo(() => section?.sections ?? [], [section?.sections]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchSectionData = async () => {
-      try {
-        setError(null);
-        if (page === 1) setLoading(true);
-        else setLoadingMore(true);
-
-        const sectionId = feed ? defaultSectionId : idToFetch;
-        if (!sectionId) throw new Error('Nenhum ID de seção fornecido.');
-
-        const { data } = await api.get<PaginatedSectionResponse>(
-          `/image-pages/${sectionId}/sections?page=${page}&limit=2`,
-          { signal: controller.signal }
-        );
-
-        if (page === 1) {
-          dispatch(setSectionData(data));
-        } else {
-          dispatch(appendSections(data.sections));
-          dispatch(updatePagination({ page: data.page, total: data.total }));
-        }
-
-        setHasMore(data.page * data.limit < data.total);
-      } catch (err: unknown) {
-        if (!isRequestCanceled(err)) {
-          setError('Erro ao carregar a seção. Tente novamente mais tarde.');
-        }
-      } finally {
-        if (page === 1) setLoading(false);
-        else setLoadingMore(false);
-      }
-    };
-
-    fetchSectionData();
-
-    return () => controller.abort();
-  }, [page, idToFetch, defaultSectionId, dispatch, feed]);
+  const lastSectionRef = useFeedSentinel({ enabled: hasNextPage && !loadingMore, onReach: loadNextPage });
 
   const handleBack = () => {
     navigate(-1);
@@ -348,7 +282,7 @@ export default function PageSectionView({ idToFetch, feed }: PageSectionProps) {
               📸 {section.title}
             </Typography>
 
-            {(section as any).subtitle && (
+            {section.subtitle && (
               <Typography
                 variant="h5"
                 fontWeight="600"
@@ -359,7 +293,7 @@ export default function PageSectionView({ idToFetch, feed }: PageSectionProps) {
                   textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 }}
               >
-                {(section as any).subtitle}
+                {section.subtitle}
               </Typography>
             )}
 
