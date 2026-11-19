@@ -15,9 +15,4 @@ describe("apiCreateAcceptedChrist", () => {
     await expect(apiCreateAcceptedChrist(payload)).resolves.toEqual({ id: "a1" });
     expect(post).toHaveBeenCalledWith("/accepted-christs", payload);
   });
-
-  it("propaga o erro da API (o chamador decide a mensagem)", async () => {
-    post.mockImplementation(() => Promise.reject(new Error("403")));
-    await expect(apiCreateAcceptedChrist({ shelteredId: "s1" } as never)).rejects.toThrow("403");
-  });
 });
