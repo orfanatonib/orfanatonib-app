@@ -15,7 +15,7 @@ import {
 
 const FLAG: FeatureFlagResponse = {
   id: 'flag-id',
-  key: 'shelter-management',
+  key: 'sheltered_management',
   name: 'Gestão de acolhidos',
   description: 'Cadastro e consulta',
   enabled: true,
@@ -44,7 +44,7 @@ describe('feature flag management utilities', () => {
   it('round-trips a response through the form payload', () => {
     const values = toFeatureFlagFormValues(FLAG);
     expect(toCreateFeatureFlagRequest(values)).toEqual({
-      key: 'shelter-management',
+      key: 'sheltered_management',
       name: 'Gestão de acolhidos',
       description: 'Cadastro e consulta',
       enabled: true,

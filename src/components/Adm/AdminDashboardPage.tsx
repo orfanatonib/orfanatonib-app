@@ -49,9 +49,9 @@ export default function AdminDashboardPage() {
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isSimpleMode = isLeader && !isAdmin;
   const isShelterManagementEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.SHELTER_MANAGEMENT,
+    FeatureFlagKeys.SHELTERED_MANAGEMENT,
   );
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.PAGELAS);
   const isContentStudioEnabled = useIsFeatureEnabled(
     FeatureFlagKeys.CONTENT_STUDIO,
   );
@@ -77,8 +77,8 @@ export default function AdminDashboardPage() {
         isAuthenticated,
         role: user?.role,
         featureFlags: {
-          [FeatureFlagKeys.SHELTER_MANAGEMENT]: isShelterManagementEnabled,
-          [FeatureFlagKeys.SHELTER_PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.SHELTERED_MANAGEMENT]: isShelterManagementEnabled,
+          [FeatureFlagKeys.PAGELAS]: isPagelasEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
         },
       }),

@@ -19,8 +19,8 @@ import {
 } from "./utils";
 
 const enabledFlags = {
-  [FeatureFlagKeys.SHELTER_MANAGEMENT]: true,
-  [FeatureFlagKeys.SHELTER_PAGELAS]: true,
+  [FeatureFlagKeys.SHELTERED_MANAGEMENT]: true,
+  [FeatureFlagKeys.PAGELAS]: true,
   [FeatureFlagKeys.CONTENT_STUDIO]: true,
   [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: true,
   [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: true,
@@ -86,8 +86,8 @@ describe("admin navigation", () => {
       isAuthenticated: true,
       role: AdminNavigationRole.ADMIN,
       featureFlags: {
-        [FeatureFlagKeys.SHELTER_MANAGEMENT]: false,
-        [FeatureFlagKeys.SHELTER_PAGELAS]: false,
+        [FeatureFlagKeys.SHELTERED_MANAGEMENT]: false,
+        [FeatureFlagKeys.PAGELAS]: false,
         [FeatureFlagKeys.CONTENT_STUDIO]: true,
         [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: false,
         [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: false,

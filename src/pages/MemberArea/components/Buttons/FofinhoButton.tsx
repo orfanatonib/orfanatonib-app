@@ -87,8 +87,8 @@ const ButtonSection: React.FC<ButtonSectionProps> = ({ references }) => {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_MANAGEMENT);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
 
   const buttonsToRender = references
     .map((ref) => memberActionMap[ref])

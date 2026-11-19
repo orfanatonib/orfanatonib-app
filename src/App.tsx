@@ -193,39 +193,39 @@ function App() {
             <GlobalErrorBoundary>
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/sobre" element={<About />} />
-                <Route path="/contato" element={<Contact />} />
-                <Route path="/eventos" element={<EventosPage />} />
-                <Route path="/feed-abrigos" element={<ShelterFeedView feed />} />
+                <Route path="/sobre" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.ABOUT_PAGE}><About /></FeatureFlagRoute>} />
+                <Route path="/contato" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.CONTACT_FORM}><Contact /></FeatureFlagRoute>} />
+                <Route path="/eventos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.EVENTS_SECTION}><EventosPage /></FeatureFlagRoute>} />
+                <Route path="/feed-abrigos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_FEED}><ShelterFeedView feed /></FeatureFlagRoute>} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/verificar-email" element={<EmailVerificationInstructions />} />
                 <Route path="/verificar-email/:token" element={<ConfirmEmail />} />
-                <Route path="/cadastrar-google" element={<Register commonUser={false} />} />
-                <Route path="/cadastrar" element={<Register commonUser />} />
-                <Route path="/recuperar-senha/:token" element={<ResetPassword />} />
+                <Route path="/cadastrar-google" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.GOOGLE_LOGIN}><Register commonUser={false} /></FeatureFlagRoute>} />
+                <Route path="/cadastrar" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PUBLIC_REGISTRATION}><Register commonUser /></FeatureFlagRoute>} />
+                <Route path="/recuperar-senha/:token" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PASSWORD_RECOVERY}><ResetPassword /></FeatureFlagRoute>} />
 
                 <Route element={<ProtectedRoute />}>
-                  <Route element={<MemberAreaLayout />}>
-                    <Route path="/area-do-membro" element={<MemberArea />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.manual} element={<MinistryInstructions />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.photos} element={<ImageSectionPage />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.materials} element={<VisitMaterialsList />} />
-                    <Route path={`${MEMBER_SUBPAGE_PATHS.materials}/:id`} element={<MemberContentPage entityType={MediaTargetType.VisitMaterialsPage} />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.rate} element={<SiteFeedbackForm />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.shareIdea} element={<IdeasSectionPage />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.documents} element={<MemberDocumentsPage />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.ideas} element={<MemberIdeasPage />} />
-                    <Route path={`${MEMBER_SUBPAGE_PATHS.ideas}/:id`} element={<MemberContentPage entityType={MediaTargetType.IdeasPage} />} />
-                    <Route path={MEMBER_SUBPAGE_PATHS.videos} element={<MemberVideosPage />} />
-                    <Route path={`${MEMBER_SUBPAGE_PATHS.videos}/:id`} element={<MemberContentPage entityType={MediaTargetType.VideosPage} />} />
+                  <Route element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEMBER_AREA}><MemberAreaLayout /></FeatureFlagRoute>}>
+                    <Route path="/area-do-membro" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEMBER_AREA}><MemberArea /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.manual} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEMBER_MANUAL}><MinistryInstructions /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.photos} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PHOTO_UPLOAD}><ImageSectionPage /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.materials} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.VISIT_MATERIALS}><VisitMaterialsList /></FeatureFlagRoute>} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.materials}/:id`} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.VISIT_MATERIALS}><MemberContentPage entityType={MediaTargetType.VisitMaterialsPage} /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.rate} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SITE_FEEDBACK}><SiteFeedbackForm /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.shareIdea} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.IDEA_SUBMISSION}><IdeasSectionPage /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.documents} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.DOCUMENTS_LIBRARY}><MemberDocumentsPage /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.ideas} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.IDEAS_SHARING}><MemberIdeasPage /></FeatureFlagRoute>} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.ideas}/:id`} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.IDEAS_SHARING}><MemberContentPage entityType={MediaTargetType.IdeasPage} /></FeatureFlagRoute>} />
+                    <Route path={MEMBER_SUBPAGE_PATHS.videos} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.TRAINING_VIDEOS}><MemberVideosPage /></FeatureFlagRoute>} />
+                    <Route path={`${MEMBER_SUBPAGE_PATHS.videos}/:id`} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.TRAINING_VIDEOS}><MemberContentPage entityType={MediaTargetType.VideosPage} /></FeatureFlagRoute>} />
                     <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
-                      <Route path={MEMBER_SUBPAGE_PATHS.integrations} element={<IntegrationManager />} />
+                      <Route path={MEMBER_SUBPAGE_PATHS.integrations} element={<FeatureFlagRoute featureKey={FeatureFlagKeys.INTEGRATION}><IntegrationManager /></FeatureFlagRoute>} />
                     </Route>
                   </Route>
                   <Route
                     path="/area-dos-acolhidos"
                     element={
-                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
+                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTERED_AREA}>
                         <ShelteredBrowserPage />
                       </FeatureFlagRoute>
                     }
@@ -233,14 +233,14 @@ function App() {
                   <Route
                     path="/area-dos-acolhidos/:shelteredId"
                     element={
-                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
+                      <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTERED_AREA}>
                         <ShelteredPagelasPage />
                       </FeatureFlagRoute>
                     }
                   />
                   <Route path="/perfil" element={<ProfilePage />} />
-                  <Route path="/presenca" element={<AttendanceDashboard />} />
-                  <Route path="/integracao" element={<IntegrationShelteredPage />} />
+                  <Route path="/presenca" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.ATTENDANCE}><AttendanceDashboard /></FeatureFlagRoute>} />
+                  <Route path="/integracao" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.INTEGRATION}><IntegrationShelteredPage /></FeatureFlagRoute>} />
                 </Route>
 
                 {/* Endereços antigos da Área do Membro (e Integrações FM, que saiu do /adm) redirecionam. */}
@@ -251,21 +251,21 @@ function App() {
                 <Route element={<ProtectedRoute requiredRole={[UserRole.ADMIN, UserRole.LEADER]} />}>
                   <Route path="/adm" element={<AdminLayout />}>
                     <Route index element={<AdminDashboardPage />} />
-                    <Route path="presenca" element={<AttendanceDashboard />} />
-                    <Route path="presenca/pendencias" element={<PendingAttendancePage />} />
-                    <Route path="meditacoes" element={<MeditationManager />} />
-                    <Route path="comentarios" element={<CommentsManager />} />
-                    <Route path="documentos" element={<DocumentsManager />} />
-                    <Route path="informativos" element={<InformativeBannerLManager />} />
-                    <Route path="feedbacks" element={<FeedbackManager />} />
-                    <Route path="contatos" element={<ContactsManager />} />
-                    <Route path="paginas-materiais-visita" element={<VisitMaterialManager />} />
-                    <Route path="paginas-fotos" element={<ImagePageManager />} />
-                    <Route path="fotos-abrigos" element={<ImageSectionManager />} />
-                    <Route path="ideias-compartilhadas" element={<IdeasSectionManager />} />
-                    <Route path="paginas-videos" element={<VideosManager />} />
-                    <Route path="paginas-ideias" element={<IdeasManager />} />
-                    <Route path="criar-pagina" element={<SelectPageTemplate />} />
+                    <Route path="presenca" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.ATTENDANCE}><AttendanceDashboard /></FeatureFlagRoute>} />
+                    <Route path="presenca/pendencias" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.ATTENDANCE}><PendingAttendancePage /></FeatureFlagRoute>} />
+                    <Route path="meditacoes" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEDITATION_MANAGEMENT}><MeditationManager /></FeatureFlagRoute>} />
+                    <Route path="comentarios" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.COMMENT_MODERATION}><CommentsManager /></FeatureFlagRoute>} />
+                    <Route path="documentos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.DOCUMENT_MANAGEMENT}><DocumentsManager /></FeatureFlagRoute>} />
+                    <Route path="informativos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.INFORMATIVE_MANAGEMENT}><InformativeBannerLManager /></FeatureFlagRoute>} />
+                    <Route path="feedbacks" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.FEEDBACK_MANAGEMENT}><FeedbackManager /></FeatureFlagRoute>} />
+                    <Route path="contatos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.CONTACT_MANAGEMENT}><ContactsManager /></FeatureFlagRoute>} />
+                    <Route path="paginas-materiais-visita" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><VisitMaterialManager /></FeatureFlagRoute>} />
+                    <Route path="paginas-fotos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><ImagePageManager /></FeatureFlagRoute>} />
+                    <Route path="fotos-abrigos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PHOTO_MODERATION}><ImageSectionManager /></FeatureFlagRoute>} />
+                    <Route path="ideias-compartilhadas" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.IDEA_MODERATION}><IdeasSectionManager /></FeatureFlagRoute>} />
+                    <Route path="paginas-videos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><VideosManager /></FeatureFlagRoute>} />
+                    <Route path="paginas-ideias" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><IdeasManager /></FeatureFlagRoute>} />
+                    <Route path="criar-pagina" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><SelectPageTemplate /></FeatureFlagRoute>} />
                     <Route
                       path="estudio"
                       element={
@@ -330,31 +330,31 @@ function App() {
                         </RequireAdmin>
                       }
                     />
-                    <Route path="usuarios" element={<UsersManager />} />
-                    <Route path="perfis" element={<ProfilesManager />} />
-                    <Route path="lideres" element={<LeaderProfilesManager />} />
-                    <Route path="membros" element={<MemberProfilesManager />} />
+                    <Route path="usuarios" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.USER_MANAGEMENT}><UsersManager /></FeatureFlagRoute>} />
+                    <Route path="perfis" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.USER_MANAGEMENT}><ProfilesManager /></FeatureFlagRoute>} />
+                    <Route path="lideres" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.LEADER_MANAGEMENT}><LeaderProfilesManager /></FeatureFlagRoute>} />
+                    <Route path="membros" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEMBER_MANAGEMENT}><MemberProfilesManager /></FeatureFlagRoute>} />
                     <Route
                       path="acolhidos"
                       element={
-                        <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}>
+                        <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTERED_MANAGEMENT}>
                           <ShelteredManager />
                         </FeatureFlagRoute>
                       }
                     />
-                    <Route path="abrigos" element={<SheltersManager />} />
-                    <Route path="abrigos/novo" element={<ShelterFormPage />} />
-                    <Route path="abrigos/:id/edit" element={<ShelterFormPage />} />
+                    <Route path="abrigos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}><SheltersManager /></FeatureFlagRoute>} />
+                    <Route path="abrigos/novo" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}><ShelterFormPage /></FeatureFlagRoute>} />
+                    <Route path="abrigos/:id/edit" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_MANAGEMENT}><ShelterFormPage /></FeatureFlagRoute>} />
                     <Route
                       path="pagelas"
                       element={
-                        <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_PAGELAS}>
+                        <FeatureFlagRoute featureKey={FeatureFlagKeys.PAGELAS}>
                           <PagelaSheltersManager />
                         </FeatureFlagRoute>
                       }
                     />
-                    <Route path="agendamentos" element={<ShelterScheduleManager />} />
-                    <Route path="antecedentes" element={<AtendentesManager />} />
+                    <Route path="agendamentos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_SCHEDULE}><ShelterScheduleManager /></FeatureFlagRoute>} />
+                    <Route path="antecedentes" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.CRIMINAL_RECORDS}><AtendentesManager /></FeatureFlagRoute>} />
                     <Route
                       path="feature-flags"
                       element={
@@ -364,16 +364,16 @@ function App() {
                       }
                     />
 
-                    <Route path="editar-meditacao" element={<MeditationPageCreator fromTemplatePage={false} />} />
-                    <Route path="editar-pagina-imagens" element={<ImagePageCreator fromTemplatePage={false} />} />
-                    <Route path="editar-pagina-videos" element={<VideoPageCreator fromTemplatePage={false} />} />
-                    <Route path="editar-pagina-visita" element={<VisitMaterialPageCreator fromTemplatePage={false} />} />
-                    <Route path="editar-pagina-ideias" element={<IdeasMaterialPageCreator fromTemplatePage={false} />} />
-                    <Route path="editar-imagens-shelter" element={<ImageSectionEditorAdmin />} />
-                    <Route path="editar-ideias-compartilhadas" element={<IdeasSectionPage />} />
+                    <Route path="editar-meditacao" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.MEDITATION_MANAGEMENT}><MeditationPageCreator fromTemplatePage={false} /></FeatureFlagRoute>} />
+                    <Route path="editar-pagina-imagens" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><ImagePageCreator fromTemplatePage={false} /></FeatureFlagRoute>} />
+                    <Route path="editar-pagina-videos" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><VideoPageCreator fromTemplatePage={false} /></FeatureFlagRoute>} />
+                    <Route path="editar-pagina-visita" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><VisitMaterialPageCreator fromTemplatePage={false} /></FeatureFlagRoute>} />
+                    <Route path="editar-pagina-ideias" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}><IdeasMaterialPageCreator fromTemplatePage={false} /></FeatureFlagRoute>} />
+                    <Route path="editar-imagens-shelter" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.PHOTO_MODERATION}><ImageSectionEditorAdmin /></FeatureFlagRoute>} />
+                    <Route path="editar-ideias-compartilhadas" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.IDEA_MODERATION}><IdeasSectionPage /></FeatureFlagRoute>} />
 
-                    <Route path="relatorios-visita" element={<VisitReportsManager />} />
-                    <Route path="relatorios/pendencias" element={<PendingVisitReportsPage />} />
+                    <Route path="relatorios-visita" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.VISIT_REPORTS}><VisitReportsManager /></FeatureFlagRoute>} />
+                    <Route path="relatorios/pendencias" element={<FeatureFlagRoute featureKey={FeatureFlagKeys.VISIT_REPORTS}><PendingVisitReportsPage /></FeatureFlagRoute>} />
                   </Route>
                 </Route>
 

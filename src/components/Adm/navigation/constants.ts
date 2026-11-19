@@ -124,7 +124,7 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
         path: "/adm/acolhidos",
         icon: Group,
         allowedRoles: ADMIN_AND_LEADER_ROLES,
-        requiredFeatureFlag: FeatureFlagKeys.SHELTER_MANAGEMENT,
+        requiredFeatureFlag: FeatureFlagKeys.SHELTERED_MANAGEMENT,
       },
       {
         id: AdminNavigationItemId.MEMBERS,
@@ -214,7 +214,7 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
         path: "/adm/pagelas",
         icon: Description,
         allowedRoles: ADMIN_AND_LEADER_ROLES,
-        requiredFeatureFlag: FeatureFlagKeys.SHELTER_PAGELAS,
+        requiredFeatureFlag: FeatureFlagKeys.PAGELAS,
       },
     ],
   },

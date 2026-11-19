@@ -20,7 +20,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_MANAGEMENT);
 
   const handleClick = () => closeMenu?.();
 

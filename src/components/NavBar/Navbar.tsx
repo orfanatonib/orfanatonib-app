@@ -49,7 +49,7 @@ const NavBar: React.FC = () => {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isAuthenticated) {

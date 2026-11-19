@@ -145,7 +145,7 @@ const MemberQuickActions: React.FC<MemberQuickActionsProps> = ({ references }) =
   const isSm = useMediaQuery(theme.breakpoints.up('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
 
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
 
   const actions = references
     .map((ref) => ({ key: ref, ...memberActionMap[ref] }))

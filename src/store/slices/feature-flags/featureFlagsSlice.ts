@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 import apiAxios from '@/config/axiosConfig';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
@@ -11,6 +11,8 @@ interface FeatureFlagsState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  /** Última requisição disparada: respostas de requisições antigas são ignoradas. */
+  activeRequestId: string | null;
 }
 
 const initialState: FeatureFlagsState = {
@@ -18,6 +20,7 @@ const initialState: FeatureFlagsState = {
   loading: false,
   error: null,
   lastFetched: null,
+  activeRequestId: null,
 };
 
 export const fetchFeatureFlags = createAsyncThunk<
@@ -50,13 +53,17 @@ const featureFlagsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchFeatureFlags.pending, (state) => {
+      .addCase(fetchFeatureFlags.pending, (state, action) => {
+        state.activeRequestId = action.meta.requestId;
         state.loading = true;
         state.error = null;
       })
       .addCase(
         fetchFeatureFlags.fulfilled,
-        (state, action: PayloadAction<FeatureFlagsMap>) => {
+        (state, action) => {
+          // Sessão trocada no meio da chamada: a resposta antiga (de outro
+          // perfil) não pode sobrescrever a nova.
+          if (action.meta.requestId !== state.activeRequestId) return;
           state.loading = false;
           state.flags = action.payload;
           state.error = null;
@@ -64,6 +71,7 @@ const featureFlagsSlice = createSlice({
         },
       )
       .addCase(fetchFeatureFlags.rejected, (state, action) => {
+        if (action.meta.requestId !== state.activeRequestId) return;
         state.loading = false;
         state.flags = DEFAULT_FEATURE_FLAGS_MAP;
         state.error = action.payload ?? API_ERROR_MESSAGES.FETCH_FEATURE_FLAGS;

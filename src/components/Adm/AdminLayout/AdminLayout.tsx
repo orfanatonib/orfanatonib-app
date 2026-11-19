@@ -57,9 +57,9 @@ function AdminLayout() {
     (state: RootState) => state.auth,
   );
   const isShelterManagementEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.SHELTER_MANAGEMENT,
+    FeatureFlagKeys.SHELTERED_MANAGEMENT,
   );
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
+  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.PAGELAS);
   const isContentStudioEnabled = useIsFeatureEnabled(
     FeatureFlagKeys.CONTENT_STUDIO,
   );
@@ -85,8 +85,8 @@ function AdminLayout() {
         isAuthenticated,
         role: user?.role,
         featureFlags: {
-          [FeatureFlagKeys.SHELTER_MANAGEMENT]: isShelterManagementEnabled,
-          [FeatureFlagKeys.SHELTER_PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.SHELTERED_MANAGEMENT]: isShelterManagementEnabled,
+          [FeatureFlagKeys.PAGELAS]: isPagelasEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: isContentStudioReviewEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]:
