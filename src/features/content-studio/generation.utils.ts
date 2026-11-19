@@ -14,6 +14,11 @@ export const GENERATION_POLL_INTERVAL_MS = 2000;
 /** Teto de acompanhamento: depois disso a tela para de perguntar e orienta a atualizar. */
 export const GENERATION_POLL_MAX_MS = 5 * 60 * 1000;
 
+/** Com o stream SSE ativo, o laço só acorda sozinho a cada tanto (um evento o acorda antes). */
+export const STREAM_FALLBACK_WAIT_MS = 10_000;
+/** Depois de tantas falhas seguidas do stream, o acompanhamento fica só em polling HTTP. */
+export const STREAM_MAX_FAILURES = 2;
+
 const ACTIVE = new Set<string>([
   GenerationJobStatus.PENDING,
   GenerationJobStatus.RUNNING,

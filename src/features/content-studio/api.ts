@@ -1,5 +1,6 @@
 import api from "@/config/axiosConfig";
 
+import { parseSseText } from "./sse.utils";
 import type { ExportFormat } from "./types";
 import type {
   AiProviderResponse,
@@ -194,25 +195,49 @@ export async function cancelStageGeneration(
   return data;
 }
 
-export async function getStageDocument(packageId: string, stageId: string, signal?: AbortSignal): Promise<StageDocumentResponse> {
-  const { data } = await api.get<StageDocumentResponse>(`/content-studio/packages/${packageId}/stages/${stageId}/document`, { signal });
+export async function getStageDocument(
+  packageId: string,
+  stageId: string,
+  signal?: AbortSignal,
+): Promise<StageDocumentResponse> {
+  const { data } = await api.get<StageDocumentResponse>(
+    `/content-studio/packages/${packageId}/stages/${stageId}/document`,
+    { signal },
+  );
   return data;
 }
 
 /** Caminho (relativo ao pacote) de cada exportação. */
 export const exportPath = {
-  stage: (stageId: string, format: ExportFormat) => `stages/${stageId}/export/${format}`,
-  track: (audience: string, format: ExportFormat) => `tracks/${audience}/export/${format}`,
+  stage: (stageId: string, format: ExportFormat) =>
+    `stages/${stageId}/export/${format}`,
+  track: (audience: string, format: ExportFormat) =>
+    `tracks/${audience}/export/${format}`,
   all: (format: ExportFormat) => `export/${format}`,
 };
 
-export async function fetchExport(packageId: string, path: string, signal?: AbortSignal): Promise<Blob> {
-  const { data } = await api.get<Blob>(`/content-studio/packages/${packageId}/${path}`, { responseType: "blob", signal, skipGlobalError: true });
+export async function fetchExport(
+  packageId: string,
+  path: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>(
+    `/content-studio/packages/${packageId}/${path}`,
+    {
+      responseType: "blob",
+      signal,
+      skipGlobalError: true,
+    },
+  );
   return data;
 }
 
 /** Baixa o arquivo gerado pela API com o nome que ela sugeriu. */
-export async function downloadExport(packageId: string, path: string, fileName: string): Promise<void> {
+export async function downloadExport(
+  packageId: string,
+  path: string,
+  fileName: string,
+): Promise<void> {
   const blob = await fetchExport(packageId, path);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -222,4 +247,46 @@ export async function downloadExport(packageId: string, path: string, fileName: 
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+export interface GenerationStreamHandlers {
+  onJobs: (jobs: ContentGenerationJobResponse[]) => void;
+}
+
+/**
+ * Abre o stream SSE de andamento das gerações do pacote. Resolve quando o servidor encerra (tempo/ociosidade)
+ * ou o `signal` aborta; rejeita se a conexão falhar (o chamador cai para polling).
+ */
+export async function streamPackageGenerations(
+  packageId: string,
+  signal: AbortSignal,
+  handlers: GenerationStreamHandlers,
+): Promise<void> {
+  let offset = 0;
+  await api.get<string>(
+    `/content-studio/packages/${packageId}/generations/stream`,
+    {
+      responseType: "text",
+      timeout: 0,
+      signal,
+      skipGlobalError: true,
+      headers: { Accept: "text/event-stream" },
+      transformResponse: (value: string) => value,
+      onDownloadProgress: (progress) => {
+        const target = progress.event?.target as XMLHttpRequest | undefined;
+        const parsed = parseSseText(target?.responseText ?? "", offset);
+        offset = parsed.offset;
+        for (const message of parsed.messages) {
+          if (message.event !== "jobs") continue;
+          try {
+            handlers.onJobs(
+              JSON.parse(message.data) as ContentGenerationJobResponse[],
+            );
+          } catch {
+            // quadro inválido: ignora; o próximo estado corrige
+          }
+        }
+      },
+    },
+  );
 }

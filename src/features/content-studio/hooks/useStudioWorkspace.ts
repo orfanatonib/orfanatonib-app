@@ -5,6 +5,7 @@ import {
   completeProductionStage,
   requestStageGeneration,
   getLatestStageGeneration,
+  streamPackageGenerations,
   cancelStageGeneration,
   requestStageChanges,
   saveStageContent,
@@ -23,6 +24,8 @@ import {
 import {
   GENERATION_POLL_INTERVAL_MS,
   GENERATION_POLL_MAX_MS,
+  STREAM_FALLBACK_WAIT_MS,
+  STREAM_MAX_FAILURES,
   GenerationJobStatus,
   generationErrorMessage,
   isGenerationActive,
@@ -64,8 +67,16 @@ export function useStudioWorkspace(id: string | undefined) {
   const [instructions, setInstructions] = useState<Record<string, string>>({});
   const generationKeys = useRef<Record<string, string>>({});
   /** Andamento por etapa (fila → gerando → nova tentativa → fim), alimentado por polling. */
-  const [generationJobs, setGenerationJobs] = useState<Record<string, ContentGenerationJobResponse>>({});
+  const [generationJobs, setGenerationJobs] = useState<
+    Record<string, ContentGenerationJobResponse>
+  >({});
   const pollControllers = useRef<Record<string, AbortController>>({});
+  /** Stream SSE de andamento (um por pacote): empurra os jobs; o polling HTTP só entra se ele falhar. */
+  const streamJobs = useRef<Record<string, ContentGenerationJobResponse>>({});
+  const streamController = useRef<AbortController | null>(null);
+  const streamFailures = useRef(0);
+  const wakeups = useRef(new Set<() => void>());
+  const wakeAll = () => wakeups.current.forEach((wake) => wake());
   const generationEnabled = useIsFeatureEnabled(
     FeatureFlagKeys.CONTENT_STUDIO_GENERATION,
   );
@@ -74,10 +85,14 @@ export function useStudioWorkspace(id: string | undefined) {
     if (!contentPackage) return;
 
     const stages = contentPackage.tracks.flatMap((track) => track.stages);
-    setDrafts(Object.fromEntries(stages.map((stage) => [
-      stage.id,
-      localDrafts.current[stage.id]?.value ?? stageDraftValue(stage),
-    ])));
+    setDrafts(
+      Object.fromEntries(
+        stages.map((stage) => [
+          stage.id,
+          localDrafts.current[stage.id]?.value ?? stageDraftValue(stage),
+        ]),
+      ),
+    );
   }, [contentPackage]);
 
   const handleDraftChange = (stageId: string, value: string) => {
@@ -123,7 +138,46 @@ export function useStudioWorkspace(id: string | undefined) {
     }
   };
 
-  /** Pergunta o andamento até o job terminar (ou o teto de tempo); cada etapa tem seu AbortController. */
+  const ensureStream = (packageId: string) => {
+    if (
+      streamController.current ||
+      streamFailures.current >= STREAM_MAX_FAILURES
+    )
+      return;
+    const controller = new AbortController();
+    streamController.current = controller;
+    streamPackageGenerations(packageId, controller.signal, {
+      onJobs: (jobs) => {
+        streamFailures.current = 0;
+        for (const item of jobs) streamJobs.current[item.stageId] = item;
+        wakeAll();
+      },
+    })
+      .catch(() => {
+        if (!controller.signal.aborted) streamFailures.current += 1;
+      })
+      .finally(() => {
+        if (streamController.current === controller)
+          streamController.current = null;
+        wakeAll();
+      });
+  };
+
+  /** Espera `ms` ou até o stream trazer algo novo (o que vier primeiro). */
+  const waitForUpdate = (ms: number, signal: AbortSignal) =>
+    new Promise<void>((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        wakeups.current.delete(done);
+        signal.removeEventListener("abort", done);
+        resolve();
+      };
+      const timer = setTimeout(done, ms);
+      wakeups.current.add(done);
+      signal.addEventListener("abort", done, { once: true });
+    });
+
+  /** Acompanha o job até terminar (ou o teto de tempo): por SSE quando possível, por polling HTTP como reserva. */
   const pollGeneration = async (stageId: string) => {
     if (!contentPackage) return;
     pollControllers.current[stageId]?.abort();
@@ -131,32 +185,68 @@ export function useStudioWorkspace(id: string | undefined) {
     pollControllers.current[stageId] = controller;
     const packageId = contentPackage.id;
     const startedAt = Date.now();
+    /** Job conhecido pela leitura HTTP: o stream só vale para ele ou para um mais novo (nunca para um anterior). */
+    let seed: ContentGenerationJobResponse | null = null;
+    let seeded = false;
 
-    while (!controller.signal.aborted && Date.now() - startedAt < GENERATION_POLL_MAX_MS) {
+    while (
+      !controller.signal.aborted &&
+      Date.now() - startedAt < GENERATION_POLL_MAX_MS
+    ) {
+      ensureStream(packageId);
+      const streamed = streamJobs.current[stageId];
+      const streamUsable =
+        seeded &&
+        !!streamed &&
+        (!seed ||
+          streamed.id === seed.id ||
+          new Date(streamed.createdAt) > new Date(seed.createdAt));
       let job: ContentGenerationJobResponse | null = null;
-      try {
-        job = await getLatestStageGeneration(packageId, stageId);
-      } catch {
-        // Falha pontual de rede: tenta de novo no próximo ciclo.
+      if (streamUsable) {
+        job = streamed;
+      } else {
+        try {
+          job = await getLatestStageGeneration(packageId, stageId);
+          seeded = true;
+          seed = job;
+        } catch {
+          // Falha pontual de rede: tenta de novo no próximo ciclo.
+        }
       }
       if (controller.signal.aborted) return;
-      if (job) setGenerationJobs((current) => ({ ...current, [stageId]: job as ContentGenerationJobResponse }));
+      if (job)
+        setGenerationJobs((current) => ({
+          ...current,
+          [stageId]: job as ContentGenerationJobResponse,
+        }));
       if (job && !isGenerationActive(job)) {
         delete pollControllers.current[stageId];
         if (job.status === GenerationJobStatus.SUCCEEDED) {
-          setFeedback({ severity: "success", message: "Conteúdo gerado. Revise antes de seguir." });
+          setFeedback({
+            severity: "success",
+            message: "Conteúdo gerado. Revise antes de seguir.",
+          });
         } else if (job.status === GenerationJobStatus.FAILED) {
-          setFeedback({ severity: "error", message: generationErrorMessage(job) });
+          setFeedback({
+            severity: "error",
+            message: generationErrorMessage(job),
+          });
         }
         await reload();
         return;
       }
-      await new Promise((resolve) => setTimeout(resolve, GENERATION_POLL_INTERVAL_MS));
+      await waitForUpdate(
+        streamController.current
+          ? STREAM_FALLBACK_WAIT_MS
+          : GENERATION_POLL_INTERVAL_MS,
+        controller.signal,
+      );
     }
     if (!controller.signal.aborted) {
       setFeedback({
         severity: "error",
-        message: "A geração está demorando mais que o normal. Atualize a página para ver o resultado.",
+        message:
+          "A geração está demorando mais que o normal. Atualize a página para ver o resultado.",
       });
     }
   };
@@ -164,14 +254,20 @@ export function useStudioWorkspace(id: string | undefined) {
   // Ao abrir o pacote, retoma o acompanhamento de etapas que já estavam gerando; ao sair, para tudo.
   useEffect(() => {
     if (!contentPackage) return;
-    for (const stage of contentPackage.tracks.flatMap((track) => track.stages)) {
-      if (stage.status === ContentStageStatus.GENERATING && !pollControllers.current[stage.id]) {
+    for (const stage of contentPackage.tracks.flatMap(
+      (track) => track.stages,
+    )) {
+      if (
+        stage.status === ContentStageStatus.GENERATING &&
+        !pollControllers.current[stage.id]
+      ) {
         void pollGeneration(stage.id);
       } else if (stage.status === ContentStageStatus.FAILED) {
         // Etapa que já abriu falhada: busca o motivo para a mensagem ser específica.
         void getLatestStageGeneration(contentPackage.id, stage.id)
           .then((job) => {
-            if (job) setGenerationJobs((current) => ({ ...current, [stage.id]: job }));
+            if (job)
+              setGenerationJobs((current) => ({ ...current, [stage.id]: job }));
           })
           .catch(() => undefined);
       }
@@ -180,7 +276,10 @@ export function useStudioWorkspace(id: string | undefined) {
   }, [contentPackage?.id]);
   useEffect(
     () => () => {
-      Object.values(pollControllers.current).forEach((controller) => controller.abort());
+      Object.values(pollControllers.current).forEach((controller) =>
+        controller.abort(),
+      );
+      streamController.current?.abort();
     },
     [],
   );
@@ -274,7 +373,10 @@ export function useStudioWorkspace(id: string | undefined) {
   };
 
   /** Salva o documento rico como nova versão (os campos estruturados da versão atual seguem como estão). */
-  const handleSaveDocument = async (stage: ContentStageResponse, document: TiptapDocument): Promise<boolean> => {
+  const handleSaveDocument = async (
+    stage: ContentStageResponse,
+    document: TiptapDocument,
+  ): Promise<boolean> => {
     if (!contentPackage) return false;
     setFeedback(null);
     try {
@@ -284,11 +386,15 @@ export function useStudioWorkspace(id: string | undefined) {
         templateVersion: contentPackage.templateCatalogVersion,
       });
       delete generationKeys.current[stage.id];
-      setFeedback({ severity: "success", message: "Documento salvo como nova versão." });
+      setFeedback({
+        severity: "success",
+        message: "Documento salvo como nova versão.",
+      });
       await reload();
       return true;
     } catch (error: unknown) {
-      const status = (error as { response?: { status?: number } })?.response?.status;
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status;
       setFeedback({
         severity: "error",
         message:
@@ -301,7 +407,9 @@ export function useStudioWorkspace(id: string | undefined) {
   };
 
   /** Descarta as edições do documento: salva a versão só com os campos (o documento volta a ser montado deles). */
-  const handleResetDocument = async (stage: ContentStageResponse): Promise<boolean> => {
+  const handleResetDocument = async (
+    stage: ContentStageResponse,
+  ): Promise<boolean> => {
     if (!contentPackage || !stage.currentVersion) return false;
     setFeedback(null);
     try {
@@ -309,11 +417,17 @@ export function useStudioWorkspace(id: string | undefined) {
         structuredContent: stage.currentVersion.structuredContent,
         templateVersion: contentPackage.templateCatalogVersion,
       });
-      setFeedback({ severity: "success", message: "Documento refeito a partir dos campos." });
+      setFeedback({
+        severity: "success",
+        message: "Documento refeito a partir dos campos.",
+      });
       await reload();
       return true;
     } catch {
-      setFeedback({ severity: "error", message: "Não foi possível refazer o documento." });
+      setFeedback({
+        severity: "error",
+        message: "Não foi possível refazer o documento.",
+      });
       return false;
     }
   };
