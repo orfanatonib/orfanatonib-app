@@ -83,6 +83,17 @@ export async function requestStageGeneration(
   return data;
 }
 
+/** Andamento da última geração da etapa; `null` se nunca houve. */
+export async function getLatestStageGeneration(
+  packageId: string,
+  stageId: string,
+): Promise<ContentGenerationJobResponse | null> {
+  const { data } = await api.get<ContentGenerationJobResponse | "">(
+    `/content-studio/packages/${packageId}/stages/${stageId}/generations/latest`,
+  );
+  return data || null;
+}
+
 export async function saveStageContent(
   packageId: string,
   stageId: string,

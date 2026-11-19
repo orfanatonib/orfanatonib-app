@@ -35,6 +35,7 @@ import {
   ContentStageStatus,
 } from "../types";
 import { formatContentStudioDateTime } from "../utils";
+import { generationErrorMessage, generationStatusLabel } from "../generation.utils";
 import { ContentStudioPageHeader } from "../components/ContentStudioPageHeader";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { ContentStageEditor } from "../components/ContentStageEditor";
@@ -341,8 +342,12 @@ export function ContentPackageDetailPage() {
                             ) : undefined
                           }
                         >
-                          Gerando conteúdo. Você pode acompanhar outras etapas
-                          enquanto aguarda.
+                          {workspace.generationJobs[stage.id]
+                            ? generationStatusLabel(workspace.generationJobs[stage.id].status)
+                            : "Gerando conteúdo."}{" "}
+                          Você pode acompanhar outras etapas enquanto aguarda.
+                          {workspace.generationJobs[stage.id]?.attempts > 1 &&
+                            ` (tentativa ${workspace.generationJobs[stage.id].attempts})`}
                         </Alert>
                       )}
                       {stage.status === ContentStageStatus.STALE && (
@@ -352,9 +357,9 @@ export function ContentPackageDetailPage() {
                         </Alert>
                       )}
                       {stage.status === ContentStageStatus.FAILED && (
-                        <Alert severity="error">
-                          A geração não foi concluída. Tente novamente ou edite
-                          o conteúdo manualmente.
+                        <Alert severity="error" data-testid="content-studio-generation-error">
+                          {generationErrorMessage(workspace.generationJobs[stage.id] ?? null)}{" "}
+                          Tente novamente ou edite o conteúdo manualmente.
                         </Alert>
                       )}
                       {!dependenciesReady && stage.dependencies.length > 0 && (
