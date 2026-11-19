@@ -1,0 +1,16 @@
+{
+ "unit": "observability-audit",
+ "scenarios": [
+  "observability-audit.get.log-records-audit#flag-desligada",
+  "observability-audit.get.log-records-audit#perfil-anonimo",
+  "observability-audit.get.log-records-audit#perfil-membro",
+  "observability-audit.get.log-records-audit#storage-arquivo",
+  "observability-audit.get.log-records-observability#flag-desligada",
+  "observability-audit.get.log-records-observability#perfil-anonimo",
+  "observability-audit.get.log-records-observability#perfil-membro",
+  "observability-audit.get.log-records-observability#storage-arquivo",
+  "observability-audit.delete.log-records-audit#perfil-anonimo",
+  "observability-audit.delete.log-records-audit#perfil-membro",
+  "observability-audit.post.auth-login#auditoria-sem-dado-pessoal"
+ ]
+}
