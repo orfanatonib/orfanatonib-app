@@ -32,6 +32,12 @@ jobs:
       
       - name: Run type check
         run: npm run type-check
+
+      - name: Run unit tests (Vitest)
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
       
       - name: Comment on PR (on failure)
         if: failure() && github.event_name == 'pull_request'
