@@ -62,6 +62,10 @@ function AdminLayout() {
     FeatureFlagKeys.SHELTERED_MANAGEMENT,
   );
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.PAGELAS);
+  const isShelterFeedEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_FEED);
+  const isFeedCommentsEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.SHELTER_FEED_COMMENTS,
+  );
   const isContentStudioEnabled = useIsFeatureEnabled(
     FeatureFlagKeys.CONTENT_STUDIO,
   );
@@ -89,6 +93,8 @@ function AdminLayout() {
         featureFlags: {
           [FeatureFlagKeys.SHELTERED_MANAGEMENT]: isShelterManagementEnabled,
           [FeatureFlagKeys.PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.SHELTER_FEED]: isShelterFeedEnabled,
+          [FeatureFlagKeys.SHELTER_FEED_COMMENTS]: isFeedCommentsEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: isContentStudioReviewEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]:
@@ -101,6 +107,8 @@ function AdminLayout() {
       isContentStudioProviderAdminEnabled,
       isContentStudioReviewEnabled,
       isPagelasEnabled,
+      isShelterFeedEnabled,
+      isFeedCommentsEnabled,
       isShelterManagementEnabled,
       user?.role,
     ],

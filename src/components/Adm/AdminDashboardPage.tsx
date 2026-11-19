@@ -54,6 +54,10 @@ export default function AdminDashboardPage() {
     FeatureFlagKeys.SHELTERED_MANAGEMENT,
   );
   const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.PAGELAS);
+  const isShelterFeedEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_FEED);
+  const isFeedCommentsEnabled = useIsFeatureEnabled(
+    FeatureFlagKeys.SHELTER_FEED_COMMENTS,
+  );
   const isContentStudioEnabled = useIsFeatureEnabled(
     FeatureFlagKeys.CONTENT_STUDIO,
   );
@@ -81,6 +85,8 @@ export default function AdminDashboardPage() {
         featureFlags: {
           [FeatureFlagKeys.SHELTERED_MANAGEMENT]: isShelterManagementEnabled,
           [FeatureFlagKeys.PAGELAS]: isPagelasEnabled,
+          [FeatureFlagKeys.SHELTER_FEED]: isShelterFeedEnabled,
+          [FeatureFlagKeys.SHELTER_FEED_COMMENTS]: isFeedCommentsEnabled,
           [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
         },
       }),
@@ -88,6 +94,8 @@ export default function AdminDashboardPage() {
       isAuthenticated,
       isContentStudioEnabled,
       isPagelasEnabled,
+      isShelterFeedEnabled,
+      isFeedCommentsEnabled,
       isShelterManagementEnabled,
       user?.role,
     ],
