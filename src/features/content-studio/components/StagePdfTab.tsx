@@ -1,9 +1,11 @@
 import Download from "@mui/icons-material/Download";
 import Refresh from "@mui/icons-material/Refresh";
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import OpenInNew from "@mui/icons-material/OpenInNew";
+import { Alert, Box, Button, CircularProgress, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useState } from "react";
 
 import { downloadExport, exportPath } from "../api";
+import { canEmbedPdf } from "../export.utils";
 import { useExportPreview } from "../hooks/useExportPreview";
 import { ExportFormat } from "../types";
 
@@ -23,6 +25,9 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
   const path = exportPath.stage(stageId, ExportFormat.PDF);
   const { url, loading, error, reload } = useExportPreview(packageId, path, versionKey, active);
   const [downloadError, setDownloadError] = useState(false);
+  const theme = useTheme();
+  const compact = useMediaQuery(theme.breakpoints.down("md"));
+  const embed = canEmbedPdf(typeof navigator === "undefined" ? undefined : navigator.pdfViewerEnabled, compact);
 
   const download = async (format: ExportFormat) => {
     setDownloadError(false);
@@ -86,7 +91,28 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
           <Typography color="text.secondary">Gerando o PDF… a primeira vez pode levar alguns segundos.</Typography>
         </Stack>
       )}
-      {url && !loading && (
+      {url && !loading && !embed && (
+        <Stack
+          spacing={1.5}
+          alignItems="stretch"
+          data-testid="content-studio-pdf-open-card"
+          sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2, bgcolor: "grey.50" }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            O PDF está pronto. No celular ele abre no visualizador do aparelho, em tela cheia.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<OpenInNew />}
+            onClick={() => window.open(url, "_blank", "noopener")}
+            data-testid="content-studio-pdf-open"
+            sx={{ minHeight: 48 }}
+          >
+            Abrir PDF
+          </Button>
+        </Stack>
+      )}
+      {url && !loading && embed && (
         <Box
           component="iframe"
           title="Prévia do PDF"

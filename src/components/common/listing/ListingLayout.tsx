@@ -193,6 +193,8 @@ export default function ListingLayout({
                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
               },
               ".MuiTablePagination-actions": { ml: { xs: 0.5, sm: 2 } },
+              // O seletor de itens por página também é alvo de toque.
+              "& .MuiTablePagination-select.MuiSelect-select": { minHeight: { xs: 44, sm: "auto" }, boxSizing: "border-box", display: "flex", alignItems: "center" },
               ".MuiTablePagination-actions .MuiIconButton-root": {
                 minWidth: { xs: 44, sm: "auto" },
                 minHeight: { xs: 44, sm: "auto" },

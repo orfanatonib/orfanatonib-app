@@ -344,7 +344,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({
         <IconButton
           color="warning"
           onClick={handleClick}
-          sx={{ ml: 1, p: 0.5 }}
+          sx={{ ml: 1, p: 0.5, minWidth: 44, minHeight: 44 }}
         >
           <Badge color="error" overlap="circular" badgeContent={hasAnyAlert ? badgeCount : 0}>
             <NotificationsActiveIcon sx={{ fontSize: 26, color: '#FFD600' }} />

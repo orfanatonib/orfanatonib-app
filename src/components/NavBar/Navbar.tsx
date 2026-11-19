@@ -97,6 +97,9 @@ const NavBar: React.FC = () => {
           sx={{
             color: '#FFFF00',
             textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 44,
             fontWeight: 'bold',
             '&:hover': {
               color: '#FFFFFF'

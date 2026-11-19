@@ -137,6 +137,7 @@ export default function ListingToolbar({
                     <IconButton
                       aria-label="Limpar busca"
                       size="small"
+                      sx={{ minWidth: 44, minHeight: 44 }}
                       onClick={() => onSearchChange("")}
                     >
                       <ClearIcon fontSize="small" />

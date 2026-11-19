@@ -25,6 +25,10 @@ import {
 import type { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
+/** Alvos de toque de 44 px nos links e ícones do rodapé. */
+const FOOTER_LINK_SX = { display: "inline-flex", alignItems: "center", minHeight: 44, px: 0.5 } as const;
+const FOOTER_ICON_SX = { minWidth: 44, minHeight: 44 } as const;
+
 const FOOTER_ADMIN_LINK_SX = {
   display: "inline-flex",
   alignItems: "center",
@@ -77,7 +81,7 @@ const Footer: React.FC = () => {
           justifyContent="center"
           flexWrap="wrap"
         >
-          <Link href="/" underline="hover" color="inherit" fontWeight="medium">
+          <Link href="/" underline="hover" color="inherit" fontWeight="medium" sx={FOOTER_LINK_SX}>
             Início
           </Link>
           <Link
@@ -85,6 +89,7 @@ const Footer: React.FC = () => {
             underline="hover"
             color="inherit"
             fontWeight="medium"
+            sx={FOOTER_LINK_SX}
           >
             Sobre
           </Link>
@@ -93,6 +98,7 @@ const Footer: React.FC = () => {
             underline="hover"
             color="inherit"
             fontWeight="medium"
+            sx={FOOTER_LINK_SX}
           >
             Eventos
           </Link>
@@ -101,6 +107,7 @@ const Footer: React.FC = () => {
             underline="hover"
             color="inherit"
             fontWeight="medium"
+            sx={FOOTER_LINK_SX}
           >
             Contato
           </Link>
@@ -114,6 +121,7 @@ const Footer: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
             color="inherit"
+            sx={FOOTER_ICON_SX}
           >
             <FacebookIcon fontSize="small" />
           </IconButton>
@@ -124,6 +132,7 @@ const Footer: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
             color="inherit"
+            sx={FOOTER_ICON_SX}
           >
             <InstagramIcon fontSize="small" />
           </IconButton>
@@ -134,6 +143,7 @@ const Footer: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
             color="inherit"
+            sx={FOOTER_ICON_SX}
           >
             <YouTubeIcon fontSize="small" />
           </IconButton>
@@ -152,6 +162,7 @@ const Footer: React.FC = () => {
               color="inherit"
               fontWeight="bold"
               underline="hover"
+              sx={FOOTER_LINK_SX}
             >
               Diego Seven System
             </Link>

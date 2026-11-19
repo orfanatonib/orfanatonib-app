@@ -399,7 +399,7 @@ export const AiProvidersConfigPage: React.FC = () => {
               startIcon={isFetching ? <CircularProgress size={16} color="inherit" /> : <Refresh />}
               disabled={isFetching}
               onClick={() => refetch()}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, minHeight: 38 }}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, minHeight: 44 }}
             >
               Recarregar
             </Button>
