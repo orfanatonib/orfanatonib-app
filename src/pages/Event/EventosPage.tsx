@@ -1,6 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { gradients } from "@/theme";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -37,6 +38,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { setEvents } from "@/store/slices/events/eventsSlice";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 
 import EventDetailsModal from "./EventDetailsModal";
 import EventFormModal from "./EventFormModal";
@@ -92,8 +94,11 @@ export default function EventosPage() {
   const [dialogDeleteOpen, setDialogDeleteOpen] = useState(false);
   const [deleteTargetEvent, setDeleteTargetEvent] = useState<AppEvent | null>(null);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const fetchEventos = useCallback(async (querySearch?: string) => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const res = await api.get("/events", {
         params: querySearch?.trim() ? { search: querySearch.trim() } : undefined,
@@ -101,7 +106,8 @@ export default function EventosPage() {
       const mapped = mapEventsWithFallbackDate(res.data || []);
       dispatch(setEvents(mapped));
       setEventosState(mapped);
-    } catch {
+    } catch (error: unknown) {
+      setErrorMessage(getApiErrorMessage(error, "Não foi possível carregar os eventos."));
     } finally {
       setLoading(false);
     }
@@ -148,7 +154,9 @@ export default function EventosPage() {
       await api.delete(`/events/${deleteTargetEvent.id}`);
       closeDeleteModal();
       await fetchEventos();
-    } catch {
+    } catch (error: unknown) {
+      closeDeleteModal();
+      setErrorMessage(getApiErrorMessage(error, "Não foi possível excluir o evento."));
     }
   };
 
@@ -190,6 +198,11 @@ export default function EventosPage() {
       <Box sx={{ minHeight: "100vh", background: gradients.subtle.greenWhiteSoft }}>
 
         <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', py: { xs: 2, sm: 2.5, md: 4 }, px: { xs: 1, sm: 2, md: 3 } }}>
+          {errorMessage && (
+            <Alert severity="error" data-testid="events-error" onClose={() => setErrorMessage(null)} sx={{ mb: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
             <Box
               sx={{
