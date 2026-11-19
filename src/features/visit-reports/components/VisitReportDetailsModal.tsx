@@ -92,7 +92,7 @@ export default function VisitReportDetailsModal({
                             {report.team?.description && ` - ${report.team.description}`}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Líderes: {report.team?.leaders?.map((l: any) => l.name).join(", ") || "N/A"}
+                            Líderes: {report.team?.leaders?.map((l) => l.name).join(", ") || "N/A"}
                         </Typography>
                     </Grid>
                     <Grid item xs={12} md={4}>

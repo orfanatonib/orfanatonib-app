@@ -24,7 +24,8 @@ import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
 import { useVisitReports } from "./hooks";
-import { VisitReport } from "./types";
+import { CreateVisitReportDto, UpdateVisitReportDto, VisitReport } from "./types";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 import VisitReportFormModal from "./components/VisitReportFormModal";
 import VisitReportDetailsModal from "./components/VisitReportDetailsModal";
 import ReportGridView from "./components/ReportGridView";
@@ -145,27 +146,33 @@ export default function VisitReportsManager() {
             .filter(shelter => shelter.teams.length > 0);
     }, [groupedReports, searchTerm]);
 
-    const handleCreate = async (data: any) => {
+    const [actionError, setActionError] = useState<string | null>(null);
+
+    const handleCreate = async (data: CreateVisitReportDto | UpdateVisitReportDto) => {
         setSubmitting(true);
+        setActionError(null);
         try {
-            await createReport(data);
+            await createReport(data as CreateVisitReportDto);
             setFormOpen(false);
         } catch (e) {
             logger.error('Falha inesperada na operação', undefined, e);
+            setActionError(getApiErrorMessage(e, 'Não foi possível salvar o relatório.'));
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleUpdate = async (data: any) => {
+    const handleUpdate = async (data: CreateVisitReportDto | UpdateVisitReportDto) => {
         if (!editingReport) return;
         setSubmitting(true);
+        setActionError(null);
         try {
-            await updateReport(editingReport.id, data);
+            await updateReport(editingReport.id, data as UpdateVisitReportDto);
             setFormOpen(false);
             setEditingReport(null);
         } catch (e) {
             logger.error('Falha inesperada na operação', undefined, e);
+            setActionError(getApiErrorMessage(e, 'Não foi possível salvar o relatório.'));
         } finally {
             setSubmitting(false);
         }
@@ -229,6 +236,12 @@ export default function VisitReportsManager() {
     return (
         <Box data-testid="visit-reports-manager" sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
             <BackHeader title="Relatórios das Visitas" />
+
+            {actionError && (
+                <Alert severity="error" data-testid="visit-reports-action-error" onClose={() => setActionError(null)} sx={{ mb: 2 }}>
+                    {actionError}
+                </Alert>
+            )}
 
             <Box display="flex" justifyContent={{ xs: "center", md: "flex-end" }} alignItems="center" mb={3} flexWrap="wrap" gap={2}>
                 <ToggleButtonGroup

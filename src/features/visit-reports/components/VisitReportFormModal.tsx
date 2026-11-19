@@ -18,7 +18,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
-import { CreateVisitReportDto, VisitReport } from "../types";
+import { CreateVisitReportDto, UpdateVisitReportDto, VisitReport } from "../types";
 import { apiFetchSheltersList } from "../../shelters/api";
 import { apiGetTeamsByShelter } from "../../teams/api";
 import { apiListShelterSchedules, apiListMyTeams } from "../../shelter-schedule/api";
@@ -31,7 +31,7 @@ import { logger } from '@/utils/logger';
 interface VisitReportFormModalProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateVisitReportDto | any) => Promise<void>;
+    onSubmit: (data: CreateVisitReportDto | UpdateVisitReportDto) => Promise<void>;
     initialData?: VisitReport | null;
     loading?: boolean;
 }
@@ -141,9 +141,13 @@ export default function VisitReportFormModal({
         }
     }, [selectedTeamId, initialData]);
 
+    const teamOptions = isAdmin
+        ? teams.map((t) => ({ id: t.id, label: `Equipe ${t.numberTeam} ${t.description ? `- ${t.description}` : ""}` }))
+        : myTeams.map((t) => ({ id: t.id, label: `Equipe ${t.numberTeam} - ${t.shelter.name}` }));
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const payload: any = {
+        const payload: UpdateVisitReportDto & { scheduleId?: string } = {
             teamMembersPresent: Number(teamMembersPresent),
             shelteredHeardMessage: Number(shelteredHeardMessage),
             caretakersHeardMessage: Number(caretakersHeardMessage),
@@ -156,7 +160,7 @@ export default function VisitReportFormModal({
             payload.scheduleId = scheduleId;
         }
 
-        onSubmit(payload);
+        onSubmit(payload as CreateVisitReportDto | UpdateVisitReportDto);
     };
 
     const isFormValid =
@@ -213,20 +217,14 @@ export default function VisitReportFormModal({
                                     >
                                         {loadingTeams ? (
                                             <MenuItem disabled><CircularProgress size={20} /></MenuItem>
-                                        ) : (isAdmin ? teams : myTeams).length === 0 ? (
+                                        ) : teamOptions.length === 0 ? (
                                             <MenuItem disabled>Nenhuma equipe encontrada</MenuItem>
                                         ) : (
-                                            (isAdmin ? teams : myTeams).map((t: any) => {
-                                                const label = isAdmin
-                                                    ? `Equipe ${t.numberTeam} ${t.description ? `- ${t.description}` : ""}`
-                                                    : `Equipe ${t.numberTeam} - ${t.shelter.name}`;
-
-                                                return (
-                                                    <MenuItem key={t.id} value={t.id} sx={{ color: 'text.primary' }}>
-                                                        {label}
-                                                    </MenuItem>
-                                                );
-                                            })
+                                            teamOptions.map((option) => (
+                                                <MenuItem key={option.id} value={option.id} sx={{ color: 'text.primary' }}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))
                                         )}
                                     </TextField>
                                 </Grid>
