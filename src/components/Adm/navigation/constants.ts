@@ -100,9 +100,9 @@ export const ADMIN_NAVIGATION_SECTIONS: readonly AdminNavigationSection[] = [
       },
       {
         id: AdminNavigationItemId.CONTENT_STUDIO_PROVIDERS,
-        label: "Provedores de IA",
-        description: "Consulte provedores e capacidades disponíveis.",
-        path: "/adm/estudio/provedores-ia",
+        label: "Provedores e Modelos IA",
+        description: "Configure ChatGPT e Gemini: chave de API e modelos.",
+        path: "/adm/config-provedores-ia",
         icon: Settings,
         allowedRoles: ADMIN_ONLY_ROLES,
         requiredFeatureFlags: [

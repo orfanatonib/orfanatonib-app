@@ -372,7 +372,7 @@ export const AiProvidersConfigPage: React.FC = () => {
               color="text.secondary"
               sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' }, lineHeight: 1.5 }}
             >
-              Configure o provedor, os modelos e as chaves usados na produção das lições.
+              Configure o provedor, os modelos e as chaves usados na produção de conteúdo do Estúdio.
             </Typography>
           </Box>
 

@@ -12,6 +12,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import SettingsInputCompositeIcon from "@mui/icons-material/SettingsInputComposite";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import { Link as RouterLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -40,6 +41,11 @@ const Footer: React.FC = () => {
   );
 
   const auditEnabled = useIsFeatureEnabled(FeatureFlagKeys.OBSERVABILITY_AUDIT);
+  const studioEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTENT_STUDIO);
+  const providerAdminFlag = useIsFeatureEnabled(
+    FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN,
+  );
+  const providerAdminEnabled = studioEnabled && providerAdminFlag;
 
   return (
     <Box
@@ -179,6 +185,19 @@ const Footer: React.FC = () => {
                 >
                   <FactCheckOutlinedIcon sx={{ fontSize: "0.9rem" }} />
                   Auditoria e observabilidade
+                </Link>
+              ) : null}
+              {providerAdminEnabled ? (
+                <Link
+                  component={RouterLink}
+                  to="/adm/config-provedores-ia"
+                  color="inherit"
+                  underline="hover"
+                  data-testid="footer-ai-providers-link"
+                  sx={FOOTER_ADMIN_LINK_SX}
+                >
+                  <SettingsInputCompositeIcon sx={{ fontSize: "0.9rem" }} />
+                  Provedores e Modelos IA
                 </Link>
               ) : null}
             </Stack>

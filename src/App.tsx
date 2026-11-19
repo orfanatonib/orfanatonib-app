@@ -3,7 +3,7 @@ import {
   PendingAttendancePage,
 } from "./features/attendance/pages";
 import PendingVisitReportsPage from "./features/visit-reports/pages/PendingVisitReportsPage";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -75,7 +75,6 @@ import {
   ContentPackageDetailPage,
   ContentStudioHomePage,
   ContentStudioProductionPage,
-  AiProvidersPage,
   ContentStudioGuidelinesPage,
   ContentStudioReviewPage,
 } from "./features/content-studio";
@@ -126,6 +125,12 @@ import VisitReportsManager from "./features/visit-reports/VisitReportsManager";
 import AtendentesManager from "./features/atendentes/AtendentesManager";
 
 /** Prazo para a verificação da sessão antes de mostrar a falha com nova tentativa. */
+const AiProvidersConfigPage = lazy(() =>
+  import("./features/ai-providers/AiProvidersConfigPage").then((module) => ({
+    default: module.AiProvidersConfigPage,
+  })),
+);
+
 const BOOT_TIMEOUT_MS = 15_000;
 
 function App() {
@@ -682,7 +687,7 @@ function App() {
                       }
                     />
                     <Route
-                      path="estudio/provedores-ia"
+                      path="config-provedores-ia"
                       element={
                         <RequireAdmin>
                           <FeatureFlagRoute
@@ -693,11 +698,25 @@ function App() {
                                 FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN
                               }
                             >
-                              <AiProvidersPage />
+                              <Suspense fallback={null}>
+                                <AiProvidersConfigPage />
+                              </Suspense>
                             </FeatureFlagRoute>
                           </FeatureFlagRoute>
                         </RequireAdmin>
                       }
+                    />
+                    <Route
+                      path="provedores-ia"
+                      element={<Navigate to="/adm/config-provedores-ia" replace />}
+                    />
+                    <Route
+                      path="estudio/provedores-ia"
+                      element={<Navigate to="/adm/config-provedores-ia" replace />}
+                    />
+                    <Route
+                      path="estudio/config"
+                      element={<Navigate to="/adm/config-provedores-ia" replace />}
                     />
                     <Route
                       path="estudio/orientacoes"

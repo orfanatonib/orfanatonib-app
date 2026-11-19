@@ -20,10 +20,21 @@ const apiAxios = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+/**
+ * `skipGlobalError` faz parte do contrato público do cliente: o interceptor não mostra a falha,
+ * quem chamou dá o retorno na própria tela (ex.: painel de provedores de IA).
+ */
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipGlobalError?: boolean;
+  }
+}
+
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
   _manualRetry?: boolean;
   _skipGlobalErrorHandling?: boolean;
+  skipGlobalError?: boolean;
   _skipCircuitBreaker?: boolean;
 }
 
@@ -115,7 +126,8 @@ apiAxios.interceptors.response.use(
       }
     }
 
-    const skipGlobalErrorHandling = originalRequest?._skipGlobalErrorHandling;
+    const skipGlobalErrorHandling =
+      originalRequest?._skipGlobalErrorHandling || originalRequest?.skipGlobalError;
     const skipCircuitBreaker = originalRequest?._skipCircuitBreaker;
 
     if (

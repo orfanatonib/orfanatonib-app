@@ -152,7 +152,7 @@ export const AI_PROVIDER_PROFILES: Record<AiProviderPresetProfile, AiProviderPro
   [AiProviderProfile.TEST]: {
     label: 'Testes (econômico)',
     description:
-      'Modelos menores, imagem em baixa qualidade e sem tentativas extras. Para testar o fluxo gastando pouco; não use para material que vai às crianças.',
+      'Modelos menores, imagem em baixa qualidade e sem tentativas extras. Para testar o fluxo gastando pouco; não use para conteúdo que vai às crianças.',
     openai: {
       generalModel: 'gpt-4o-mini',
       imageModel: 'gpt-image-1-mini',
@@ -171,7 +171,7 @@ export const AI_PROVIDER_PROFILES: Record<AiProviderPresetProfile, AiProviderPro
   [AiProviderProfile.PRODUCTION]: {
     label: 'Produção (qualidade)',
     description:
-      'Modelos e qualidade de imagem recomendados para o material final. Custo mais alto por lição.',
+      'Modelos e qualidade de imagem recomendados para o material final. Custo mais alto por pacote.',
     openai: {
       generalModel: DEFAULT_AI_PROVIDER_SETTINGS.openai.generalModel,
       imageModel: DEFAULT_AI_PROVIDER_SETTINGS.openai.imageModel,
