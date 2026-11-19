@@ -24,7 +24,7 @@ import TeamMemberAttendance from './TeamMemberAttendance';
 import AttendanceModeSelector from './AttendanceModeSelector';
 import ListSheets from './ListSheets';
 import BackHeader from '@/components/common/header/BackHeader';
-import NoTeamLinked from '@/components/Common/NoTeamLinked';
+import NoTeamLinked from '@/components/common/NoTeamLinked';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
 import { useAuthRole } from '@/utils/useAuthRole';

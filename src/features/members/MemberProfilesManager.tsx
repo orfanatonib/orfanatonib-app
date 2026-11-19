@@ -14,7 +14,7 @@ import type { SortingState } from "@tanstack/react-table";
 import { useSheltersIndex, useMemberMutations, useMemberProfiles } from "./hooks";
 import { MemberProfile } from "./types";
 import BackHeader from "@/components/common/header/BackHeader";
-import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import NoTeamLinked from "@/components/common/NoTeamLinked";
 import { useAuthRole } from "@/utils/useAuthRole";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";

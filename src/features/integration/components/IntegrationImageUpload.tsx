@@ -21,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ImageCarouselDialog, { CarouselImage } from './ImageCarouselDialog';
-import CameraModal from '../../../components/Common/CameraModal';
+import CameraModal from '../../../components/common/CameraModal';
 
 interface IntegrationImageUploadProps {
   onImagesSelect: (files: File[]) => void;

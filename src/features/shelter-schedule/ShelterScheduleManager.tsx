@@ -15,7 +15,7 @@ import EmptyState from "./components/EmptyState";
 import ShelterCard from "./components/ShelterCard";
 import ScheduleDetailsModal from "./components/ScheduleDetailsModal";
 import BackHeader from "@/components/common/header/BackHeader";
-import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import NoTeamLinked from "@/components/common/NoTeamLinked";
 
 interface TeamGroup {
   teamId: string;

@@ -29,9 +29,9 @@ import VisitReportFormModal from "./components/VisitReportFormModal";
 import VisitReportDetailsModal from "./components/VisitReportDetailsModal";
 import ReportGridView from "./components/ReportGridView";
 import ReportTableView from "./components/ReportTableView";
-import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import BackHeader from "@/components/common/header/BackHeader";
-import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import NoTeamLinked from "@/components/common/NoTeamLinked";
 import { logger } from '@/utils/logger';
 
 interface TeamGroup {

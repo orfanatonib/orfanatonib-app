@@ -33,7 +33,7 @@ import {
   GroupOutlined,
   WhatsApp,
 } from "@mui/icons-material";
-import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
+import ImagePreviewDialog from "@/components/common/ImagePreviewDialog";
 import { ShelterResponseDto } from "./types";
 import { fmtDate } from "@/utils/dateUtils";
 import { CopyButton } from "@/components/common/CopyButton";

@@ -41,7 +41,7 @@ import BirthdaySection from './components/BirthdaySection';
 import { ProfileCard, ProfileCardSkeleton } from './components/ProfileCard';
 import ProfileDetailModal from './components/ProfileDetailModal';
 import BackHeader from '@/components/common/header/BackHeader';
-import NoTeamLinked from '@/components/Common/NoTeamLinked';
+import NoTeamLinked from '@/components/common/NoTeamLinked';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/slices';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';

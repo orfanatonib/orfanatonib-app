@@ -17,7 +17,7 @@ import { Search, Clear, RateReview } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import FeedbackCard from "./components/FeedbackCard";
 import FeedbackDetailsModal from "./components/FeedbackDetailsModal";
-import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import { useFeedbackList, useFeedbackMutations, useFeedbackSearch } from "./hooks";
 import { FeedbackData } from "@/store/slices/feedback/feedbackSlice";
 import BackHeader from "@/components/common/header/BackHeader";

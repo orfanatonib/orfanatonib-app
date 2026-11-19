@@ -1,5 +1,5 @@
 import React from 'react';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 
 interface Props {
     open: boolean;

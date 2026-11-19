@@ -27,7 +27,7 @@ import { fetchRoutes } from 'store/slices/route/routeSlice';
 import { clearIdeasData, IdeasSection } from 'store/slices/ideas/ideasSlice';
 import api from '@/config/axiosConfig';
 import { MediaUploadType } from 'store/slices/types';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import { IdeasMaterialSection } from './IdeasMaterialSection';
 
 interface PageCreatorProps {

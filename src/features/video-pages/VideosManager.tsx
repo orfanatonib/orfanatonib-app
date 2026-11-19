@@ -22,7 +22,7 @@ import { setVideoData, VideoPageData } from 'store/slices/video/videoSlice';
 import { useVideoPages } from './hooks';
 import VideoPageToolbar from './components/VideoPageToolbar';
 import VideoPageCard from './components/VideoPageCard';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import VideoPageDetailsModal from './components/VideoPageDetailsModal';
 import BackHeader from '@/components/common/header/BackHeader';
 

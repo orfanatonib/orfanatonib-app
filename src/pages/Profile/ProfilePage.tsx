@@ -20,7 +20,7 @@ import PersonalDataForm from '@/features/profile/components/PersonalDataForm';
 import PreferencesForm from '@/features/profile/components/PreferencesForm';
 import { PROFILE_ERROR_MESSAGES } from '@/constants/errors';
 import ProfileSidebar, { menuItems } from './components/ProfileSidebar';
-import ImagePreviewDialog from '@/components/Common/ImagePreviewDialog';
+import ImagePreviewDialog from '@/components/common/ImagePreviewDialog';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ProfilePage: React.FC = () => {

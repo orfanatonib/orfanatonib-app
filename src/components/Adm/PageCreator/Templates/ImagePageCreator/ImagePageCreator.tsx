@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from '@/store/slices';
 import api from '@/config/axiosConfig';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
 import { AddImageModal } from './AddImageModal';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import { Notification } from './NotificationModal';
 import { LoadingSpinner } from './LoadingSpinner';
 import {

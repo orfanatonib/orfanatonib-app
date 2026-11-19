@@ -16,7 +16,7 @@ import {
   Paper,
 } from "@mui/material";
 import { Edit as EditIcon, Person as PersonIcon, Home as HomeIcon, Groups as GroupsIcon, SupervisorAccount as SupervisorIcon } from "@mui/icons-material";
-import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
+import ImagePreviewDialog from "@/components/common/ImagePreviewDialog";
 import { MemberProfile } from "../types";
 import { fmtDate } from "@/utils/dateUtils";
 
