@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { listImageSections } from './api';
+import { listImageSections, listMyImageSections } from './api';
+import type { MyImageSection } from './types';
 
 export function useImageSections() {
   const [sections, setSections] = useState<SectionData[]>([]);
@@ -54,4 +55,29 @@ export function useImageSections() {
     setError,
     fetchSections,
   };
+}
+
+/** "Minhas publicações" do autor logado; `reload` recarrega depois de um envio. */
+export function useMyImageSections() {
+  const [items, setItems] = useState<MyImageSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setFailed(false);
+    try {
+      setItems(await listMyImageSections());
+    } catch {
+      setFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  return { items, loading, failed, reload };
 }

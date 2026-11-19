@@ -20,9 +20,11 @@ import { setData, SectionData } from '@/store/slices/image-section/imageSectionS
 import { setIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
 import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
 import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
+import { RejectImageSectionDialog } from './components/RejectImageSectionDialog';
 import ImagePageCard from './components/ImagePageCard';
 import ImagePageDetailsModal from './components/ImagePageDetailsModal';
 import { deleteImageSection } from './api';
+import { ADMIN_IMAGE_SECTION_EDIT_ROUTE } from './constants';
 import { useImageSections } from './hooks';
 import BackHeader from '@/components/common/header/BackHeader';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
@@ -39,12 +41,13 @@ export default function ImageSectionManager() {
 
   const [sectionToDelete, setSectionToDelete] = useState<SectionData | null>(null);
   const [selectedSection, setSelectedSection] = useState<SectionData | null>(null);
+  const [sectionToReject, setSectionToReject] = useState<SectionData | null>(null);
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
   const handleEdit = (section: SectionData) => {
     dispatch(setData(section));
-    navigate('/adm/editar-imagens-shelter');
+    navigate(ADMIN_IMAGE_SECTION_EDIT_ROUTE);
   };
 
   const handleDelete = async () => {
@@ -228,6 +231,7 @@ export default function ImageSectionManager() {
                     onDelete={setSectionToDelete}
                     onEdit={handleEdit}
                     onViewDetails={setSelectedSection}
+                    onReject={setSectionToReject}
                   />
                 </Grid>
               ))}
@@ -240,6 +244,17 @@ export default function ImageSectionManager() {
           title={sectionToDelete?.caption || 'Seção'}
           onClose={() => setSectionToDelete(null)}
           onConfirm={handleDelete}
+        />
+
+        <RejectImageSectionDialog
+          open={!!sectionToReject}
+          sectionId={sectionToReject?.id ?? null}
+          caption={sectionToReject?.caption ?? ''}
+          onClose={() => setSectionToReject(null)}
+          onRejected={() => {
+            setSectionToReject(null);
+            void fetchSections();
+          }}
         />
 
         <ImagePageDetailsModal

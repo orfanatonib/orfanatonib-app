@@ -11,10 +11,13 @@ import {
   Chip,
   Stack,
 } from '@mui/material';
-import { Delete, Visibility, Image as ImageIcon, Edit as EditIcon, Public, Lock } from '@mui/icons-material';
+import { Delete, Visibility, Image as ImageIcon, Edit as EditIcon, Public, Lock, VideocamOutlined, BlockOutlined } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { truncate } from '../utils';
+import { MediaType } from '@/store/slices/types';
+import { REVIEW_STATUS_LABELS, TOUCH_TARGET_PX } from '../constants';
+import { ImageSectionReviewStatus } from '../types';
+import { mediaSummary, truncate } from '../utils';
 import { useTheme } from '@mui/material/styles';
 
 interface Props {
@@ -22,10 +25,15 @@ interface Props {
   onDelete: (section: SectionData) => void;
   onEdit: (section: SectionData) => void;
   onViewDetails: (section: SectionData) => void;
+  onReject: (section: SectionData) => void;
 }
 
-export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails }: Props) {
-  const preview = section.mediaItems?.[0]?.url;
+export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails, onReject }: Props) {
+  const items = section.mediaItems ?? [];
+  const preview = items.find((media) => media.mediaType === MediaType.IMAGE)?.url;
+  const status = section.reviewStatus ?? ImageSectionReviewStatus.PENDING;
+  const rejected = status === ImageSectionReviewStatus.REJECTED;
+  const hasVideo = items.some((media) => media.mediaType === MediaType.VIDEO);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -35,6 +43,7 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
       transition={{ duration: 0.2 }}
     >
       <Card
+        data-testid="image-section-card"
         variant="outlined"
         sx={{
           borderRadius: 3,
@@ -71,19 +80,22 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
               alt={section.caption || 'Miniatura'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
+          ) : hasVideo ? (
+            <VideocamOutlined data-testid="image-section-video-preview" fontSize="large" color="primary" />
           ) : (
             <ImageIcon fontSize="large" color="disabled" />
           )}
 
           <Chip
-            icon={section.public ? <Public fontSize="small" /> : <Lock fontSize="small" />}
-            label={section.public ? 'Público' : 'Privado'}
+            data-testid="image-section-status"
+            icon={rejected ? <Lock fontSize="small" /> : <Public fontSize="small" />}
+            label={REVIEW_STATUS_LABELS[status]}
             size="small"
             sx={{
               position: 'absolute',
               top: 8,
               left: 8,
-              bgcolor: section.public ? 'success.main' : 'error.main',
+              bgcolor: rejected ? 'error.main' : 'warning.main',
               color: 'white',
               fontSize: { xs: '0.7rem', sm: '0.75rem' },
               height: { xs: 24, sm: 28 },
@@ -96,7 +108,8 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
           />
 
           <Chip
-            label={`${section.mediaItems?.length || 0} ${section.mediaItems?.length === 1 ? 'imagem' : 'imagens'}`}
+            label={mediaSummary(items)}
+            data-testid="image-section-media-summary"
             size="small"
             sx={{
               position: 'absolute',
@@ -114,8 +127,11 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
           <Tooltip title="Excluir galeria">
             <IconButton
               size="small"
+              data-testid="image-section-delete"
               onClick={() => onDelete(section)}
               sx={{
+                minWidth: TOUCH_TARGET_PX,
+                minHeight: TOUCH_TARGET_PX,
                 position: 'absolute',
                 top: 8,
                 right: 8,
@@ -168,6 +184,16 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
           >
             {truncate(section.description)}
           </Typography>
+          {rejected && (
+            <Typography
+              data-testid="image-section-rejection-reason"
+              variant="caption"
+              color="error"
+              sx={{ display: 'block', mt: 1, overflowWrap: 'anywhere' }}
+            >
+              Motivo: {section.rejectionReason}
+            </Typography>
+          )}
         </CardContent>
 
         <CardActions
@@ -186,10 +212,12 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
             <Button
               variant="contained"
               size="small"
+              data-testid="image-section-view"
               startIcon={<Visibility fontSize="small" />}
               onClick={() => onViewDetails(section)}
               fullWidth
               sx={{
+                minHeight: TOUCH_TARGET_PX,
                 borderRadius: 2,
                 textTransform: 'none',
                 fontSize: { xs: '0.875rem', sm: '0.75rem' },
@@ -208,10 +236,12 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
             <Button
               variant="outlined"
               size="small"
+              data-testid="image-section-edit"
               startIcon={<EditIcon fontSize="small" />}
               onClick={() => onEdit(section)}
               fullWidth
               sx={{
+                minHeight: TOUCH_TARGET_PX,
                 borderRadius: 2,
                 textTransform: 'none',
                 fontSize: { xs: '0.875rem', sm: '0.75rem' },
@@ -229,6 +259,20 @@ export default function ImagePageCard({ section, onDelete, onEdit, onViewDetails
               Editar
             </Button>
           </Stack>
+          {!rejected && (
+            <Button
+              data-testid="image-section-reject"
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<BlockOutlined fontSize="small" />}
+              onClick={() => onReject(section)}
+              fullWidth
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, minHeight: TOUCH_TARGET_PX }}
+            >
+              Reprovar
+            </Button>
+          )}
         </CardActions>
       </Card>
     </motion.div>

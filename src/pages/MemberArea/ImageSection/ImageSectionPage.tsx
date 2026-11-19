@@ -1,187 +1,165 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Paper, Stack } from '@mui/material';
+import { Alert, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { CheckCircleOutline, SendOutlined } from '@mui/icons-material';
 
-import { submitImageSection } from '@/features/image-sections/api';
-import { setData, clearData, SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
-import { RootState } from '@/store/slices';
+import {
+  SHELTER_FEED_ROUTE,
+  SHELTER_UPLOAD_MESSAGES,
+  MyImageSectionsList,
+  ShelterMediaEditor,
+  TOUCH_TARGET_PX,
+  buildSectionFormData,
+  buildSectionUpload,
+  submitImageSection,
+  useMyImageSections,
+  validateShelterDraft,
+} from '@/features/image-sections';
+import type { SectionData } from '@/store/slices/image-section/imageSectionSlice';
+import { extractErrorMessage } from '@/utils/apiError';
 
 import { MEMBER_AREA_HOME_PATH, MEMBER_CARD_SX } from '../constants/navigation';
-import { LoadingSpinner } from '../components/Modals';
-import { NotificationModal } from '../components/Modals';
-import ImageSectionEditor from './ImageSectionEditor';
 
-interface NotificationState {
-  open: boolean;
-  message: string;
-  severity: 'success' | 'error';
-}
+const EMPTY_DRAFT: SectionData = { caption: '', description: '', public: false, mediaItems: [] };
 
+/**
+ * Envio de fotos e/ou vídeo de um abrigo. O post entra na fila de revisão
+ * (nunca publica direto); em caso de erro os arquivos continuam na tela.
+ */
 export default function ImageSectionPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const sectionData = useSelector((state: RootState) => state.imageSection.data) as SectionData | null;
-
+  const [draft, setDraft] = useState<SectionData>(EMPTY_DRAFT);
   const [isSaving, setIsSaving] = useState(false);
-  const [notification, setNotification] = useState<NotificationState>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-
-  useEffect(() => {
-    dispatch(clearData());
-  }, [dispatch]);
-
-  const showError = (message: string) => {
-    setNotification({ open: true, message, severity: 'error' });
-  };
-
-  const validate = useCallback((): boolean => {
-    if (!sectionData?.caption?.trim()) {
-      showError('O título das atividades do seu Abrigo é obrigatório.');
-      return false;
-    }
-    if (!sectionData?.description?.trim()) {
-      showError('A descrição das atividades é obrigatória.');
-      return false;
-    }
-    if (!sectionData?.mediaItems?.length) {
-      showError('Adicione pelo menos uma imagem das atividades do seu Abrigo.');
-      return false;
-    }
-    return true;
-  }, [sectionData]);
-
-  const prepareFormData = useCallback((): FormData => {
-    const formData = new FormData();
-
-    const mediaItems = sectionData!.mediaItems.map((media, index) => {
-      const base = {
-        isLocalFile: media.isLocalFile,
-        url: media.url || '',
-        uploadType: media.uploadType || MediaUploadType.UPLOAD,
-        mediaType: MediaType.IMAGE,
-        title: media.title || '',
-        description: media.description || '',
-        platformType: media.platformType || MediaPlatform.ANY,
-        originalName: media.originalName,
-        size: media.size,
-      };
-
-      if (media.isLocalFile && media.file) {
-        const fieldKey = `file_${index}`;
-        formData.append(fieldKey, media.file);
-        return { ...base, fieldKey, id: media.id };
-      }
-
-      return { ...base, id: media.id };
-    });
-
-    const payload = {
-      caption: sectionData!.caption,
-      description: sectionData!.description,
-      public: sectionData!.public,
-      mediaItems,
-    };
-
-    formData.append('sectionData', JSON.stringify(payload));
-    return formData;
-  }, [sectionData]);
-
-  const saveSection = async (formData: FormData) => {
-    await submitImageSection(formData);
-
-    setNotification({
-      open: true,
-      message: 'Imagens do seu Abrigo compartilhadas com sucesso!',
-      severity: 'success',
-    });
-
-    dispatch(clearData());
-  };
+  const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const mine = useMyImageSections();
 
   const handleSave = async () => {
-    if (!validate()) return;
-
+    if (isSaving) return;
+    const validation = validateShelterDraft(draft);
+    if (validation) {
+      setError(validation);
+      return;
+    }
     setIsSaving(true);
-    const formData = prepareFormData();
-
+    setError('');
     try {
-      await saveSection(formData);
-
-      navigate('/area-do-membro');
-    } catch {
-      showError('Falha ao compartilhar as imagens do seu Abrigo. Tente novamente.');
+      const { payload, uploads } = buildSectionUpload({
+        caption: draft.caption.trim(),
+        description: draft.description.trim(),
+        mediaItems: draft.mediaItems,
+      });
+      await submitImageSection(buildSectionFormData(payload, uploads));
+      setSubmitted(true);
+      setDraft(EMPTY_DRAFT);
+      void mine.reload();
+    } catch (failure: unknown) {
+      setError(extractErrorMessage(failure, SHELTER_UPLOAD_MESSAGES.SEND_FAILED));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleChange = (updatedData: Partial<SectionData>) => {
-    dispatch(setData({ ...(sectionData || {}), ...updatedData } as SectionData));
-  };
-
-  const handleCancel = () => {
-    navigate(MEMBER_AREA_HOME_PATH);
-  };
+  if (submitted) {
+    return (
+      <Stack data-testid="member-photos-page" spacing={2}>
+        <Paper
+          data-testid="shelter-upload-success"
+          variant="outlined"
+          sx={{ p: { xs: 3, md: 6 }, textAlign: 'center', borderRadius: 3 }}
+        >
+          <CheckCircleOutline color="success" sx={{ fontSize: 56 }} />
+          <Typography component="h2" variant="h5" mt={2} fontWeight={700}>
+            Seu momento foi enviado!
+          </Typography>
+          <Typography color="text.secondary" mt={1}>
+            A equipe vai revisar sua publicação. Após a aprovação, ela aparecerá no feed dos abrigos
+            com seu nome.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" gap={2} mt={3}>
+            <Button
+              data-testid="shelter-upload-go-feed"
+              type="button"
+              variant="contained"
+              onClick={() => navigate(SHELTER_FEED_ROUTE)}
+              sx={{ minHeight: TOUCH_TARGET_PX }}
+            >
+              Ir para o feed
+            </Button>
+            <Button
+              data-testid="shelter-upload-send-another"
+              type="button"
+              variant="outlined"
+              onClick={() => setSubmitted(false)}
+              sx={{ minHeight: TOUCH_TARGET_PX }}
+            >
+              Enviar outro momento
+            </Button>
+          </Stack>
+        </Paper>
+        <MyImageSectionsList items={mine.items} loading={mine.loading} failed={mine.failed} />
+      </Stack>
+    );
+  }
 
   return (
-    <>
-    <LoadingSpinner open={isSaving} aria-label="Salvando a seção" />
-    <NotificationModal
-      open={notification.open}
-      message={notification.message}
-      severity={notification.severity}
-      onClose={() => setNotification({ ...notification, open: false })}
-    />
     <Stack data-testid="member-photos-page" spacing={{ xs: 2, md: 3 }}>
-      <ImageSectionEditor
-        isEditMode={false}
-        initialCaption={sectionData?.caption || ''}
-        initialDescription={sectionData?.description || ''}
-        initialIsPublic={sectionData?.public ?? true}
-        initialMediaItems={sectionData?.mediaItems || []}
-        onChange={handleChange}
-        captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
-        descriptionPlaceholder="EX: Descreva as atividades realizadas no seu Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos, momentos especiais com as pessoas e como elas reagiram às atividades."
+      <ShelterMediaEditor
+        initialCaption={draft.caption}
+        initialDescription={draft.description}
+        initialMediaItems={draft.mediaItems}
+        disabled={isSaving}
+        onChange={(changes) => {
+          setDraft((current) => ({ ...current, ...changes }));
+          setError('');
+        }}
       />
-
+      {error && (
+        <Alert data-testid="shelter-upload-error" severity="error" role="alert">
+          {error}
+        </Alert>
+      )}
       <Paper
         data-testid="member-photos-actions"
         elevation={0}
         sx={{
           ...MEMBER_CARD_SX,
           display: 'flex',
-          flexDirection: { xs: 'column-reverse', sm: 'row' },
-          justifyContent: 'flex-end',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', sm: 'center' },
           gap: 1.5,
         }}
       >
-        <Button
-          data-testid="member-photos-cancel"
-          variant="outlined"
-          color="inherit"
-          onClick={handleCancel}
-          disabled={isSaving}
-          sx={{ minHeight: 44, textTransform: 'none', fontWeight: 600 }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          data-testid="member-photos-submit"
-          variant="contained"
-          onClick={handleSave}
-          disabled={isSaving}
-          sx={{ minHeight: 44, px: 3, textTransform: 'none', fontWeight: 700 }}
-          aria-label="Compartilhar imagens do Abrigo"
-        >
-          {isSaving ? 'Enviando...' : 'Compartilhar imagens'}
-        </Button>
+        <Typography variant="body2" color="text.secondary" role="status" data-testid="shelter-upload-status">
+          {isSaving
+            ? 'Enviando arquivos. Aguarde até a confirmação.'
+            : 'Tudo pronto? Envie seu registro para a equipe.'}
+        </Typography>
+        <Stack direction={{ xs: 'column-reverse', sm: 'row' }} gap={1.5}>
+          <Button
+            data-testid="member-photos-cancel"
+            variant="outlined"
+            color="inherit"
+            onClick={() => navigate(MEMBER_AREA_HOME_PATH)}
+            disabled={isSaving}
+            sx={{ minHeight: TOUCH_TARGET_PX, textTransform: 'none', fontWeight: 600 }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            data-testid="member-photos-submit"
+            variant="contained"
+            disabled={isSaving}
+            onClick={() => void handleSave()}
+            startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : <SendOutlined />}
+            sx={{ minHeight: 48, px: 3, textTransform: 'none', fontWeight: 700 }}
+          >
+            {isSaving ? 'Enviando…' : 'Enviar para revisão'}
+          </Button>
+        </Stack>
       </Paper>
+      <MyImageSectionsList items={mine.items} loading={mine.loading} failed={mine.failed} />
     </Stack>
-    </>
   );
 }

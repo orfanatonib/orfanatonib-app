@@ -1,17 +1,21 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Container, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';
-import { motion } from 'framer-motion';
+import { Box, Button, Chip, CircularProgress, Container, Paper, Stack, Typography } from '@mui/material';
+import PublicIcon from '@mui/icons-material/Public';
 
-import api from '@/config/axiosConfig';
-import { setData, clearData, SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
+import BackHeader from '@/components/common/header/BackHeader';
 import { RootState } from '@/store/slices';
+import { setData, clearData, SectionData } from '@/store/slices/image-section/imageSectionSlice';
+import { extractErrorMessage } from '@/utils/apiError';
+import { LoadingSpinner, NotificationModal } from '@/pages/MemberArea/components/Modals';
 
-import { LoadingSpinner } from '@/pages/MemberArea/components/Modals';
-import { NotificationModal } from '@/pages/MemberArea/components/Modals';
-import ImageSectionEditor from '@/pages/MemberArea/ImageSection/ImageSectionEditor';
+import { updateImageSection } from './api';
+import { RejectImageSectionDialog } from './components/RejectImageSectionDialog';
+import { ShelterMediaEditor } from './components/ShelterMediaEditor';
+import { ADMIN_IMAGE_SECTIONS_ROUTE, REVIEW_STATUS_COLORS, REVIEW_STATUS_LABELS, TOUCH_TARGET_PX } from './constants';
+import { validateShelterPublication } from './media-utils';
+import { buildSectionFormData, buildSectionUpload, mediaSummary } from './utils';
 
 interface NotificationState {
   open: boolean;
@@ -19,372 +23,166 @@ interface NotificationState {
   severity: 'success' | 'error';
 }
 
+/**
+ * Revisão do admin: confere título, descrição, fotos e vídeo (com player), ajusta
+ * o que for preciso e aprova. Aprovar grava `public: true` e leva o post à galeria
+ * do feed (a API usa `FEED_ORFANATO_PAGE_ID`).
+ */
 export default function ImageSectionEditorAdmin() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const sectionData = useSelector((state: RootState) => state.imageSection.data) as SectionData | null;
 
   const [isSaving, setIsSaving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const [notification, setNotification] = useState<NotificationState>({
     open: false,
     message: '',
     severity: 'success',
   });
 
-  const showError = (message: string) => {
-    setNotification({ open: true, message, severity: 'error' });
-  };
+  useEffect(() => {
+    if (!sectionData) navigate(ADMIN_IMAGE_SECTIONS_ROUTE);
+  }, [sectionData, navigate]);
 
-  const validate = useCallback((): boolean => {
-    if (!sectionData?.caption?.trim()) {
-      showError('O título da galeria compartilhada é obrigatório.');
-      return false;
-    }
-    if (!sectionData?.description?.trim()) {
-      showError('A descrição das atividades do Abrigo é obrigatória.');
-      return false;
-    }
-    if (!sectionData?.mediaItems?.length) {
-      showError('É necessário ter pelo menos uma imagem para publicar.');
-      return false;
-    }
-    return true;
-  }, [sectionData]);
+  if (!sectionData) return null;
 
-  const prepareFormData = useCallback((): FormData => {
-    const formData = new FormData();
+  const showError = (message: string) => setNotification({ open: true, message, severity: 'error' });
 
-    const mediaItems = sectionData!.mediaItems.map((media, index) => {
-      const base = {
-        isLocalFile: media.isLocalFile,
-        url: media.url || '',
-        uploadType: media.uploadType || MediaUploadType.UPLOAD,
-        mediaType: MediaType.IMAGE,
-        title: media.title || '',
-        description: media.description || '',
-        platformType: media.platformType || MediaPlatform.ANY,
-        originalName: media.originalName,
-        size: media.size,
-      };
-
-      if (media.isLocalFile && media.file) {
-        const fieldKey = `file_${index}`;
-        formData.append(fieldKey, media.file);
-        return { ...base, fieldKey, id: media.id };
-      }
-
-      return { ...base, id: media.id };
-    });
-
-    const payload = {
-      caption: sectionData!.caption,
-      description: sectionData!.description,
-      public: sectionData!.public,
-      mediaItems,
-    };
-
-    formData.append('sectionData', JSON.stringify(payload));
-    return formData;
-  }, [sectionData]);
-
-  const saveSection = async (formData: FormData) => {
-    if (!sectionData?.id) {
-      showError('ID da seção não encontrado.');
-      return;
-    }
-
-    await api.patch(`/image-sections/${sectionData.id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-
-    setNotification({
-      open: true,
-      message: 'Imagens compartilhadas publicadas com sucesso!',
-      severity: 'success',
-    });
-
-    dispatch(clearData());
-  };
-
-  const handleSave = async () => {
-    if (!validate()) return;
+  const handleApprove = async () => {
+    if (isSaving) return;
+    if (!sectionData.caption.trim()) return showError('O título da publicação é obrigatório.');
+    if (!sectionData.description.trim()) return showError('A descrição da publicação é obrigatória.');
+    const mediaError = validateShelterPublication(sectionData.mediaItems, true);
+    if (mediaError) return showError(mediaError);
+    if (!sectionData.id) return showError('ID da seção não encontrado.');
 
     setIsSaving(true);
-    const formData = prepareFormData();
-
     try {
-      await saveSection(formData);
-      navigate('/adm/fotos-abrigos');
-    } catch {
-      showError('Falha ao publicar as imagens compartilhadas. Tente novamente.');
+      const { payload, uploads } = buildSectionUpload({
+        caption: sectionData.caption.trim(),
+        description: sectionData.description.trim(),
+        public: true,
+        mediaItems: sectionData.mediaItems,
+      });
+      await updateImageSection(sectionData.id, buildSectionFormData(payload, uploads));
+      dispatch(clearData());
+      navigate(ADMIN_IMAGE_SECTIONS_ROUTE);
+    } catch (error: unknown) {
+      showError(extractErrorMessage(error, 'Falha ao publicar. Tente novamente.'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleChange = (updatedData: Partial<SectionData>) => {
-    dispatch(setData({ ...(sectionData || {}), ...updatedData } as SectionData));
+  const handleChange = (updated: Partial<SectionData>) => {
+    dispatch(setData({ ...sectionData, ...updated }));
   };
-
-  useEffect(() => {
-    if (!sectionData) {
-      navigate('/adm/fotos-abrigos');
-    }
-  }, [sectionData, navigate]);
-
-  if (!sectionData) {
-    return null; 
-  }
 
   return (
     <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: '#f5f7fa',
-        py: { xs: 1, md: 2 },
-        px: { xs: 0.5, md: 0 },
-      }}
+      data-testid="image-sections-image-section-editor-admin"
+      sx={{ minHeight: '100vh', bgcolor: '#f9fafb', px: { xs: 2, md: 0 }, pb: 4 }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 1, md: 2 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              mb: 2,
-              borderRadius: 2,
-              background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
-              color: 'white',
-            }}
+      <Container maxWidth="lg" disableGutters>
+        <BackHeader title="Revisar fotos e vídeo" />
+        <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2 }, mb: 2, borderRadius: 3, border: 1, borderColor: 'divider' }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
           >
-            <Box
-              sx={{
-                p: { xs: 1.5, md: 2 },
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 1,
-              }}
-            >
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  sx={{
-                    fontSize: { xs: '1.1rem', md: '1.3rem' },
-                    mb: 0.5,
-                  }}
-                >
-                  🛠️ Editor de Imagens Compartilhadas
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    opacity: 0.9,
-                    fontSize: { xs: '0.8rem', md: '0.85rem' },
-                  }}
-                >
-                  Editar e publicar imagens compartilhadas dos Abrigos
-                </Typography>
-              </Box>
-              
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 1,
-                  flexDirection: { xs: 'row', sm: 'row' },
-                  width: { xs: '100%', sm: 'auto' },
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/adm/fotos-abrigos')}
-                  disabled={isSaving}
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  ← Voltar
-                </Button>
-                
-                <Button
-                  variant="contained"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                  }}
-                >
-                  {isSaving ? 'Publicando...' : '💾 Publicar Alterações'}
-                </Button>
-              </Box>
-            </Box>
-          </Paper>
-
-          <Paper
-            elevation={1}
-            sx={{
-              p: { xs: 1.5, md: 2 },
-              borderRadius: 2,
-              bgcolor: 'white',
-              border: '1px solid #e5e7eb',
-            }}
-          >
-
-            <LoadingSpinner open={isSaving} aria-label="Salvando a seção" />
-
-            <NotificationModal
-              open={notification.open}
-              message={notification.message}
-              severity={notification.severity}
-              onClose={() => setNotification({ ...notification, open: false })}
-            />
-
-            <Box
-              sx={{
-                mb: 3,
-                p: 0,
-                display: 'flex',
-                gap: 2,
-                flexDirection: { xs: 'column', sm: 'row' },
-              }}
-            >
-              <Box
-                sx={{
-                  flex: 1,
-                  p: 2,
-                  bgcolor: sectionData?.public ? '#f0fdf4' : '#fef2f2',
-                  borderRadius: 2,
-                  border: sectionData?.public ? '2px solid #86efac' : '2px solid #fecaca',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    bgcolor: sectionData?.public ? '#22c55e' : '#ef4444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                  }}
-                >
-                  {sectionData?.public ? '🌐' : '🔒'}
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
-                    Status
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: sectionData?.public ? '#16a34a' : '#dc2626',
-                      fontWeight: 700,
-                      fontSize: { xs: '1rem', md: '1.1rem' },
-                    }}
-                  >
-                    {sectionData?.public ? 'Público' : 'Privado'}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box
-                sx={{
-                  flex: 1,
-                  p: 2,
-                  bgcolor: '#eff6ff',
-                  borderRadius: 2,
-                  border: '2px solid #bfdbfe',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    bgcolor: '#3b82f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                  }}
-                >
-                  📸
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
-                    Imagens Compartilhadas
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: '#1e40af',
-                      fontWeight: 700,
-                      fontSize: { xs: '1rem', md: '1.1rem' },
-                    }}
-                  >
-                    {sectionData?.mediaItems?.length || 0} {sectionData?.mediaItems?.length === 1 ? 'imagem' : 'imagens'}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <ImageSectionEditor
-                isEditMode={true}
-                initialCaption={sectionData?.caption || ''}
-                initialDescription={sectionData?.description || ''}
-                initialIsPublic={sectionData?.public ?? true}
-                initialMediaItems={sectionData?.mediaItems || []}
-                onChange={handleChange}
-                captionPlaceholder="EX: Abrigo 90: Gincana de Páscoa - Acolhidos aprendendo sobre ressurreição"
-                descriptionPlaceholder="EX: Revisar e aprimorar a descrição das atividades do Abrigo: dinâmicas, brincadeiras, ensinamentos bíblicos e momentos especiais registrados."
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip
+                size="small"
+                data-testid="image-section-admin-status"
+                color={REVIEW_STATUS_COLORS[sectionData.reviewStatus ?? 'pending']}
+                label={REVIEW_STATUS_LABELS[sectionData.reviewStatus ?? 'pending']}
               />
-            </motion.div>
-          </Paper>
-        </motion.div>
+              <Chip
+                size="small"
+                variant="outlined"
+                data-testid="image-section-admin-media-summary"
+                label={mediaSummary(sectionData.mediaItems)}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                data-testid="image-section-admin-author"
+                label={`Enviado por: ${sectionData.author?.displayName ?? 'Autor não informado'}`}
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1}>
+              <Button
+                data-testid="image-section-admin-back"
+                variant="outlined"
+                disabled={isSaving}
+                onClick={() => navigate(ADMIN_IMAGE_SECTIONS_ROUTE)}
+                sx={{ minHeight: TOUCH_TARGET_PX }}
+              >
+                Voltar
+              </Button>
+              <Button
+                data-testid="image-section-admin-reject"
+                variant="outlined"
+                color="error"
+                disabled={isSaving}
+                onClick={() => setRejecting(true)}
+                sx={{ minHeight: TOUCH_TARGET_PX }}
+              >
+                Reprovar
+              </Button>
+              <Button
+                data-testid="image-section-admin-approve"
+                variant="contained"
+                color="success"
+                disabled={isSaving}
+                onClick={() => void handleApprove()}
+                startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : <PublicIcon />}
+                sx={{ minHeight: TOUCH_TARGET_PX }}
+              >
+                {isSaving ? 'Publicando…' : 'Aprovar e publicar'}
+              </Button>
+            </Stack>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+            Confira o título, a descrição e as fotos ou o vídeo antes de decidir. Publicar leva o registro
+            para o feed dos abrigos.
+          </Typography>
+        </Paper>
+
+        <RejectImageSectionDialog
+          open={rejecting}
+          sectionId={sectionData.id ?? null}
+          caption={sectionData.caption}
+          onClose={() => setRejecting(false)}
+          onRejected={() => {
+            setRejecting(false);
+            dispatch(clearData());
+            navigate(ADMIN_IMAGE_SECTIONS_ROUTE);
+          }}
+        />
+
+        <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 3, border: 1, borderColor: 'divider' }}>
+          <LoadingSpinner open={isSaving} aria-label="Publicando a seção" />
+          <NotificationModal
+            open={notification.open}
+            message={notification.message}
+            severity={notification.severity}
+            onClose={() => setNotification({ ...notification, open: false })}
+          />
+          <ShelterMediaEditor
+            isEditMode
+            disabled={isSaving}
+            initialCaption={sectionData.caption || ''}
+            initialDescription={sectionData.description || ''}
+            initialMediaItems={sectionData.mediaItems || []}
+            onChange={handleChange}
+            captionPlaceholder="EX: Abrigo São Lucas: Gincana de Páscoa"
+            descriptionPlaceholder="EX: dinâmicas, brincadeiras e momentos especiais registrados."
+          />
+        </Paper>
       </Container>
     </Box>
   );

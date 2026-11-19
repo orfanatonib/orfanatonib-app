@@ -3,30 +3,13 @@ import {
   Stack, Paper, Grid, Box, useMediaQuery
 } from '@mui/material';
   import { useTheme } from '@mui/material/styles';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import { SectionData, setData } from '@/store/slices/image-section/imageSectionSlice';
-import { styled } from '@mui/material/styles';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { formatDatePtBr } from '../utils';
-
-const StyledSlider = styled(Slider)(({ theme }) => ({
-  '.slick-prev, .slick-next': {
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    backgroundColor: theme.palette.grey[800],
-    borderRadius: '50%',
-    color: theme.palette.common.white,
-    '&:hover': { backgroundColor: theme.palette.grey[700] },
-    [theme.breakpoints.down('sm')]: { width: 32, height: 32 },
-  },
-  '.slick-prev': { left: 10 },
-  '.slick-next': { right: 10 },
-  '.slick-dots': { bottom: -10 },
-}));
+import { MediaType } from '@/store/slices/types';
+import { ADMIN_IMAGE_SECTION_EDIT_ROUTE, TOUCH_TARGET_PX } from '../constants';
+import { formatDatePtBr, mediaSummary } from '../utils';
+import { ShelterMediaPreview } from './ShelterMediaPreview';
 
 interface Props {
   section: SectionData | null;
@@ -42,19 +25,8 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
 
   const handleEdit = (s: SectionData) => {
     dispatch(setData(s));
-    navigate('/adm/editar-imagens-shelter');
+    navigate(ADMIN_IMAGE_SECTION_EDIT_ROUTE);
   };
-
-  const carouselSettings = {
-    dots: true,
-    infinite: (section?.mediaItems?.length ?? 0) > 1,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: true,
-    adaptiveHeight: false,
-  };
-  const aspect = isMobile ? '16 / 10' : '16 / 9';
 
   return (
     <Dialog
@@ -63,9 +35,10 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
       fullWidth
       maxWidth="lg"
       aria-labelledby="dialog-title"
+      data-testid="image-section-details"
       sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}
     >
-      <DialogTitle id="dialog-title">Detalhes das imagens</DialogTitle>
+      <DialogTitle id="dialog-title">Detalhes da publicação</DialogTitle>
       <DialogContent sx={{ pb: 1 }}>
         {section ? (
           <Stack spacing={3} mt={0.5}>
@@ -82,6 +55,9 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Stack spacing={1}>
+                    <Typography variant="body1" data-testid="image-section-details-author">
+                      <strong>Enviado por:</strong> {section.author?.displayName ?? 'Autor não informado'}
+                    </Typography>
                     <Typography variant="body1"><strong>Criado em:</strong> {formatDatePtBr(section.createdAt)}</Typography>
                     <Typography variant="body1"><strong>Atualizado em:</strong> {formatDatePtBr(section.updatedAt)}</Typography>
                   </Stack>
@@ -90,36 +66,29 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
             </Paper>
 
             <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom color="primary">Galeria de Imagens</Typography>
+              <Typography variant="h6" gutterBottom color="primary">
+                Fotos e vídeo ({mediaSummary(section.mediaItems)})
+              </Typography>
               {(section.mediaItems?.length ?? 0) > 0 ? (
                 <Box
+                  data-testid="image-section-details-media"
                   sx={{
-                    position: 'relative',
-                    width: '100%',
-                    aspectRatio: aspect, 
-                    bgcolor: 'background.default',
-                    borderRadius: 2,
-                    overflow: 'hidden',
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                    gap: 1.5,
                   }}
                 >
-                  <StyledSlider {...(carouselSettings as any)}>
-                    {section.mediaItems!.map((item) => (
-                      <Box key={item.id} sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img
-                          src={item.url}
-                          alt={item.originalName}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </StyledSlider>
+                  {section.mediaItems!.map((item, index) => (
+                    <Box
+                      key={item.id ?? index}
+                      sx={{ minWidth: 0, gridColumn: item.mediaType === MediaType.VIDEO ? '1 / -1' : undefined }}
+                    >
+                      <ShelterMediaPreview media={item} />
+                    </Box>
+                  ))}
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">Nenhuma imagem disponível.</Typography>
+                <Typography variant="body2" color="text.secondary">Nenhuma mídia disponível.</Typography>
               )}
             </Paper>
           </Stack>
@@ -142,7 +111,8 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
             variant="contained"
             color="secondary"
             aria-label="Editar e publicar"
-            sx={{ width: isMobile ? '100%' : 'auto' }}
+            data-testid="image-section-details-edit"
+            sx={{ width: isMobile ? '100%' : 'auto', minHeight: TOUCH_TARGET_PX }}
           >
             Editar e publicar
           </Button>
@@ -152,7 +122,7 @@ export default function ImagePageDetailsModal({ section, open, onClose }: Props)
           variant="outlined"
           color="primary"
           aria-label="Fechar modal"
-          sx={{ width: isMobile ? '100%' : 'auto' }}
+          sx={{ width: isMobile ? '100%' : 'auto', minHeight: TOUCH_TARGET_PX }}
         >
           Fechar
         </Button>

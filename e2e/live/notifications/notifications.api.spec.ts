@@ -27,7 +27,8 @@ const EXPECTED_TEMPLATES = [
   "team-assignment-changed",
   "pagela-reminder",
   "visit-report-reminder",
-  "photo-uploaded",
+  "image-shared-notification",
+  "image-rejected-notification",
 ];
 
 test.describe.serial("Notificações — API ao vivo", () => {
