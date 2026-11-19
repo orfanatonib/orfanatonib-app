@@ -73,8 +73,10 @@ export function useAtendentes(
         next[i] = updated;
         return next;
       });
-    } catch {
-      setRows((prev) => prev.filter((p) => p.id !== id));
+    } catch (err: unknown) {
+      // Só some da lista se o registro realmente não existe mais; falha de rede/permissão não pode apagar a linha da tela.
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 404) setRows((prev) => prev.filter((p) => p.id !== id));
     }
   }, []);
 
