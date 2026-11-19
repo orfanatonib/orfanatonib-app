@@ -74,7 +74,7 @@ export default function ListingLayout({
     <Box data-testid={testId}
       sx={
         embedded
-          ? { display: "flex", flexDirection: "column", flexGrow: 1 }
+          ? { display: "flex", flexDirection: "column", flexGrow: 1, gap: 2 }
           : {
               px: { xs: 2, md: 0 },
               pb: 4,

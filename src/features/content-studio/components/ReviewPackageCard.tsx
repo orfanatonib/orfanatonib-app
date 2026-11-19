@@ -2,7 +2,7 @@ import ArrowForward from "@mui/icons-material/ArrowForward";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import FactCheck from "@mui/icons-material/FactCheck";
 import Groups from "@mui/icons-material/Groups";
-import { Box, Button, LinearProgress, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 
 import ListingCard from "@/components/common/listing/ListingCard";
 
@@ -50,17 +50,10 @@ export function ReviewPackageCard({ item, audiences, onOpen }: ReviewPackageCard
             variant="caption"
             fontWeight={700}
             color="text.secondary"
-            sx={{ display: "block", mt: 0.75, mb: 0.5 }}
+            sx={{ display: "block", mt: 0.75 }}
           >
             {reviewProgressText(summary)}
           </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={summary.percent}
-            color={summary.percent === 100 ? "success" : "primary"}
-            aria-label={`${summary.percent}% das etapas aprovadas`}
-            sx={{ height: 6, borderRadius: 3 }}
-          />
         </Box>
       }
       actions={
