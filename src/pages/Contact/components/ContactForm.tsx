@@ -38,6 +38,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
       email: '',
       telefone: '',
       mensagem: '',
+      website: '',
     },
   });
 
@@ -59,7 +60,23 @@ const ContactForm: React.FC<ContactFormProps> = ({
         </Alert>
       )}
 
-      <Box component="form" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+      <Box component="form" data-testid="contact-form" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+        {/* Isca anti-robô: fora da tela e do teclado; se vier preenchida, a API descarta a mensagem. */}
+        <Controller
+          name="website"
+          control={control}
+          render={({ field }) => (
+            <input
+              {...field}
+              data-testid="contact-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, opacity: 0 }}
+            />
+          )}
+        />
         <Controller
           name="name"
           control={control}

@@ -19,6 +19,7 @@ export const useContactForm = () => {
         email: normalizeEmail(data.email),
         phone: digitsOnly(data.telefone),
         message: data.mensagem,
+        website: data.website ?? '',
       });
       setSubmitted(true);
     } catch (error) {

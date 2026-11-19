@@ -3,6 +3,8 @@ export interface ContactFormData {
   email: string;
   telefone: string;
   mensagem: string;
+  /** Isca anti-robô: escondida, pessoas nunca a preenchem. */
+  website?: string;
 }
 
 export interface ContactFormProps {
