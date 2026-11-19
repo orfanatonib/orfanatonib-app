@@ -37,6 +37,7 @@
   "feature-flags.get.feature-flags-stats#perfil-anonimo",
   "feature-flags.get.feature-flags-stats#perfil-lider",
   "feature-flags.get.feature-flags-stats#perfil-membro",
+  "feature-flags.get.varredura#publicos-das-flags",
   "feature-flags.patch.feature-flags-key#conflito-ou-duplicidade",
   "feature-flags.patch.feature-flags-key#falha-do-colaborador-sem-efeito-parcial",
   "feature-flags.patch.feature-flags-key#feliz",
