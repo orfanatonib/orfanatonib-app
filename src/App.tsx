@@ -8,10 +8,7 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
-  CircularProgress,
   Toolbar,
-  Button,
-  Typography,
 } from "@mui/material";
 
 import "./App.css";
@@ -21,6 +18,7 @@ import Navbar from "./components/NavBar/Navbar";
 import Footer from "./components/Footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import RequireAdmin from "./components/RequireAdmin/RequireAdmin";
+import AppBootScreen from "./components/AppBoot/AppBootScreen";
 import PageRenderer from "./components/PageRenderer/PageRenderer";
 import GlobalErrorBoundary from "./components/common/GlobalErrorBoundary";
 import GlobalNotification from "./components/GlobalNotification/GlobalNotification";
@@ -125,6 +123,9 @@ import IntegrationShelteredPage from "./features/integration/IntegrationSheltere
 import VisitReportsManager from "./features/visit-reports/VisitReportsManager";
 import AtendentesManager from "./features/atendentes/AtendentesManager";
 
+/** Prazo para a verificação da sessão antes de mostrar a falha com nova tentativa. */
+const BOOT_TIMEOUT_MS = 15_000;
+
 function App() {
   const dispatch = useDispatch<AppDispatchType>();
   const dynamicRoutes = useSelector(
@@ -133,18 +134,17 @@ function App() {
   const { initialized, loadingUser, isAuthenticated, user } = useSelector(
     (state: RootStateType) => state.auth,
   );
-  const [forceReady, setForceReady] = useState(false);
+  const [bootTimedOut, setBootTimedOut] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
 
   useEffect(() => {
     dispatch(fetchRoutes());
     dispatch(initAuth());
 
-    const fallbackTimeout = setTimeout(() => {
-      setForceReady(true);
-    }, 15000);
-
-    return () => clearTimeout(fallbackTimeout);
-  }, [dispatch]);
+    // Passado o prazo sem sessão resolvida, mostra a falha (com "Tentar novamente").
+    const timeout = setTimeout(() => setBootTimedOut(true), BOOT_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [dispatch, bootAttempt]);
 
   useEffect(() => {
     if (initialized) {
@@ -154,47 +154,20 @@ function App() {
 
   const handleLogout = () => {
     dispatch(logout());
-    setForceReady(true);
   };
 
-  if (!forceReady && (!initialized || loadingUser)) {
+  const handleBootRetry = () => {
+    setBootTimedOut(false);
+    setBootAttempt((attempt) => attempt + 1);
+  };
+
+  if (!initialized || loadingUser) {
     return (
-      <Box
-        data-testid="app-auth-loading"
-        sx={{
-          height: "100vh",
-          width: "100vw",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%)",
-          backgroundAttachment: "fixed",
-          gap: 3,
-          px: 2,
-        }}
-      >
-        <CircularProgress size={48} />
-        <Typography variant="body1" color="text.secondary">
-          Verificando autenticação...
-        </Typography>
-        <Button
-          data-testid="app-auth-loading-logout"
-          variant="outlined"
-          color="error"
-          onClick={handleLogout}
-          sx={{
-            mt: 2,
-            borderWidth: 2,
-            "&:hover": {
-              borderWidth: 2,
-              bgcolor: "rgba(211, 47, 47, 0.04)",
-            },
-          }}
-        >
-          Sair
-        </Button>
-      </Box>
+      <AppBootScreen
+        timedOut={bootTimedOut}
+        onRetry={handleBootRetry}
+        onLogout={handleLogout}
+      />
     );
   }
 
