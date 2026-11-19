@@ -6,7 +6,8 @@ import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
 import { useShelterSchedules, useMyTeams } from "./hooks";
-import { ShelterScheduleResponseDto } from "./types";
+import { CreateShelterScheduleDto, ShelterScheduleResponseDto, UpdateShelterScheduleDto } from "./types";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 import ShelterScheduleFormModal from "./components/ShelterScheduleFormModal";
 import ShelterScheduleDeleteDialog from "./components/ShelterScheduleDeleteDialog";
 import LeaderInfoBanner from "./components/LeaderInfoBanner";
@@ -166,13 +167,15 @@ export default function ShelterScheduleManager() {
     setDetailsModalOpen(true);
   };
 
-  const handleSubmit = async (data: any) => {
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleSubmit = async (data: CreateShelterScheduleDto | UpdateShelterScheduleDto) => {
     setSubmitting(true);
     try {
       if (editingSchedule) {
-        await updateSchedule(editingSchedule.id, data);
+        await updateSchedule(editingSchedule.id, data as UpdateShelterScheduleDto);
       } else {
-        await createSchedule(data);
+        await createSchedule(data as CreateShelterScheduleDto);
       }
       handleCloseForm();
     } catch (err: unknown) {
@@ -191,7 +194,9 @@ export default function ShelterScheduleManager() {
       if (selectedSchedule?.id === deletingSchedule.id) {
         setSelectedSchedule(null);
       }
-    } catch {
+    } catch (err: unknown) {
+      handleCloseDelete();
+      setActionError(getApiErrorMessage(err, "Não foi possível excluir o agendamento."));
     } finally {
       setSubmitting(false);
     }
@@ -237,6 +242,12 @@ export default function ShelterScheduleManager() {
       {isLeader && !isAdmin && <LeaderInfoBanner />}
 
       <BackHeader title="Agendamentos de Visitas" />
+
+      {actionError && (
+        <Alert severity="error" data-testid="shelter-schedule-action-error" onClose={() => setActionError(null)} sx={{ mb: 2 }}>
+          {actionError}
+        </Alert>
+      )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Button
