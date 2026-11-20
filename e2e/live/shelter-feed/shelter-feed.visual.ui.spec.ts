@@ -4,16 +4,7 @@ import { SHELTER_FEED_PATH } from "../../../src/features/shelter-feed/routes";
 import { RUN_TAG } from "../support/factory";
 import { closeDb, countRows, queryOne } from "../support/db";
 import { expect, loginAs, seedBrowserSession, test } from "../support/live";
-import {
-  IMAGE_LINK,
-  IMAGE_LINK_2,
-  createVideoSection,
-  createEmptyGallery,
-  createFeedSection,
-  createGallery,
-  removeGallery,
-  removeSection,
-} from "./feed-fixtures";
+import { IMAGE_LINK, IMAGE_LINK_2, createVideoSection, createEmptyGallery, createFeedSection, createGallery, removeGallery, removeSection } from "./feed-fixtures";
 
 /**
  * Feed visual (plano 36, fases 5/6/11): modos, busca, lightbox, compartilhar,
@@ -33,8 +24,7 @@ test.describe.serial("Feed visual — tela", () => {
   const fillerIds: string[] = [];
   const tag = `${RUN_TAG} visual`;
 
-  const sectionBox = (page: Page, id: string): Locator =>
-    page.locator(`[data-testid="shelter-feed-section"][data-section-id="${id}"]`);
+  const sectionBox = (page: Page, id: string): Locator => page.locator(`[data-testid="shelter-feed-section"][data-section-id="${id}"]`);
   const feedUrl = (id = pageId) => `${SHELTER_FEED_PATH}?galeria=${id}`;
   const openFeed = async (page: Page, id = pageId) => {
     await page.goto(feedUrl(id));
@@ -90,6 +80,21 @@ test.describe.serial("Feed visual — tela", () => {
     await page.getByTestId("shelter-feed-view-mode-timeline").click();
     await expect(page.getByTestId("shelter-feed-timeline-stream")).toBeVisible();
     await expect(page.getByTestId("shelter-feed-view-mode-timeline")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("[shelter-feed.visual#video-nao-vira-imagem] nenhum <img> recebe URL de vídeo em nenhum modo nem no lightbox", async ({ page }) => {
+    const brokenVideoImages = async () => page.locator('img[src*=".mp4"], img[src*=".webm"], img[src*=".mov"]').count();
+    await openFeed(page);
+    await expect(sectionBox(page, videoId)).toBeAttached();
+    expect(await brokenVideoImages()).toBe(0);
+    for (const mode of ["bento", "gallery", "timeline"]) {
+      await page.getByTestId(`shelter-feed-view-mode-${mode}`).click();
+      await page.waitForTimeout(400);
+      expect(await brokenVideoImages()).toBe(0);
+    }
+    await page.getByTestId(`shelter-feed-post-photos-${videoId}`).click();
+    await expect(page.getByTestId("shelter-feed-lightbox-dialog")).toBeVisible();
+    expect(await brokenVideoImages()).toBe(0);
   });
 
   test("[shelter-feed.visual#busca] busca sem acento, limpar e estado de busca vazia", async ({ page }) => {
@@ -239,9 +244,7 @@ test.describe.serial("Feed visual — tela", () => {
   test("[shelter-feed.visual#erro-proxima-pagina] falha ao carregar a 2ª página mostra aviso com tentar de novo", async ({ page }) => {
     await openFeed(page);
     // Injeção de falha (HTTP 400, sem retentativa do cliente) só na 2ª página (não há como provocá-la de verdade na API local).
-    await page.route("**/image-pages/*/sections*page=2*", (route) =>
-      route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "falha injetada" }) }),
-    );
+    await page.route("**/image-pages/*/sections*page=2*", (route) => route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "falha injetada" }) }));
     // A rolagem até o fim dispara o carregamento automático (sentinela); o botão é o plano B manual.
     await page.getByTestId("shelter-feed-sentinel").scrollIntoViewIfNeeded();
     await expect(page.getByTestId("shelter-feed-next-page-error")).toBeVisible({ timeout: 60_000 });

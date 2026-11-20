@@ -1,5 +1,7 @@
 import type { RefObject } from 'react';
 import { Box, ButtonBase } from '@mui/material';
+import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded';
+import { MediaType } from '@/store/slices/types';
 import { FEED_MIN_TOUCH_TARGET_PX, FEED_PALETTE, FEED_TEST_IDS } from '../constants';
 import type { FeedMediaViewModel } from '../types';
 
@@ -32,7 +34,7 @@ export function FeedLightboxThumbnails({ mediaItems, currentIndex, activeThumbRe
                   data-testid={`${FEED_TEST_IDS.LIGHTBOX_THUMB_PREFIX}-${media.key}`}
                   type="button"
                   onClick={() => onSelect(idx)}
-                  aria-label={`Selecionar foto ${idx + 1} de ${mediaItems.length}`}
+                  aria-label={`Selecionar ${media.mediaType === MediaType.VIDEO ? 'vídeo' : 'foto'} ${idx + 1} de ${mediaItems.length}`}
                   aria-current={isActive ? 'true' : undefined}
                   sx={{
                     width: 56,
@@ -56,18 +58,29 @@ export function FeedLightboxThumbnails({ mediaItems, currentIndex, activeThumbRe
                     },
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={media.previewUrl}
-                    alt=""
-                    loading="lazy"
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
+                  {media.mediaType === MediaType.VIDEO ? (
+                    <>
+                      <Box
+                        component="video"
+                        src={media.originalUrl}
+                        preload="metadata"
+                        muted
+                        playsInline
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+                      />
+                      <PlayCircleOutlineRoundedIcon sx={{ position: 'absolute', fontSize: 26, color: '#ffffff', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))' }} />
+                    </>
+                  ) : (
+                    <Box
+                      component="img"
+                      src={media.previewUrl}
+                      alt=""
+                      loading="lazy"
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  )}
                 </ButtonBase>
               );
             })}
