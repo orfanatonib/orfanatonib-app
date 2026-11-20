@@ -30,14 +30,32 @@ async function newPackage(request: import("@playwright/test").APIRequestContext,
   });
   expect(res.status()).toBe(201);
   const pkg = (await res.json()) as Pkg;
-  const stage = pkg.tracks[0].stages.find((s) => s.stageType === "CANONICAL_BASE") ?? pkg.tracks[0].stages[0];
+  const stage = pkg.tracks[0].stages.find((s) => s.stageType === "LESSON") ?? pkg.tracks[0].stages[0];
   return { packageId: pkg.id, stage };
 }
 
-const request202 = (request: import("@playwright/test").APIRequestContext, packageId: string, stageId: string, key: string) =>
+/** "Visuais da lição" só gera depois das perguntas (quantidade, tipo, desenho e formato); o desenho é o padrão da categoria. */
+const VISUAL_CONFIG_BY_AUDIENCE: Record<string, object> = {
+  BABY: { quantity: 4, format: "CUTOUT_KIT", style: "CUTE_CARTOON", orientation: "LANDSCAPE" },
+  CHILD: { quantity: 4, format: "CUTOUT_KIT", style: "CUTE_CARTOON", orientation: "LANDSCAPE" },
+  TEEN: { quantity: 4, format: "STORY_SCENES", style: "MODERN_ILLUSTRATION", orientation: "LANDSCAPE" },
+  ADULT: { quantity: 4, format: "STORY_SCENES", style: "EDITORIAL_PAINTING", orientation: "PORTRAIT" },
+};
+
+const request202 = (
+  request: import("@playwright/test").APIRequestContext,
+  packageId: string,
+  stageId: string,
+  key: string,
+  visualAudience?: string,
+) =>
   request.post(`${API_URL}/content-studio/packages/${packageId}/stages/${stageId}/generations`, {
     headers: authHeaders(admin),
-    data: { capability: "TEXT_STRUCTURED", idempotencyKey: key },
+    data: {
+      capability: "TEXT_STRUCTURED",
+      idempotencyKey: key,
+      ...(visualAudience ? { visualConfig: VISUAL_CONFIG_BY_AUDIENCE[visualAudience] } : {}),
+    },
   });
 
 const jobRow = (id: string) =>
@@ -153,7 +171,7 @@ test.describe.serial("Geração com provedor simulado — ao vivo", () => {
     for (const track of pkg.tracks) {
       // respeita as dependências: gera na ordem do catálogo, esperando cada etapa concluir
       for (const stage of track.stages) {
-        const job = (await (await request202(request, pkg.id, stage.id, `${TAG}-${track.audience}-${stage.stageType}`)).json()) as { id: string };
+        const job = (await (await request202(request, pkg.id, stage.id, `${TAG}-${track.audience}-${stage.stageType}`, stage.stageType === "LESSON_VISUALS" ? track.audience : undefined)).json()) as { id: string };
         const done = await waitJob(job.id, (s) => s === "SUCCEEDED" || s === "FAILED");
         expect(done.status, `${track.audience} ${stage.stageType}`).toBe("SUCCEEDED");
         const version = await queryOne<{ structuredContent: string | { story?: Array<{ body: string }> }; generationSnapshot: string | { audience?: string; stageType?: string; promptVersion?: string } }>(
@@ -161,7 +179,7 @@ test.describe.serial("Geração com provedor simulado — ao vivo", () => {
           [stage.id],
         );
         const snap = typeof version?.generationSnapshot === "string" ? JSON.parse(version.generationSnapshot) : version?.generationSnapshot;
-        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: "orfanato.studio.prompts/1.0.0" });
+        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: "orfanato.studio.prompts/2.2.0" });
         if (stage.stageType === "LESSON") {
           const content = typeof version?.structuredContent === "string" ? JSON.parse(version.structuredContent) : version?.structuredContent;
           lessonWords[track.audience] = (content?.story ?? []).reduce((n: number, b: { body: string }) => n + b.body.split(" ").length, 0);

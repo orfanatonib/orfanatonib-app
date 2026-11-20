@@ -43,6 +43,8 @@ export default function PageFormBase({
             data-testid={`${testId}-${PAGE_FORM_TEST_IDS.BACK}`}
             onClick={onBack}
             sx={{
+              minWidth: 44,
+              minHeight: 44,
               bgcolor: 'background.paper',
               boxShadow: 2,
               '&:hover': { bgcolor: 'action.hover', transform: 'scale(1.05)' },

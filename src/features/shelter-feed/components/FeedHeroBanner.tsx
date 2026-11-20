@@ -48,9 +48,9 @@ export function FeedHeroBanner({
       <Container
         maxWidth={false}
         disableGutters
-        sx={{ width: FEED_CONTAINER_WIDTH, maxWidth: FEED_CONTENT_MAX_WIDTH, py: 2 }}
+        sx={{ width: FEED_CONTAINER_WIDTH, maxWidth: FEED_CONTENT_MAX_WIDTH, py: { xs: 0.5, sm: 2 } }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 0, sm: 1 } }}>
           <Stack
             component="nav"
             aria-label="Localização"
@@ -127,7 +127,7 @@ export function FeedHeroBanner({
                 fontSize: '0.7rem',
                 fontWeight: 700,
                 letterSpacing: '0.1em',
-                mb: 0.75,
+                mb: { xs: 0.25, sm: 0.75 },
               }}
             >
               {FEED_PAGE_MESSAGES.HERO_EYEBROW}
@@ -136,17 +136,25 @@ export function FeedHeroBanner({
               component="h1"
               sx={{
                 color: FEED_PALETTE.inkPrimary,
-                fontSize: { xs: '1.85rem', md: '2.25rem' },
+                fontSize: { xs: '1.45rem', md: '2.25rem' },
                 fontWeight: 800,
-                letterSpacing: '-0.035em',
+                letterSpacing: '-0.03em',
                 lineHeight: 1.2,
-                mb: 1,
+                mb: { xs: 0.5, sm: 1 },
               }}
             >
               {title || FEED_PAGE_MESSAGES.DEFAULT_TITLE}
             </Typography>
             <Typography
-              sx={{ color: FEED_PALETTE.inkSecondary, fontSize: '0.95rem', lineHeight: 1.6 }}
+              sx={{
+                color: FEED_PALETTE.inkSecondary,
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                lineHeight: 1.5,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: { xs: 2, sm: 'unset' },
+                overflow: 'hidden',
+              }}
             >
               {description || FEED_PAGE_MESSAGES.DEFAULT_SUBTITLE}
             </Typography>

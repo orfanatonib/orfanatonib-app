@@ -5,6 +5,8 @@ export interface StudioDocEditorProps {
   initialJson: TiptapDocument;
   onChange?: (json: TiptapDocument) => void;
   editable?: boolean;
+  /** Categoria do material (etiqueta do cabeçalho da folha): Baby, Crianças… */
+  audienceName?: string;
 }
 
 export interface StudioEditorAdvancedToolsProps {

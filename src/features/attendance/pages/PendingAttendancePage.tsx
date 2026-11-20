@@ -1,389 +1,250 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from "react";
 import {
   Alert,
   Box,
-  Breadcrumbs,
-  Card,
-  CardContent,
+  Button,
   Chip,
-  CircularProgress,
-  Collapse,
   Dialog,
   DialogContent,
   DialogTitle,
-  Grid,
   IconButton,
-  Link,
-  List,
-  ListItem,
-  ListItemText,
+  Pagination,
+  Skeleton,
   Stack,
   TextField,
   Typography,
-  InputAdornment,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import HomeIcon from '@mui/icons-material/Home';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import GroupsIcon from '@mui/icons-material/Groups';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchIcon from '@mui/icons-material/Search';
-import { getAllPendings } from '../api';
-import { EventCategory } from '../types';
-import BackHeader from '@/components/common/header/BackHeader';
-import type { TeamPendingsDto, PendingForLeaderDto, PendingForMemberDto, TeamScheduleDto } from '../types';
-import RegisterAttendance from '../components/RegisterAttendance';
-import { attendanceErrorMessage } from '../errors';
-import { formatDayBR } from 'utils/dateUtils';
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import Close from "@mui/icons-material/Close";
+import { Link } from "react-router-dom";
+import { getAllPendings } from "../api";
+import { useAttendanceResource } from "../hooks/useAttendanceResource";
+import {
+  attendanceTeamPath,
+  normalizeAttendanceSearch,
+  pendingToSchedule,
+} from "../workspace.utils";
+import { EventCategory } from "../types";
+import type { TeamScheduleDto } from "../types";
+import { formatDateBR } from "../utils";
+import { ATTENDANCE_HISTORY_PAGE_SIZE } from "../constants";
+import { attendanceCardSx, attendancePrimarySx } from "@/theme/attendance";
+import RegisterAttendance from "../components/RegisterAttendance";
 
-const PendingAttendancePage = () => {
-  const navigate = useNavigate();
-  const [leaderPendings, setLeaderPendings] = useState<TeamPendingsDto[]>([]);
-  const [memberPendings, setMemberPendings] = useState<PendingForMemberDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [expandedShelter, setExpandedShelter] = useState<string | null>(null);
-  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
-  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
-  const [openRegisterModal, setOpenRegisterModal] = useState(false);
-  const [selectedPendingMember, setSelectedPendingMember] = useState<TeamScheduleDto | null>(null);
-
-  const fetchPendings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getAllPendings();
-      setLeaderPendings(res.leaderPendings);
-      setMemberPendings(res.memberPendings);
-    } catch (err: unknown) {
-      const message = attendanceErrorMessage(err, 'Erro ao buscar pendências.');
-      setError(message);
-      setLeaderPendings([]);
-      setMemberPendings([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPendings();
-  }, []);
-
-  const filteredLeaderPendings = useMemo(() => {
-    if (!searchTerm.trim()) return leaderPendings;
-
-    const lowerTerm = searchTerm.toLowerCase();
-
-    return leaderPendings.map(shelterGroup => {
-      const shelterMatches = shelterGroup.shelterName.toLowerCase().includes(lowerTerm);
-      const teamMatches = shelterGroup.teamName.toLowerCase().includes(lowerTerm);
-
-      if (shelterMatches || teamMatches) return shelterGroup;
-
-      return null;
-    }).filter(Boolean) as TeamPendingsDto[];
-
-  }, [leaderPendings, searchTerm]);
-
-  const groupedByShelter = useMemo(() => {
-    return filteredLeaderPendings.reduce((acc, team) => {
-      if (!acc[team.shelterName]) {
-        acc[team.shelterName] = [];
-      }
-      acc[team.shelterName].push(team);
-      return acc;
-    }, {} as Record<string, TeamPendingsDto[]>);
-  }, [filteredLeaderPendings]);
-
-  const sortedShelters = useMemo(() => {
-    return Object.entries(groupedByShelter).sort((a, b) =>
-      a[0].localeCompare(b[0])
-    );
-  }, [groupedByShelter]);
-
-  const totalLeaderPendings = leaderPendings.reduce((acc, tp) => acc + tp.pendings.length, 0);
-  const totalMemberPendings = memberPendings.length;
-  const filteredCount = filteredLeaderPendings.reduce((acc, tp) => acc + tp.pendings.length, 0);
-
-
-  const toggleShelter = (shelterName: string) => {
-    setExpandedShelter(prev => (prev === shelterName ? null : shelterName));
-    setExpandedTeam(null);
-    setExpandedEvent(null);
-  };
-
-  const toggleTeam = (teamId: string) => {
-    setExpandedTeam(prev => (prev === teamId ? null : teamId));
-    setExpandedEvent(null);
-  };
-
-  const toggleEvent = (eventKey: string) => {
-    setExpandedEvent(prev => (prev === eventKey ? null : eventKey));
-  };
-
-  const formatScheduleLabel = (pending: PendingForLeaderDto | PendingForMemberDto) => {
-    const readableDate = formatDayBR(pending.date);
-    const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
-    return `${kind} #${pending.visitNumber} • ${readableDate}`;
-  };
-
-  const handleNavigateToRegister = (teamId: string, scheduleId: string, category: EventCategory) => {
-    navigate(`/adm/presenca?teamId=${teamId}&scheduleId=${scheduleId}&category=${category}`);
-  };
-
-  const handleOpenMemberRegister = (pending: PendingForMemberDto) => {
-    const scheduleDto: TeamScheduleDto = {
-      id: pending.scheduleId,
-      category: pending.category,
-      date: pending.date,
-      visitNumber: pending.visitNumber,
-      lessonContent: pending.lessonContent,
-      location: pending.location,
-      teamId: pending.teamId,
-      teamNumber: pending.teamNumber,
-      teamName: pending.teamName,
-      shelterName: pending.shelterName,
-      visitDate: pending.category === EventCategory.VISIT ? pending.date : undefined,
-      meetingDate: pending.category === EventCategory.MEETING ? pending.date : undefined,
-    };
-
-    setSelectedPendingMember(scheduleDto);
-    setOpenRegisterModal(true);
-  };
-
-  const handleCloseMemberRegister = () => {
-    setOpenRegisterModal(false);
-    setSelectedPendingMember(null);
-    fetchPendings();
-  };
-
-  if (loading) {
-    return (
-      <Box
-        data-testid="pendings-loading"
-        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
+export default function PendingAttendancePage() {
+  const resource = useAttendanceResource(getAllPendings);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [personal, setPersonal] = useState<TeamScheduleDto | null>(null);
+  const mobile = useMediaQuery(useTheme().breakpoints.down("sm"));
+  const entries = useMemo(
+    () =>
+      (resource.data?.leaderPendings ?? [])
+        .flatMap((team) => team.pendings.map((pending) => ({ team, pending })))
+        .filter(({ team, pending }) =>
+          normalizeAttendanceSearch(
+            `${team.shelterName} ${team.teamName} ${pending.lessonContent}`,
+          ).includes(normalizeAttendanceSearch(search)),
+        )
+        .sort((a, b) => a.pending.date.localeCompare(b.pending.date)),
+    [resource.data, search],
+  );
+  const memberPendings = (resource.data?.memberPendings ?? []).filter(
+    (pending) =>
+      normalizeAttendanceSearch(
+        `${pending.shelterName} ${pending.teamName} ${pending.lessonContent}`,
+      ).includes(normalizeAttendanceSearch(search)),
+  );
+  const pageCount = Math.max(
+    1,
+    Math.ceil(entries.length / ATTENDANCE_HISTORY_PAGE_SIZE),
+  );
+  const currentPage = Math.min(page, pageCount);
   return (
-    <Box data-testid="pendings-page" sx={{ p: { xs: 1, md: 3 } }}>
-      <BackHeader title="Central de Pendências" />
-      <Breadcrumbs sx={{ mb: 3, display: { xs: 'none', md: 'flex' } }}>
-        <Link underline="hover" sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} color="inherit" onClick={() => navigate('/adm')}>
-          <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
-          Admin
-        </Link>
-        <Link underline="hover" sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} color="inherit" onClick={() => navigate('/adm/presenca')}>
-          <EventAvailableIcon sx={{ mr: 0.5 }} fontSize="small" />
-          Presenças
-        </Link>
-        <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
-          Pendências
-        </Typography>
-      </Breadcrumbs>
-
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3, display: { xs: 'none', md: 'flex' } }}>
-        <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
-          Central de Pendências
-        </Typography>
-        {(totalLeaderPendings > 0 || totalMemberPendings > 0) && (
-          <Chip
-            label={`${totalLeaderPendings + totalMemberPendings} pendências`}
-            color="error"
-            size="medium"
-          />
-        )}
-      </Stack>
-
+    <Box data-testid="pendings-page">
+      <Typography component="h2" variant="h6" fontWeight={800}>
+        Pendências de presença
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Encontros passados que ainda precisam de marcação, dos mais antigos aos
+        mais recentes.
+      </Typography>
       <TextField
-        fullWidth
-        placeholder="Buscar por abrigo ou equipe..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ mb: 4 }}
-        inputProps={{ 'data-testid': 'pendings-search' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="action" />
-            </InputAdornment>
-          ),
+        label="Buscar abrigo, equipe ou conteúdo"
+        value={search}
+        onChange={(event) => {
+          setSearch(event.target.value);
+          setPage(1);
         }}
+        fullWidth
+        inputProps={{ "data-testid": "pendings-search" }}
+        sx={{ mb: 2 }}
       />
-
-      {error && (
-        <Alert severity="error" data-testid="pendings-error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {totalLeaderPendings === 0 && totalMemberPendings === 0 && !loading && (
+      {resource.loading ? (
+        <Skeleton
+          data-testid="pendings-loading"
+          variant="rounded"
+          height={180}
+        />
+      ) : resource.error ? (
         <Alert
-          severity="success"
-          data-testid="pendings-empty"
-          sx={{ borderRadius: 2 }}
+          data-testid="pendings-error"
+          severity="error"
+          action={
+            <Button
+              onClick={resource.reload}
+              color="inherit"
+              sx={{ minHeight: 44 }}
+            >
+              Tentar novamente
+            </Button>
+          }
         >
-          Nenhuma pendência encontrada. Tudo em dia!
+          {resource.error}
         </Alert>
-      )}
-
-      <Stack spacing={4}>
-        {totalMemberPendings > 0 && (
-          <Box>
-            <Typography variant="h5" fontWeight="bold" color="secondary.main" sx={{ mb: 2, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-              Suas Pendências Pessoais ({totalMemberPendings})
-            </Typography>
-            <Grid container spacing={2}>
-              {memberPendings.map(pending => (
-                <Grid item xs={12} sm={6} md={4} key={`${pending.scheduleId}-${pending.category}`}>
-                  <Card variant="outlined" onClick={() => handleOpenMemberRegister(pending)} sx={{ cursor: 'pointer', '&:hover': { boxShadow: 2 } }}>
-                    <CardContent>
-                      <Box display="flex" justifyContent="space-between">
-                        <Chip label={pending.category} size="small" color={pending.category === 'visit' ? 'success' : 'info'} />
-                        <Typography variant="caption">{pending.teamName}</Typography>
-                      </Box>
-                      <Typography variant="subtitle1" fontWeight="bold" mt={1}>
-                        {formatScheduleLabel(pending)}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">{pending.lessonContent}</Typography>
-                      <Typography variant="body2" color="secondary" mt={1}>Clique para registrar</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {filteredLeaderPendings.length > 0 ? (
-          <Box>
-            <Typography variant="h5" fontWeight="bold" color="primary.main" sx={{ mb: 2, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
-              Pendências de Pagela ({filteredCount})
-            </Typography>
-            <Grid container spacing={3}>
-              {sortedShelters.map(([shelterName, teams]) => {
-                const isShelterExpanded = expandedShelter === shelterName || searchTerm.length > 0;
-                const shelterPendingsCount = teams.reduce((acc, t) => acc + t.pendings.length, 0);
-
-                return (
-                  <Grid item xs={12} md={isShelterExpanded ? 12 : 6} key={shelterName}>
-                    <Card variant="outlined" sx={{ overflow: 'visible', borderColor: 'primary.light', borderWidth: 1, height: 'fit-content' }}>
-                      <CardContent
-                        sx={{ p: 2, bgcolor: 'primary.50', cursor: 'pointer', '&:hover': { bgcolor: 'primary.100' } }}
-                        onClick={() => toggleShelter(shelterName)}
-                      >
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Stack direction="row" alignItems="center" spacing={1.5}>
-                            <HomeIcon color="primary" fontSize="large" sx={{ fontSize: { xs: 30, md: 35 } }} />
-                            <Box>
-                              <Typography variant="h6" fontWeight="bold" color="primary.main" noWrap>{shelterName}</Typography>
-                              <Typography variant="body2" color="text.secondary">{teams.length} equipes com pendências</Typography>
-                            </Box>
-                          </Stack>
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <Chip label={shelterPendingsCount} color="error" size="small" sx={{ fontWeight: 'bold' }} />
-                            <IconButton size="medium">{isShelterExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
-                          </Stack>
-                        </Stack>
-                      </CardContent>
-
-                      <Collapse in={isShelterExpanded}>
-                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'primary.light' }}>
-                          <Stack spacing={2}>
-                            {teams.map(team => {
-                              const isTeamExpanded = expandedTeam === team.teamId || searchTerm.length > 0;
-                              return (
-                                <Card key={team.teamId} variant="outlined" sx={{ ml: { sm: 1 }, borderLeft: 4, borderLeftColor: 'secondary.main' }}>
-                                  <CardContent sx={{ p: 2 }}>
-                                    <Stack direction="row" alignItems="center" justifyContent="space-between" onClick={() => toggleTeam(team.teamId)} sx={{ cursor: 'pointer' }}>
-                                      <Stack direction="row" alignItems="center" spacing={1.5}>
-                                        <GroupsIcon color="secondary" />
-                                        <Typography variant="h6" fontWeight="bold">{team.teamName}</Typography>
-                                      </Stack>
-                                      <Stack direction="row" alignItems="center" spacing={1}>
-                                        <Chip label={team.pendings.length} color="warning" size="small" />
-                                        <IconButton size="small">{isTeamExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
-                                      </Stack>
-                                    </Stack>
-                                  </CardContent>
-                                  <Collapse in={isTeamExpanded}>
-                                    <Box sx={{ px: 2, py: 2 }}>
-                                      <Stack spacing={1.5}>
-                                        {team.pendings.map(pending => {
-                                          const eventKey = `${pending.scheduleId}-${pending.category}`;
-                                          const isEventExpanded = expandedEvent === eventKey;
-                                          return (
-                                            <Card key={eventKey} variant="outlined" sx={{ bgcolor: 'grey.50', cursor: 'pointer', '&:hover': { borderColor: 'primary.main' } }}>
-                                              <CardContent sx={{ p: 1.5 }}>
-                                                <Stack direction="row" alignItems="center" justifyContent="space-between" onClick={() => toggleEvent(eventKey)}>
-                                                  <Stack spacing={0.5}>
-                                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                                      <Chip label={pending.category === 'visit' ? 'Visita' : 'Reunião'} size="small" color={pending.category === 'visit' ? 'success' : 'info'} />
-                                                      <Typography variant="subtitle1" fontWeight="medium">{formatScheduleLabel(pending)}</Typography>
-                                                    </Stack>
-                                                    <Typography variant="body2" color="error.main">{pending.pendingMembers.length} membros sem registro</Typography>
-                                                  </Stack>
-                                                  <IconButton size="small">{isEventExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
-                                                </Stack>
-                                                <Collapse in={isEventExpanded}>
-                                                  <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                                                    <Typography variant="body2" paragraph><strong>Local:</strong> {pending.location}</Typography>
-                                                    <Typography variant="body2" paragraph><strong>Conteúdo:</strong> {pending.lessonContent}</Typography>
-                                                    <List dense disablePadding>
-                                                      {pending.pendingMembers.map(member => (
-                                                        <ListItem key={member.memberId} disableGutters><ListItemText primary={member.memberName} secondary={member.memberEmail} /></ListItem>
-                                                      ))}
-                                                    </List>
-                                                    <Box sx={{ mt: 2, textAlign: 'right' }}>
-                                                      <Chip label="Registrar presença" color="primary" clickable onClick={(e) => { e.stopPropagation(); handleNavigateToRegister(team.teamId, pending.scheduleId, pending.category); }} />
-                                                    </Box>
-                                                  </Box>
-                                                </Collapse>
-                                              </CardContent>
-                                            </Card>
-                                          );
-                                        })}
-                                      </Stack>
-                                    </Box>
-                                  </Collapse>
-                                </Card>
-                              );
-                            })}
-                          </Stack>
-                        </Box>
-                      </Collapse>
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </Box>
-        ) : (
-          totalLeaderPendings > 0 && searchTerm && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Nenhuma equipe ou abrigo encontrado para "{searchTerm}".
+      ) : (
+        <>
+          {!entries.length && !memberPendings.length && (
+            <Alert
+              data-testid="pendings-empty"
+              severity={search ? "info" : "success"}
+            >
+              {search
+                ? "Nenhuma pendência corresponde à busca."
+                : "Tudo em dia! Nenhuma presença pendente."}
             </Alert>
-          )
-        )}
-      </Stack>
-
-      <Dialog open={openRegisterModal} onClose={() => setOpenRegisterModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          Registrar Minha Presença
-          <IconButton onClick={() => setOpenRegisterModal(false)}><CloseIcon /></IconButton>
+          )}
+          {memberPendings.length > 0 && (
+            <Box sx={{ ...attendanceCardSx, mb: 2 }}>
+              <Typography component="h3" variant="subtitle1" fontWeight={700}>
+                Minha presença
+              </Typography>
+              <Stack spacing={1}>
+                {memberPendings.map((pending) => (
+                  <Button
+                    key={`${pending.scheduleId}-${pending.category}`}
+                    onClick={() => setPersonal(pendingToSchedule(pending))}
+                    sx={{ minHeight: 48, justifyContent: "flex-start" }}
+                  >
+                    {pending.shelterName} ·{" "}
+                    {pending.category === EventCategory.VISIT
+                      ? "Visita"
+                      : "Reunião"}{" "}
+                    · {formatDateBR(pending.date)}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          )}
+          <Stack spacing={1.5}>
+            {entries
+              .slice(
+                (currentPage - 1) * ATTENDANCE_HISTORY_PAGE_SIZE,
+                currentPage * ATTENDANCE_HISTORY_PAGE_SIZE,
+              )
+              .map(({ team, pending }) => (
+                <Box
+                  key={`${pending.scheduleId}-${pending.category}`}
+                  data-testid={`attendance-pending-${pending.scheduleId}-${pending.category}`}
+                  sx={attendanceCardSx}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {team.shelterName} · {team.teamName}
+                  </Typography>
+                  <Typography
+                    component="h3"
+                    variant="subtitle1"
+                    fontWeight={800}
+                  >
+                    {pending.category === EventCategory.VISIT
+                      ? "Visita"
+                      : "Reunião"}{" "}
+                    · {formatDateBR(pending.date)}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ my: 1 }}
+                  >
+                    {pending.lessonContent}
+                  </Typography>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    gap={1.5}
+                    justifyContent="space-between"
+                    alignItems={{ xs: "stretch", sm: "center" }}
+                  >
+                    <Chip
+                      variant="outlined"
+                      label={`${pending.pendingMembers.length} membro(s) sem registro`}
+                    />
+                    <Button
+                      component={Link}
+                      to={attendanceTeamPath(
+                        team.teamId,
+                        pending.scheduleId,
+                        pending.category,
+                      )}
+                      variant="contained"
+                      sx={attendancePrimarySx}
+                    >
+                      Preencher presença
+                    </Button>
+                  </Stack>
+                </Box>
+              ))}
+          </Stack>
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={currentPage}
+              onChange={(_, value) => setPage(value)}
+              size="small"
+              sx={{
+                my: 2,
+                "& .MuiPaginationItem-root": { minWidth: 44, height: 44 },
+              }}
+            />
+          )}
+        </>
+      )}
+      <Dialog
+        data-testid="attendance-personal-dialog"
+        open={Boolean(personal)}
+        onClose={() => setPersonal(null)}
+        fullScreen={mobile}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          Minha presença
+          <IconButton
+            aria-label="Fechar registro de presença"
+            onClick={() => setPersonal(null)}
+            sx={{ minWidth: 44, minHeight: 44 }}
+          >
+            <Close />
+          </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
-          {selectedPendingMember && <RegisterAttendance schedules={[selectedPendingMember]} disabled={false} onSuccess={handleCloseMemberRegister} />}
+        <DialogContent>
+          {personal && (
+            <RegisterAttendance
+              schedules={[personal]}
+              onSuccess={() => {
+                setPersonal(null);
+                resource.reload();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Box>
   );
-};
-
-export default PendingAttendancePage;
+}

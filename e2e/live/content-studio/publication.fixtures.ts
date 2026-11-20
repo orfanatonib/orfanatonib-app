@@ -22,7 +22,6 @@ export async function getPackage(request: APIRequestContext, token: string, id: 
 
 export async function createPackage(request: APIRequestContext, token: string, label: string, created: string[]): Promise<Pkg> {
   const res = await callApi(request, token, "post", `${CS}/packages`, {
-    audience: "CHILD",
     theme: `e2e-publicacao ${label} ${Date.now()}-${created.length}`,
     biblicalReferences: "Salmos 23",
     canonicalObjective: "Confiar no cuidado de Deus",
@@ -33,23 +32,26 @@ export async function createPackage(request: APIRequestContext, token: string, l
   return pkg;
 }
 
-/** Cria o material e leva até READY_FOR_PUBLICATION: salva e conclui as 5 etapas, envia para revisão e aprova todas. */
+/** Cria o material e leva até READY_FOR_PUBLICATION: salva e conclui as 20 etapas (4 categorias × 5), envia para revisão e aprova todas. */
 export async function createReadyPackage(request: APIRequestContext, token: string, label: string, created: string[]): Promise<Pkg> {
   const pkg = await createPackage(request, token, label, created);
-  for (const stage of [...pkg.tracks[0].stages].sort((a, b) => a.position - b.position)) {
-    expect((await callApi(request, token, "patch", `${CS}/packages/${pkg.id}/stages/${stage.id}/content`, { structuredContent: { title: `Etapa ${stage.position}` } })).status()).toBe(200);
-    expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/complete-production`)).status());
-  }
-  expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/submit-review`)).status());
-  for (const stage of [...(await getPackage(request, token, pkg.id)).tracks[0].stages].sort((a, b) => a.position - b.position)) {
-    const fresh = (await getPackage(request, token, pkg.id)).tracks[0].stages.find((item) => item.id === stage.id)!;
-    const approved = await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/approve`, {
-      versionId: fresh.currentVersion!.id,
-      lockVersion: fresh.lockVersion,
-      contentChecksum: fresh.currentVersion!.contentChecksum,
-    });
-    expect([200, 201]).toContain(approved.status());
-  }
+  for (const track of pkg.tracks)
+    for (const stage of [...track.stages].sort((x, y) => x.position - y.position)) {
+      expect((await callApi(request, token, "patch", `${CS}/packages/${pkg.id}/stages/${stage.id}/content`, { structuredContent: { title: `Etapa ${stage.position}` } })).status()).toBe(200);
+      expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/complete-production`)).status());
+    }
+  // Sem lista, o envio leva as quatro categorias de uma vez.
+  expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/submit-review`, {})).status());
+  for (const track of (await getPackage(request, token, pkg.id)).tracks)
+    for (const stage of [...track.stages].sort((x, y) => x.position - y.position)) {
+      const fresh = (await getPackage(request, token, pkg.id)).tracks.flatMap((t) => t.stages).find((item) => item.id === stage.id)!;
+      const approved = await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/approve`, {
+        versionId: fresh.currentVersion!.id,
+        lockVersion: fresh.lockVersion,
+        contentChecksum: fresh.currentVersion!.contentChecksum,
+      });
+      expect([200, 201]).toContain(approved.status());
+    }
   const ready = await getPackage(request, token, pkg.id);
   expect(ready.status).toBe("READY_FOR_PUBLICATION");
   return ready;

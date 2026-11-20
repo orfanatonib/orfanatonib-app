@@ -6,12 +6,11 @@ export enum ContentAudience {
 }
 
 export enum ContentStageType {
-  CANONICAL_BASE = "CANONICAL_BASE",
   LESSON = "LESSON",
-  DISCUSSION = "DISCUSSION",
-  ACTIVITY = "ACTIVITY",
-  VISUAL = "VISUAL",
-  FACILITATOR_GUIDANCE = "FACILITATOR_GUIDANCE",
+  LESSON_VISUALS = "LESSON_VISUALS",
+  VERSE_VISUALS = "VERSE_VISUALS",
+  VERSE_FIXATION = "VERSE_FIXATION",
+  STANDARD_GAME = "STANDARD_GAME",
 }
 
 export enum ContentPackageStatus {
@@ -218,17 +217,73 @@ export interface QueryContentPackagesParams {
 export type ContentPackageSort = "updatedAt" | "createdAt" | "theme";
 
 export interface CreateContentPackagePayload {
-  audience?: ContentAudience;
   theme: string;
   biblicalReferences: string;
   canonicalObjective: string;
   canonicalNotes?: string | null;
 }
 
+/** Escolhas dos visuais da lição (as mesmas perguntas do Clubinho). */
+export enum VisualFormat {
+  CUTOUT_KIT = "CUTOUT_KIT",
+  STORY_SCENES = "STORY_SCENES",
+}
+
+export enum VisualStyle {
+  CUTE_CARTOON = "CUTE_CARTOON",
+  ILLUSTRATED = "ILLUSTRATED",
+  CLASSIC_CARTOON = "CLASSIC_CARTOON",
+  MODERN_ILLUSTRATION = "MODERN_ILLUSTRATION",
+  GRAPHIC_NOVEL = "GRAPHIC_NOVEL",
+  EDITORIAL_PAINTING = "EDITORIAL_PAINTING",
+  SOFT_WATERCOLOR = "SOFT_WATERCOLOR",
+}
+
+export enum VisualOrientation {
+  LANDSCAPE = "LANDSCAPE",
+  PORTRAIT = "PORTRAIT",
+}
+
+export interface VisualConfig {
+  quantity: number;
+  format: VisualFormat;
+  style: VisualStyle;
+  orientation: VisualOrientation;
+  instructions?: string;
+}
+
 export interface RequestStageGenerationPayload {
   revisionInstructions?: string;
   capability: AiGenerationCapability;
   idempotencyKey: string;
+  /** Obrigatório na etapa "Visuais da lição". */
+  visualConfig?: VisualConfig;
+}
+
+/** Andamento da fase de imagens de um job. */
+export interface ImageJobProgress {
+  phase: "IMAGES";
+  done: number;
+  total: number;
+  failed: string[];
+}
+
+export interface StageImageItem {
+  slot: string;
+  title: string;
+  assetId: string | null;
+  url: string | null;
+  updatedAt: string | null;
+}
+
+export interface StageImagesResponse {
+  versionId: string | null;
+  items: StageImageItem[];
+}
+
+export interface RegenerateStageImagesPayload {
+  slots?: string[];
+  instructions?: string;
 }
 
 export interface SaveStageContentPayload {
@@ -265,6 +320,7 @@ export interface ContentGenerationJobResponse {
   heartbeatAt: string | null;
   errorCode: string | null;
   errorMessage: string | null;
+  progress: ImageJobProgress | null;
   requestedById: string;
   createdAt: string;
   updatedAt: string;

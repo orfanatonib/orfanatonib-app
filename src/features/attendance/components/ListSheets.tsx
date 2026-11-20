@@ -1,450 +1,350 @@
-import { memo, useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useMemo, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
-  Card,
-  CardContent,
-  CardHeader,
+  Button,
   Chip,
-  CircularProgress,
-  Collapse,
-  IconButton,
+  MenuItem,
+  Pagination,
+  Skeleton,
   Stack,
-  Typography,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Grid,
   TextField,
-  InputAdornment,
-} from '@mui/material';
-import BusinessIcon from '@mui/icons-material/Business';
-import EventIcon from '@mui/icons-material/Event';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SearchIcon from '@mui/icons-material/Search';
-import WarningIcon from '@mui/icons-material/Warning';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import { getHierarchicalSheets } from '../api';
-import type { HierarchicalSheetsResponse, ShelterWithTeamsSheetsDto, TeamWithSchedulesDto, ScheduleWithAttendanceDto } from '../types';
-import { formatDateBR } from '../utils';
-import { attendanceErrorMessage } from '../errors';
+  Typography,
+} from "@mui/material";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import { Link } from "react-router-dom";
+import { getHierarchicalSheets } from "../api";
+import { useAttendanceResource } from "../hooks/useAttendanceResource";
+import {
+  attendancePeriodValid,
+  attendanceTeamPath,
+  currentAttendanceMonth,
+  normalizeAttendanceSearch,
+} from "../workspace.utils";
+import { EventCategory, AttendanceType } from "../types";
+import { formatDateBR } from "../utils";
+import { ATTENDANCE_HISTORY_PAGE_SIZE } from "../constants";
+import {
+  attendanceCardSx,
+  attendanceColors,
+  attendancePrimarySx,
+} from "@/theme/attendance";
 
-interface ListSheetsProps {
-  onBack: () => void;
-}
-
-const ListSheets = memo(({ onBack }: ListSheetsProps) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sheets, setSheets] = useState<HierarchicalSheetsResponse>([]);
-
-  const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
-  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
-  const [expandedScheduleId, setExpandedScheduleId] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const loadSheets = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getHierarchicalSheets();
-      setSheets(data);
-      
-      if (data.length > 0) {
-        setExpandedShelterId(data[0].shelterId);
-        if (data[0].teams.length > 0) {
-          setExpandedTeamId(data[0].teams[0].teamId);
-        }
-      }
-    } catch (err: unknown) {
-      const message = attendanceErrorMessage(err, 'Erro ao carregar listas de frequência.');
-      setError(message);
-      setSheets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSheets();
-  }, [loadSheets]);
-
-  const toggleShelter = useCallback((shelterId: string) => {
-    setExpandedShelterId(prev => (prev === shelterId ? null : shelterId));
-    
-    setExpandedTeamId(null);
-    setExpandedScheduleId(null);
-  }, []);
-
-  const toggleTeam = useCallback((teamId: string) => {
-    setExpandedTeamId(prev => (prev === teamId ? null : teamId));
-    
-    setExpandedScheduleId(null);
-  }, []);
-
-  const toggleSchedule = useCallback((scheduleKey: string) => {
-    setExpandedScheduleId(prev => (prev === scheduleKey ? null : scheduleKey));
-  }, []);
-
-  const filteredSheets = useMemo(() => {
-    
-    if (!searchTerm.trim()) return sheets;
-
-    const term = searchTerm.toLowerCase();
-    return sheets.filter(s => s.shelterName.toLowerCase().includes(term));
-  }, [sheets, searchTerm]);
-
-  useEffect(() => {
-    if (searchTerm && filteredSheets.length === 1) {
-      setExpandedShelterId(filteredSheets[0].shelterId);
-    }
-  }, [searchTerm, filteredSheets]);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error" action={
-          <IconButton onClick={onBack} size="small">
-            <ArrowBackIcon />
-          </IconButton>
-        }>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
-
+export default function ListSheets() {
+  const [period, setPeriod] = useState(currentAttendanceMonth);
+  const [start, setStart] = useState(period.startDate ?? "");
+  const [end, setEnd] = useState(period.endDate ?? "");
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<EventCategory | "">("");
+  const [page, setPage] = useState(1);
+  const load = useCallback(() => getHierarchicalSheets(period), [period]);
+  const resource = useAttendanceResource(load);
+  const valid = attendancePeriodValid(start, end);
+  const entries = useMemo(
+    () =>
+      (resource.data ?? [])
+        .flatMap((shelter) =>
+          shelter.teams.flatMap((team) =>
+            team.schedules.map((schedule) => ({ shelter, team, schedule })),
+          ),
+        )
+        .filter(
+          ({ shelter, team, schedule }) =>
+            (!category || schedule.category === category) &&
+            normalizeAttendanceSearch(
+              `${shelter.shelterName} Equipe ${team.teamNumber} ${team.teamName} ${schedule.lessonContent}`,
+            ).includes(normalizeAttendanceSearch(search)),
+        )
+        .sort((a, b) => b.schedule.date.localeCompare(a.schedule.date)),
+    [resource.data, category, search],
+  );
+  const pageCount = Math.max(
+    1,
+    Math.ceil(entries.length / ATTENDANCE_HISTORY_PAGE_SIZE),
+  );
+  const currentPage = Math.min(page, pageCount);
   return (
-    <Box sx={{ width: '100%', p: { xs: 1, sm: 3 } }}>
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-        <IconButton
-          onClick={onBack}
-          aria-label="Voltar para seleção de modo"
+    <Box data-testid="attendance-history-page">
+      <Typography component="h2" variant="h6" fontWeight={800} sx={{ mb: 2 }}>
+        Histórico de presenças
+      </Typography>
+      <Box
+        component="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (valid) {
+            setPeriod({
+              startDate: start || undefined,
+              endDate: end || undefined,
+            });
+            setPage(1);
+          }
+        }}
+        sx={{ ...attendanceCardSx, mb: 2 }}
+      >
+        <Box
           sx={{
-            bgcolor: 'action.hover',
-            '&:hover': {
-              bgcolor: 'action.selected',
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, minmax(0, 1fr))",
+              sm: "minmax(0, 1fr) minmax(0, 1fr) auto",
             },
+            gap: 1.5,
+            alignItems: "start",
+            "& .MuiInputBase-root": { minWidth: 0 },
+            "& input": { minWidth: 0, px: { xs: 1, sm: 1.75 } },
           }}
         >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Lista de Frequências
-        </Typography>
-      </Stack>
-
-      <Box sx={{ mb: 4, maxWidth: 400 }}>
-        <TextField
-          fullWidth
-          placeholder="Filtrar abrigo..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-          }}
-        />
+          <TextField
+            label="De"
+            type="date"
+            value={start}
+            onChange={(event) => setStart(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+          <TextField
+            label="Até"
+            type="date"
+            value={end}
+            onChange={(event) => setEnd(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            error={!valid}
+            helperText={
+              !valid
+                ? "A data final deve ser igual ou posterior à inicial."
+                : undefined
+            }
+          />
+          <Button
+            type="submit"
+            disabled={!valid || resource.loading}
+            variant="contained"
+            sx={{
+              ...attendancePrimarySx,
+              minWidth: 120,
+              gridColumn: { xs: "1 / -1", sm: "auto" },
+            }}
+          >
+            Aplicar
+          </Button>
+        </Box>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} sx={{ mt: 2 }}>
+          <TextField
+            label="Buscar abrigo, equipe ou conteúdo"
+            value={search}
+            fullWidth
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+          <TextField
+            select
+            label="Tipo de evento"
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value as EventCategory | "");
+              setPage(1);
+            }}
+            sx={{ minWidth: { sm: 180 } }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value={EventCategory.VISIT}>Visitas</MenuItem>
+            <MenuItem value={EventCategory.MEETING}>Reuniões</MenuItem>
+          </TextField>
+        </Stack>
       </Box>
-
-      {filteredSheets.length === 0 ? (
-        <Alert severity="info">
-          {searchTerm ? 'Nenhum abrigo encontrado com esse nome.' : 'Nenhuma frequência encontrada.'}
+      {resource.loading ? (
+        <Skeleton
+          data-testid="attendance-history-loading"
+          variant="rounded"
+          height={180}
+        />
+      ) : resource.error ? (
+        <Alert
+          data-testid="attendance-history-error"
+          severity="error"
+          action={
+            <Button
+              onClick={resource.reload}
+              color="inherit"
+              sx={{ minHeight: 44 }}
+            >
+              Tentar novamente
+            </Button>
+          }
+        >
+          {resource.error}
         </Alert>
       ) : (
-        <Grid container spacing={2}>
-          {filteredSheets.map((shelter: ShelterWithTeamsSheetsDto) => (
-            <Grid item xs={12} md={6} key={shelter.shelterId}>
-              <Card variant="outlined">
-                <CardHeader
-                  sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 1.5, sm: 2 } }}
-                  avatar={
-                    <Box
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 2,
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <BusinessIcon />
+        <>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {entries.length} encontro(s) no período aplicado
+          </Typography>
+          {!entries.length && (
+            <Alert data-testid="attendance-history-empty" severity="info">
+              Nenhum encontro encontrado. Ajuste o período ou os filtros.
+            </Alert>
+          )}
+          <Stack spacing={1.5}>
+            {entries
+              .slice(
+                (currentPage - 1) * ATTENDANCE_HISTORY_PAGE_SIZE,
+                currentPage * ATTENDANCE_HISTORY_PAGE_SIZE,
+              )
+              .map(({ shelter, team, schedule }) => (
+                <Accordion
+                  data-testid={`attendance-history-event-${schedule.scheduleId}-${schedule.category}`}
+                  key={`${schedule.scheduleId}-${schedule.category}`}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    ...attendanceCardSx,
+                    p: 0,
+                    "&:before": { display: "none" },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMore />}
+                    sx={{ minHeight: 88 }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: attendanceColors.muted }}
+                      >
+                        {shelter.shelterName} · Equipe {team.teamNumber}
+                      </Typography>
+                      <Typography fontWeight={800}>
+                        {schedule.category === EventCategory.VISIT
+                          ? "Visita"
+                          : "Reunião"}{" "}
+                        · {formatDateBR(schedule.date)}
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        useFlexGap
+                        flexWrap="wrap"
+                        gap={0.75}
+                        sx={{ mt: 1 }}
+                      >
+                        <Chip
+                          size="small"
+                          label={`${schedule.presentCount} presentes`}
+                          color="success"
+                          variant="outlined"
+                        />
+                        <Chip
+                          size="small"
+                          label={`${schedule.absentCount} faltas`}
+                          color="error"
+                          variant="outlined"
+                        />
+                        <Chip
+                          size="small"
+                          label={`${schedule.pendingCount} pendentes`}
+                          variant="outlined"
+                        />
+                      </Stack>
                     </Box>
-                  }
-                  title={
-                    <Typography variant="h6" fontWeight="bold">
-                      {shelter.shelterName}
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      {schedule.lessonContent}
                     </Typography>
-                  }
-                  subheader={
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Chip label={`${shelter.totalTeams} equipe${shelter.totalTeams !== 1 ? 's' : ''}`} size="small" />
-                    </Stack>
-                  }
-                  action={
-                    <IconButton onClick={() => toggleShelter(shelter.shelterId)}>
-                      {expandedShelterId === shelter.shelterId ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  }
-                />
-                <Collapse in={expandedShelterId === shelter.shelterId}>
-                  <CardContent sx={{ pt: 0 }}>
-                    <Stack spacing={1}>
-                      {shelter.teams.map((team: TeamWithSchedulesDto) => (
-                        <Accordion
-                          key={team.teamId}
-                          disableGutters
-                          elevation={0}
+                    {!schedule.attendanceRecords.length && (
+                      <Typography color="text.secondary">
+                        Nenhuma presença registrada neste encontro.
+                      </Typography>
+                    )}
+                    <Stack
+                      component="ul"
+                      spacing={1}
+                      sx={{ p: 0, m: 0, listStyle: "none" }}
+                    >
+                      {schedule.attendanceRecords.map((record) => (
+                        <Box
+                          component="li"
+                          key={record.id}
                           sx={{
-                            '&:before': { display: 'none' },
-                            bgcolor: 'action.hover',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1,
-                            mb: 1,
-                            overflow: 'hidden',
-                            '&:last-child': { mb: 0 }
+                            borderBottom: "1px solid",
+                            borderColor: attendanceColors.border,
+                            pb: 1,
                           }}
-                          expanded={expandedTeamId === team.teamId}
-                          onChange={() => toggleTeam(team.teamId)}
                         >
-                          <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            sx={{
-                              px: { xs: 1, sm: 0 },
-                              minHeight: 48,
-                              '& .MuiAccordionSummary-content': { my: 1 },
-                              flexDirection: 'row-reverse',
-                              '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-                                transform: 'rotate(90deg)',
-                              },
-                            }}
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            gap={1}
                           >
-                            <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', ml: 2 }}>
-                              <Typography variant="subtitle1" fontWeight="bold">
-                                Equipe {team.teamNumber} {team.teamName && `- ${team.teamName}`}
-                              </Typography>
-                              <Chip
-                                label={`${team.totalSchedules} evento${team.totalSchedules !== 1 ? 's' : ''}`}
-                                size="small"
-                                variant="outlined"
-                                sx={{ height: 24 }}
-                              />
-                            </Stack>
-                          </AccordionSummary>
-                          <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                            <Stack spacing={1} sx={{ pl: { xs: 1, sm: 4 }, borderLeft: '2px solid', borderColor: 'divider' }}>
-                              {team.schedules.length === 0 ? (
-                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', py: 1 }}>
-                                  Nenhum evento registrado
-                                </Typography>
-                              ) : (
-                                team.schedules.map((schedule: ScheduleWithAttendanceDto) => {
-                                  const scheduleKey = `${schedule.scheduleId}-${schedule.category}`;
-                                  return (
-                                    <Accordion
-                                      key={scheduleKey}
-                                      disableGutters
-                                      elevation={0}
-                                      expanded={expandedScheduleId === scheduleKey}
-                                      onChange={() => toggleSchedule(scheduleKey)}
-                                      sx={{
-                                        bgcolor: 'background.paper',
-                                        '&:before': { display: 'none' },
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        borderRadius: 1,
-                                        mb: 1,
-                                        '&:last-child': { mb: 0 }
-                                      }}
-                                    >
-                                      <AccordionSummary
-                                        expandIcon={<ExpandMoreIcon />}
-                                        sx={{
-                                          px: { xs: 1, sm: 1 },
-                                          minHeight: 40,
-                                          '&.Mui-expanded': { minHeight: 40 },
-                                          '& .MuiAccordionSummary-content': { my: 0.5, alignItems: 'center' },
-                                          
-                                          bgcolor: schedule.pendingCount > 0 ? 'warning.50' : 'transparent',
-                                          borderLeft: schedule.pendingCount > 0 ? '3px solid' : 'none',
-                                          borderColor: schedule.pendingCount > 0 ? 'warning.main' : 'transparent',
-                                        }}
-                                      >
-                                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="nowrap" sx={{ width: '100%', overflow: 'hidden' }}>
-                                          {schedule.pendingCount > 0 && (
-                                            <WarningIcon
-                                              fontSize="small"
-                                              color="warning"
-                                              sx={{ flexShrink: 0, ml: -0.5 }}
-                                            />
-                                          )}
-                                          <Typography
-                                            variant="body2"
-                                            fontWeight={schedule.pendingCount > 0 ? 'bold' : 'medium'}
-                                            noWrap
-                                            sx={{ flex: 1 }}
-                                            color={schedule.pendingCount > 0 ? 'warning.dark' : 'text.primary'}
-                                          >
-                                            {(() => {
-                                              const readableDate = formatDateBR(schedule.date);
-                                              const kind = schedule.category === 'visit' ? 'Visita' : 'Reunião';
-                                              return `${kind} #${schedule.visitNumber} • ${readableDate}`;
-                                            })()}
-                                          </Typography>
-                                          <Stack direction="row" spacing={0.5}>
-                                            {schedule.pendingCount > 0 && (
-                                              <Chip
-                                                icon={<AssignmentIcon sx={{ fontSize: 14 }} />}
-                                                label={`${schedule.pendingCount} pendente${schedule.pendingCount > 1 ? 's' : ''}`}
-                                                size="small"
-                                                color="warning"
-                                                sx={{
-                                                  height: 22,
-                                                  fontSize: '0.7rem',
-                                                  fontWeight: 'bold',
-                                                  '& .MuiChip-label': { px: 1 },
-                                                  '& .MuiChip-icon': { fontSize: 14 }
-                                                }}
-                                              />
-                                            )}
-                                            <Chip
-                                              label={`✓ ${schedule.presentCount}`}
-                                              size="small"
-                                              color="success"
-                                              sx={{ height: 20, fontSize: '0.75rem', '& .MuiChip-label': { px: 1 } }}
-                                            />
-                                            {schedule.absentCount > 0 && (
-                                              <Chip
-                                                label={`✗ ${schedule.absentCount}`}
-                                                size="small"
-                                                color="error"
-                                                sx={{ height: 20, fontSize: '0.75rem', '& .MuiChip-label': { px: 1 } }}
-                                              />
-                                            )}
-                                          </Stack>
-                                        </Stack>
-                                      </AccordionSummary>
-                                      <AccordionDetails sx={{ pt: 1, pb: 2, px: { xs: 1, sm: 2 } }}>
-                                        {schedule.pendingCount > 0 && (
-                                          <Alert
-                                            severity="warning"
-                                            sx={{ mb: 2 }}
-                                            icon={<AssignmentIcon />}
-                                          >
-                                            <Typography variant="body2" fontWeight="bold">
-                                              {schedule.pendingCount} pagela{schedule.pendingCount > 1 ? 's' : ''} pendente{schedule.pendingCount > 1 ? 's' : ''}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                              {schedule.totalMembers - (schedule.presentCount + schedule.absentCount)} membro{schedule.totalMembers - (schedule.presentCount + schedule.absentCount) > 1 ? 's' : ''} ainda não tem frequência registrada
-                                            </Typography>
-                                          </Alert>
-                                        )}
-                                        <List dense disablePadding>
-                                          {(schedule.lessonContent || schedule.location) && (
-                                            <ListItem disableGutters sx={{ display: 'block', mb: 1 }}>
-                                              <Typography variant="caption" color="text.secondary" display="block">
-                                                <strong>Local:</strong> {schedule.location || schedule.meetingRoom || '-'}
-                                              </Typography>
-                                              {schedule.lessonContent && (
-                                                <Typography variant="caption" color="text.secondary" display="block">
-                                                  <strong>Conteúdo:</strong> {schedule.lessonContent}
-                                                </Typography>
-                                              )}
-                                            </ListItem>
-                                          )}
-                                          {schedule.attendanceRecords.length === 0 ? (
-                                            <ListItem disableGutters>
-                                              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                {schedule.pendingCount > 0
-                                                  ? `Nenhuma pagela registrada ainda. ${schedule.pendingCount} pendente${schedule.pendingCount > 1 ? 's' : ''}.`
-                                                  : 'Nenhum registro encontrado.'
-                                                }
-                                              </Typography>
-                                            </ListItem>
-                                          ) : (
-                                            schedule.attendanceRecords.map((record) => (
-                                              <ListItem
-                                                key={record.id}
-                                                disableGutters
-                                                sx={{
-                                                  py: 0.5,
-                                                  borderBottom: '1px solid',
-                                                  borderColor: 'divider',
-                                                  '&:last-child': { borderBottom: 'none' }
-                                                }}
-                                              >
-                                                <ListItemIcon sx={{ minWidth: 32 }}>
-                                                  {record.type === 'present' ? (
-                                                    <CheckCircleIcon fontSize="small" color="success" />
-                                                  ) : (
-                                                    <CancelIcon fontSize="small" color="error" />
-                                                  )}
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                  primary={
-                                                    <Typography variant="body2">
-                                                      {record.memberName}
-                                                    </Typography>
-                                                  }
-                                                  secondary={
-                                                    record.comment ? (
-                                                      <Typography variant="caption" color="error.main">
-                                                        {record.comment}
-                                                      </Typography>
-                                                    ) : null
-                                                  }
-                                                />
-                                              </ListItem>
-                                            ))
-                                          )}
-                                        </List>
-                                      </AccordionDetails>
-                                    </Accordion>
-                                  );
-                                })
-                              )}
-                            </Stack>
-                          </AccordionDetails>
-                        </Accordion>
+                            <Typography sx={{ overflowWrap: "anywhere" }}>
+                              {record.memberName}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color={
+                                record.type === AttendanceType.PRESENT
+                                  ? "success.main"
+                                  : "error.main"
+                              }
+                            >
+                              {record.type === AttendanceType.PRESENT
+                                ? "Presente"
+                                : "Faltou"}
+                            </Typography>
+                          </Stack>
+                          {record.comment && (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                overflowWrap: "anywhere",
+                                color: attendanceColors.muted,
+                              }}
+                            >
+                              {record.comment}
+                            </Typography>
+                          )}
+                        </Box>
                       ))}
                     </Stack>
-                  </CardContent>
-                </Collapse>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <Button
+                      component={Link}
+                      to={attendanceTeamPath(
+                        team.teamId,
+                        schedule.scheduleId,
+                        schedule.category,
+                      )}
+                      sx={{
+                        minHeight: 48,
+                        mt: 2,
+                        color: attendanceColors.accent,
+                      }}
+                    >
+                      Abrir frequência da equipe
+                    </Button>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+          </Stack>
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={currentPage}
+              onChange={(_, value) => setPage(value)}
+              size="small"
+              sx={{
+                my: 2,
+                "& .MuiPaginationItem-root": { minWidth: 44, height: 44 },
+              }}
+            />
+          )}
+        </>
       )}
     </Box>
   );
-});
-
-ListSheets.displayName = 'ListSheets';
-
-export default ListSheets;
+}

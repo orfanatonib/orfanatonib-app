@@ -11,6 +11,8 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { FontFamily, FontSize, TextStyle } from '@tiptap/extension-text-style';
 import StarterKit from '@tiptap/starter-kit';
 
+import { BrandLogo, ColorBars, PageBreak } from './brand.extensions';
+
 export const LessonParagraphSpacing = Extension.create({
   name: 'lessonParagraphSpacing',
   addGlobalAttributes() {
@@ -49,5 +51,8 @@ export function createStudioEditorExtensions(): Extensions {
     TableRow,
     TableHeader,
     TableCell,
+    BrandLogo,
+    PageBreak,
+    ColorBars,
   ];
 }

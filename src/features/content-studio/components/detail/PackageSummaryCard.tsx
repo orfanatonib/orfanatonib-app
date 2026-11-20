@@ -1,4 +1,5 @@
 import { Archive, Refresh, TaskAlt } from "@mui/icons-material";
+import { useState } from "react";
 import { Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from "@mui/material";
 
 import { CONTENT_PACKAGE_STATUS_LABELS } from "../../constants";
@@ -7,6 +8,8 @@ import { PACKAGE_STATUS_COLORS } from "../../period.utils";
 import type { ContentPackageResponse, ContentTrackResponse } from "../../types";
 import { PackageExportMenu } from "../PackageExportMenu";
 import { PackagePublication } from "./PackagePublication";
+import { SubmitReviewDialog } from "./SubmitReviewDialog";
+import { SUBMIT_REVIEW_TEXTS } from "../../review.constants";
 
 interface PackageSummaryCardProps {
   contentPackage: ContentPackageResponse;
@@ -30,6 +33,7 @@ export function PackageSummaryCard({
   hasUnsavedWork,
 }: PackageSummaryCardProps) {
   const statusColor = PACKAGE_STATUS_COLORS[contentPackage.status];
+  const [reviewOpen, setReviewOpen] = useState(false);
   return (
     <Card variant="outlined" data-testid="content-studio-production-header">
       <CardContent>
@@ -69,12 +73,22 @@ export function PackageSummaryCard({
                 variant="contained"
                 startIcon={<TaskAlt />}
                 disabled={busy || hasUnsavedWork}
-                onClick={() => void workspace.handleSubmitReview()}
+                onClick={() => setReviewOpen(true)}
                 sx={{ minHeight: 44 }}
               >
-                Enviar para revisão
+                {SUBMIT_REVIEW_TEXTS.open}
               </Button>
             )}
+            <SubmitReviewDialog
+              open={reviewOpen}
+              tracks={contentPackage.tracks}
+              busy={busy}
+              onClose={() => setReviewOpen(false)}
+              onSubmit={(audiences) => {
+                setReviewOpen(false);
+                void workspace.handleSubmitReview(audiences);
+              }}
+            />
             <PackagePublication
               packageId={contentPackage.id}
               status={contentPackage.status}

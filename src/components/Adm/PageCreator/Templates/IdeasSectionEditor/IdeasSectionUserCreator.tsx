@@ -1,12 +1,5 @@
-import React, { useState } from 'react';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Paper,
-  Snackbar,
-  Stack,
-} from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Button, CircularProgress, Paper, Stack } from '@mui/material';
 import { LightbulbOutlined as LightbulbIcon } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -16,42 +9,40 @@ import {
   IDEA_DRAFT_ISSUE_MESSAGES,
   IDEA_SHARE_COPY,
   IDEA_SHARE_REDIRECT_DELAY_MS,
-  IDEA_SHARE_SNACKBAR_DURATION_MS,
-  buildIdeasSectionFormData,
   createIdeasSection,
   getSendableMedias,
   ideasSectionErrorMessage,
   validateIdeaDraft,
 } from '@/features/ideas-sections';
 import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
-
-type SnackbarSeverity = 'success' | 'error';
-
-interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: SnackbarSeverity;
-}
-
-const EMPTY_SECTION: IdeasSection = { title: '', description: '', medias: [], public: true };
+import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
+import type { FeedbackSeverity } from '../shared/types';
+import {
+  CLOSED_FEEDBACK,
+  EMPTY_IDEA_SECTION,
+  IDEA_MEDIA_STATUS_SEVERITY,
+  IDEA_SHARE_TEST_IDS,
+  MIN_TOUCH_TARGET_PX,
+} from './constants';
+import type { IdeaFeedbackState } from './types';
+import { buildMemberIdeaFormData, getIdeaMediaStatus, getIdeaMediaStatusMessage } from './utils';
 
 export function IdeasSectionUserCreator() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [sectionData, setSectionData] = useState<IdeasSection>(EMPTY_SECTION);
+  const [sectionData, setSectionData] = useState<IdeasSection>(EMPTY_IDEA_SECTION);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+  const [feedback, setFeedback] = useState<IdeaFeedbackState>(CLOSED_FEEDBACK);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   const sendableMediaCount = getSendableMedias(sectionData.medias).length;
-  const hasMedia = sectionData.medias.length > 0;
+  const mediaStatus = getIdeaMediaStatus(sendableMediaCount, sectionData.medias.length);
 
-  const showMessage = (message: string, severity: SnackbarSeverity) =>
-    setSnackbar({ open: true, message, severity });
+  const showMessage = (message: string, severity: FeedbackSeverity) =>
+    setFeedback({ open: true, message, severity });
 
   const handleCancel = () => {
     dispatch(clearIdeasSectionData());
@@ -68,19 +59,12 @@ export function IdeasSectionUserCreator() {
     setLoading(true);
     try {
       // A ideia enviada por um membro nasce pública e sempre com mídia nova.
-      await createIdeasSection(
-        buildIdeasSectionFormData({
-          title: sectionData.title,
-          description: sectionData.description,
-          public: true,
-          medias: sectionData.medias,
-        }),
-      );
+      await createIdeasSection(buildMemberIdeaFormData(sectionData));
 
       dispatch(clearIdeasSectionData());
-      setSectionData(EMPTY_SECTION);
+      setSectionData(EMPTY_IDEA_SECTION);
       showMessage(IDEA_SHARE_COPY.SUCCESS, 'success');
-      setTimeout(() => navigate(MEMBER_AREA_HOME_PATH), IDEA_SHARE_REDIRECT_DELAY_MS);
+      redirectTimer.current = setTimeout(() => navigate(MEMBER_AREA_HOME_PATH), IDEA_SHARE_REDIRECT_DELAY_MS);
     } catch (error: unknown) {
       showMessage(ideasSectionErrorMessage(error, IDEA_SHARE_COPY.FAILURE), 'error');
     } finally {
@@ -89,9 +73,9 @@ export function IdeasSectionUserCreator() {
   };
 
   return (
-    <Stack data-testid="idea-share-page" spacing={{ xs: 2, md: 3 }}>
+    <Stack data-testid={IDEA_SHARE_TEST_IDS.PAGE} spacing={{ xs: 2, md: 3 }}>
       <Paper
-        data-testid="idea-share-form-card"
+        data-testid={IDEA_SHARE_TEST_IDS.FORM_CARD}
         elevation={0}
         sx={MEMBER_CARD_SX}
       >
@@ -99,7 +83,7 @@ export function IdeasSectionUserCreator() {
       </Paper>
 
       <Paper
-        data-testid="idea-share-actions"
+        data-testid={IDEA_SHARE_TEST_IDS.ACTIONS}
         elevation={0}
         sx={{
           ...MEMBER_CARD_SX,
@@ -111,58 +95,46 @@ export function IdeasSectionUserCreator() {
         }}
       >
         <Alert
-          data-testid="idea-share-media-status"
-          severity={sendableMediaCount > 0 ? 'success' : hasMedia ? 'warning' : 'info'}
+          data-testid={IDEA_SHARE_TEST_IDS.MEDIA_STATUS}
+          severity={IDEA_MEDIA_STATUS_SEVERITY[mediaStatus]}
           variant="outlined"
           sx={{ py: 0, flex: 1 }}
         >
-          {sendableMediaCount > 0
-            ? `${sendableMediaCount} mídia(s) pronta(s) para envio`
-            : hasMedia
-              ? 'Complete os dados das mídias adicionadas'
-              : 'Adicione pelo menos uma mídia (vídeo, imagem ou documento)'}
+          {getIdeaMediaStatusMessage(mediaStatus, sendableMediaCount)}
         </Alert>
 
         <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1.5}>
           <Button
-            data-testid="idea-share-cancel"
+            data-testid={IDEA_SHARE_TEST_IDS.CANCEL}
             variant="outlined"
             color="inherit"
             onClick={handleCancel}
             disabled={loading}
-            sx={{ minHeight: 44, textTransform: 'none', fontWeight: 600 }}
+            sx={{ minHeight: MIN_TOUCH_TARGET_PX, textTransform: 'none', fontWeight: 600 }}
           >
             {IDEA_SHARE_COPY.CANCEL}
           </Button>
           <Button
-            data-testid="idea-share-submit"
+            data-testid={IDEA_SHARE_TEST_IDS.SUBMIT}
             variant="contained"
             onClick={handleShareIdea}
             disabled={loading}
             startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <LightbulbIcon />}
-            sx={{ minHeight: 44, px: 3, textTransform: 'none', fontWeight: 700 }}
+            sx={{ minHeight: MIN_TOUCH_TARGET_PX, px: 3, textTransform: 'none', fontWeight: 700 }}
           >
             {loading ? IDEA_SHARE_COPY.SUBMITTING : IDEA_SHARE_COPY.SUBMIT}
           </Button>
         </Stack>
       </Paper>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={IDEA_SHARE_SNACKBAR_DURATION_MS}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ zIndex: 1400 }}
-      >
-        <Alert
-          data-testid="idea-share-snackbar"
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <PageFeedbackSnackbar
+        testId={IDEA_SHARE_TEST_IDS.SNACKBAR}
+        open={feedback.open}
+        message={feedback.message}
+        severity={feedback.severity}
+        filled
+        onClose={() => setFeedback((prev) => ({ ...prev, open: false }))}
+      />
     </Stack>
   );
 }

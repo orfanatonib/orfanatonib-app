@@ -16,8 +16,8 @@ type Stage = { id: string; position: number };
 type Pkg = { id: string; tracks: Array<{ stages: Stage[] }> };
 const CS = `${API_URL}/content-studio`;
 
-async function create(request: import("@playwright/test").APIRequestContext, theme: string, audience: string): Promise<Pkg> {
-  const res = await request.post(`${CS}/packages`, { headers: authHeaders(admin), data: { audience, theme, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" } });
+async function create(request: import("@playwright/test").APIRequestContext, theme: string): Promise<Pkg> {
+  const res = await request.post(`${CS}/packages`, { headers: authHeaders(admin), data: { theme, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" } });
   return (await res.json()) as Pkg;
 }
 async function archive(request: import("@playwright/test").APIRequestContext, id: string) {
@@ -32,15 +32,15 @@ test.beforeAll(async ({ request }) => {
     before[key] = (await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 0;
     await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: true } });
   }
-  // Alfa vai até a revisão (todas as etapas concluídas e enviado); Beta fica em produção.
-  const review = await create(request, themeReview, "CHILD");
+  // Alfa tem a primeira categoria concluída e enviada para revisão; Beta fica em produção.
+  const review = await create(request, themeReview);
   idReview = review.id;
   for (const stage of [...review.tracks[0].stages].sort((a, b) => a.position - b.position)) {
     await request.patch(`${CS}/packages/${idReview}/stages/${stage.id}/content`, { headers: authHeaders(admin), data: { structuredContent: { title: `Etapa ${stage.position}` } } });
     await request.post(`${CS}/packages/${idReview}/stages/${stage.id}/complete-production`, { headers: authHeaders(admin) });
   }
-  expect((await request.post(`${CS}/packages/${idReview}/submit-review`, { headers: authHeaders(admin) })).status()).toBe(201);
-  idProd = (await create(request, themeProd, "TEEN")).id;
+  expect((await request.post(`${CS}/packages/${idReview}/submit-review`, { headers: authHeaders(admin), data: { audiences: [review.tracks[0].audience] } })).status()).toBe(201);
+  idProd = (await create(request, themeProd)).id;
 });
 
 test.afterAll(async ({ request }) => {
@@ -70,11 +70,11 @@ test("recortes com contagem, filtros na URL e abertura do material", async ({ pa
   await page.getByTestId("content-studio-review-view-ALL").click();
   await expect(page.getByTestId(`content-studio-review-card-${idReview}`)).toBeVisible();
 
-  // Faixa etária: só o material de Crianças aparece quando filtro = Adolescentes some.
-  await page.goto(`/adm/estudio/revisao?recorte=ALL&faixa=TEEN&busca=${encodeURIComponent("e2e-revisao")}`);
-  await expect(page.getByText("Nenhum material na fila")).toBeVisible({ timeout: 20_000 });
-  await page.goto(`/adm/estudio/revisao?recorte=ALL&faixa=CHILD&busca=${encodeURIComponent("e2e-revisao")}`);
-  await expect(page.getByTestId(`content-studio-review-card-${idReview}`)).toBeVisible({ timeout: 20_000 });
+  // Todo material tem as quatro categorias: o filtro por faixa continua achando o material.
+  for (const faixa of ["TEEN", "CHILD"]) {
+    await page.goto(`/adm/estudio/revisao?recorte=ALL&faixa=${faixa}&busca=${encodeURIComponent("e2e-revisao")}`);
+    await expect(page.getByTestId(`content-studio-review-card-${idReview}`)).toBeVisible({ timeout: 20_000 });
+  }
 
   // Abrir leva ao material.
   await page.getByTestId(`content-studio-review-open-${idReview}`).click();

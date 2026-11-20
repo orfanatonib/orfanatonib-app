@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogTitle,
   FormHelperText,
-  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -20,7 +19,6 @@ import { useState } from "react";
 import { createContentPackage } from "../api";
 import { EMPTY_STUDIO_FORM } from "../workspace.constants";
 import type { ContentStudioCatalogResponse, CreateContentPackagePayload } from "../types";
-import { formatAudienceAgeRange } from "../utils";
 
 const THEME_MAX = 180;
 const REFERENCES_MAX = 500;
@@ -35,14 +33,12 @@ interface PackageFormDialogProps {
 
 type FieldErrors = Partial<Record<"theme" | "biblicalReferences" | "canonicalObjective", string>>;
 
-/** Criação de um material para visita: faixa etária, tema, referências e objetivo da visita. */
+/** Criação de um material para visita: tema, referências e objetivo; nasce para todas as categorias. */
 export function PackageFormDialog({ open, catalog, onClose, onCreated }: PackageFormDialogProps) {
   const [form, setForm] = useState<CreateContentPackagePayload>(EMPTY_STUDIO_FORM);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const audience = catalog.audiences.find((item) => item.audience === form.audience);
 
   const change = (field: keyof CreateContentPackagePayload) => (event: ChangeEvent<HTMLInputElement>) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -58,7 +54,6 @@ export function PackageFormDialog({ open, catalog, onClose, onCreated }: Package
     setSubmitError("");
 
     const payload: CreateContentPackagePayload = {
-      audience: form.audience,
       theme: form.theme.trim(),
       biblicalReferences: form.biblicalReferences.trim(),
       canonicalObjective: form.canonicalObjective.trim(),
@@ -94,24 +89,13 @@ export function PackageFormDialog({ open, catalog, onClose, onCreated }: Package
         <DialogContent>
           <Stack spacing={2.5}>
             <Typography color="text.secondary">
-              Conte o essencial da visita. Depois você gera e revisa cada etapa (lição, discussão, atividade, apoios visuais e roteiro).
+              Conte o essencial da visita. Depois você gera e revisa as cinco etapas de cada categoria: lição, visuais da lição, visual do versículo, fixação divertida do versículo e brincadeira divertida.
             </Typography>
             {submitError && <Alert severity="error">{submitError}</Alert>}
 
-            <TextField
-              select
-              label="Faixa etária"
-              value={form.audience}
-              onChange={change("audience")}
-              helperText={audience ? `${audience.name} · ${formatAudienceAgeRange(audience)}` : undefined}
-              data-testid="content-studio-create-audience"
-            >
-              {catalog.audiences.map((item) => (
-                <MenuItem key={item.audience} value={item.audience}>
-                  {item.name} · {formatAudienceAgeRange(item)}
-                </MenuItem>
-              ))}
-            </TextField>
+            <Alert severity="info" data-testid="content-studio-create-audiences-info">
+              O material é criado de uma vez para {catalog.audiences.map((item) => item.name).join(", ")}. Cada categoria aparece em uma aba, com as mesmas cinco etapas.
+            </Alert>
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
               <TextField

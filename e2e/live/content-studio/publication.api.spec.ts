@@ -96,10 +96,10 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
       "SELECT mediaType, originalName, isLocalFile, size FROM media_items WHERE targetId = ? AND targetType = 'VisitMaterialsPage'",
       [pages[0].id],
     );
-    // uma faixa (CHILD): PDF + DOCX
-    expect(media).toHaveLength(2);
+    // quatro categorias (PDF + DOCX cada) + o pacote completo (PDF + DOCX)
+    expect(media).toHaveLength(10);
     expect(media.every((item) => item.mediaType === "document" && item.isLocalFile === 1 && Number(item.size) > 0)).toBe(true);
-    expect(media.map((item) => item.originalName.split(".").pop()).sort()).toEqual(["docx", "pdf"]);
+    expect(media.map((item) => item.originalName.split(".").pop()).sort()).toEqual(Array(5).fill("docx").concat(Array(5).fill("pdf")));
     const row = await queryOne<{ status: string; visit_material_page_id: string }>(
       "SELECT status, visit_material_page_id FROM content_publications WHERE idempotencyKey = ?",
       [key],
@@ -115,7 +115,7 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect(again.visitMaterialPageId).toBe(first.visitMaterialPageId);
     expect(await countRows("visit_material_pages", { sourceLessonId: ready.id })).toBe(1);
     expect(await countRows("content_publications", { package_id: ready.id })).toBe(1);
-    expect(await countRows("media_items", { targetId: first.visitMaterialPageId!, targetType: "VisitMaterialsPage" })).toBe(2);
+    expect(await countRows("media_items", { targetId: first.visitMaterialPageId!, targetType: "VisitMaterialsPage" })).toBe(10);
   });
 
   test("[content-studio.post.content-studio-packages-packageid-publish#conflito-ou-duplicidade] chave de outro material ou material já publicado => 409", async ({ request }) => {

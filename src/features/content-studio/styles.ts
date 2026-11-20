@@ -1,10 +1,11 @@
 import type { SxProps, Theme } from "@mui/material/styles";
 
 export const CONTENT_STUDIO_PAGE_SX: SxProps<Theme> = {
-  width: "100%",
-  maxWidth: 1480,
+  // Telas do Estúdio usam quase toda a largura: 98% no celular e 95% a partir do desktop (sem teto em px).
+  width: { xs: "98%", md: "95%" },
+  maxWidth: "none",
   mx: "auto",
-  px: { xs: 2, sm: 3, lg: 4 },
+  px: 0,
   py: { xs: 2, md: 3 },
   "& .MuiCard-root": {
     borderColor: "rgba(26, 48, 84, 0.12)",

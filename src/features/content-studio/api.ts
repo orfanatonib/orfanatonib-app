@@ -2,7 +2,7 @@ import api from "@/config/axiosConfig";
 
 import { PUBLISH_REQUEST_TIMEOUT_MS } from "./publication.constants";
 import { parseSseText } from "./sse.utils";
-import type { ExportFormat } from "./types";
+import type { ContentAudience, ExportFormat } from "./types";
 import type {
   AiProviderResponse,
   ApproveReviewStagePayload,
@@ -17,10 +17,12 @@ import type {
   CreateContentPackagePayload,
   PaginatedContentPackagesResponse,
   QueryContentPackagesParams,
+  RegenerateStageImagesPayload,
   RequestStageChangesPayload,
   RequestStageGenerationPayload,
   SaveStageContentPayload,
   StageDocumentResponse,
+  StageImagesResponse,
 } from "./types";
 
 export async function getContentStudioCatalog(
@@ -93,6 +95,32 @@ export async function requestStageGeneration(
   return data;
 }
 
+/** Imagens da versão atual da etapa (URL assinada por item). */
+export async function getStageImages(
+  packageId: string,
+  stageId: string,
+  signal?: AbortSignal,
+): Promise<StageImagesResponse> {
+  const { data } = await api.get<StageImagesResponse>(
+    `/content-studio/packages/${packageId}/stages/${stageId}/images`,
+    { signal },
+  );
+  return data;
+}
+
+/** Refaz uma ou mais imagens (o texto não muda); sem `slots`, refaz as que faltam. */
+export async function regenerateStageImages(
+  packageId: string,
+  stageId: string,
+  payload: RegenerateStageImagesPayload,
+): Promise<ContentGenerationJobResponse> {
+  const { data } = await api.post<ContentGenerationJobResponse>(
+    `/content-studio/packages/${packageId}/stages/${stageId}/images/regenerate`,
+    payload,
+  );
+  return data;
+}
+
 /** Andamento da última geração da etapa; `null` se nunca houve. */
 export async function getLatestStageGeneration(
   packageId: string,
@@ -126,11 +154,14 @@ export async function completeProductionStage(
   return data;
 }
 
+/** Envia para revisão as categorias indicadas; sem a lista, envia todas. */
 export async function submitPackageReview(
   packageId: string,
+  audiences?: readonly ContentAudience[],
 ): Promise<ContentPackageResponse> {
   const { data } = await api.post<ContentPackageResponse>(
     `/content-studio/packages/${packageId}/submit-review`,
+    audiences?.length ? { audiences } : {},
   );
   return data;
 }
@@ -258,6 +289,8 @@ export async function downloadExport(
 
 export interface GenerationStreamHandlers {
   onJobs: (jobs: ContentGenerationJobResponse[]) => void;
+  /** Qualquer byte recebido (inclusive o heartbeat): prova de que a conexão está viva. */
+  onActivity?: () => void;
 }
 
 /**
@@ -280,6 +313,7 @@ export async function streamPackageGenerations(
       headers: { Accept: "text/event-stream" },
       transformResponse: (value: string) => value,
       onDownloadProgress: (progress) => {
+        handlers.onActivity?.();
         const target = progress.event?.target as XMLHttpRequest | undefined;
         const parsed = parseSseText(target?.responseText ?? "", offset);
         offset = parsed.offset;

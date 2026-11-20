@@ -203,7 +203,9 @@ test.describe.serial("Frequência — UI ao vivo", () => {
       timeout: 20_000,
     });
     await expect(page.getByTestId("attendance-loading")).toHaveCount(0);
-    await expect(page.getByText(RUN_TAG, { exact: false }).first()).toBeVisible();
+    await expect(
+      page.getByText(RUN_TAG, { exact: false }).first(),
+    ).toBeVisible();
   });
 
   test("a busca filtra os abrigos e o vazio aparece sem resultado", async ({
@@ -214,7 +216,9 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await openRegisterMode(page);
 
     await page.getByTestId("attendance-search").fill(RUN_TAG);
-    await expect(page.getByText(RUN_TAG, { exact: false }).first()).toBeVisible();
+    await expect(
+      page.getByText(RUN_TAG, { exact: false }).first(),
+    ).toBeVisible();
 
     await page.getByTestId("attendance-search").fill("zzz-nao-existe-zzz");
     await expect(page.getByTestId("attendance-empty")).toBeVisible();
@@ -268,7 +272,9 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await expect(page.getByTestId("pendings-error")).toHaveCount(0);
 
     await page.getByTestId("pendings-search").fill(RUN_TAG);
-    await expect(page.getByText(RUN_TAG, { exact: false }).first()).toBeVisible();
+    await expect(
+      page.getByText(RUN_TAG, { exact: false }).first(),
+    ).toBeVisible();
     await expect(page.getByTestId("pendings-empty")).toHaveCount(0);
   });
 
@@ -307,7 +313,9 @@ test.describe.serial("Frequência — UI ao vivo", () => {
 
     // `new Date("2026-09-01")` era lido como UTC e exibido no fuso local,
     // mostrando o dia anterior em toda a tela.
-    await expect(page.getByText(VISIT.br, { exact: false }).first()).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByText(VISIT.br, { exact: false }).first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("lançar a presença pela tela grava no banco", async ({
@@ -324,6 +332,9 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     ).json()) as AttendanceRecords;
     expect(before.meta.total).toBe(0);
 
+    await page
+      .getByRole("button", { name: "Marcar pendentes como presentes" })
+      .click();
     const submit = page.getByTestId("team-attendance-submit");
     await expect(submit).toBeEnabled({ timeout: 20_000 });
     await submit.click();
@@ -346,6 +357,82 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     expect(after.meta.total).toBe(1);
     expect(after.data[0].memberId).toBe(memberUserId);
     expect(after.data[0].type).toBe("present");
+  });
+
+  test("@mobile rotas, preenchimento e consulta em 375px", async ({
+    page,
+    request,
+  }) => {
+    await seedBrowserSession(page, await loginAs(request, "admin"));
+    await openTeam(page);
+    await expect(page).toHaveURL(new RegExp(`/adm/presenca/equipes/${teamId}`));
+    const card = page.getByTestId(`team-attendance-member-${memberUserId}`);
+    await expect(card).toBeVisible();
+    await page.screenshot({
+      path: "/tmp/attendance-mobile-form.png",
+      fullPage: true,
+    });
+    const submit = page.getByTestId("team-attendance-submit");
+    await expect(submit).toBeDisabled();
+    await card.getByRole("button", { name: "Faltou", exact: true }).click();
+    await page.getByRole("tab", { name: "Consultar", exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /continuar|ficar|cancelar/i })
+      .click();
+    await submit.click();
+    await expect(page.getByTestId("team-attendance-feedback")).toBeVisible();
+    const records = await request.get(
+      `${API_URL}/attendance/records?teamId=${teamId}`,
+      { headers: authHeaders(token) },
+    );
+    const body = (await records.json()) as AttendanceRecords;
+    expect(
+      body.data.find(
+        (record) =>
+          record.memberId === memberUserId && record.category === "visit",
+      )?.type,
+    ).toBe("absent");
+    await page.reload();
+    await expect(
+      card.getByRole("button", { name: "Faltou", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page.getByRole("tab", { name: "Consultar", exact: true }).click();
+    await expect(page).toHaveURL(/\/adm\/presenca\/consultar$/);
+    await expect(page.getByTestId("attendance-history-page")).toBeVisible();
+    await page.getByLabel("De", { exact: true }).fill(VISIT.iso);
+    await page.getByLabel("Até", { exact: true }).fill(VISIT.iso);
+    await page.getByRole("button", { name: "Aplicar", exact: true }).click();
+    await page.getByLabel("Buscar abrigo, equipe ou conteúdo").fill(RUN_TAG);
+    await expect(page.getByText(VISIT.br, { exact: false })).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: "/tmp/attendance-mobile-history.png",
+      fullPage: true,
+    });
+    await page.getByRole("tab", { name: "Pendências", exact: true }).click();
+    await page.getByTestId("pendings-search").fill(RUN_TAG);
+    await expect(
+      page.getByText(MEETING.br, { exact: false }).first(),
+    ).toBeVisible();
+    await page
+      .getByRole("link", { name: "Preencher presença" })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/tipo=meeting/);
+    await expect(
+      page.getByRole("button", { name: "Reuniões", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("membro não alcança a tela de frequência administrativa", async ({

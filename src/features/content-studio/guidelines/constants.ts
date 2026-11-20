@@ -12,29 +12,25 @@ export const PROMPT_STORAGE_SCOPE = "prompts";
 export const PROMPT_COMPLEMENTARY_HEADER = "PERSONALIZAÇÃO DO ADMINISTRADOR:";
 
 export const PROMPT_STAGE_CONFIG: Record<ContentStageType, { icon: string; description: string }> = {
-  [ContentStageType.CANONICAL_BASE]: {
-    icon: "📖",
-    description: "A base fiel à Bíblia (texto, ideia central e objetivo) de que as outras etapas dependem.",
-  },
   [ContentStageType.LESSON]: {
     icon: "🗣️",
-    description: "O texto que o facilitador conta ou lê na visita, no tom e no tamanho certos para a faixa etária.",
+    description: "A lição com a dinâmica para contá-la: personagens, materiais de apoio, quebra-gelo, história com ações, aplicação e versículos.",
   },
-  [ContentStageType.DISCUSSION]: {
-    icon: "💬",
-    description: "As perguntas de conversa depois da história, para ouvir e acolher cada um.",
-  },
-  [ContentStageType.ACTIVITY]: {
-    icon: "🎲",
-    description: "A dinâmica ou atividade prática, pensada para o espaço e os materiais de uma visita.",
-  },
-  [ContentStageType.VISUAL]: {
+  [ContentStageType.LESSON_VISUALS]: {
     icon: "🎨",
-    description: "Os apoios visuais da visita: cenas, cartazes e imagens genéricas, sem identificar pessoas.",
+    description: "Os visuais da lição: cenas ou elementos que ajudam a contar a história, sem identificar pessoas.",
   },
-  [ContentStageType.FACILITATOR_GUIDANCE]: {
-    icon: "🧭",
-    description: "O roteiro de cuidado para quem conduz: como acolher, o que evitar e como encerrar.",
+  [ContentStageType.VERSE_VISUALS]: {
+    icon: "🔤",
+    description: "Os cartões do versículo, um trecho por cartão, com o cartão final da referência.",
+  },
+  [ContentStageType.VERSE_FIXATION]: {
+    icon: "🏃",
+    description: "O modo divertido de repassar o versículo até todos o dizerem de cor.",
+  },
+  [ContentStageType.STANDARD_GAME]: {
+    icon: "🎲",
+    description: "A brincadeira divertida da visita, pensada para o espaço e os materiais de cada público.",
   },
 };
 
@@ -47,13 +43,11 @@ export const PROMPT_PRESETS = [
 
 /** Exemplo do que cabe na orientação de cada etapa, mostrado no campo vazio (não é gravado). */
 export const PROMPT_STAGE_EXAMPLES: Record<ContentStageType, string> = {
-  [ContentStageType.CANONICAL_BASE]: "Ex.: Destaque uma única ideia central e use sempre a mesma tradução da Bíblia nas referências.",
-  [ContentStageType.LESSON]: "Ex.: Conte em frases curtas, com uma pergunta a cada parte. Termine com uma aplicação simples para a semana.",
-  [ContentStageType.DISCUSSION]: "Ex.: Faça poucas perguntas, todas abertas, e uma delas sobre gratidão. Evite perguntas sobre a família de quem participa.",
-  [ContentStageType.ACTIVITY]: "Ex.: Dinâmicas que funcionem em sala pequena, só com papel e caneta, e em que todos participem ao mesmo tempo.",
-  [ContentStageType.VISUAL]: "Ex.: Cenas com personagens de expressão clara e cores vivas, sem rostos reais e sem texto dentro da imagem.",
-  [ContentStageType.FACILITATOR_GUIDANCE]:
-    "Ex.: Lembre o facilitador de nunca fotografar nem pedir dados pessoais e de encerrar com uma oração curta e opcional.",
+  [ContentStageType.LESSON]: "Ex.: Use objetos que já existem em qualquer casa e termine com uma aplicação simples para a semana.",
+  [ContentStageType.LESSON_VISUALS]: "Ex.: Cenas com personagens de expressão clara e cores vivas, sem rostos reais e sem texto dentro da imagem.",
+  [ContentStageType.VERSE_VISUALS]: "Ex.: Fundo quente e letras bem grandes, com poucos desenhos pequenos ligados ao sentido do trecho.",
+  [ContentStageType.VERSE_FIXATION]: "Ex.: Uma corrida em equipes em que cada rodada esconde uma palavra a mais do versículo.",
+  [ContentStageType.STANDARD_GAME]: "Ex.: Brincadeiras que funcionem em pátio pequeno, só com materiais baratos, em que todos participem ao mesmo tempo.",
 };
 
 export const PROMPT_TEXTS = {

@@ -23,9 +23,8 @@ type Pkg = { id: string; status: string; tracks: Array<{ audience: string; stage
 const call = (request: APIRequestContext, method: "get" | "post" | "patch", path: string, data?: unknown) =>
   request.fetch(`${API_URL}${path}`, { method, headers: authHeaders(admin), data });
 
-async function newPackage(request: APIRequestContext, audience = "CHILD"): Promise<Pkg> {
+async function newPackage(request: APIRequestContext): Promise<Pkg> {
   const res = await call(request, "post", `${CS}/packages`, {
-    audience,
     theme: `e2e-matriz ${Date.now()}-${created.length}`,
     biblicalReferences: "Salmos 23",
     canonicalObjective: "Confiar em Deus",
@@ -38,8 +37,9 @@ async function newPackage(request: APIRequestContext, audience = "CHILD"): Promi
 const getPkg = async (request: APIRequestContext, id: string) => (await (await call(request, "get", `${CS}/packages/${id}`)).json()) as Pkg;
 
 /** Salva e conclui todas as etapas na ordem (pré-condição de revisão). */
-async function completeAll(request: APIRequestContext, pkg: Pkg) {
-  for (const stage of [...pkg.tracks[0].stages].sort((a, b) => a.position - b.position)) {
+async function completeAll(request: APIRequestContext, pkg: Pkg, audience?: string) {
+  const track = audience ? pkg.tracks.find((t) => t.audience === audience)! : pkg.tracks[0];
+  for (const stage of [...track.stages].sort((a, b) => a.position - b.position)) {
     const save = await call(request, "patch", `${CS}/packages/${pkg.id}/stages/${stage.id}/content`, { structuredContent: { title: `Etapa ${stage.position}` } });
     expect(save.status()).toBe(200);
     const done = await call(request, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/complete-production`);
@@ -49,7 +49,9 @@ async function completeAll(request: APIRequestContext, pkg: Pkg) {
 async function inReview(request: APIRequestContext) {
   const pkg = await newPackage(request);
   await completeAll(request, pkg);
-  expect([200, 201]).toContain((await call(request, "post", `${CS}/packages/${pkg.id}/submit-review`)).status());
+  // Envia só a primeira categoria: as outras continuam em produção.
+  const sent = await call(request, "post", `${CS}/packages/${pkg.id}/submit-review`, { audiences: [pkg.tracks[0].audience] });
+  expect([200, 201]).toContain(sent.status());
   return getPkg(request, pkg.id);
 }
 /** Arquivar exige conteúdo salvo em alguma etapa. */
@@ -132,14 +134,22 @@ test.describe.serial("Estúdio — matriz de cenários", () => {
   });
 
   // ---------- criar pacote ----------
-  test("[content-studio.post.content-studio-packages#feliz] cria pacote com a faixa pedida", async ({ request }) => {
-    const pkg = await newPackage(request, "TEEN");
-    expect(pkg.tracks).toHaveLength(1);
-    expect(pkg.tracks[0].audience).toBe("TEEN");
+  test("[content-studio.post.content-studio-packages#feliz] cria o material para os quatro públicos, cada um com as cinco etapas", async ({ request }) => {
+    const pkg = await newPackage(request);
+    expect(pkg.tracks.map((t) => t.audience).sort()).toEqual(["ADULT", "BABY", "CHILD", "TEEN"]);
+    for (const track of pkg.tracks)
+      expect([...track.stages].sort((a, b) => a.position - b.position).map((s) => s.stageType)).toEqual([
+        "LESSON",
+        "LESSON_VISUALS",
+        "VERSE_VISUALS",
+        "VERSE_FIXATION",
+        "STANDARD_GAME",
+      ]);
+    expect(await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_stages s JOIN content_tracks t ON t.id = s.track_id WHERE t.package_id = ?", [pkg.id])).toMatchObject({ n: 20 });
   });
-  test("[content-studio.post.content-studio-packages#validacao] corpo vazio ou público inválido ⇒ 400", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages#validacao] corpo vazio ou com público (o material nasce para todos) ⇒ 400", async ({ request }) => {
     expect((await call(request, "post", `${CS}/packages`, {})).status()).toBe(400);
-    expect((await call(request, "post", `${CS}/packages`, { audience: "NAO", theme: "t", biblicalReferences: "r", canonicalObjective: "o" })).status()).toBe(400);
+    expect((await call(request, "post", `${CS}/packages`, { audience: "CHILD", theme: "t", biblicalReferences: "r", canonicalObjective: "o" })).status()).toBe(400);
   });
   test("[content-studio.post.content-studio-packages#conflito-ou-duplicidade] temas repetidos são permitidos e geram pacotes distintos", async ({ request }) => {
     const body = { theme: `e2e-dup ${Date.now()}`, biblicalReferences: "Sl 1", canonicalObjective: "o" };
@@ -266,11 +276,41 @@ test.describe.serial("Estúdio — matriz de cenários", () => {
   test("[content-studio.post.content-studio-packages-packageid-submit-review#validacao] id que não é UUID ⇒ 400", async ({ request }) => {
     expect((await call(request, "post", submitPath("x"))).status()).toBe(400);
   });
-  test("[content-studio.post.content-studio-packages-packageid-submit-review#conflito-ou-duplicidade] sem etapas concluídas ou já em revisão ⇒ 409", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-submit-review#conflito-ou-duplicidade] pacote sem produção ⇒ 409; categoria já enviada ⇒ 400", async ({ request }) => {
     const fresh = await newPackage(request);
-    expect((await call(request, "post", submitPath(fresh.id))).status()).toBe(409);
+    expect((await call(request, "post", submitPath(fresh.id), {})).status()).toBe(409);
     const reviewing = await inReview(request);
-    expect((await call(request, "post", submitPath(reviewing.id))).status()).toBe(409);
+    expect((await call(request, "post", submitPath(reviewing.id), { audiences: [reviewing.tracks[0].audience] })).status()).toBe(400);
+  });
+  test("[content-studio.post.content-studio-packages-packageid-submit-review#parcial] envia uma categoria por vez e as outras continuam em produção", async ({ request }) => {
+    const pkg = await newPackage(request);
+    await completeAll(request, pkg);
+    const first = pkg.tracks[0].audience;
+    expect([200, 201]).toContain((await call(request, "post", submitPath(pkg.id), { audiences: [first] })).status());
+    const after = await getPkg(request, pkg.id);
+    expect(after.status).toBe("IN_REVIEW");
+    for (const track of after.tracks)
+      for (const stage of track.stages) {
+        const status = await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]);
+        expect(status?.status, `${track.audience} ${stage.stageType}`).toBe(track.audience === first ? "IN_REVIEW" : "NOT_STARTED");
+      }
+    // Enquanto uma categoria está em revisão, as outras seguem editáveis.
+    const other = after.tracks.find((t) => t.audience !== first)!.stages[0];
+    expect((await call(request, "patch", `${CS}/packages/${pkg.id}/stages/${other.id}/content`, { structuredContent: { title: "continua em produção" } })).status()).toBe(200);
+  });
+  test("[content-studio.post.content-studio-packages-packageid-submit-review#todas] sem lista envia todas as categorias (todas precisam estar concluídas)", async ({ request }) => {
+    const pkg = await newPackage(request);
+    await completeAll(request, pkg);
+    expect((await call(request, "post", submitPath(pkg.id), {})).status()).toBe(400);
+    for (const track of pkg.tracks.slice(1)) await completeAll(request, pkg, track.audience);
+    expect([200, 201]).toContain((await call(request, "post", submitPath(pkg.id), {})).status());
+    expect(await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_stages s JOIN content_tracks t ON t.id = s.track_id WHERE t.package_id = ? AND s.status = 'IN_REVIEW'", [pkg.id])).toMatchObject({ n: 20 });
+  });
+  test("[content-studio.post.content-studio-packages-packageid-submit-review#validacao-publico] público inválido ou repetido ⇒ 400", async ({ request }) => {
+    const pkg = await newPackage(request);
+    expect((await call(request, "post", submitPath(pkg.id), { audiences: ["NAO"] })).status()).toBe(400);
+    expect((await call(request, "post", submitPath(pkg.id), { audiences: ["CHILD", "CHILD"] })).status()).toBe(400);
+    expect((await call(request, "post", submitPath(pkg.id), { audiences: [] })).status()).toBe(400);
   });
 
   const approvePath = (pkgId: string, stageId: string) => `${CS}/packages/${pkgId}/stages/${stageId}/approve`;

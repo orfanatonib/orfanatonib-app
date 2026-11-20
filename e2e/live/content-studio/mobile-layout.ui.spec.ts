@@ -9,6 +9,8 @@ import { authHeaders, expect, loginAs, seedBrowserSession, test } from "../suppo
 const FLAGS = ["content_studio", "content_studio_review", "content_studio_generation", "content_studio_provider_admin"] as const;
 const before: Record<string, number> = {};
 let admin = "";
+let savedAudience = "";
+let firstStage = "";
 let packageId = "";
 const CS = `${API_URL}/content-studio`;
 
@@ -23,10 +25,12 @@ test.beforeAll(async ({ request }) => {
   const pkg = (await (
     await request.post(`${CS}/packages`, {
       headers: authHeaders(admin),
-      data: { audience: "CHILD", theme: `e2e-mobile ${Date.now()}`, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" },
+      data: { theme: `e2e-mobile ${Date.now()}`, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" },
     })
   ).json()) as Pkg;
   packageId = pkg.id;
+  savedAudience = pkg.tracks[0].audience;
+  firstStage = pkg.tracks[0].stages[0].stageType;
   await request.patch(`${CS}/packages/${packageId}/stages/${pkg.tracks[0].stages[0].id}/content`, { headers: authHeaders(admin), data: { structuredContent: { title: "Deus cuida de nós" } } });
 });
 
@@ -85,7 +89,7 @@ for (const [name, url] of SCREENS) {
 test("celular — PDF da etapa: em vez do iframe, botão para abrir no visualizador do aparelho", async ({ page, request }) => {
   await seedBrowserSession(page, await loginAs(request, "admin"));
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto(`/adm/estudio/pacotes/${packageId}?audience=CHILD&stage=CANONICAL_BASE`);
+  await page.goto(`/adm/estudio/pacotes/${packageId}?audience=${savedAudience}&stage=${firstStage}`);
   await page.getByTestId("content-studio-pdf-tab-button").click();
   await expect(page.getByTestId("content-studio-pdf-open")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByTestId("content-studio-pdf-frame")).toHaveCount(0);

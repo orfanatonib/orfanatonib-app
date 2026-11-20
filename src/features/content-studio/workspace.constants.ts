@@ -1,5 +1,4 @@
 import {
-  ContentAudience,
   ContentStageStatus,
   ContentPackageStatus,
   type CreateContentPackagePayload,
@@ -25,7 +24,6 @@ export const MANUAL_EDIT_ALLOWED_STATUSES: readonly ContentStageStatus[] = [
 
 export const PACKAGE_PRODUCTION_LOCKED_STATUSES: readonly ContentPackageStatus[] =
   [
-    ContentPackageStatus.IN_REVIEW,
     ContentPackageStatus.PUBLISHING,
     ContentPackageStatus.PUBLISHED,
     ContentPackageStatus.ARCHIVED,
@@ -41,7 +39,6 @@ export const INITIAL_PACKAGE_STATE = {
 
 export const STUDIO_PAGE_SIZE = 10;
 export const EMPTY_STUDIO_FORM: CreateContentPackagePayload = {
-  audience: ContentAudience.CHILD,
   theme: "",
   biblicalReferences: "",
   canonicalObjective: "",

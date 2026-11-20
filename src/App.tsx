@@ -1,3 +1,7 @@
+import AttendanceLayout from "@/features/attendance/pages/AttendanceLayout";
+import AttendanceIndexRedirect from "@/features/attendance/pages/AttendanceIndexRedirect";
+import AttendanceTeamPage from "@/features/attendance/pages/AttendanceTeamPage";
+import ListSheets from "@/features/attendance/components/ListSheets";
 import {
   AttendanceDashboard,
   PendingAttendancePage,
@@ -8,10 +12,7 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { LegacyFeedRedirect } from "./features/shelter-feed/LegacyFeedRedirect";
 import { SHELTER_FEED_PATH } from "./features/shelter-feed/routes";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Box,
-  Toolbar,
-} from "@mui/material";
+import { Box, Toolbar } from "@mui/material";
 
 import "./App.css";
 import "./styles/Global.css";
@@ -111,11 +112,11 @@ import FeedbackManager from "./features/feedback/FeedbackManager";
 import UsersManager from "./features/users/UsersManager";
 import InformativeBannerLManager from "./features/informatives/InformativeBannerLManager";
 import ImageSectionManager from "./features/image-sections/ImageSectionManager";
-import ImagePageManager from "./features/image-pages/ImagePageManager";
 import {
   FEED_COMMENTS_ADMIN_PATH,
   FeedCommentsManager,
 } from "./features/feed-comments";
+import ImagePageManager from "./features/image-pages/ImagePageManager";
 import IdeasSectionManager from "./features/ideas-sections/IdeasSectionManager";
 import IdeasSectionPage from "./pages/MemberArea/IdeasSection/IdeasSectionPage";
 import DocumentsManager from "./features/documents/DocumentsManager";
@@ -464,11 +465,7 @@ function App() {
                   <Route path="/perfil" element={<ProfilePage />} />
                   <Route
                     path="/presenca"
-                    element={
-                      <FeatureFlagRoute featureKey={FeatureFlagKeys.ATTENDANCE}>
-                        <AttendanceDashboard />
-                      </FeatureFlagRoute>
-                    }
+                    element={<AttendanceIndexRedirect />}
                   />
                   {/* A API é admin/líder (403 para membro): a rota também. */}
                   <Route
@@ -517,20 +514,22 @@ function App() {
                         <FeatureFlagRoute
                           featureKey={FeatureFlagKeys.ATTENDANCE}
                         >
-                          <AttendanceDashboard />
+                          <AttendanceLayout />
                         </FeatureFlagRoute>
                       }
-                    />
-                    <Route
-                      path="presenca/pendencias"
-                      element={
-                        <FeatureFlagRoute
-                          featureKey={FeatureFlagKeys.ATTENDANCE}
-                        >
-                          <PendingAttendancePage />
-                        </FeatureFlagRoute>
-                      }
-                    />
+                    >
+                      <Route index element={<AttendanceIndexRedirect />} />
+                      <Route path="lancar" element={<AttendanceDashboard />} />
+                      <Route
+                        path="equipes/:teamId"
+                        element={<AttendanceTeamPage />}
+                      />
+                      <Route path="consultar" element={<ListSheets />} />
+                      <Route
+                        path="pendencias"
+                        element={<PendingAttendancePage />}
+                      />
+                    </Route>
                     <Route
                       path="meditacoes"
                       element={
@@ -620,6 +619,7 @@ function App() {
                           <ImageSectionManager />
                         </FeatureFlagRoute>
                       }
+                    />
                     <Route
                       path={FEED_COMMENTS_ADMIN_PATH}
                       element={
@@ -633,7 +633,6 @@ function App() {
                           </FeatureFlagRoute>
                         </FeatureFlagRoute>
                       }
-                    />
                     />
                     <Route
                       path="ideias-compartilhadas"
@@ -733,15 +732,21 @@ function App() {
                     />
                     <Route
                       path="provedores-ia"
-                      element={<Navigate to="/adm/config-provedores-ia" replace />}
+                      element={
+                        <Navigate to="/adm/config-provedores-ia" replace />
+                      }
                     />
                     <Route
                       path="estudio/provedores-ia"
-                      element={<Navigate to="/adm/config-provedores-ia" replace />}
+                      element={
+                        <Navigate to="/adm/config-provedores-ia" replace />
+                      }
                     />
                     <Route
                       path="estudio/config"
-                      element={<Navigate to="/adm/config-provedores-ia" replace />}
+                      element={
+                        <Navigate to="/adm/config-provedores-ia" replace />
+                      }
                     />
                     <Route
                       path="usuarios"

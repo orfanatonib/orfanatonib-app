@@ -1,4 +1,5 @@
-import api from '@/config/axiosConfig';
+import { ATTENDANCE_RECORDS_PAGE_SIZE } from "./constants";
+import api from "@/config/axiosConfig";
 
 import type {
   AllPendingsResponseDto,
@@ -12,7 +13,7 @@ import type {
   SheltersTeamsMembersResponse,
   TeamMembersResponse,
   TeamScheduleDto,
-} from './types';
+} from "./types";
 
 /**
  * Chamadas HTTP do módulo de frequência.
@@ -26,7 +27,7 @@ export async function registerAttendance(
   data: RegisterAttendanceDto,
 ): Promise<AttendanceResponseDto> {
   const response = await api.post<AttendanceResponseDto>(
-    '/attendance/register',
+    "/attendance/register",
     data,
   );
   return response.data;
@@ -36,7 +37,7 @@ export async function registerTeamAttendance(
   data: RegisterTeamAttendanceDto,
 ): Promise<AttendanceResponseDto[]> {
   const response = await api.post<AttendanceResponseDto[]>(
-    '/attendance/register/team',
+    "/attendance/register/team",
     data,
   );
   return response.data;
@@ -44,7 +45,7 @@ export async function registerTeamAttendance(
 
 export async function getAllPendings(): Promise<AllPendingsResponseDto> {
   const response = await api.get<AllPendingsResponseDto>(
-    '/attendance/pending/all',
+    "/attendance/pending/all",
   );
   return response.data;
 }
@@ -78,7 +79,7 @@ export async function getTeamSchedules(
  */
 export async function getSheltersTeamsMembers(): Promise<SheltersTeamsMembersResponse> {
   const response = await api.get<SheltersTeamsMembersResponse>(
-    '/attendance/leader/teams/members',
+    "/attendance/leader/teams/members",
   );
   return response.data;
 }
@@ -87,7 +88,7 @@ export async function getHierarchicalSheets(
   query: PeriodQuery = {},
 ): Promise<HierarchicalSheetsResponse> {
   const response = await api.get<HierarchicalSheetsResponse>(
-    '/attendance/sheets/hierarchical',
+    "/attendance/sheets/hierarchical",
     { params: query },
   );
   return response.data;
@@ -97,8 +98,28 @@ export async function getAttendanceRecords(
   query: AttendanceFiltersQuery = {},
 ): Promise<PaginatedResponseDto<AttendanceResponseDto>> {
   const response = await api.get<PaginatedResponseDto<AttendanceResponseDto>>(
-    '/attendance/records',
+    "/attendance/records",
     { params: query },
   );
   return response.data;
+}
+
+/** Load the whole selected occurrence; never treat a missing page as an unmarked member. */
+export async function getOccurrenceAttendance(
+  query: import("./workspace.types").AttendanceOccurrenceQuery,
+): Promise<AttendanceResponseDto[]> {
+  const records: AttendanceResponseDto[] = [];
+  let page = 1;
+  let hasNext = true;
+  while (hasNext) {
+    const response = await getAttendanceRecords({
+      ...query,
+      page,
+      limit: ATTENDANCE_RECORDS_PAGE_SIZE,
+    });
+    records.push(...response.data);
+    hasNext = response.meta.hasNext;
+    page += 1;
+  }
+  return records;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import ministryLogo from '../assets-ministry-logo.png';
 import { useEditor, EditorContent } from '@tiptap/react';
 import {
   Box,
@@ -52,6 +53,7 @@ export const StudioDocEditor = ({
   initialJson,
   onChange,
   editable = true,
+  audienceName,
 }: StudioDocEditorProps) => {
   const theme = useTheme();
   const compact = useMediaQuery(theme.breakpoints.down('md'));
@@ -549,62 +551,86 @@ export const StudioDocEditor = ({
           bgcolor: 'white',
         }}
       >
-        {/* Cabeçalho da folha: o mesmo do DOCX/PDF exportado (texto, sem imagens de outra marca). */}
-        <Stack
-          direction="row"
-          alignItems="baseline"
-          spacing={1}
-          sx={{ mb: 3, pb: 1, borderBottom: '2px solid #1E3A5F' }}
+        {/* Cabeçalho da folha: o mesmo do DOCX/PDF (logo do ministério, etiqueta da categoria e endereço à direita;
+            o título é o primeiro título do documento e fica à esquerda, ao lado). */}
+        <Box
           data-testid="content-studio-doc-sheet-header"
+          sx={{
+            float: { xs: 'none', sm: 'right' },
+            width: { xs: '100%', sm: 190 },
+            ml: { sm: 2 },
+            mb: 1,
+            textAlign: 'center',
+          }}
         >
-          <Typography sx={{ fontWeight: 800, color: '#1E3A5F', fontSize: 15 }}>Orfanatos NIB</Typography>
-          <Typography sx={{ color: '#5F6B7A', fontSize: 13 }}>· Material para visita</Typography>
-        </Stack>
+          <Box
+            component="img"
+            src={ministryLogo}
+            alt="Ministério de Orfanato"
+            sx={{ width: { xs: 120, sm: 170 }, height: 'auto', display: 'block', mx: 'auto' }}
+          />
+          <Box
+            data-testid="content-studio-doc-sheet-tag"
+            sx={{ bgcolor: '#0047AB', color: '#fff', fontWeight: 800, fontSize: 15, py: 0.25, mt: 0.5, textTransform: 'uppercase' }}
+          >
+            {audienceName ?? 'Material'}
+          </Box>
+          <Box sx={{ borderBottom: '3px solid #F7A233', mt: 0.75, mb: 0.5 }} />
+          <Typography sx={{ color: '#0B5BD3', fontSize: 12 }}>www.orfanatonib.com</Typography>
+          <Typography sx={{ fontSize: 10, textAlign: 'right' }}>® {new Date().getFullYear()}</Typography>
+        </Box>
         <Box
           sx={{
             '& .tiptap': {
               outline: 'none',
               minHeight: compact ? 440 : '230mm',
               lineHeight: 1.7,
-              fontFamily: '"Calibri", "Helvetica", "Arial", sans-serif',
+              fontFamily: '"Arial", "Helvetica", sans-serif',
               fontSize: '15px',
               overflowWrap: 'anywhere',
               color: '#000000',
             },
             '& .tiptap h1': {
-              textAlign: 'center',
+              textAlign: 'left',
               color: '#000000',
-              fontSize: '24px',
+              fontSize: { xs: '24px', sm: '32px' },
+              lineHeight: 1.15,
               fontWeight: 800,
-              mt: 2,
+              mt: 1,
               mb: 3,
+              pb: 1,
               textTransform: 'uppercase',
-              letterSpacing: '0.5px',
+              borderBottom: '5px solid #E30613',
+              // Contexto próprio: a linha vermelha termina antes do logo (que flutua à direita).
+              overflow: 'hidden',
             },
             '& .tiptap h2': {
               color: '#000000',
-              fontSize: '17px',
-              fontWeight: 700,
-              textAlign: 'center',
-              mt: 3.5,
+              fontSize: { xs: '26px', sm: '32px' },
+              fontWeight: 800,
+              textAlign: 'left',
+              mt: 4,
               mb: 1.5,
-              pb: 0.5,
-              borderBottom: '2px solid #000000',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3px',
+              clear: 'both',
             },
             '& .tiptap h3': {
               color: '#000000',
-              fontSize: '15px',
-              fontWeight: 600,
-              textAlign: 'center',
+              fontSize: '17px',
+              fontWeight: 700,
+              textAlign: 'left',
               mt: 2.5,
               mb: 1,
             },
             '& .tiptap p': {
-              mb: 1.5,
-              textAlign: 'justify',
+              mb: 1.75,
+              textAlign: { xs: 'left', sm: 'justify' },
+              textIndent: { xs: 0, sm: '1cm' },
               lineHeight: 1.65,
+            },
+            '& .tiptap td p, & .tiptap th p, & .tiptap li p': {
+              textIndent: 0,
+              textAlign: 'left',
+              mb: 0.5,
             },
             '& .tiptap blockquote': {
               borderLeft: '4px solid #000000',
@@ -625,18 +651,28 @@ export const StudioDocEditor = ({
             '& .tiptap table': {
               borderCollapse: 'collapse',
               tableLayout: 'fixed',
-              width: '100%',
+              width: '100% !important',
+              minWidth: '0 !important',
               my: 2,
+              clear: 'both',
+            },
+            // Celular: as colunas dividem a largura da folha em vez de manter os pixels do desktop.
+            '@media (max-width: 599.95px)': {
+              '& .tiptap col': { width: 'auto !important' },
+              '& .tiptap col:first-of-type': { width: '40% !important' },
+              '& .tiptap td, & .tiptap th': { fontSize: '12.5px', padding: '6px' },
             },
             '& .tiptap td, & .tiptap th': {
-              border: '1px solid #CCCCCC',
+              border: '1px solid #000000',
               p: 1,
               verticalAlign: 'top',
               boxSizing: 'border-box',
+              fontSize: '14px',
             },
             '& .tiptap th': {
-              bgcolor: '#F5F5F5',
+              bgcolor: '#FFD400',
               fontWeight: 'bold',
+              textAlign: 'left',
             },
             '& .tiptap ul, & .tiptap ol': {
               pl: 3,

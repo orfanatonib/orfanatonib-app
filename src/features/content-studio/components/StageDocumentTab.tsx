@@ -18,10 +18,11 @@ interface StageDocumentTabProps {
   onReset: (stage: ContentStageResponse) => Promise<boolean>;
   /** Avisa a página se há edição não salva (para o aviso ao sair). */
   onDirtyChange?: (dirty: boolean) => void;
+  audienceName?: string;
 }
 
 /** Aba "Documento": editor rico (TipTap) da etapa, com salvar (Ctrl+S), descartar e voltar ao gerado dos campos. */
-export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, onDirtyChange }: StageDocumentTabProps) {
+export function StageDocumentTab({ packageId, stage, audienceName, disabled, onSave, onReset, onDirtyChange }: StageDocumentTabProps) {
   const { data, loading, error, reload } = useStageDocument(packageId, stage.id, stage.currentVersionId);
   const [draft, setDraft] = useState<TiptapDocument | null>(null);
   const [saving, setSaving] = useState(false);
@@ -154,7 +155,7 @@ export function StageDocumentTab({ packageId, stage, disabled, onSave, onReset, 
       {disabled && <Alert severity="info">Esta etapa não pode ser editada agora (em revisão, aprovada ou publicada).</Alert>}
 
       <Box data-testid="content-studio-doc-editor-wrapper" sx={{ minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>
-        <StudioDocEditor initialJson={draft} editable={!disabled && !saving} onChange={setDraft} />
+        <StudioDocEditor initialJson={draft} editable={!disabled && !saving} onChange={setDraft} audienceName={audienceName} />
       </Box>
       <Typography variant="caption" color="text.secondary">
         Dica: Ctrl+S salva. O PDF e o DOCX usam a última versão SALVA.

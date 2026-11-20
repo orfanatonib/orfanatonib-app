@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ContentAudience } from "./types";
+
 const get = vi.fn();
 const post = vi.fn();
 const patch = vi.fn();
@@ -49,7 +51,9 @@ describe("api do Estúdio — rotas e corpos", () => {
     await api.approveReviewStage(P, S, { note: "ok" } as never);
     await api.requestStageChanges(P, S, { message: "ajustar" } as never);
     await api.resolveReviewComment(P, "c1");
-    expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/submit-review`);
+    expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/submit-review`, {});
+    await api.submitPackageReview(P, [ContentAudience.TEEN]);
+    expect(post).toHaveBeenLastCalledWith(`/content-studio/packages/${P}/submit-review`, { audiences: ["TEEN"] });
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/stages/${S}/approve`, { note: "ok" });
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/stages/${S}/request-changes`, { message: "ajustar" });
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/review-comments/c1/resolve`);

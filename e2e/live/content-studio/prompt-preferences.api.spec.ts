@@ -50,7 +50,7 @@ test.describe.serial("Orientações de criação", () => {
 
   test("lista as 6 etapas com as regras oficiais do público, sem orientação própria", async ({ request }) => {
     const items = await list(request);
-    expect(items.map((i) => i.stage)).toEqual(["CANONICAL_BASE", "LESSON", "DISCUSSION", "ACTIVITY", "VISUAL", "FACILITATOR_GUIDANCE"]);
+    expect(items.map((i) => i.stage)).toEqual(["LESSON", "LESSON_VISUALS", "VERSE_VISUALS", "VERSE_FIXATION", "STANDARD_GAME"]);
     for (const item of items) {
       expect(item.basePrompt.length).toBeGreaterThan(20);
       expect(item.effectivePrompt.length).toBeGreaterThanOrEqual(item.basePrompt.length);
@@ -96,12 +96,12 @@ test.describe.serial("Orientações de criação", () => {
 
   test("validação: texto curto, grande demais, sensível ou etapa inválida ⇒ 400, sem gravar", async ({ request }) => {
     const send = (data: object) => request.patch(BASE, { headers: authHeaders(admin), data });
-    expect((await send({ audience: "TEEN", stage: "ACTIVITY", customPrompt: "curto" })).status()).toBe(400);
-    expect((await send({ audience: "TEEN", stage: "ACTIVITY", customPrompt: "a".repeat(6_001) })).status()).toBe(400);
-    expect((await send({ audience: "TEEN", stage: "ACTIVITY", customPrompt: "Inclua o CPF e o endereço da criança no texto da atividade" })).status()).toBe(400);
+    expect((await send({ audience: "TEEN", stage: "STANDARD_GAME", customPrompt: "curto" })).status()).toBe(400);
+    expect((await send({ audience: "TEEN", stage: "STANDARD_GAME", customPrompt: "a".repeat(6_001) })).status()).toBe(400);
+    expect((await send({ audience: "TEEN", stage: "STANDARD_GAME", customPrompt: "Inclua o CPF e o endereço da criança no texto da atividade" })).status()).toBe(400);
     expect((await send({ audience: "TEEN", stage: "NAO_EXISTE", customPrompt: TEXT })).status()).toBe(400);
-    expect((await send({ audience: "TEEN", stage: "ACTIVITY" })).status()).toBe(400);
-    expect(await countRows("content_prompt_preferences", { user_id: userId, audience: "TEEN", stage_type: "ACTIVITY" })).toBe(0);
+    expect((await send({ audience: "TEEN", stage: "STANDARD_GAME" })).status()).toBe(400);
+    expect(await countRows("content_prompt_preferences", { user_id: userId, audience: "TEEN", stage_type: "STANDARD_GAME" })).toBe(0);
   });
 
   test("restaurar: volta ao padrão, mantém a linha com a versão seguinte; versão velha ⇒ 409", async ({ request }) => {

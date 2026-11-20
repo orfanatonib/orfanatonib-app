@@ -13,6 +13,7 @@ import { useHighlightsCarousel } from '../useHighlightsCarousel';
 
 const slideFromRight = keyframes`from { transform: translateX(${FEED_HIGHLIGHTS_SLOT_PX}px); } to { transform: translateX(0); }`;
 const slideFromLeft = keyframes`from { transform: translateX(-${FEED_HIGHLIGHTS_SLOT_PX}px); } to { transform: translateX(0); }`;
+const SWIPE_MIN_PX = 40;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 /**
@@ -26,6 +27,7 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
   const highlights = useMemo(() => selectMonthHighlights(sections, reference, FEED_MAX_STORY_HIGHLIGHTS), [sections, reference]);
   // Repete os cartões só até preencher a largura da tela; com itens suficientes (ou sobrando) não repete.
   const areaRef = useRef<HTMLDivElement | null>(null);
+  const swipeStartX = useRef<number | null>(null);
   const [areaWidth, setAreaWidth] = useState(0);
   const hasHighlights = highlights.length > 0;
   useEffect(() => {
@@ -46,12 +48,18 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
     return <Box data-testid={FEED_TEST_IDS.HIGHLIGHTS_EMPTY} sx={{ display: 'none' }} />;
   }
 
+  // No celular as setas ficam sobre os cartões (a largura toda é dos cartões; o deslize também navega).
   const navButtonSx = {
+    position: { xs: 'absolute', sm: 'static' },
+    top: { xs: '50%', sm: 'auto' },
+    transform: { xs: 'translateY(-50%)', sm: 'none' },
+    zIndex: 2,
     width: FEED_MIN_TOUCH_TARGET_PX,
     height: FEED_MIN_TOUCH_TARGET_PX,
     flexShrink: 0,
     color: FEED_PALETTE.inkSecondary,
-    bgcolor: FEED_PALETTE.canvasElevated,
+    bgcolor: { xs: 'rgba(255,255,255,0.92)', sm: FEED_PALETTE.canvasElevated },
+    boxShadow: { xs: '0 2px 8px rgba(15,23,42,0.25)', sm: 'none' },
     border: `1px solid ${FEED_PALETTE.borderSubtle}`,
   } as const;
 
@@ -66,9 +74,20 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
       onMouseLeave={() => carousel.setPause('hover', false)}
       onFocus={() => carousel.setPause('focus', true)}
       onBlur={() => carousel.setPause('focus', false)}
-      onTouchStart={carousel.onTouchStart}
-      onTouchEnd={carousel.onTouchEnd}
-      sx={{ py: { xs: 2, sm: 2.5 }, minWidth: 0, position: 'relative' }}
+      onTouchStart={(event) => {
+        swipeStartX.current = event.touches[0]?.clientX ?? null;
+        carousel.onTouchStart();
+      }}
+      onTouchEnd={(event) => {
+        const endX = event.changedTouches[0]?.clientX;
+        if (swipeStartX.current !== null && endX !== undefined) {
+          const dx = endX - swipeStartX.current;
+          if (Math.abs(dx) > SWIPE_MIN_PX) (dx < 0 ? carousel.next : carousel.prev)();
+        }
+        swipeStartX.current = null;
+        carousel.onTouchEnd();
+      }}
+      sx={{ py: { xs: 1.5, sm: 2.5 }, minWidth: 0, position: 'relative' }}
     >
       <Stack direction="row" alignItems="center" spacing={0.85} sx={{ mb: 1.25 }}>
         <AutoStoriesOutlinedIcon sx={{ fontSize: 18, color: FEED_PALETTE.brandLeafDark }} />
@@ -76,9 +95,9 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
           data-testid={FEED_TEST_IDS.HIGHLIGHTS_TITLE}
           component="h2"
           sx={{
-            fontSize: '0.82rem',
+            fontSize: { xs: '0.7rem', sm: '0.82rem' },
             fontWeight: 800,
-            letterSpacing: '0.06em',
+            letterSpacing: { xs: '0.02em', sm: '0.06em' },
             textTransform: 'uppercase',
             color: FEED_PALETTE.inkSecondary,
           }}
@@ -87,8 +106,8 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
         </Typography>
       </Stack>
 
-      <Stack direction="row" alignItems="center" spacing={0.5}>
-        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_PREV} type="button" onClick={carousel.prev} aria-label="Destaque anterior" sx={navButtonSx}>
+      <Stack direction="row" alignItems="center" spacing={{ xs: 0, sm: 0.5 }} sx={{ position: 'relative' }}>
+        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_PREV} type="button" onClick={carousel.prev} aria-label="Destaque anterior" sx={{ ...navButtonSx, left: { xs: 6, sm: 'auto' } }}>
           <ChevronLeftRoundedIcon />
         </IconButton>
         <Box ref={areaRef} sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
@@ -202,7 +221,7 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
             })}
           </Box>
         </Box>
-        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_NEXT} type="button" onClick={carousel.next} aria-label="Próximo destaque" sx={navButtonSx}>
+        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_NEXT} type="button" onClick={carousel.next} aria-label="Próximo destaque" sx={{ ...navButtonSx, right: { xs: 6, sm: 'auto' } }}>
           <ChevronRightRoundedIcon />
         </IconButton>
       </Stack>

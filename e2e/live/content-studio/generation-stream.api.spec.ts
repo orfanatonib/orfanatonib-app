@@ -66,7 +66,7 @@ test.beforeAll(async ({ request }) => {
   });
   const pkg = (await res.json()) as Pkg;
   packageId = pkg.id;
-  stageId = pkg.tracks.find((t) => t.audience === "CHILD")!.stages.find((s) => s.stageType === "CANONICAL_BASE")!.id;
+  stageId = pkg.tracks.find((t) => t.audience === "CHILD")!.stages.find((s) => s.stageType === "LESSON")!.id;
 });
 
 test.afterAll(async ({ request }) => {

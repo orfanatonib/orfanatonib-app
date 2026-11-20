@@ -1,27 +1,10 @@
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import {
-  CONTENT_STAGE_STATUS_LABELS,
-  CONTENT_STAGE_TYPE_LABELS,
-} from "../constants";
+import { CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import type { StageNavigationProps } from "../workspace.types";
 
-export function ContentStageNavigation({
-  track,
-  selectedId,
-  dirtyIds,
-  onSelect,
-}: StageNavigationProps) {
+export function ContentStageNavigation({ track, selectedId, dirtyIds, onSelect }: StageNavigationProps) {
   const [collapsed, setCollapsed] = useState(false);
   return (
     <Paper
@@ -38,12 +21,7 @@ export function ContentStageNavigation({
         top: 88,
       }}
     >
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 2 }}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         {!collapsed && (
           <Typography component="h2" fontWeight={800}>
             Etapas do material
@@ -65,16 +43,9 @@ export function ContentStageNavigation({
           </IconButton>
         </Tooltip>
       </Stack>
-      <Stack
-        spacing={1}
-        direction={{ xs: "row", lg: "column" }}
-        sx={{ overflowX: { xs: "auto", lg: "visible" }, pb: 1 }}
-      >
+      <Stack spacing={1} direction="column" sx={{ pb: 1 }}>
         {track.stages.map((stage) => (
-          <Tooltip
-            key={stage.id}
-            title={CONTENT_STAGE_TYPE_LABELS[stage.stageType]}
-          >
+          <Tooltip key={stage.id} title={collapsed ? CONTENT_STAGE_TYPE_LABELS[stage.stageType] : ""}>
             <Button
               data-testid={`content-studio-stage-tab-${stage.stageType}`}
               aria-current={selectedId === stage.id ? "step" : undefined}
@@ -83,28 +54,39 @@ export function ContentStageNavigation({
               onClick={() => onSelect(stage.id)}
               sx={{
                 minHeight: 44,
-                minWidth: collapsed ? 44 : 180,
+                minWidth: collapsed ? 44 : 0,
+                width: "100%",
                 textAlign: "left",
                 justifyContent: "flex-start",
                 textTransform: "none",
                 borderRadius: 2,
               }}
             >
-              <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  flexWrap: { xs: "nowrap", lg: "wrap" },
+                  flexDirection: { xs: "row", lg: "column" },
+                }}
+              >
                 <Typography component="span" fontWeight={700}>
                   {stage.position}
-                  {!collapsed &&
-                    `. ${CONTENT_STAGE_TYPE_LABELS[stage.stageType]}`}
+                  {!collapsed && `. ${CONTENT_STAGE_TYPE_LABELS[stage.stageType]}`}
                 </Typography>
                 {!collapsed && (
                   <Chip
                     size="small"
-                    label={
-                      dirtyIds.includes(stage.id)
-                        ? "Não salvo"
-                        : CONTENT_STAGE_STATUS_LABELS[stage.status]
-                    }
-                    sx={{ display: "flex", mt: 0.5, width: "fit-content" }}
+                    label={dirtyIds.includes(stage.id) ? "Não salvo" : CONTENT_STAGE_STATUS_LABELS[stage.status]}
+                    sx={{
+                      display: "flex",
+                      mt: { xs: 0, lg: 0.5 },
+                      width: "fit-content",
+                      flexShrink: 0,
+                    }}
                   />
                 )}
               </Box>

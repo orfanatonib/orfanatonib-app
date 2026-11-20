@@ -58,9 +58,9 @@ test.describe.serial("Estúdio — documento e exportação", () => {
     const pkg = (await (await request.get(`${API_URL}/content-studio/packages/${packageId}`, { headers: authHeaders(admin) })).json()) as Pkg;
     const child = pkg.tracks.find((t) => t.audience === "CHILD")!;
     const lesson = child.stages.find((s) => s.stageType === "LESSON")!;
-    const activity = child.stages.find((s) => s.stageType === "ACTIVITY")!;
+    const game = child.stages.find((s) => s.stageType === "STANDARD_GAME")!;
 
-    const fields = await request.patch(`${API_URL}/content-studio/packages/${packageId}/stages/${activity.id}/content`, {
+    const fields = await request.patch(`${API_URL}/content-studio/packages/${packageId}/stages/${game.id}/content`, {
       headers: authHeaders(admin),
       data: { structuredContent: { name: "Pastor e ovelhas", objective: "Brincar", materials: ["bolas"], steps: ["Roda", "Canto"], durationMinutes: 15 } },
     });

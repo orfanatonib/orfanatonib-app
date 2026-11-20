@@ -14,10 +14,10 @@ let idB = "";
 
 type Pkg = { id: string; tracks: Array<{ stages: Array<{ id: string }> }> };
 
-async function create(request: import("@playwright/test").APIRequestContext, theme: string, audience: string): Promise<Pkg> {
+async function create(request: import("@playwright/test").APIRequestContext, theme: string): Promise<Pkg> {
   const res = await request.post(`${API_URL}/content-studio/packages`, {
     headers: authHeaders(admin),
-    data: { audience, theme, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" },
+    data: { theme, biblicalReferences: "Salmos 23", canonicalObjective: "Confiar em Deus" },
   });
   return (await res.json()) as Pkg;
 }
@@ -28,8 +28,8 @@ test.beforeAll(async ({ request }) => {
     before[key] = (await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 0;
     await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: true } });
   }
-  const a = await create(request, themeA, "CHILD");
-  const b = await create(request, themeB, "TEEN");
+  const a = await create(request, themeA);
+  const b = await create(request, themeB);
   idA = a.id;
   idB = b.id;
   // A ganha conteúdo (libera o PDF no cartão).
@@ -63,7 +63,7 @@ test("cartões, busca e filtros ficam na URL; arquivar tira da lista principal e
   const cardA = page.getByTestId(`content-studio-package-card-${idA}`);
   await expect(cardA).toBeVisible({ timeout: 20_000 });
   await expect(cardA.getByTestId("content-studio-stage-segments")).toBeVisible();
-  await expect(page.getByTestId(`content-studio-package-progress-${idA}`)).toContainText("de 5 etapas");
+  await expect(page.getByTestId(`content-studio-package-progress-${idA}`)).toContainText("de 20 etapas");
   await expect(page.getByTestId(`content-studio-package-${idA}`)).toContainText("Continuar produção");
   await expect(page.getByTestId(`content-studio-package-${idB}`)).toContainText("Começar produção");
   // PDF só no material com conteúdo.

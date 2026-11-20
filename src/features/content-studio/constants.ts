@@ -11,7 +11,7 @@ import {
 export const CONTENT_STUDIO_WORKFLOW = [
   {
     title: "Produção editorial",
-    description: "Pacotes, etapas e versões são organizados por faixa etária.",
+    description: "Cada material nasce com Baby, Crianças, Adolescentes e Adultos, cada um com as cinco etapas.",
     icon: AutoAwesome,
     path: "/adm/estudio/producao",
     action: "Abrir produção",
@@ -82,10 +82,9 @@ export const CONTENT_STAGE_STATUS_LABELS: Record<ContentStageStatus, string> = {
 };
 
 export const CONTENT_STAGE_TYPE_LABELS: Record<ContentStageType, string> = {
-  [ContentStageType.CANONICAL_BASE]: "Base canônica",
   [ContentStageType.LESSON]: "Lição",
-  [ContentStageType.DISCUSSION]: "Discussão",
-  [ContentStageType.ACTIVITY]: "Atividade",
-  [ContentStageType.VISUAL]: "Apoio visual",
-  [ContentStageType.FACILITATOR_GUIDANCE]: "Orientação ao facilitador",
+  [ContentStageType.LESSON_VISUALS]: "Visuais da lição",
+  [ContentStageType.VERSE_VISUALS]: "Visual do versículo",
+  [ContentStageType.VERSE_FIXATION]: "Fixação divertida do versículo",
+  [ContentStageType.STANDARD_GAME]: "Brincadeira divertida",
 };

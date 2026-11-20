@@ -1,39 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
-  Paper,
-  Container,
-  Grid,
-  Chip,
-} from '@mui/material';
-import { ArrowBack, Save, Public, Lock } from '@mui/icons-material';
+import { useEffect, useRef, useState } from 'react';
+import { Box, Chip, FormControl, Grid, InputLabel, MenuItem, Paper, Select, Typography } from '@mui/material';
+import { Lock, Public } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '@/store/slices';
-import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
-import { setIdeasSectionData, clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
+import { clearIdeasSectionData, type IdeasSection } from '@/store/slices/ideas/ideasSlice';
+import { attachIdeasSectionToPage, ideasSectionErrorMessage } from '@/features/ideas-sections';
 import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
+import PageFormBase from '../shared/PageFormBase';
+import PageFormActions from '../shared/PageFormActions';
+import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
+import { PAGE_PAPER_SX } from '../shared/styles';
 import {
-  attachIdeasSectionToPage,
-  buildIdeasSectionFormData,
-  ideasSectionErrorMessage,
-  listIdeasPages,
-} from '@/features/ideas-sections';
-import { motion } from 'framer-motion';
-
-interface IdeasSectionAdminEditorProps {
-  existingSection?: IdeasSection;
-}
+  ADMIN_IDEAS_SECTIONS_PATH,
+  ADMIN_REDIRECT_DELAY_MS,
+  ADMIN_SAVE_ISSUE_MESSAGES,
+  CLOSED_FEEDBACK,
+  EMPTY_IDEA_SECTION,
+  IDEAS_SECTION_ADMIN_COPY,
+  IDEAS_SECTION_ADMIN_TEST_ID,
+  IDEAS_SECTION_ADMIN_TEST_IDS,
+  MIN_TOUCH_TARGET_PX,
+} from './constants';
+import type { IdeaFeedbackState, IdeasPageOption, IdeasSectionAdminEditorProps } from './types';
+import { useIdeasPageOptions } from './useIdeasPageOptions';
+import {
+  buildAdminSectionFormData,
+  findPageOption,
+  isPublicValue,
+  publicToValue,
+  validateAdminSave,
+} from './utils';
 
 export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEditorProps) {
   const dispatch = useDispatch();
@@ -41,366 +38,183 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
   const { ideasSectionData } = useSelector((state: RootState) => state.ideas);
 
   const [sectionData, setSectionData] = useState<IdeasSection>(
-    existingSection || ideasSectionData || {
-      title: '',
-      description: '',
-      medias: [],
-      public: true,
-    }
+    existingSection || ideasSectionData || EMPTY_IDEA_SECTION,
   );
-  const [selectedPage, setSelectedPage] = useState<{ id: string; title: string } | null>(null);
-  const [pages, setPages] = useState<{ id: string; title: string }[]>([]);
-  const [pagesLoading, setPagesLoading] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<IdeasPageOption | null>(null);
   const [loading, setLoading] = useState(false);
-  const [touched, setTouched] = useState({ page: false });
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
-  });
+  const [pageTouched, setPageTouched] = useState(false);
+  const [feedback, setFeedback] = useState<IdeaFeedbackState>(CLOSED_FEEDBACK);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => {
-    const loadPages = async () => {
-      setPagesLoading(true);
-      try {
-        setPages(await listIdeasPages());
-      } catch (error: unknown) {
-        setSnackbar({
-          open: true,
-          message: ideasSectionErrorMessage(
-            error,
-            'Erro ao carregar páginas disponíveis',
-          ),
-          severity: 'error',
-        });
-      } finally {
-        setPagesLoading(false);
-      }
-    };
-    loadPages();
-  }, []);
+  const showError = (message: string) => setFeedback({ open: true, message, severity: 'error' });
+  const { pages, loading: pagesLoading } = useIdeasPageOptions(showError);
 
-  const handleSectionUpdate = (updatedSection: IdeasSection) => {
-    setSectionData(updatedSection);
-  };
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   const handleBack = () => {
     dispatch(clearIdeasSectionData());
-    navigate('/adm/ideias-compartilhadas');
+    navigate(ADMIN_IDEAS_SECTIONS_PATH);
   };
 
   const handleSaveSection = async () => {
-    setTouched({ page: true });
+    setPageTouched(true);
 
-    if (!selectedPage) {
-      setSnackbar({
-        open: true,
-        message: 'Por favor, selecione uma página de destino',
-        severity: 'error',
-      });
-      return;
-    }
-
-    if (!existingSection?.id) {
-      setSnackbar({
-        open: true,
-        message: 'ID da seção não encontrado',
-        severity: 'error',
-      });
+    const issue = validateAdminSave({ pageId: selectedPage?.id ?? null, sectionId: existingSection?.id });
+    if (issue || !selectedPage || !existingSection?.id) {
+      if (issue) showError(ADMIN_SAVE_ISSUE_MESSAGES[issue]);
       return;
     }
 
     setLoading(true);
     try {
-      // Edição: os `id` das mídias viajam junto, senão a API trataria tudo
-      // como novo e recriaria os arquivos no bucket a cada salvamento.
-      await attachIdeasSectionToPage(
-        existingSection.id,
-        selectedPage.id,
-        buildIdeasSectionFormData({
-          title: sectionData.title,
-          description: sectionData.description,
-          public: sectionData.public ?? false,
-          medias: sectionData.medias,
-          keepMediaIds: true,
-        }),
-      );
+      await attachIdeasSectionToPage(existingSection.id, selectedPage.id, buildAdminSectionFormData(sectionData));
       dispatch(clearIdeasSectionData());
-      setSnackbar({
-        open: true,
-        message: 'Seção editada e vinculada com sucesso! 🎉',
-        severity: 'success',
-      });
-      setTimeout(() => {
-        navigate('/adm/ideias-compartilhadas');
-      }, 2000);
+      setFeedback({ open: true, message: IDEAS_SECTION_ADMIN_COPY.SUCCESS, severity: 'success' });
+      redirectTimer.current = setTimeout(() => navigate(ADMIN_IDEAS_SECTIONS_PATH), ADMIN_REDIRECT_DELAY_MS);
     } catch (error: unknown) {
-      setSnackbar({
-        open: true,
-        message: ideasSectionErrorMessage(
-          error,
-          'Ops! Algo deu errado ao salvar a seção. Tente novamente.',
-        ),
-        severity: 'error',
-      });
+      showError(ideasSectionErrorMessage(error, IDEAS_SECTION_ADMIN_COPY.SAVE_FAILED));
     } finally {
       setLoading(false);
     }
   };
 
+  const pageInvalid = pageTouched && !selectedPage;
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        py: { xs: 2, md: 4 },
-      }}
+    <PageFormBase
+      testId={IDEAS_SECTION_ADMIN_TEST_ID}
+      heading={IDEAS_SECTION_ADMIN_COPY.HEADING}
+      onBack={handleBack}
     >
-      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
-            <IconButton
-              onClick={handleBack}
-              sx={{
-                bgcolor: 'background.paper',
-                boxShadow: 2,
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-              🔧 Editar Seção de Ideias
-            </Typography>
-          </Box>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
-              ⚙️ Configurações
-            </Typography>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth required error={touched.page && !selectedPage}>
-                  <InputLabel>Página de Destino</InputLabel>
-                  <Select
-                    value={selectedPage?.id || ''}
-                    label="Página de Destino"
-                    onChange={(e) => {
-                      const pageId = e.target.value;
-                      const page = pages.find(p => p.id === pageId);
-                      setSelectedPage(page || null);
-                      if (touched.page) setTouched((prev) => ({ ...prev, page: false }));
-                    }}
-                    onBlur={() => setTouched((prev) => ({ ...prev, page: true }))}
-                    disabled={pagesLoading}
-                    sx={{
-                      borderRadius: 2,
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      <em>Selecione uma página...</em>
-                    </MenuItem>
-                    {pages.map((page) => (
-                      <MenuItem key={page.id} value={page.id}>
-                        {page.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {touched.page && !selectedPage && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1.75 }}>
-                      Campo obrigatório
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Visibilidade</InputLabel>
-                  <Select
-                    value={sectionData.public ? 'true' : 'false'}
-                    label="Visibilidade"
-                    onChange={(e) => {
-                      const isPublic = e.target.value === 'true';
-                      setSectionData({ ...sectionData, public: isPublic });
-                    }}
-                    sx={{
-                      borderRadius: 2,
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    }}
-                  >
-                    <MenuItem value="true">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Public fontSize="small" />
-                        Público
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="false">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Lock fontSize="small" />
-                        Privado
-                      </Box>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-
-            {selectedPage && (
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 2,
-                  bgcolor: 'success.lighter',
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'success.main',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <Chip
-                  icon={<Public />}
-                  label="Página selecionada"
-                  color="success"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                  <strong>{selectedPage.title}</strong>
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <IdeasMaterialSection
-              section={sectionData}
-              onUpdate={handleSectionUpdate}
-              isCreationMode={false}
-            />
-          </Paper>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={handleBack}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                borderWidth: 2,
-                '&:hover': {
-                  borderWidth: 2,
-                  transform: 'translateY(-2px)',
-                  boxShadow: 2,
-                  bgcolor: 'action.hover',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleSaveSection}
-              disabled={loading || !selectedPage}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                '&:hover:not(:disabled)': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 4,
-                },
-                '&:disabled': {
-                  opacity: 0.6,
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {loading ? 'Salvando...' : 'Salvar e Publicar'}
-            </Button>
-          </Box>
-        </motion.div>
-      </Container>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={5000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      <Paper
+        data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.SETTINGS}
+        elevation={2}
+        sx={PAGE_PAPER_SX}
       >
-        <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+          {IDEAS_SECTION_ADMIN_COPY.SETTINGS}
+        </Typography>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <FormControl
+              data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.PAGE_SELECT}
+              fullWidth
+              required
+              error={pageInvalid}
+            >
+              <InputLabel>{IDEAS_SECTION_ADMIN_COPY.PAGE_LABEL}</InputLabel>
+              <Select
+                value={selectedPage?.id || ''}
+                label={IDEAS_SECTION_ADMIN_COPY.PAGE_LABEL}
+                onChange={(event) => {
+                  setSelectedPage(findPageOption(pages, event.target.value));
+                  setPageTouched(false);
+                }}
+                onBlur={() => setPageTouched(true)}
+                disabled={pagesLoading}
+                sx={{ borderRadius: 2, minHeight: MIN_TOUCH_TARGET_PX }}
+              >
+                <MenuItem value="" disabled>
+                  <em>{IDEAS_SECTION_ADMIN_COPY.PAGE_PLACEHOLDER}</em>
+                </MenuItem>
+                {pages.map((page) => (
+                  <MenuItem key={page.id} value={page.id} sx={{ minHeight: MIN_TOUCH_TARGET_PX }}>
+                    {page.title}
+                  </MenuItem>
+                ))}
+              </Select>
+              {pageInvalid && (
+                <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1.75 }}>
+                  {IDEAS_SECTION_ADMIN_COPY.PAGE_REQUIRED}
+                </Typography>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.VISIBILITY} fullWidth>
+              <InputLabel>{IDEAS_SECTION_ADMIN_COPY.VISIBILITY_LABEL}</InputLabel>
+              <Select
+                value={publicToValue(sectionData.public)}
+                label={IDEAS_SECTION_ADMIN_COPY.VISIBILITY_LABEL}
+                onChange={(event) => setSectionData({ ...sectionData, public: isPublicValue(event.target.value) })}
+                sx={{ borderRadius: 2, minHeight: MIN_TOUCH_TARGET_PX }}
+              >
+                <MenuItem value="true" sx={{ minHeight: MIN_TOUCH_TARGET_PX }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Public fontSize="small" />
+                    {IDEAS_SECTION_ADMIN_COPY.PUBLIC}
+                  </Box>
+                </MenuItem>
+                <MenuItem value="false" sx={{ minHeight: MIN_TOUCH_TARGET_PX }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Lock fontSize="small" />
+                    {IDEAS_SECTION_ADMIN_COPY.PRIVATE}
+                  </Box>
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {selectedPage && (
+          <Box
+            data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.SELECTED_PAGE}
+            sx={{
+              mt: 3,
+              p: 2,
+              bgcolor: 'success.lighter',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'success.main',
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 1,
+            }}
+          >
+            <Chip
+              icon={<Public />}
+              label={IDEAS_SECTION_ADMIN_COPY.SELECTED_PAGE_CHIP}
+              color="success"
+              size="small"
+              sx={{ fontWeight: 600 }}
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+              <strong>{selectedPage.title}</strong>
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+
+      <Paper
+        data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.MEDIA_CARD}
+        elevation={2}
+        sx={PAGE_PAPER_SX}
+      >
+        <IdeasMaterialSection section={sectionData} onUpdate={setSectionData} isCreationMode={false} />
+      </Paper>
+
+      <PageFormActions
+        testId={IDEAS_SECTION_ADMIN_TEST_ID}
+        saveLabel={IDEAS_SECTION_ADMIN_COPY.SAVE}
+        savingLabel={IDEAS_SECTION_ADMIN_COPY.SAVING}
+        saveColor="primary"
+        savingSpinner
+        isSaving={loading}
+        saveDisabled={!selectedPage}
+        onCancel={handleBack}
+        onSave={handleSaveSection}
+      />
+
+      <PageFeedbackSnackbar
+        testId={IDEAS_SECTION_ADMIN_TEST_IDS.FEEDBACK}
+        open={feedback.open}
+        message={feedback.message}
+        severity={feedback.severity}
+        onClose={() => setFeedback((prev) => ({ ...prev, open: false }))}
+      />
+    </PageFormBase>
   );
 }
