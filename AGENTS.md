@@ -48,6 +48,7 @@ The frontend best-practices document is the canonical detailed guide. This file 
 4. Implement the smallest cohesive change with loading, empty, success, error, and permission states.
 5. Add or update Playwright tests (`e2e/`) and documentation.
 6. Run checks proportional to the change and inspect the final diff.
+7. E-mail notifications and E2E: **every E2E run starts with ALL e-mail dispatch flags turned off** (`email_*` and legacy `email-*`, none left out, even the ones already off) — this is done once by the Playwright `setup` project (`e2e/live/support/email-flags.setup.ts`), which `live-api`, `live-ui`, and `live-ui-mobile` depend on; never remove it or add a project that skips it. A test that proves an e-mail turns on ONLY that case's flag in its own `beforeAll` and restores it in `afterAll`. When a frontend feature triggers an e-mail (new notification type), the flag must already exist in the API (one flag per notification type, created with the notification) and be listed in the admin feature-flag screen; do not hardcode e-mail behavior in the UI.
 
 When existing code conflicts with the canonical guide, do not spread the inconsistency and do not perform an unrelated mass refactor. Apply the standard within scope and report remaining debt.
 

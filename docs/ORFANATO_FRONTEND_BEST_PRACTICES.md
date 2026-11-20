@@ -186,6 +186,7 @@ Every screen MUST work on mobile first and progressively enhance through MUI bre
 - Reuse `ProtectedRoute`, `RequireAdmin`, `RequireAdminOrLeader`, and existing role guards.
 - Hiding a button is not authorization. The API remains responsible for enforcing every protected operation.
 - A feature flag must consistently protect its route, navigation entry, and related actions.
+- A new feature that sends e-mail needs a notification type with its OWN flag (`email_<type>`), created together with the notification on the API; it must appear in the admin feature-flag screen and be covered by the E2E e-mail rule in section 10.
 - Never log access tokens, refresh tokens, passwords, or personal data about sheltered children, guardians, contacts, criminal records, or ministry participants.
 
 ## 9. Errors, Observability, and Security
@@ -207,6 +208,7 @@ Automated frontend testing is driven by **Playwright** (`playwright.config.ts`, 
 
 - `unit` (`e2e/unit/*.spec.ts` or `src/**/*.test.ts`): pure rules — utils, query and payload builders, validators.
 - `e2e/live/`: the only accepted Playwright e2e suite. It MUST use real login, drive the real UI, call the real NestJS API, pass through services/repositories, and verify persistence through API/database-visible state.
+- **E-mail flags:** every run of `e2e/live` starts with ALL e-mail dispatch flags (`email_*` and legacy `email-*`, none left out, including ones already off) turned off by the Playwright `setup` project (`e2e/live/support/email-flags.setup.ts`); `live-api`, `live-ui`, and `live-ui-mobile` depend on it. The setup re-reads the flags and fails if any stays on. A test that proves an e-mail turns on only that case's flag in its own `beforeAll` and restores it in `afterAll`. Flags stay off after the run.
 - E2E tests MUST NOT mock, stub, intercept, route, fulfill, or fake HTTP. Do not use `page.route`, mocked API fixtures, fake sessions, or synthetic persistence in e2e. If a test does not need the backend, write a unit/component test instead of Playwright e2e.
 
 What each kind of change needs:
