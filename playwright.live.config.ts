@@ -33,12 +33,21 @@ export default defineConfig({
   },
   projects: [
     {
+      // Desliga todas as flags de e-mail antes de qualquer teste (regra da suíte).
+      name: "setup",
+      testDir: "./e2e/live/support",
+      testMatch: "**/email-flags.setup.ts",
+      use: { baseURL: API_URL },
+    },
+    {
       name: "live-api",
+      dependencies: ["setup"],
       testMatch: "**/*.api.spec.ts",
       use: { baseURL: API_URL },
     },
     {
       name: "live-ui",
+      dependencies: ["setup"],
       testMatch: "**/*.ui.spec.ts",
       grepInvert: /@mobile/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
@@ -46,6 +55,7 @@ export default defineConfig({
     {
       // Fluxos marcados com @mobile no título, em 375×812 (mobile-first).
       name: "live-ui-mobile",
+      dependencies: ["setup"],
       testMatch: "**/*.ui.spec.ts",
       grep: /@mobile/,
       use: { ...devices["Pixel 5"], viewport: { width: 375, height: 812 } },
