@@ -42,6 +42,12 @@ export function buildLoopItems(
   return Array.from({ length: copies }, (_, copy) => sections.map((section) => ({ section, copy }))).flat();
 }
 
+/** Quantos cartões cabem na largura da área (arredonda para cima: o último pode aparecer cortado). Sem medida, `fallback`. */
+export function countSlotsToFill(areaWidthPx: number, slotPx: number, fallback: number): number {
+  if (!Number.isFinite(areaWidthPx) || areaWidthPx <= 0 || slotPx <= 0) return fallback;
+  return Math.max(1, Math.ceil(areaWidthPx / slotPx));
+}
+
 /** Lista circular começando em `offset` (aceita negativos e valores maiores que o tamanho). */
 export function rotateLoop<T>(items: ReadonlyArray<T>, offset: number): T[] {
   if (items.length === 0) return [];

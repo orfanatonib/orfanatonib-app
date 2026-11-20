@@ -52,7 +52,7 @@ export const FEED_MAX_STORY_HIGHLIGHTS = 12;
 /** Destaques: avanço automático a cada 5 s, em loop; com poucos itens eles se repetem até este mínimo. */
 export const FEED_HIGHLIGHTS_INTERVAL_MS = 5000;
 export const FEED_HIGHLIGHTS_MIN_LOOP_ITEMS = 6;
-export const FEED_HIGHLIGHTS_SLOT_PX = 96;
+export const FEED_HIGHLIGHTS_SLOT_PX = 156;
 export const FEED_HIGHLIGHTS_TOUCH_RESUME_MS = 4000;
 export const FEED_COLLAGE_PREVIEW_LIMIT = 5;
 export const FEED_SKELETON_CARD_COUNT = 2;
@@ -170,7 +170,6 @@ export const FEED_TEST_IDS = {
   HIGHLIGHTS_DOTS: 'shelter-feed-highlights-dots',
   HIGHLIGHTS_DOT_PREFIX: 'shelter-feed-highlights-dot',
   HIGHLIGHTS_LIVE: 'shelter-feed-highlights-live',
-  HIGHLIGHTS_STATE: 'shelter-feed-highlights-state',
   CONTROL_BAR: 'shelter-feed-control-bar',
   VIEW_MODE_PREFIX: 'shelter-feed-view-mode',
   SEARCH_INPUT: 'shelter-feed-search-input',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FEED_HIGHLIGHTS_INTERVAL_MS, FEED_HIGHLIGHTS_MIN_LOOP_ITEMS, FEED_HIGHLIGHTS_TOUCH_RESUME_MS } from './constants';
+import { FEED_HIGHLIGHTS_INTERVAL_MS, FEED_HIGHLIGHTS_TOUCH_RESUME_MS } from './constants';
 import { buildLoopItems, rotateLoop, stepLoopOffset } from './feedHighlights.utils';
 import type { FeedSectionViewModel } from './types';
 
@@ -10,14 +10,14 @@ type PauseReason = 'hover' | 'focus' | 'touch';
  * cada 5 s e pausa por mouse, foco ou toque. Sem avanço automático quando o
  * usuário prefere movimento reduzido (só os botões).
  */
-export function useHighlightsCarousel(sections: FeedSectionViewModel[], reducedMotion: boolean) {
+export function useHighlightsCarousel(sections: FeedSectionViewModel[], reducedMotion: boolean, minLoopItems: number) {
   const [offset, setOffset] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [announcement, setAnnouncement] = useState('');
   const [pauses, setPauses] = useState<ReadonlySet<PauseReason>>(() => new Set());
   const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loop = useMemo(() => buildLoopItems(sections, FEED_HIGHLIGHTS_MIN_LOOP_ITEMS), [sections]);
+  const loop = useMemo(() => buildLoopItems(sections, minLoopItems), [sections, minLoopItems]);
   const rotated = useMemo(() => rotateLoop(loop, offset), [loop, offset]);
   const total = sections.length;
   const activeIndex = loop.length === 0 ? 0 : offset % total;

@@ -86,7 +86,6 @@ test.describe.serial("Feed — destaques do mês", () => {
     expect(distinct.size).toBe(5);
     expect(order[5]).toBe(order[0]);
     expect(order[6]).toBe(order[1]);
-
   });
 
   test("[shelter-feed.highlights#pausa] pausa com mouse e com foco, e retoma ao sair", async ({ page }) => {
@@ -146,7 +145,10 @@ test.describe.serial("Feed — destaques do mês", () => {
     expect(await first(page).getAttribute("data-testid")).toContain("-copy-1");
     await page.clock.runFor(STEP_MS * 10);
     await expect(track(page).locator("> *").first()).toBeVisible();
-    expect(await track(page).locator("> *").count()).toBeGreaterThanOrEqual(6);
+    // Repete só até preencher a largura da área (cartões de 156px); nada de itens de sobra além do necessário.
+    const areaWidth = await track(page).evaluate((node) => node.parentElement!.clientWidth);
+    const needed = Math.ceil(areaWidth / 156);
+    expect(await track(page).locator("> *").count()).toBe(needed);
 
     await page.clock.resume(); // o relógio parado também congelaria o carregamento da próxima galeria
     await open(page, "two", true);
@@ -165,7 +167,7 @@ test.describe.serial("Feed — destaques do mês", () => {
     const start = await firstId(page);
     await page.clock.runFor(STEP_MS * 3);
     expect(await firstId(page)).toBe(start);
-    await expect(page.getByTestId("shelter-feed-highlights-state")).toContainText("botões");
+    await expect(page.getByTestId("shelter-feed-highlights-state")).toHaveCount(0);
     await page.getByTestId("shelter-feed-highlights-next").click();
     expect(await firstId(page)).not.toBe(start);
   });

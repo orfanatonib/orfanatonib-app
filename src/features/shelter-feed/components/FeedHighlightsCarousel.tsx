@@ -1,19 +1,13 @@
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, ButtonBase, IconButton, Stack, Typography, useMediaQuery } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import type { FeedHighlightsCarouselProps } from '../componentTypes';
-import {
-  FEED_HIGHLIGHTS_SLOT_PX,
-  FEED_MAX_STORY_HIGHLIGHTS,
-  FEED_MIN_TOUCH_TARGET_PX,
-  FEED_PALETTE,
-  FEED_TEST_IDS,
-} from '../constants';
-import { formatHighlightsMonthLabel, selectMonthHighlights } from '../feedHighlights.utils';
+import { FEED_HIGHLIGHTS_MIN_LOOP_ITEMS, FEED_HIGHLIGHTS_SLOT_PX, FEED_MAX_STORY_HIGHLIGHTS, FEED_MIN_TOUCH_TARGET_PX, FEED_PALETTE, FEED_TEST_IDS } from '../constants';
+import { countSlotsToFill, formatHighlightsMonthLabel, selectMonthHighlights } from '../feedHighlights.utils';
 import { formatCountLabel } from '../feedLayout.utils';
 import { useHighlightsCarousel } from '../useHighlightsCarousel';
 
@@ -29,11 +23,23 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate, onSelectStory }: FeedHighlightsCarouselProps) {
   const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
   const reference = useMemo(() => referenceDate ?? new Date(), [referenceDate]);
-  const highlights = useMemo(
-    () => selectMonthHighlights(sections, reference, FEED_MAX_STORY_HIGHLIGHTS),
-    [sections, reference],
-  );
-  const carousel = useHighlightsCarousel(highlights, reducedMotion);
+  const highlights = useMemo(() => selectMonthHighlights(sections, reference, FEED_MAX_STORY_HIGHLIGHTS), [sections, reference]);
+  // Repete os cartões só até preencher a largura da tela; com itens suficientes (ou sobrando) não repete.
+  const areaRef = useRef<HTMLDivElement | null>(null);
+  const [areaWidth, setAreaWidth] = useState(0);
+  const hasHighlights = highlights.length > 0;
+  useEffect(() => {
+    const node = areaRef.current;
+    if (!node) return undefined;
+    const measure = () => setAreaWidth(node.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasHighlights]);
+  const slotsToFill = countSlotsToFill(areaWidth, FEED_HIGHLIGHTS_SLOT_PX, FEED_HIGHLIGHTS_MIN_LOOP_ITEMS);
+  const carousel = useHighlightsCarousel(highlights, reducedMotion, slotsToFill);
   const monthLabel = formatHighlightsMonthLabel(reference);
 
   if (highlights.length === 0) {
@@ -69,23 +75,23 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
         <Typography
           data-testid={FEED_TEST_IDS.HIGHLIGHTS_TITLE}
           component="h2"
-          sx={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: FEED_PALETTE.inkSecondary }}
+          sx={{
+            fontSize: '0.82rem',
+            fontWeight: 800,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: FEED_PALETTE.inkSecondary,
+          }}
         >
           Momentos em destaque — {monthLabel}
         </Typography>
       </Stack>
 
       <Stack direction="row" alignItems="center" spacing={0.5}>
-        <IconButton
-          data-testid={FEED_TEST_IDS.HIGHLIGHTS_PREV}
-          type="button"
-          onClick={carousel.prev}
-          aria-label="Destaque anterior"
-          sx={navButtonSx}
-        >
+        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_PREV} type="button" onClick={carousel.prev} aria-label="Destaque anterior" sx={navButtonSx}>
           <ChevronLeftRoundedIcon />
         </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <Box ref={areaRef} sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <Box
             key={carousel.offset}
             data-testid={FEED_TEST_IDS.HIGHLIGHTS_TRACK}
@@ -93,9 +99,7 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
               display: 'flex',
               gap: 1.5,
               width: 'max-content',
-              animation: reducedMotion
-                ? 'none'
-                : `${carousel.direction === 1 ? slideFromRight : slideFromLeft} 0.45s ease-out`,
+              animation: reducedMotion ? 'none' : `${carousel.direction === 1 ? slideFromRight : slideFromLeft} 0.45s ease-out`,
             }}
           >
             {carousel.rotated.map(({ section, copy }) => {
@@ -109,63 +113,101 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
                   onClick={() => onSelectStory(section)}
                   aria-label={`Ver destaque de ${section.caption} (${formatCountLabel(section.mediaCount, 'foto', 'fotos')})`}
                   sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
+                    position: 'relative',
                     width: FEED_HIGHLIGHTS_SLOT_PX - 12,
-                    minHeight: FEED_MIN_TOUCH_TARGET_PX,
+                    height: 188,
                     flexShrink: 0,
-                    p: 0.5,
-                    borderRadius: 3.5,
-                    '&:focus-visible': { outline: `3px solid ${FEED_PALETTE.brandLeaf}`, outlineOffset: '2px' },
+                    overflow: 'hidden',
+                    borderRadius: 3,
+                    bgcolor: FEED_PALETTE.canvasSubtle,
+                    boxShadow: '0 4px 14px rgba(15, 23, 42, 0.16)',
+                    outline: isViewed ? 'none' : `2.5px solid ${FEED_PALETTE.brandLeaf}`,
+                    outlineOffset: '-2.5px',
+                    transition: 'transform 0.2s ease',
+                    '&:hover': { transform: 'translateY(-2px)' },
+                    '&:focus-visible': {
+                      outline: `3px solid ${FEED_PALETTE.brandLeaf}`,
+                      outlineOffset: '2px',
+                    },
                   }}
                 >
+                  {section.coverUrl ? (
+                    <Box
+                      component="img"
+                      src={section.coverUrl}
+                      alt=""
+                      loading="lazy"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      data-testid="shelter-feed-highlight-video-cover"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: FEED_PALETTE.inkMuted,
+                      }}
+                    >
+                      <VideocamOutlinedIcon fontSize="large" />
+                    </Box>
+                  )}
                   <Box
                     sx={{
-                      p: '3px',
-                      borderRadius: '22px',
-                      mb: 0.75,
-                      background: isViewed ? FEED_PALETTE.storyRingViewed : FEED_PALETTE.storyRingActive,
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      px: 1.25,
+                      pt: 4,
+                      pb: 1.1,
+                      textAlign: 'left',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0))',
                     }}
                   >
-                    <Box sx={{ width: 66, height: 66, borderRadius: '19px', overflow: 'hidden', border: '2.5px solid #ffffff', bgcolor: FEED_PALETTE.canvasSubtle }}>
-                      {section.coverUrl ? (
-                        <Box component="img" src={section.coverUrl} alt="" loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      ) : (
-                        <Box data-testid="shelter-feed-highlight-video-cover" sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: FEED_PALETTE.inkMuted }}>
-                          <VideocamOutlinedIcon />
-                        </Box>
-                      )}
-                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        lineHeight: 1.25,
+                        color: '#ffffff',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {section.caption}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '0.68rem',
+                        color: 'rgba(255,255,255,0.82)',
+                      }}
+                    >
+                      {section.relativeDate}
+                    </Typography>
                   </Box>
-                  <Typography sx={{ width: '100%', fontSize: '0.73rem', fontWeight: isViewed ? 600 : 700, color: isViewed ? FEED_PALETTE.inkMuted : FEED_PALETTE.inkPrimary, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {section.caption}
-                  </Typography>
-                  <Typography sx={{ width: '100%', fontSize: '0.66rem', color: FEED_PALETTE.inkMuted, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {section.relativeDate}
-                  </Typography>
                 </ButtonBase>
               );
             })}
           </Box>
         </Box>
-        <IconButton
-          data-testid={FEED_TEST_IDS.HIGHLIGHTS_NEXT}
-          type="button"
-          onClick={carousel.next}
-          aria-label="Próximo destaque"
-          sx={navButtonSx}
-        >
+        <IconButton data-testid={FEED_TEST_IDS.HIGHLIGHTS_NEXT} type="button" onClick={carousel.next} aria-label="Próximo destaque" sx={navButtonSx}>
           <ChevronRightRoundedIcon />
         </IconButton>
       </Stack>
 
-      <Stack
-        data-testid={FEED_TEST_IDS.HIGHLIGHTS_DOTS}
-        direction="row"
-        justifyContent="center"
-        sx={{ mt: 0.5 }}
-      >
+      <Stack data-testid={FEED_TEST_IDS.HIGHLIGHTS_DOTS} direction="row" justifyContent="center" sx={{ mt: 0.5 }}>
         {highlights.map((section, position) => (
           <ButtonBase
             key={section.id}
@@ -174,7 +216,11 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
             onClick={() => carousel.goToItem(position)}
             aria-label={`Ir para o destaque ${position + 1} de ${carousel.total}`}
             aria-current={position === carousel.activeIndex ? 'true' : undefined}
-            sx={{ width: FEED_MIN_TOUCH_TARGET_PX / 2 + 2, height: FEED_MIN_TOUCH_TARGET_PX, minWidth: 22 }}
+            sx={{
+              width: FEED_MIN_TOUCH_TARGET_PX / 2 + 2,
+              height: FEED_MIN_TOUCH_TARGET_PX,
+              minWidth: 22,
+            }}
           >
             <Box
               sx={{
@@ -189,18 +235,18 @@ export function FeedHighlightsCarousel({ sections, viewedStoryIds, referenceDate
         ))}
       </Stack>
 
-      <Typography
-        data-testid={FEED_TEST_IDS.HIGHLIGHTS_STATE}
-        variant="caption"
-        sx={{ display: 'block', textAlign: 'center', color: FEED_PALETTE.inkMuted }}
-      >
-        {reducedMotion ? 'Use os botões para navegar' : carousel.isPaused ? 'Pausado' : 'Passa sozinho a cada 5 segundos'}
-      </Typography>
       <Box
         data-testid={FEED_TEST_IDS.HIGHLIGHTS_LIVE}
         aria-live="polite"
         aria-atomic="true"
-        sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}
+        sx={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+          clip: 'rect(0 0 0 0)',
+          whiteSpace: 'nowrap',
+        }}
       >
         {carousel.announcement}
       </Box>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildLoopItems,
+  countSlotsToFill,
   formatHighlightsMonthLabel,
   isInSameLocalMonth,
   rotateLoop,
@@ -52,6 +53,14 @@ describe('selectMonthHighlights', () => {
   });
   it('rótulo do mês', () => {
     expect(formatHighlightsMonthLabel(ref)).toBe('março de 2026');
+  });
+});
+
+describe('countSlotsToFill', () => {
+  it('quantos cartões preenchem a largura (arredonda para cima); sem medida usa o fallback', () => {
+    expect(countSlotsToFill(300, 156, 6)).toBe(2);
+    expect(countSlotsToFill(1100, 156, 6)).toBe(8);
+    expect(countSlotsToFill(0, 156, 6)).toBe(6);
   });
 });
 
