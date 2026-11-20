@@ -5,7 +5,7 @@ import {
   IconButton, Divider, Paper, Grid,
 } from '@mui/material';
 import { ContentCopy, Close } from '@mui/icons-material';
-import { formatDate } from '../../visit-materials/utils';
+import { buildVisitMaterialCategoryViews, formatDate } from '../../visit-materials/utils';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 import { VisitMaterialPageResponseDto } from '../types';
 import { VISIT_MATERIAL_TESTAMENT_LABELS } from '../constants';
@@ -124,73 +124,66 @@ export default function VisitMaterialDetailsModal({
 
               <Divider sx={{ my: 2 }} />
 
-              {[
-                { label: 'Vídeos', items: material.videos },
-                { label: 'Documentos', items: material.documents },
-                { label: 'Imagens', items: material.images },
-                { label: 'Áudios', items: material.audios },
-              ].map((section) =>
-                section.items.length > 0 ? (
-                  <Paper key={section.label} elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: '#fff' }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight="bold"
-                      color="primary"
-                      textAlign="center"
-                      mb={3}
-                    >
-                      {section.label}
-                    </Typography>
-
-                    <Grid container spacing={3}>
-                      {section.items.map((item) => (
-                        <Grid item xs={12} md={6} key={item.id}>
-                          <Box
-                            sx={{
-                              p: 2,
-                              border: '1px solid #e0e0e0',
-                              borderRadius: 2,
-                              bgcolor: '#f9f9f9',
-                              height: '100%',
-                            }}
-                          >
-                            <Typography variant="body1">
-                              <strong>Título:</strong> {item.title || 'Sem Título'}
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 0.5 }}>
-                              <strong>Descrição:</strong> {item.description || 'Sem Descrição'}
-                            </Typography>
-
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                mt: 1,
-                                gap: 1,
-                                flexWrap: 'wrap',
-                              }}
-                            >
-                              <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-                                <strong>URL:</strong> {item.url}
-                              </Typography>
-                              <IconButton
-                                data-testid="visit-material-details-copy-url"
-                                aria-label={`Copiar URL de ${item.title}`}
-                                size="small"
-                                onClick={() => handleCopyUrl(item.url)}
-                                title="Copiar URL"
-                                sx={{ color: '#1976d2' }}
-                              >
-                                <ContentCopy fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          </Box>
+              {buildVisitMaterialCategoryViews(material).map((category) => (
+                <Paper
+                  key={category.category}
+                  data-testid={`visit-material-details-category-${category.category}`}
+                  elevation={2}
+                  sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2, bgcolor: '#fff' }}
+                >
+                  <Typography variant="h5" fontWeight="bold" color="primary" mb={1}>
+                    {category.label}
+                  </Typography>
+                  {(category.title || category.description) && (
+                    <Box sx={{ mb: 2 }}>
+                      {category.title && <Typography fontWeight={700}>{category.title}</Typography>}
+                      {category.description && (
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {category.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                  <Stack spacing={2}>
+                    {category.mediaSections.map((section) => (
+                      <Box key={section.kind}>
+                        <Typography variant="subtitle1" fontWeight="bold" mb={1.5}>
+                          {section.icon} {section.label}
+                        </Typography>
+                        <Grid container spacing={2}>
+                          {section.items.map((item) => (
+                            <Grid item xs={12} md={6} key={item.id}>
+                              <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, bgcolor: '#f9f9f9', height: '100%' }}>
+                                <Typography variant="body1">
+                                  <strong>Título:</strong> {item.title || 'Sem Título'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  <strong>Descrição:</strong> {item.description || 'Sem Descrição'}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1, flexWrap: 'wrap' }}>
+                                  <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                                    <strong>URL:</strong> {item.url}
+                                  </Typography>
+                                  <IconButton
+                                    data-testid="visit-material-details-copy-url"
+                                    aria-label={`Copiar URL de ${item.title}`}
+                                    size="small"
+                                    onClick={() => handleCopyUrl(item.url)}
+                                    title="Copiar URL"
+                                    sx={{ color: '#1976d2' }}
+                                  >
+                                    <ContentCopy fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Box>
+                            </Grid>
+                          ))}
                         </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                ) : null
-              )}
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              ))}
             </Stack>
           )}
         </DialogContent>

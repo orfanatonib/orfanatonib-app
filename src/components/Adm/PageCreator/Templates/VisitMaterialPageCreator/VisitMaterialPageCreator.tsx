@@ -7,13 +7,8 @@ import {
   Grid,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
-  Tab,
-  Tabs,
-  Typography,
 } from '@mui/material';
-import { VideoLibrary, Description, Image, Audiotrack } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/slices';
@@ -25,15 +20,10 @@ import PageFormBase from '../shared/PageFormBase';
 import PageBasicInfoSection from '../shared/PageBasicInfoSection';
 import PageFormActions from '../shared/PageFormActions';
 import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
-import { PAGE_PAPER_SX } from '../shared/styles';
 import { useTouchedFields } from '../shared/useTouchedFields';
-import { VISIT_EDITOR_HEADINGS, VISIT_EDITOR_TEST_ID, VISIT_TABS_SX } from './constants';
+import { VISIT_EDITOR_HEADINGS, VISIT_EDITOR_TEST_ID } from './constants';
 import { useRequestedVisitMaterial } from './useRequestedVisitMaterial';
-import VisitVideos from './VisitVideos';
-import VisitDocuments from './VisitDocuments';
-import VisitAudios from './VisitAudios';
-import VisitImages from './VisitImages';
-import { MediaItem } from 'store/slices/types';
+import VisitCategoriesEditor from './VisitCategoriesEditor';
 import {
   createVisitMaterial,
   updateVisitMaterial,
@@ -46,9 +36,15 @@ import { visitMaterialErrorMessage } from '@/features/visit-materials/errors';
 import { buildVisitMaterialFormData } from '@/features/visit-materials/payload';
 import {
   TestamentType,
+  VisitMaterialCategory,
+  VisitMaterialCategoryDraft,
+  VisitMaterialCategoryDrafts,
   VisitMaterialPageCreatorProps,
+  VisitMaterialSectionCategory,
   VisitMaterialSnackbarState,
 } from '@/features/visit-materials/types';
+import { VISIT_MATERIAL_SECTION_CATEGORIES } from '@/features/visit-materials/constants';
+import { draftsFromMaterial, emptyCategoryDrafts } from '@/features/visit-materials/utils';
 
 export default function VisitMaterialPageCreator({
   fromTemplatePage,
@@ -67,12 +63,10 @@ export default function VisitMaterialPageCreator({
   );
 
   const [pageCurrentWeek, setPageCurrentWeek] = useState(false);
-  const [tab, setTab] = useState(0);
-
-  const [videos, setVideos] = useState<MediaItem[]>([]);
-  const [documents, setDocuments] = useState<MediaItem[]>([]);
-  const [images, setImages] = useState<MediaItem[]>([]);
-  const [audios, setAudios] = useState<MediaItem[]>([]);
+  /** Mídias por categoria: o Geral (padrão) são as mídias da página; as faixas etárias viram seções. */
+  const [drafts, setDrafts] = useState<VisitMaterialCategoryDrafts>(emptyCategoryDrafts);
+  const handleDraftChange = (category: VisitMaterialCategory, draft: VisitMaterialCategoryDraft) =>
+    setDrafts((current) => ({ ...current, [category]: draft }));
 
   const { touched, setField, touchAll } = useTouchedFields();
 
@@ -90,10 +84,7 @@ export default function VisitMaterialPageCreator({
       setPageSubtitle('');
       setPageDescription('');
       setTestament(TestamentType.OLD_TESTAMENT);
-      setVideos([]);
-      setDocuments([]);
-      setImages([]);
-      setAudios([]);
+      setDrafts(emptyCategoryDrafts());
     }
   }, [fromTemplatePage, dispatch]);
 
@@ -104,10 +95,7 @@ export default function VisitMaterialPageCreator({
       setPageDescription(visitMaterialSData.description);
       setTestament(visitMaterialSData.testament);
       setPageCurrentWeek(visitMaterialSData.currentWeek);
-      setVideos(visitMaterialSData.videos);
-      setDocuments(visitMaterialSData.documents);
-      setImages(visitMaterialSData.images);
-      setAudios(visitMaterialSData.audios);
+      setDrafts(draftsFromMaterial(visitMaterialSData));
     }
   }, [fromTemplatePage, visitMaterialSData]);
 
@@ -152,10 +140,13 @@ export default function VisitMaterialPageCreator({
           testament,
           pageDescription,
           currentWeek: pageCurrentWeek,
-          videos,
-          documents,
-          images,
-          audios,
+          videos: drafts[VisitMaterialCategory.GENERAL].videos,
+          documents: drafts[VisitMaterialCategory.GENERAL].documents,
+          images: drafts[VisitMaterialCategory.GENERAL].images,
+          audios: drafts[VisitMaterialCategory.GENERAL].audios,
+          sections: Object.fromEntries(
+            VISIT_MATERIAL_SECTION_CATEGORIES.map((category) => [category, drafts[category]]),
+          ) as Partial<Record<VisitMaterialSectionCategory, VisitMaterialCategoryDraft>>,
         },
         fromTemplatePage ? 'create' : 'update',
       );
@@ -256,32 +247,7 @@ export default function VisitMaterialPageCreator({
         </Grid>
       </PageBasicInfoSection>
 
-      <Paper elevation={2} sx={PAGE_PAPER_SX}>
-        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
-          📚 Materiais de Visita
-        </Typography>
-
-        <Tabs
-          data-testid="visit-material-page-editor-media-tabs"
-          value={tab}
-          onChange={(_, val) => setTab(val)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={VISIT_TABS_SX}
-        >
-          <Tab icon={<VideoLibrary />} iconPosition="start" label="Vídeos" />
-          <Tab icon={<Description />} iconPosition="start" label="Documentos" />
-          <Tab icon={<Image />} iconPosition="start" label="Imagens" />
-          <Tab icon={<Audiotrack />} iconPosition="start" label="Áudios" />
-        </Tabs>
-
-        <Box sx={{ minHeight: 300 }}>
-          {tab === 0 && <VisitVideos videos={videos} setVideos={setVideos} />}
-          {tab === 1 && <VisitDocuments documents={documents} setDocuments={setDocuments} />}
-          {tab === 2 && <VisitImages images={images} setImages={setImages} />}
-          {tab === 3 && <VisitAudios audios={audios} setAudios={setAudios} />}
-        </Box>
-      </Paper>
+      <VisitCategoriesEditor drafts={drafts} onChange={handleDraftChange} />
 
       <PageFormActions
         testId={VISIT_EDITOR_TEST_ID}

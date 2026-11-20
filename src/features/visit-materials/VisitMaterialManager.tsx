@@ -27,6 +27,7 @@ import { useVisitMaterials } from './hooks';
 import VisitMaterialDetailsModal from './components/VisitMaterialDetailsModal';
 import SetCurrentMaterialConfirmDialog from './components/SetCurrentMaterialConfirmDialog';
 import VisitMaterialCard from './components/VisitMaterialCard';
+import VisitCategoryFilter from './components/VisitCategoryFilter';
 import BackHeader from '@/components/common/header/BackHeader';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 import {
@@ -41,7 +42,7 @@ import {
 import { tabFromTestament, testamentFromTab } from './utils';
 
 export default function VisitMaterialManager() {
-  const { materials, search, setSearch, testament, setTestament, loading, isFiltering, error, setError, fetchAll, remove, markAsCurrent, pendingMutation } =
+  const { materials, search, setSearch, testament, setTestament, category, setCategory, loading, isFiltering, error, setError, fetchAll, remove, markAsCurrent, pendingMutation } =
     useVisitMaterials();
 
   const [materialToDelete, setMaterialToDelete] =
@@ -196,6 +197,11 @@ export default function VisitMaterialManager() {
                   />
                 ))}
               </Tabs>
+              <VisitCategoryFilter
+                value={category}
+                onChange={setCategory}
+                testIdPrefix="visit-material-manager"
+              />
             </Box>
           </Paper>
         </motion.div>

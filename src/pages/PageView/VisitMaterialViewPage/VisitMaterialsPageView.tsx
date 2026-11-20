@@ -30,7 +30,9 @@ import {
   VisitMaterialMediaSection,
   VisitMaterialMediaSectionView,
 } from '@/features/visit-materials/types';
-import { buildVisitMaterialMediaSections } from '@/features/visit-materials/utils';
+import { buildVisitMaterialCategoryViews } from '@/features/visit-materials/utils';
+import { VisitMaterialCategory } from '@/features/visit-materials/types';
+import VisitCategorySelector from './VisitCategorySelector';
 
 interface VisitMaterialsPageViewProps {
   idToFetch: string;
@@ -54,7 +56,7 @@ const renderMediaItem = (
 
 /** Estados (carregando, erro, vazio) usam o mesmo contêiner da página. */
 const StateFrame = ({ children }: { children: ReactNode }) => (
-  <Container maxWidth="lg" disableGutters sx={{ px: 0, py: { xs: 2, md: 0 } }}>
+  <Container maxWidth={false} disableGutters sx={{ px: 0, py: { xs: 2, md: 0 } }}>
     {children}
   </Container>
 );
@@ -62,6 +64,7 @@ const StateFrame = ({ children }: { children: ReactNode }) => (
 export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPageViewProps) {
   const { material: visitMaterials, loading, error } = useVisitMaterial(idToFetch);
   const [activeTab, setActiveTab] = useState(0);
+  const [activeCategory, setActiveCategory] = useState<VisitMaterialCategory | null>(null);
 
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
@@ -108,8 +111,17 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
     );
   }
 
-  const mediaTypes = buildVisitMaterialMediaSections(visitMaterials);
+  const categories = buildVisitMaterialCategoryViews(visitMaterials);
+  const currentCategory =
+    categories.find((item) => item.category === activeCategory) ?? categories[0] ?? null;
+  const mediaTypes = currentCategory?.mediaSections ?? [];
   const activeSection = mediaTypes[Math.min(activeTab, mediaTypes.length - 1)];
+  // Só mostra o seletor quando há mais de uma categoria (página antiga: só o Geral, sem mudança na tela).
+  const showCategories = categories.length > 1 || currentCategory?.category !== VisitMaterialCategory.GENERAL;
+  const handleCategoryChange = (category: VisitMaterialCategory) => {
+    setActiveCategory(category);
+    setActiveTab(0);
+  };
 
   return (
     <StateFrame>
@@ -154,6 +166,30 @@ export default function VisitMaterialsPageView({ idToFetch }: VisitMaterialsPage
             </Typography>
           )}
         </Paper>
+
+        {currentCategory && showCategories && (
+          <Paper data-testid="visit-material-categories" elevation={0} sx={MEMBER_CARD_SX}>
+            <VisitCategorySelector
+              categories={categories}
+              active={currentCategory.category}
+              onChange={handleCategoryChange}
+            />
+            {(currentCategory.title || currentCategory.description) && (
+              <Box sx={{ mt: 1.5 }}>
+                {currentCategory.title && (
+                  <Typography component="h4" variant="subtitle1" fontWeight={700}>
+                    {currentCategory.title}
+                  </Typography>
+                )}
+                {currentCategory.description && (
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {currentCategory.description}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Paper>
+        )}
 
         {mediaTypes.length > 0 && activeSection ? (
           <Paper data-testid="visit-material-media" elevation={0} sx={MEMBER_CARD_SX}>

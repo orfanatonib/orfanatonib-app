@@ -13,6 +13,7 @@ import { visitMaterialErrorMessage } from './errors';
 import {
   TestamentType,
   VisitMaterialMutation,
+  VisitMaterialSectionCategory,
   VisitMaterialPageResponseDto,
 } from './types';
 import { buildVisitMaterialQuery } from './utils';
@@ -21,6 +22,7 @@ export function useVisitMaterials() {
   const [materials, setMaterials] = useState<VisitMaterialPageResponseDto[]>([]);
   const [search, setSearch] = useState('');
   const [testament, setTestament] = useState<TestamentType | undefined>();
+  const [category, setCategory] = useState<VisitMaterialSectionCategory | undefined>();
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +32,11 @@ export function useVisitMaterials() {
   const hasLoaded = useRef(false);
 
   const fetchAll = useCallback(
-    async (nextSearch = search, nextTestament = testament): Promise<void> => {
+    async (
+      nextSearch = search,
+      nextTestament = testament,
+      nextCategory = category,
+    ): Promise<void> => {
       const requestId = latestRequest.current + 1;
       latestRequest.current = requestId;
       setError('');
@@ -39,7 +45,7 @@ export function useVisitMaterials() {
 
       try {
         const data = await listVisitMaterials(
-          buildVisitMaterialQuery(nextSearch, nextTestament),
+          buildVisitMaterialQuery(nextSearch, nextTestament, nextCategory),
         );
         if (requestId === latestRequest.current) setMaterials(data);
       } catch (caught: unknown) {
@@ -59,16 +65,16 @@ export function useVisitMaterials() {
         }
       }
     },
-    [search, testament],
+    [search, testament, category],
   );
 
   useEffect(() => {
     const timeout = window.setTimeout(
-      () => void fetchAll(search, testament),
+      () => void fetchAll(search, testament, category),
       hasLoaded.current ? VISIT_MATERIAL_FILTER_DEBOUNCE_MS : 0,
     );
     return () => window.clearTimeout(timeout);
-  }, [fetchAll, search, testament]);
+  }, [fetchAll, search, testament, category]);
 
   const remove = useCallback(
     async (id: string): Promise<boolean> => {
@@ -124,6 +130,8 @@ export function useVisitMaterials() {
     setSearch,
     testament,
     setTestament,
+    category,
+    setCategory,
     loading,
     isFiltering,
     error,

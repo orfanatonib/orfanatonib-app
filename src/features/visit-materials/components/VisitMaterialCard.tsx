@@ -3,7 +3,7 @@ import {
   useMediaQuery, useTheme, Tooltip, CardActions
 } from '@mui/material';
 import { Visibility, Delete, Public, Lock, Edit, Star } from '@mui/icons-material';
-import { truncate } from '../../visit-materials/utils';
+import { materialCategoryLabels, truncate } from '../../visit-materials/utils';
 import { motion } from 'framer-motion';
 import { VisitMaterialPageResponseDto, TestamentType } from '../types';
 import { VISIT_MATERIAL_TESTAMENT_LABELS } from '../constants';
@@ -95,6 +95,16 @@ export default function VisitMaterialCard({
                 }}
               />
             )}
+            {materialCategoryLabels(material).map((label) => (
+              <Chip
+                key={label}
+                data-testid="visit-material-card-category"
+                label={label}
+                size="small"
+                variant="outlined"
+                sx={{ fontWeight: 600, fontSize: { xs: '0.7rem', sm: '0.75rem' }, height: { xs: 24, sm: 28 } }}
+              />
+            ))}
           </Box>
           <IconButton
             data-testid="visit-material-card-delete"

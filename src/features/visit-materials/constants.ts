@@ -1,6 +1,8 @@
 import { MediaPlatform, MediaType } from '@/store/slices/types';
 import {
   TestamentType,
+  VisitMaterialCategory,
+  VisitMaterialSectionCategory,
   VisitMaterialListTab,
   VisitMaterialMediaSection,
 } from './types';
@@ -79,4 +81,51 @@ export const VISIT_MATERIAL_DEFAULT_PLATFORMS: Readonly<
   [MediaType.DOCUMENT]: MediaPlatform.GOOGLE_DRIVE,
   [MediaType.IMAGE]: MediaPlatform.GOOGLE_DRIVE,
   [MediaType.AUDIO]: MediaPlatform.GOOGLE_DRIVE,
+};
+
+/** Ordem de exibição: Geral primeiro, depois da faixa mais nova para a mais velha. */
+export const VISIT_MATERIAL_CATEGORY_ORDER: readonly VisitMaterialCategory[] = [
+  VisitMaterialCategory.GENERAL,
+  VisitMaterialCategory.BABY,
+  VisitMaterialCategory.CHILD,
+  VisitMaterialCategory.TEEN,
+  VisitMaterialCategory.ADULT,
+];
+
+/** Categorias que viram seção na API. */
+export const VISIT_MATERIAL_SECTION_CATEGORIES: readonly VisitMaterialSectionCategory[] =
+  VISIT_MATERIAL_CATEGORY_ORDER.filter(
+    (category): category is VisitMaterialSectionCategory =>
+      category !== VisitMaterialCategory.GENERAL,
+  );
+
+export const VISIT_MATERIAL_CATEGORY_LABELS: Readonly<
+  Record<VisitMaterialCategory, string>
+> = {
+  [VisitMaterialCategory.GENERAL]: 'Geral',
+  [VisitMaterialCategory.BABY]: 'Baby',
+  [VisitMaterialCategory.CHILD]: 'Crianças',
+  [VisitMaterialCategory.TEEN]: 'Adolescentes',
+  [VisitMaterialCategory.ADULT]: 'Adultos',
+};
+
+export const VISIT_MATERIAL_CATEGORY_HINTS: Readonly<
+  Record<VisitMaterialCategory, string>
+> = {
+  [VisitMaterialCategory.GENERAL]: 'Vale para todas as faixas etárias.',
+  [VisitMaterialCategory.BABY]: '0 a 2 anos',
+  [VisitMaterialCategory.CHILD]: '3 a 9 anos',
+  [VisitMaterialCategory.TEEN]: '10 a 14 anos',
+  [VisitMaterialCategory.ADULT]: '15 anos em diante',
+};
+
+/** Prefixo dos campos de arquivo do multipart: evita colisão entre categorias. O Geral mantém o formato antigo. */
+export const VISIT_MATERIAL_FIELD_SCOPE: Readonly<
+  Record<VisitMaterialCategory, string>
+> = {
+  [VisitMaterialCategory.GENERAL]: '',
+  [VisitMaterialCategory.BABY]: 'baby_',
+  [VisitMaterialCategory.CHILD]: 'child_',
+  [VisitMaterialCategory.TEEN]: 'teen_',
+  [VisitMaterialCategory.ADULT]: 'adult_',
 };

@@ -34,6 +34,7 @@ import {
 } from '@/features/visit-materials/types';
 import { tabFromTestament, testamentFromTab } from '@/features/visit-materials/utils';
 import { FofinhoButton } from '../Buttons';
+import VisitCategoryFilter from '@/features/visit-materials/components/VisitCategoryFilter';
 import { MEMBER_CARD_SX } from '../../constants/navigation';
 import { MediaTargetType } from '@/store/slices/types';
 import { buildMemberContentPath } from '../../utils/navigation';
@@ -47,6 +48,8 @@ const VisitMaterialsList = () => {
         setSearch: setFilter,
         testament,
         setTestament,
+        category,
+        setCategory,
         loading,
         isFiltering,
         error,
@@ -185,6 +188,11 @@ const VisitMaterialsList = () => {
                                     />
                                 ))}
                             </Tabs>
+                            <VisitCategoryFilter
+                                value={category}
+                                onChange={setCategory}
+                                testIdPrefix="visit-material-member-list"
+                            />
                         </Box>
                     </Paper>
                 </motion.div>

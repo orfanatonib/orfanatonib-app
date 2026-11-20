@@ -50,6 +50,7 @@ describe('visit material utilities', () => {
       description: 'Descrição',
       testament: TestamentType.OLD_TESTAMENT,
       currentWeek: false,
+      sections: [],
       createdAt: '2026-09-13T00:00:00.000Z',
       updatedAt: '2026-09-13T00:00:00.000Z',
       route: {

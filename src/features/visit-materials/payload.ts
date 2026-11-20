@@ -1,26 +1,37 @@
 import { MediaItem, MediaType, MediaUploadType } from '@/store/slices/types';
-import { VISIT_MATERIAL_PAYLOAD_FIELD } from './constants';
+import {
+  VISIT_MATERIAL_FIELD_SCOPE,
+  VISIT_MATERIAL_PAYLOAD_FIELD,
+  VISIT_MATERIAL_SECTION_CATEGORIES,
+} from './constants';
+import { isCategoryDraftFilled } from './utils';
 import {
   CreateVisitMaterialPageRequestDto,
   UpdateVisitMaterialPageRequestDto,
+  VisitMaterialCategoryDraft,
   VisitMaterialFormValues,
   VisitMaterialMediaRequestDto,
+  VisitMaterialSectionCategory,
+  VisitMaterialSectionRequestDto,
 } from './types';
 
 const extensionOf = (file: File): string =>
   file.name.includes('.') ? file.name.split('.').pop() ?? 'bin' : 'bin';
 
+/** Nome do campo do arquivo no multipart; o prefixo da categoria evita colisão (o Geral mantém o formato antigo). */
 const fileFieldFor = (
+  scope: string,
   mediaType: MediaType,
   index: number,
   file: File,
-): string => `${mediaType}_${index}.${extensionOf(file)}`;
+): string => `${scope}${mediaType}_${index}.${extensionOf(file)}`;
 
 const toMediaRequest = (
   item: MediaItem,
   mediaType: MediaType,
   index: number,
   formData: FormData,
+  scope: string,
 ): VisitMaterialMediaRequestDto => {
   const base: VisitMaterialMediaRequestDto = {
     ...(item.id ? { id: item.id } : {}),
@@ -40,7 +51,7 @@ const toMediaRequest = (
   }
 
   if (item.file instanceof File) {
-    const fieldKey = fileFieldFor(mediaType, index, item.file);
+    const fieldKey = fileFieldFor(scope, mediaType, index, item.file);
     formData.append(fieldKey, item.file, item.file.name);
     return {
       ...base,
@@ -63,10 +74,42 @@ const mapBucket = (
   items: MediaItem[],
   mediaType: MediaType,
   formData: FormData,
+  scope = '',
 ): VisitMaterialMediaRequestDto[] =>
   items.map((item, index) =>
-    toMediaRequest(item, mediaType, index, formData),
+    toMediaRequest(item, mediaType, index, formData, scope),
   );
+
+/** Seção de uma categoria; só entra no payload se tiver mídia ou texto (o resto é "categoria vazia"). */
+const toSectionRequest = (
+  category: VisitMaterialSectionCategory,
+  draft: VisitMaterialCategoryDraft,
+  formData: FormData,
+): VisitMaterialSectionRequestDto => {
+  const scope = VISIT_MATERIAL_FIELD_SCOPE[category];
+  const title = draft.title.trim();
+  const description = draft.description.trim();
+  return {
+    category,
+    ...(title ? { title } : {}),
+    ...(description ? { description } : {}),
+    videos: mapBucket(draft.videos, MediaType.VIDEO, formData, scope),
+    documents: mapBucket(draft.documents, MediaType.DOCUMENT, formData, scope),
+    images: mapBucket(draft.images, MediaType.IMAGE, formData, scope),
+    audios: mapBucket(draft.audios, MediaType.AUDIO, formData, scope),
+  };
+};
+
+const buildSections = (
+  values: VisitMaterialFormValues,
+  formData: FormData,
+): VisitMaterialSectionRequestDto[] =>
+  VISIT_MATERIAL_SECTION_CATEGORIES.flatMap((category) => {
+    const draft = values.sections?.[category];
+    return draft && isCategoryDraftFilled(draft)
+      ? [toSectionRequest(category, draft, formData)]
+      : [];
+  });
 
 export const buildVisitMaterialFormData = (
   values: VisitMaterialFormValues,
@@ -82,6 +125,8 @@ export const buildVisitMaterialFormData = (
     documents: mapBucket(values.documents, MediaType.DOCUMENT, formData),
     images: mapBucket(values.images, MediaType.IMAGE, formData),
     audios: mapBucket(values.audios, MediaType.AUDIO, formData),
+    // Sem `sections` (cliente antigo) a API não mexe nas seções; com ele, a lista é a verdade (as que faltam são removidas).
+    ...(values.sections ? { sections: buildSections(values, formData) } : {}),
   };
 
   const payload: CreateVisitMaterialPageRequestDto | UpdateVisitMaterialPageRequestDto =

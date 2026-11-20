@@ -10,6 +10,24 @@ export enum TestamentType {
   NEW_TESTAMENT = 'NEW_TESTAMENT',
 }
 
+/**
+ * Categoria do material. `GENERAL` ("Geral") são as mídias da própria página (as únicas das páginas antigas e o padrão do
+ * que se cria à mão); as demais são seções por faixa etária e espelham o enum da API.
+ */
+export enum VisitMaterialCategory {
+  GENERAL = 'GENERAL',
+  BABY = 'BABY',
+  CHILD = 'CHILD',
+  TEEN = 'TEEN',
+  ADULT = 'ADULT',
+}
+
+/** Categorias que existem como seção na API (tudo menos `GENERAL`). */
+export type VisitMaterialSectionCategory = Exclude<
+  VisitMaterialCategory,
+  VisitMaterialCategory.GENERAL
+>;
+
 export enum VisitMaterialListTab {
   ALL = 'ALL',
   OLD_TESTAMENT = TestamentType.OLD_TESTAMENT,
@@ -51,6 +69,18 @@ export interface VisitMaterialMediaResponseDto {
   originalName?: string;
 }
 
+export interface VisitMaterialSectionResponseDto {
+  id: string;
+  category: VisitMaterialSectionCategory;
+  title: string | null;
+  description: string | null;
+  position: number;
+  videos: VisitMaterialMediaResponseDto[];
+  documents: VisitMaterialMediaResponseDto[];
+  images: VisitMaterialMediaResponseDto[];
+  audios: VisitMaterialMediaResponseDto[];
+}
+
 export interface VisitMaterialPageResponseDto {
   id: string;
   title: string;
@@ -64,11 +94,14 @@ export interface VisitMaterialPageResponseDto {
   documents: VisitMaterialMediaResponseDto[];
   images: VisitMaterialMediaResponseDto[];
   audios: VisitMaterialMediaResponseDto[];
+  /** Seções por categoria; vazio nas páginas antigas (as mídias delas são o "Geral"). */
+  sections: VisitMaterialSectionResponseDto[];
   route: VisitMaterialRouteResponseDto;
 }
 
 export interface ListVisitMaterialsQueryDto {
   testament?: TestamentType;
+  category?: VisitMaterialSectionCategory;
   searchString?: string;
 }
 
@@ -90,6 +123,16 @@ export interface VisitMaterialMediaRequestDto {
   size?: number;
 }
 
+export interface VisitMaterialSectionRequestDto {
+  category: VisitMaterialSectionCategory;
+  title?: string;
+  description?: string;
+  videos: VisitMaterialMediaRequestDto[];
+  documents: VisitMaterialMediaRequestDto[];
+  images: VisitMaterialMediaRequestDto[];
+  audios: VisitMaterialMediaRequestDto[];
+}
+
 export interface CreateVisitMaterialPageRequestDto {
   pageTitle: string;
   pageSubtitle: string;
@@ -99,6 +142,7 @@ export interface CreateVisitMaterialPageRequestDto {
   documents: VisitMaterialMediaRequestDto[];
   images: VisitMaterialMediaRequestDto[];
   audios: VisitMaterialMediaRequestDto[];
+  sections?: VisitMaterialSectionRequestDto[];
 }
 
 export interface UpdateVisitMaterialPageRequestDto
@@ -106,6 +150,22 @@ export interface UpdateVisitMaterialPageRequestDto
   id: string;
   currentWeek: boolean;
 }
+
+/** Mídias e textos de UMA categoria no editor. */
+export interface VisitMaterialCategoryDraft {
+  title: string;
+  description: string;
+  videos: MediaItem[];
+  documents: MediaItem[];
+  images: MediaItem[];
+  audios: MediaItem[];
+}
+
+/** Rascunho por categoria; `GENERAL` guarda as mídias da página e as demais, as seções. */
+export type VisitMaterialCategoryDrafts = Record<
+  VisitMaterialCategory,
+  VisitMaterialCategoryDraft
+>;
 
 export interface VisitMaterialFormValues {
   id?: string;
@@ -118,6 +178,8 @@ export interface VisitMaterialFormValues {
   documents: MediaItem[];
   images: MediaItem[];
   audios: MediaItem[];
+  /** Seções por categoria (as faixas etárias); as mídias do Geral continuam nas listas acima. */
+  sections?: Partial<Record<VisitMaterialSectionCategory, VisitMaterialCategoryDraft>>;
 }
 
 export interface VisitMaterialPageCreatorProps {

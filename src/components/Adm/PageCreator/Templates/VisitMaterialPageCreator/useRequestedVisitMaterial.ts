@@ -34,7 +34,9 @@ export function useRequestedVisitMaterial({ fromTemplatePage, requestedMaterialI
         }
       })
       .finally(() => {
-        if (active) setInitialLoading(false);
+        // Sem checar `active`: ao carregar, o `dispatch` muda `loadedMaterialId`, o efeito é limpo e `active` vira false
+        // antes deste `finally`; checar aqui deixava o editor em "carregando" para sempre ao abrir `?id=` pela URL.
+        setInitialLoading(false);
       });
 
     return () => {
