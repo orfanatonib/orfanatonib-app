@@ -12,7 +12,7 @@ import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { ContentStageEditor } from "../components/ContentStageEditor";
 import { PackageSummaryCard } from "../components/detail/PackageSummaryCard";
 import { StageActionsBar } from "../components/detail/StageActionsBar";
-import { StageGenerationPanel } from "../components/detail/StageGenerationPanel";
+import { StageActionsToolbar, StageGenerationPanel } from "../components/detail/StageGenerationPanel";
 import { StageReviewSection } from "../components/detail/StageReviewSection";
 import { StageStatusAlerts } from "../components/detail/StageStatusAlerts";
 import { exportFileName } from "../export.utils";
@@ -201,6 +201,11 @@ export function ContentPackageDetailPage() {
                         dependenciesReady={dependenciesReady}
                         conflict={conflict}
                       />
+                      {!locked && !(stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled) && (
+                        <StageActionsToolbar>
+                          <StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />
+                        </StageActionsToolbar>
+                      )}
                       {stage.stageType === ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
                         <VisualConfigWizard
                           audience={track.audience}
@@ -238,6 +243,7 @@ export function ContentPackageDetailPage() {
                           busy={busy}
                           dirty={dirty}
                           dependenciesReady={dependenciesReady}
+                          actions={<StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />}
                         />
                       )}
                       {!IMAGE_STAGE_TYPES.includes(stage.stageType) && (
@@ -287,7 +293,6 @@ export function ContentPackageDetailPage() {
                           fieldsDirty={dirty}
                         />
                       )}
-                      {!locked && <StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />}
                       <StageReviewSection contentPackage={contentPackage} stage={stage} workspace={workspace} busy={busy} />
                     </Stack>
                   </CardContent>

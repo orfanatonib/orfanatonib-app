@@ -1,5 +1,5 @@
 import { Save, TaskAlt } from "@mui/icons-material";
-import { Button, Stack } from "@mui/material";
+import { Button } from "@mui/material";
 
 import type { StudioWorkspace } from "../../hooks/useStudioWorkspace";
 import { ContentStageStatus, type ContentStageResponse } from "../../types";
@@ -17,7 +17,7 @@ interface StageActionsBarProps {
 /** Salvar versão (campos), descartar rascunho e concluir a produção da etapa. */
 export function StageActionsBar({ stage, workspace, busy, dirty, conflict }: StageActionsBarProps) {
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
+    <>
       <Button
         data-testid="content-studio-save-stage"
         variant="outlined"
@@ -37,7 +37,7 @@ export function StageActionsBar({ stage, workspace, busy, dirty, conflict }: Sta
             if (window.confirm("Descartar as alterações não salvas desta etapa?"))
               workspace.handleDraftChange(stage.id, stageDraftValue(stage));
           }}
-          sx={{ minHeight: 44 }}
+          sx={{ minHeight: 44, gridColumn: { xs: "1 / -1", sm: "auto" } }}
         >
           Descartar alterações
         </Button>
@@ -52,6 +52,6 @@ export function StageActionsBar({ stage, workspace, busy, dirty, conflict }: Sta
       >
         Concluir produção
       </Button>
-    </Stack>
+    </>
   );
 }

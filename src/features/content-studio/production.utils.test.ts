@@ -13,8 +13,8 @@ describe("production.utils", () => {
   });
 
   it("andamento: porcentagem, limites e rótulo no singular/plural", () => {
-    expect(stageProgress({ approvedStagesCount: 2, requiredStagesCount: 5 })).toMatchObject({ percent: 40, label: "2 de 5 etapas aprovadas" });
-    expect(stageProgress({ approvedStagesCount: 1, requiredStagesCount: 1 })).toMatchObject({ percent: 100, label: "1 de 1 etapa aprovada" });
+    expect(stageProgress({ approvedStagesCount: 2, requiredStagesCount: 5 })).toMatchObject({ percent: 40, label: "2 de 5 etapas concluídas" });
+    expect(stageProgress({ approvedStagesCount: 1, requiredStagesCount: 1 })).toMatchObject({ percent: 100, label: "1 de 1 etapa concluída" });
     expect(stageProgress({ approvedStagesCount: 9, requiredStagesCount: 4 }).approved).toBe(4);
     expect(stageProgress({ approvedStagesCount: 0, requiredStagesCount: 0 })).toMatchObject({ percent: 0, label: "Sem etapas obrigatórias" });
   });

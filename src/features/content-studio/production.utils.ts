@@ -1,4 +1,11 @@
-import { ContentPackageStatus, type ContentAudience, type ContentAudienceDefinitionResponse, type ContentPackageListItemResponse } from "./types";
+import {
+  ContentPackageStatus,
+  ContentStageStatus,
+  type ContentAudience,
+  type ContentAudienceDefinitionResponse,
+  type ContentPackageListItemResponse,
+  type ContentStageSegment,
+} from "./types";
 
 export const pluralize = (count: number, one: string, many: string): string => (count === 1 ? one : many);
 
@@ -14,10 +21,22 @@ export interface StageProgress {
   label: string;
 }
 
-/** Andamento do material: etapas obrigatórias já aprovadas. */
-export function stageProgress(item: Pick<ContentPackageListItemResponse, "approvedStagesCount" | "requiredStagesCount">): StageProgress {
-  const required = Math.max(0, item.requiredStagesCount);
-  const approved = Math.min(Math.max(0, item.approvedStagesCount), required);
+/** Etapas já concluídas pelo produtor: aprovadas por ele, em revisão ou aprovadas na revisão. */
+const COMPLETED_STAGE_STATUSES: ReadonlySet<ContentStageStatus> = new Set([
+  ContentStageStatus.PRODUCER_APPROVED,
+  ContentStageStatus.IN_REVIEW,
+  ContentStageStatus.APPROVED,
+]);
+
+/** Andamento do material: etapas obrigatórias já concluídas (produtor aprovou ou além). */
+export function stageProgress(
+  item: Pick<ContentPackageListItemResponse, "approvedStagesCount" | "requiredStagesCount"> & { stageSegments?: readonly ContentStageSegment[] },
+): StageProgress {
+  const segments = item.stageSegments ?? [];
+  const useSegments = segments.length > 0;
+  const required = Math.max(0, useSegments ? segments.length : item.requiredStagesCount);
+  const done = useSegments ? segments.filter((segment) => COMPLETED_STAGE_STATUSES.has(segment.status)).length : item.approvedStagesCount;
+  const approved = Math.min(Math.max(0, done), required);
   const percent = required === 0 ? 0 : Math.round((approved / required) * 100);
   return {
     approved,
@@ -26,7 +45,7 @@ export function stageProgress(item: Pick<ContentPackageListItemResponse, "approv
     label:
       required === 0
         ? "Sem etapas obrigatórias"
-        : `${approved} de ${required} ${pluralize(required, "etapa aprovada", "etapas aprovadas")}`,
+        : `${approved} de ${required} ${pluralize(required, "etapa concluída", "etapas concluídas")}`,
   };
 }
 
