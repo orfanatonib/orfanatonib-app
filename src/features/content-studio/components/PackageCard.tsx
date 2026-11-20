@@ -8,10 +8,9 @@ import { Box, Button, CircularProgress, IconButton, Stack, Tooltip, Typography }
 import ListingCard from "@/components/common/listing/ListingCard";
 import type { ListingBadge } from "@/components/common/listing";
 
-import { CONTENT_PACKAGE_STATUS_LABELS } from "../constants";
-import { PACKAGE_STATUS_COLORS } from "../period.utils";
+import { productionCardAction, productionListStatusView } from "../package-list-status.utils";
 import { PRODUCTION_LIST_TEXTS } from "../production-list.constants";
-import { canArchivePackage, canExportPackage, nextStep, relativeTimeLabel } from "../production-list.utils";
+import { canArchivePackage, canExportPackage, relativeTimeLabel } from "../production-list.utils";
 import { audienceNames, pluralize, stageProgress } from "../production.utils";
 import { ContentPackageStatus, type ContentAudienceDefinitionResponse, type ContentPackageListItemResponse } from "../types";
 import { PackageStageSegments } from "./PackageStageSegments";
@@ -29,13 +28,15 @@ interface PackageCardProps {
 /** Um material para visita na listagem: onde ele está, o que fazer agora e as ações que valem. */
 export function PackageCard({ item, audiences, downloadingId, onOpen, onDownload, onArchive }: PackageCardProps) {
   const progress = stageProgress(item);
-  const step = nextStep(item);
-  const statusColor = PACKAGE_STATUS_COLORS[item.status];
+  // Status do ponto de vista da PRODUÇÃO (derivado das categorias, não do pacote inteiro): nunca fala em "revisar".
+  const view = productionListStatusView(item);
   const failed = item.failedStagesCount > 0;
   const generating = item.generatingStagesCount > 0;
+  const step = productionCardAction(item);
+  const statusColor = view.color;
   const names = audienceNames(item.audiences ?? [], audiences);
 
-  const badges: ListingBadge[] = [{ label: CONTENT_PACKAGE_STATUS_LABELS[item.status], color: statusColor }];
+  const badges: ListingBadge[] = [{ label: view.label, color: statusColor }];
   if (failed) badges.push({ label: PRODUCTION_LIST_TEXTS.failedBadge, color: "error" });
   if (generating) badges.push({ label: PRODUCTION_LIST_TEXTS.generatingBadge, color: "info" });
 

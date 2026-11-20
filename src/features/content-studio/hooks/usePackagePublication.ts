@@ -20,6 +20,8 @@ export function usePackagePublication(
   packageId: string,
   status: ContentPackageStatus,
   onChanged: () => Promise<void> | void,
+  /** Chamado quando a publicação termina bem (a tela de revisão leva o revisor a Materiais de Visita). */
+  onPublished?: () => void,
 ) {
   const [state, setState] = useState<PublicationState>(INITIAL_PUBLICATION_STATE);
   const key = useRef<string | null>(null);
@@ -47,6 +49,7 @@ export function usePackagePublication(
         if (next.phase !== PublicationPhase.PUBLISHING) key.current = null;
         setState(next);
         await onChanged();
+        if (next.phase === PublicationPhase.PUBLISHED) onPublished?.();
       } catch (error) {
         setState({
           phase: PublicationPhase.FAILED,
@@ -57,7 +60,7 @@ export function usePackagePublication(
         await onChanged();
       }
     },
-    [packageId, onChanged],
+    [packageId, onChanged, onPublished],
   );
 
   const reset = useCallback(() => setState(INITIAL_PUBLICATION_STATE), []);

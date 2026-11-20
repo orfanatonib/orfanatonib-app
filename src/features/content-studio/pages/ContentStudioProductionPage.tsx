@@ -12,6 +12,7 @@ import { getErrorMessage } from "@/utils/apiError";
 import { archiveContentPackage, downloadExport, exportPath } from "../api";
 import { PackageArchiveDialog } from "../components/PackageArchiveDialog";
 import { PackageCard } from "../components/PackageCard";
+import { GenerationActivityCompact } from "../components/activity/GenerationActivityCompact";
 import { PackageFormDialog } from "../components/PackageFormDialog";
 import { useContentPackages } from "../hooks/useContentPackages";
 import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
@@ -146,6 +147,8 @@ export function ContentStudioProductionPage() {
             Não foi possível carregar o catálogo do Estúdio.
           </Alert>
         )}
+
+        {catalog && <GenerationActivityCompact audiences={audiences} />}
 
         <ListingLayout
           hideTitle

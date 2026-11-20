@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  ContentPackageStatus,
-  ContentPublicationStatus,
-  PublicationPhase,
-  type ContentPublicationResponse,
-} from "./types";
+import { ContentPackageStatus, ContentPublicationStatus, PublicationPhase, type ContentPublicationResponse } from "./types";
 import { canPublishPackage, newPublicationKey, publicationPageUrl, publicationStateFrom } from "./publication.utils";
 
 const base: ContentPublicationResponse = {
@@ -14,6 +9,7 @@ const base: ContentPublicationResponse = {
   status: ContentPublicationStatus.PUBLISHED,
   targetType: "VISIT_MATERIAL_PAGE",
   visitMaterialPageId: "pg",
+  audiences: null,
   visitMaterialPagePath: "materiais_visita_x",
   publishedAt: null,
   errorCode: null,
@@ -22,11 +18,22 @@ const base: ContentPublicationResponse = {
 };
 
 describe("publication.utils", () => {
-  it("mostra o botão só com READY_FOR_PUBLICATION e a flag ligada", () => {
-    expect(canPublishPackage(ContentPackageStatus.READY_FOR_PUBLICATION, true)).toBe(true);
-    expect(canPublishPackage(ContentPackageStatus.READY_FOR_PUBLICATION, false)).toBe(false);
-    expect(canPublishPackage(ContentPackageStatus.PUBLISHED, true)).toBe(false);
-    expect(canPublishPackage(ContentPackageStatus.IN_REVIEW, true)).toBe(false);
+  it("mostra o botão quando há categoria aprovada para publicar e a flag está ligada, qualquer que seja o status do pacote", () => {
+    for (const status of [
+      ContentPackageStatus.READY_FOR_PUBLICATION,
+      ContentPackageStatus.IN_PROGRESS,
+      ContentPackageStatus.PACKAGE_READY,
+      ContentPackageStatus.IN_REVIEW,
+      ContentPackageStatus.CHANGES_REQUESTED,
+    ])
+      expect(canPublishPackage(status, true, 1), status).toBe(true);
+    expect(canPublishPackage(ContentPackageStatus.READY_FOR_PUBLICATION, false, 1)).toBe(false);
+  });
+
+  it("sem categoria para publicar, ou com o material publicando/publicado/arquivado, não mostra", () => {
+    expect(canPublishPackage(ContentPackageStatus.READY_FOR_PUBLICATION, true, 0)).toBe(false);
+    for (const status of [ContentPackageStatus.PUBLISHING, ContentPackageStatus.PUBLISHED, ContentPackageStatus.ARCHIVED])
+      expect(canPublishPackage(status, true, 2), status).toBe(false);
   });
 
   it("gera chaves únicas e dentro do limite de 191 caracteres", () => {
@@ -45,11 +52,7 @@ describe("publication.utils", () => {
     expect(publicationStateFrom(base).phase).toBe(PublicationPhase.PUBLISHED);
     const failed = publicationStateFrom({ ...base, status: ContentPublicationStatus.FAILED, errorMessage: "Falhou X" });
     expect(failed).toMatchObject({ phase: PublicationPhase.FAILED, message: "Falhou X" });
-    expect(publicationStateFrom({ ...base, status: ContentPublicationStatus.UNCERTAIN }).phase).toBe(
-      PublicationPhase.FAILED,
-    );
-    expect(publicationStateFrom({ ...base, status: ContentPublicationStatus.PUBLISHING }).phase).toBe(
-      PublicationPhase.PUBLISHING,
-    );
+    expect(publicationStateFrom({ ...base, status: ContentPublicationStatus.UNCERTAIN }).phase).toBe(PublicationPhase.FAILED);
+    expect(publicationStateFrom({ ...base, status: ContentPublicationStatus.PUBLISHING }).phase).toBe(PublicationPhase.PUBLISHING);
   });
 });

@@ -1,15 +1,17 @@
-import { Archive, Refresh, TaskAlt } from "@mui/icons-material";
 import { useState } from "react";
-import { Box, Button, Card, CardContent, Chip, LinearProgress, Stack, Typography } from "@mui/material";
+import { Archive, ImageOutlined, Refresh, TaskAlt } from "@mui/icons-material";
+import { Badge, Box, Button, Card, CardContent, Chip, CircularProgress, LinearProgress, Stack, Typography } from "@mui/material";
 
 import { CONTENT_PACKAGE_STATUS_LABELS } from "../../constants";
 import type { StudioWorkspace } from "../../hooks/useStudioWorkspace";
 import { PACKAGE_STATUS_COLORS } from "../../period.utils";
 import type { ContentPackageResponse, ContentTrackResponse } from "../../types";
 import { PackageExportMenu } from "../PackageExportMenu";
-import { PackagePublication } from "./PackagePublication";
-import { SubmitReviewDialog } from "./SubmitReviewDialog";
-import { SUBMIT_REVIEW_TEXTS } from "../../review.constants";
+import { PackageCoverDialog } from "./PackageCoverDialog";
+import { PACKAGE_COVER_TEXTS } from "../../cover.constants";
+import { hasUnseenCover, markCoverSeen, readSeenCover } from "../../cover.utils";
+import { SEND_REVIEW_TEXTS } from "../../review.constants";
+import { canSendAllToReview } from "../../workspace.utils";
 
 interface PackageSummaryCardProps {
   contentPackage: ContentPackageResponse;
@@ -20,6 +22,8 @@ interface PackageSummaryCardProps {
   totalStages: number;
   /** Há rascunho de campos ou de documento sem salvar: bloqueia o envio para revisão. */
   hasUnsavedWork: boolean;
+  /** Abre a confirmação do envio geral (todas as categorias prontas). */
+  onSendAll: () => void;
 }
 
 /** Cabeçalho do material: tema, status, progresso e ações do pacote (atualizar, exportar, revisão, arquivar). */
@@ -31,16 +35,31 @@ export function PackageSummaryCard({
   completeCount,
   totalStages,
   hasUnsavedWork,
+  onSendAll,
 }: PackageSummaryCardProps) {
   const statusColor = PACKAGE_STATUS_COLORS[contentPackage.status];
-  const [reviewOpen, setReviewOpen] = useState(false);
+  const [coverOpen, setCoverOpen] = useState(false);
+  const [seenCover, setSeenCover] = useState(() => readSeenCover(contentPackage.id));
+  const coverUnseen = hasUnseenCover(contentPackage.coverImageUrl, contentPackage.coverGenerating, seenCover);
+  const openCover = () => {
+    setCoverOpen(true);
+    if (contentPackage.coverImageUrl) {
+      markCoverSeen(contentPackage.id, contentPackage.coverImageUrl);
+      setSeenCover(contentPackage.coverImageUrl);
+    }
+  };
   return (
     <Card variant="outlined" data-testid="content-studio-production-header">
       <CardContent>
         <Stack spacing={2}>
           <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
             <Box>
-              <Typography component="h2" variant="h4" fontWeight={800} sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" }, overflowWrap: "anywhere" }}>
+              <Typography
+                component="h2"
+                variant="h4"
+                fontWeight={800}
+                sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" }, overflowWrap: "anywhere" }}
+              >
                 {contentPackage.theme}
               </Typography>
               <Typography color="text.secondary">{contentPackage.biblicalReferences}</Typography>
@@ -66,35 +85,37 @@ export function PackageSummaryCard({
             <Button startIcon={<Refresh />} disabled={busy} onClick={() => void workspace.reload()} sx={{ minHeight: 44 }}>
               Atualizar
             </Button>
+            <Button
+              data-testid="content-studio-cover-open"
+              startIcon={contentPackage.coverGenerating ? <CircularProgress size={18} /> : <ImageOutlined />}
+              onClick={openCover}
+              sx={{ minHeight: 44 }}
+            >
+              <Badge
+                color="error"
+                variant="dot"
+                invisible={!coverUnseen}
+                data-testid="content-studio-cover-badge"
+                aria-label={PACKAGE_COVER_TEXTS.newCoverAria}
+                sx={{ "& .MuiBadge-badge": { right: -10, top: 2 } }}
+              >
+                {PACKAGE_COVER_TEXTS.openButton}
+              </Badge>
+            </Button>
             <PackageExportMenu packageId={contentPackage.id} theme={contentPackage.theme} track={track} disabled={busy} />
-            {workspace.canSubmitReview && (
+            {/* O envio normal é por categoria (botão dentro dela). O geral só aparece quando todos os itens de todas as categorias estão prontos. */}
+            {workspace.canSubmitReview && canSendAllToReview(contentPackage.tracks) && (
               <Button
                 data-testid="content-studio-submit-review"
                 variant="contained"
                 startIcon={<TaskAlt />}
                 disabled={busy || hasUnsavedWork}
-                onClick={() => setReviewOpen(true)}
+                onClick={onSendAll}
                 sx={{ minHeight: 44 }}
               >
-                {SUBMIT_REVIEW_TEXTS.open}
+                {SEND_REVIEW_TEXTS.sendAll}
               </Button>
             )}
-            <SubmitReviewDialog
-              open={reviewOpen}
-              tracks={contentPackage.tracks}
-              busy={busy}
-              onClose={() => setReviewOpen(false)}
-              onSubmit={(audiences) => {
-                setReviewOpen(false);
-                void workspace.handleSubmitReview(audiences);
-              }}
-            />
-            <PackagePublication
-              packageId={contentPackage.id}
-              status={contentPackage.status}
-              disabled={busy || hasUnsavedWork}
-              onChanged={workspace.reload}
-            />
             {workspace.canArchive && (
               <Button
                 startIcon={<Archive />}
@@ -109,6 +130,12 @@ export function PackageSummaryCard({
           </Stack>
         </Stack>
       </CardContent>
+      <PackageCoverDialog
+        open={coverOpen}
+        onClose={() => setCoverOpen(false)}
+        contentPackage={contentPackage}
+        onChanged={workspace.reload}
+      />
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CloudUpload, OpenInNew } from "@mui/icons-material";
 import {
   Alert,
@@ -28,21 +28,44 @@ interface PackagePublicationProps {
   status: ContentPackageStatus;
   disabled: boolean;
   onChanged: () => Promise<void> | void;
+  /** Nomes das categorias que esta publicação leva (aprovadas e ainda não publicadas). */
+  categoryNames?: readonly string[];
+  /** Primeira publicação do material: cria a página (e pergunta o testamento); as seguintes só acrescentam categorias. */
+  firstPublication?: boolean;
+  /** Publicação concluída: a tela de revisão leva o revisor a Materiais de Visita. */
+  onPublished?: () => void;
+  /** Cada incremento abre o diálogo de publicar (usado por "Aprovar tudo e publicar"). */
+  openRequest?: number;
 }
 
 /** Botão "Publicar no site", diálogo de confirmação e resultado (link da página ou erro explicado). */
-export function PackagePublication({ packageId, status, disabled, onChanged }: PackagePublicationProps) {
+export function PackagePublication({
+  packageId,
+  status,
+  disabled,
+  onChanged,
+  categoryNames = [],
+  firstPublication = true,
+  onPublished,
+  openRequest = 0,
+}: PackagePublicationProps) {
   const publicationEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTENT_STUDIO_PUBLICATION);
-  const { state, publish } = usePackagePublication(packageId, status, onChanged);
+  const { state, publish } = usePackagePublication(packageId, status, onChanged, onPublished);
   const [open, setOpen] = useState(false);
   const [testament, setTestament] = useState<PublicationTestament>(PublicationTestament.OLD_TESTAMENT);
   const publishing = state.phase === PublicationPhase.PUBLISHING;
   const pageUrl = publicationPageUrl(state.publication?.visitMaterialPagePath ?? null);
-  const showButton = canPublishPackage(status, publicationEnabled);
+  const showButton = canPublishPackage(status, publicationEnabled, categoryNames.length);
   const showResult =
     publicationEnabled &&
-    ((state.phase === PublicationPhase.PUBLISHED && !!pageUrl) ||
-      (state.phase === PublicationPhase.FAILED && !!state.message));
+    ((state.phase === PublicationPhase.PUBLISHED && !!pageUrl) || (state.phase === PublicationPhase.FAILED && !!state.message));
+
+  // "Aprovar tudo e publicar": depois de aprovar, a tela pede para abrir o diálogo (só se já der para publicar).
+  useEffect(() => {
+    if (openRequest > 0 && showButton) setOpen(true);
+    // só reage ao pedido novo; `showButton` já vem do material recarregado
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
 
   const confirm = async () => {
     setOpen(false);
@@ -75,39 +98,43 @@ export function PackagePublication({ packageId, status, disabled, onChanged }: P
         <DialogTitle id="content-studio-publish-title">{PUBLICATION_TEXTS.DIALOG_TITLE}</DialogTitle>
         <DialogContent>
           <Stack spacing={2}>
-            <DialogContentText>{PUBLICATION_TEXTS.DIALOG_WARNING}</DialogContentText>
-            <FormControl>
-              <FormLabel id="content-studio-publish-testament-label">{PUBLICATION_TEXTS.TESTAMENT_LABEL}</FormLabel>
-              <RadioGroup
-                aria-labelledby="content-studio-publish-testament-label"
-                data-testid="content-studio-publish-testament"
-                value={testament}
-                onChange={(event) => setTestament(event.target.value as PublicationTestament)}
-              >
-                {PUBLICATION_TESTAMENT_OPTIONS.map((option) => (
-                  <FormControlLabel
-                    key={option.value}
-                    value={option.value}
-                    control={<Radio />}
-                    label={option.label}
-                    data-testid={`content-studio-publish-testament-${option.value}`}
-                    sx={{ minHeight: 44 }}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
+            <DialogContentText>
+              {firstPublication ? PUBLICATION_TEXTS.DIALOG_WARNING_FIRST : PUBLICATION_TEXTS.DIALOG_WARNING_NEXT}
+            </DialogContentText>
+            {categoryNames.length > 0 && (
+              <DialogContentText data-testid="content-studio-publish-categories">
+                <strong>{PUBLICATION_TEXTS.CATEGORIES_LABEL}:</strong> {categoryNames.join(", ")}.
+              </DialogContentText>
+            )}
+            {firstPublication && (
+              <FormControl>
+                <FormLabel id="content-studio-publish-testament-label">{PUBLICATION_TEXTS.TESTAMENT_LABEL}</FormLabel>
+                <RadioGroup
+                  aria-labelledby="content-studio-publish-testament-label"
+                  data-testid="content-studio-publish-testament"
+                  value={testament}
+                  onChange={(event) => setTestament(event.target.value as PublicationTestament)}
+                >
+                  {PUBLICATION_TESTAMENT_OPTIONS.map((option) => (
+                    <FormControlLabel
+                      key={option.value}
+                      value={option.value}
+                      control={<Radio />}
+                      label={option.label}
+                      data-testid={`content-studio-publish-testament-${option.value}`}
+                      sx={{ minHeight: 44 }}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)} sx={{ minHeight: 44 }} data-testid="content-studio-publish-cancel">
             {PUBLICATION_TEXTS.CANCEL}
           </Button>
-          <Button
-            variant="contained"
-            onClick={() => void confirm()}
-            data-testid="content-studio-publish-confirm"
-            sx={{ minHeight: 44 }}
-          >
+          <Button variant="contained" onClick={() => void confirm()} data-testid="content-studio-publish-confirm" sx={{ minHeight: 44 }}>
             {PUBLICATION_TEXTS.CONFIRM}
           </Button>
         </DialogActions>

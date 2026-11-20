@@ -1,5 +1,6 @@
-import React, { useState, ReactElement } from 'react';
+import React, { ReactElement } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { clearImageData } from '@/store/slices/image/imageSlice';
 import {
   Box,
@@ -23,9 +24,9 @@ import { IdeasMaterialPageCreator } from '@/components/Adm/PageCreator/Templates
 import BackHeader from '@/components/common/header/BackHeader';
 
 import { PageTemplateType, PageTemplateOption } from './types';
-import { PAGE_TEMPLATE_OPTIONS, PAGE_CREATOR_TEST_IDS } from './constants';
+import { PAGE_TEMPLATE_OPTIONS, PAGE_CREATOR_TEST_IDS, PAGE_CREATOR_BASE_PATH } from './constants';
 import { PageTemplateCard } from './PageTemplateCard';
-import { getTemplateOptionByKey } from './utils';
+import { getTemplateOptionByKey, getTemplateRoute } from './utils';
 
 const componentMap: Record<PageTemplateType, () => ReactElement> = {
   GALLERY: () => <PhotoPageCreator fromTemplatePage={true} />,
@@ -35,20 +36,25 @@ const componentMap: Record<PageTemplateType, () => ReactElement> = {
   VISIT_MATERIALS: () => <VisitMaterialPageCreator fromTemplatePage={true} />,
 };
 
-export default function SelectPageTemplate() {
-  const [selectedOption, setSelectedOption] = useState<PageTemplateType | ''>('');
+interface SelectPageTemplateProps {
+  /** Modelo definido pela subrota; sem ele, mostra a grade de cartões. */
+  templateKey?: PageTemplateType;
+}
+
+export default function SelectPageTemplate({ templateKey }: SelectPageTemplateProps = {}) {
+  const selectedOption: PageTemplateType | '' = templateKey ?? '';
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSelectOption = (option: PageTemplateOption) => {
-    setSelectedOption(option.key);
-
     if (option.key === PageTemplateType.GALLERY) {
       dispatch(clearImageData());
     }
+    navigate(getTemplateRoute(option));
   };
 
   const handleBackToCards = () => {
-    setSelectedOption('');
+    navigate(PAGE_CREATOR_BASE_PATH);
   };
 
   const currentOptionInfo = getTemplateOptionByKey(selectedOption);

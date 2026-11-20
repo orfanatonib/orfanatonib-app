@@ -31,14 +31,14 @@ const METRICS: readonly MetricDefinition[] = [
 function MetricBody({ metric, value }: { metric: MetricDefinition; value: number }) {
   const Icon = metric.icon;
   return (
-    <CardContent>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
+    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
+      <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }}>
         <Box
           sx={{
             display: "grid",
             placeItems: "center",
-            width: 44,
-            height: 44,
+            width: { xs: 36, sm: 44 },
+            height: { xs: 36, sm: 44 },
             borderRadius: 2,
             color: `${metric.color}.main`,
             bgcolor: (theme) => `${theme.palette[metric.color].main}1A`,
@@ -48,13 +48,13 @@ function MetricBody({ metric, value }: { metric: MetricDefinition; value: number
           <Icon />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h4" fontWeight={800} lineHeight={1.1}>
+          <Typography variant="h5" fontWeight={800} lineHeight={1.1} sx={{ fontSize: { sm: "2.125rem" } }}>
             {value}
           </Typography>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.25 }}>
             {metric.label}
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
             {metric.hint}
           </Typography>
         </Box>
@@ -65,8 +65,10 @@ function MetricBody({ metric, value }: { metric: MetricDefinition; value: number
 
 const GRID_SX = {
   display: "grid",
-  gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" },
-  gap: 2,
+  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))", lg: "repeat(5, minmax(0, 1fr))" },
+  gap: { xs: 1, sm: 2 },
+  // Em 2 colunas sobra um cartão: o último ocupa a linha toda.
+  "& > :last-child": { gridColumn: { xs: "1 / -1", md: "auto" } },
 } as const;
 
 export function DashboardMetricsSkeleton() {

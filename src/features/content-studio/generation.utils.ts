@@ -1,4 +1,9 @@
-import type { ContentGenerationJobResponse } from "./types";
+import { getApiErrorCode, getErrorMessage } from "@/utils/apiError";
+
+import { AiGenerationCapability, ContentStageStatus, type ContentGenerationJobResponse, type ImageJobProgress } from "./types";
+
+/** Código do 409 quando a geração não cabe nos limites do Estúdio (1 por categoria, 2 materiais ao mesmo tempo). */
+export const GENERATION_CAPACITY_ERROR_CODE = "GENERATION_CAPACITY";
 
 /** Estados do job de geração (espelham o enum da API). */
 export enum GenerationJobStatus {
@@ -83,4 +88,48 @@ export function generationErrorMessage(
     (job?.errorCode && ERROR_MESSAGES[job.errorCode]) ||
     "Não foi possível gerar o conteúdo desta etapa."
   );
+}
+
+/** Andamento de imagens de um job (`null` se o job é de texto ou ainda não tem andamento). */
+export function imageProgressOf(job: Pick<ContentGenerationJobResponse, "progress"> | null | undefined): ImageJobProgress | null {
+  return job?.progress?.phase === "IMAGES" ? job.progress : null;
+}
+
+/**
+ * Outra etapa da mesma categoria (faixa etária) já está gerando? O Estúdio só roda uma geração por categoria,
+ * então o botão "Gerar" das demais espera a atual terminar. A API é quem garante; isto só evita o clique em vão.
+ */
+export function isCategoryBusy(
+  stages: ReadonlyArray<{ id: string; status: ContentStageStatus }>,
+  currentStageId: string,
+  jobs: Readonly<Record<string, Pick<ContentGenerationJobResponse, "status"> | undefined>>,
+): boolean {
+  return stages.some(
+    (other) =>
+      other.id !== currentStageId && (other.status === ContentStageStatus.GENERATING || isGenerationActive(jobs[other.id] ?? null)),
+  );
+}
+
+/**
+ * A etapa está trabalhando? Vale o status dela, qualquer job ativo (texto OU imagens: durante as imagens a etapa fica em
+ * rascunho) e a ponte entre o texto concluído e o início das imagens. O painel de progresso só some quando tudo acabou.
+ */
+export function isStageWorking(
+  stage: { status: ContentStageStatus },
+  job: Pick<ContentGenerationJobResponse, "status"> | null | undefined,
+  awaitingImages: boolean,
+): boolean {
+  return stage.status === ContentStageStatus.GENERATING || isGenerationActive(job ?? null) || awaitingImages;
+}
+
+/** Job que o painel de progresso desenha: na ponte (texto pronto, imagens ainda na fila) vira um job de imagens "na fila". */
+export function progressJobFor(job: ContentGenerationJobResponse | null | undefined, awaitingImages: boolean): ContentGenerationJobResponse | null {
+  if (!job) return null;
+  if (!awaitingImages || isGenerationActive(job)) return job;
+  return { ...job, status: GenerationJobStatus.PENDING, capability: AiGenerationCapability.IMAGE_GENERATION, progress: null, attempts: 0 };
+}
+
+/** Texto do erro ao pedir uma geração: o aviso de capacidade vem pronto da API; o resto cai no texto padrão. */
+export function generationRequestErrorMessage(error: unknown, fallback: string): string {
+  return getApiErrorCode(error) === GENERATION_CAPACITY_ERROR_CODE ? getErrorMessage(error, fallback) : fallback;
 }

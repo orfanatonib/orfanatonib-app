@@ -13,12 +13,22 @@ interface StageGenerationPanelProps {
   /** Há alterações de campos sem salvar: gerar de novo as descartaria. */
   dirty: boolean;
   dependenciesReady: boolean;
+  /** Outra etapa da mesma categoria está gerando: só uma por vez. */
+  categoryBusy?: boolean;
   /** Ações da etapa (salvar versão, concluir produção…), na mesma barra do "Gerar conteúdo". */
   actions?: ReactNode;
 }
 
 /** Barra de ações da etapa: gerar com IA, instruções extras (em modal) e as ações de salvar/concluir. */
-export function StageGenerationPanel({ stage, workspace, busy, dirty, dependenciesReady, actions }: StageGenerationPanelProps) {
+export function StageGenerationPanel({
+  stage,
+  workspace,
+  busy,
+  dirty,
+  dependenciesReady,
+  categoryBusy = false,
+  actions,
+}: StageGenerationPanelProps) {
   const [open, setOpen] = useState(false);
   const instructions = workspace.instructions[stage.id] ?? "";
   const generating = stage.status === ContentStageStatus.GENERATING;
@@ -30,7 +40,7 @@ export function StageGenerationPanel({ stage, workspace, busy, dirty, dependenci
           data-testid="content-studio-generate-stage"
           variant="contained"
           startIcon={<AutoAwesome />}
-          disabled={busy || dirty || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
+          disabled={busy || dirty || categoryBusy || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
           onClick={() => void workspace.handleRequestGeneration(stage)}
           sx={{ minHeight: 44 }}
         >
@@ -82,7 +92,9 @@ export function StageGenerationPanel({ stage, workspace, busy, dirty, dependenci
 export function StageActionsToolbar({ children }: { children: ReactNode }) {
   return (
     <Paper variant="outlined" sx={{ borderRadius: 2, p: 1.5 }} data-testid="content-studio-actions-toolbar">
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(auto-fit, minmax(170px, max-content))" }, gap: 1 }}>{children}</Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(auto-fit, minmax(170px, max-content))" }, gap: 1 }}>
+        {children}
+      </Box>
     </Paper>
   );
 }

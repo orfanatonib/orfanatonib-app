@@ -1,8 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 
-import { VISIT_MATERIAL_CATEGORY_HINTS } from '@/features/visit-materials/constants';
 import type { VisitMaterialCategoryView } from '@/features/visit-materials/utils';
-import { VisitMaterialCategory } from '@/features/visit-materials/types';
+import type { VisitMaterialCategory } from '@/features/visit-materials/types';
 
 interface VisitCategorySelectorProps {
   categories: readonly VisitMaterialCategoryView[];
@@ -10,7 +9,7 @@ interface VisitCategorySelectorProps {
   onChange: (category: VisitMaterialCategory) => void;
 }
 
-/** Categorias do material (Geral e faixas etárias) como uma fileira rolável de botões, com a faixa de idade como dica. */
+/** Categorias do material como uma fileira rolável de botões (só o nome da categoria, sem idade). */
 export default function VisitCategorySelector({ categories, active, onChange }: VisitCategorySelectorProps) {
   return (
     <Box
@@ -46,11 +45,6 @@ export default function VisitCategorySelector({ categories, active, onChange }: 
                 <Typography component="span" variant="caption" sx={{ opacity: 0.8 }}>
                   {category.totalMedia > 0 ? category.totalMedia : ''}
                 </Typography>
-                {category.category !== VisitMaterialCategory.GENERAL && (
-                  <Typography component="span" variant="caption" sx={{ display: { xs: 'none', sm: 'inline' }, opacity: 0.7 }}>
-                    · {VISIT_MATERIAL_CATEGORY_HINTS[category.category]}
-                  </Typography>
-                )}
               </Stack>
             }
           />

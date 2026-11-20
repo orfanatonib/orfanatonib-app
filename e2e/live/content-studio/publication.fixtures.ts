@@ -7,10 +7,19 @@ import { authHeaders, expect } from "../support/live";
 /** Apoio dos E2E de publicação (API e UI): material aprovado, flags e limpeza. */
 export const CS = "/content-studio";
 
-export const PUBLICATION_FLAGS = ["content_studio", "content_studio_review", "content_studio_publication", "page_management", "visit_materials"] as const;
+export const PUBLICATION_FLAGS = [
+  "content_studio",
+  "content_studio_review",
+  "content_studio_publication",
+  "page_management",
+  "visit_materials",
+] as const;
 
 export type Version = { id: string; contentChecksum: string };
 export type Stage = { id: string; position: number; lockVersion: number; currentVersion: Version | null };
+/** Documento mínimo (TipTap) para o item poder ser exportado em PDF (só com título, a exportação por item recusa). */
+export const STAGE_TEXT_DOCUMENT = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Texto do item" }] }] };
+
 export type Pkg = { id: string; status: string; theme: string; tracks: Array<{ stages: Stage[] }> };
 
 export const callApi = (request: APIRequestContext, token: string, method: "get" | "post" | "patch", path: string, data?: unknown) =>
@@ -37,8 +46,17 @@ export async function createReadyPackage(request: APIRequestContext, token: stri
   const pkg = await createPackage(request, token, label, created);
   for (const track of pkg.tracks)
     for (const stage of [...track.stages].sort((x, y) => x.position - y.position)) {
-      expect((await callApi(request, token, "patch", `${CS}/packages/${pkg.id}/stages/${stage.id}/content`, { structuredContent: { title: `Etapa ${stage.position}` } })).status()).toBe(200);
-      expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/complete-production`)).status());
+      expect(
+        (
+          await callApi(request, token, "patch", `${CS}/packages/${pkg.id}/stages/${stage.id}/content`, {
+            structuredContent: { title: `Etapa ${stage.position}` },
+            contentDocument: STAGE_TEXT_DOCUMENT,
+          })
+        ).status(),
+      ).toBe(200);
+      expect([200, 201]).toContain(
+        (await callApi(request, token, "post", `${CS}/packages/${pkg.id}/stages/${stage.id}/complete-production`)).status(),
+      );
     }
   // Sem lista, o envio leva as quatro categorias de uma vez.
   expect([200, 201]).toContain((await callApi(request, token, "post", `${CS}/packages/${pkg.id}/submit-review`, {})).status());
@@ -70,7 +88,8 @@ export async function cleanupPackages(request: APIRequestContext, token: string,
     if (pkg.status === "ARCHIVED") continue;
     // Arquivar exige conteúdo salvo em alguma etapa.
     const first = pkg.tracks[0]?.stages[0];
-    if (first && pkg.status === "DRAFT") await callApi(request, token, "patch", `${CS}/packages/${id}/stages/${first.id}/content`, { structuredContent: { title: "a" } });
+    if (first && pkg.status === "DRAFT")
+      await callApi(request, token, "patch", `${CS}/packages/${id}/stages/${first.id}/content`, { structuredContent: { title: "a" } });
     await callApi(request, token, "post", `${CS}/packages/${id}/archive`);
   }
 }

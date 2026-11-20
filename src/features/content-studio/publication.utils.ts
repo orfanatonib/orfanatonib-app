@@ -1,4 +1,5 @@
 import { PUBLICATION_TEXTS } from "./publication.constants";
+import { PACKAGE_CLOSED_FOR_REVIEW_STATUSES } from "./workspace.constants";
 import {
   ContentPackageStatus,
   ContentPublicationStatus,
@@ -10,15 +11,16 @@ import {
 /** Chave de idempotência de uma tentativa de publicação (a mesma chave reenviada devolve a mesma publicação). */
 export function newPublicationKey(): string {
   const random =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   return `pub-${random}`;
 }
 
-/** O botão "Publicar no site" só aparece com o material pronto e a flag de publicação ligada. */
-export function canPublishPackage(status: ContentPackageStatus, publicationEnabled: boolean): boolean {
-  return publicationEnabled && status === ContentPackageStatus.READY_FOR_PUBLICATION;
+/**
+ * O botão de publicar aparece quando há categoria aprovada e ainda não publicada (e a flag ligada), qualquer que seja o
+ * status do pacote: ele não representa as categorias.
+ */
+export function canPublishPackage(status: ContentPackageStatus, publicationEnabled: boolean, publishableCount: number): boolean {
+  return publicationEnabled && publishableCount > 0 && !PACKAGE_CLOSED_FOR_REVIEW_STATUSES.includes(status);
 }
 
 /** URL pública da página: as páginas dinâmicas ficam na raiz do site. */

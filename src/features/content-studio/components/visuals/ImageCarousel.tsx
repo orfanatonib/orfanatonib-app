@@ -10,7 +10,8 @@ interface ImageCarouselProps {
   ratio: string;
   drawing: boolean;
   disabled: boolean;
-  onRedo: (item: StageImageItem) => void;
+  /** Sem `onRedo` o carrossel é só de leitura (revisão): não mostra o botão de refazer. */
+  onRedo?: (item: StageImageItem) => void;
 }
 
 /**
@@ -155,16 +156,18 @@ export function ImageCarousel({ items, ratio, drawing, disabled, onRedo }: Image
           </Typography>
           <Chip size="small" color={current.assetId ? "success" : "default"} label={current.assetId ? "Pronta" : "Pendente"} />
         </Stack>
-        <Button
-          data-testid={`content-studio-image-redo-${current.slot}`}
-          startIcon={<Replay />}
-          variant="outlined"
-          disabled={disabled || drawing}
-          onClick={() => onRedo(current)}
-          sx={{ minHeight: 48, fontWeight: 700, width: { xs: "100%", sm: "auto" } }}
-        >
-          {current.assetId ? "Refazer esta imagem" : "Gerar esta imagem"}
-        </Button>
+        {onRedo && (
+          <Button
+            data-testid={`content-studio-image-redo-${current.slot}`}
+            startIcon={<Replay />}
+            variant="outlined"
+            disabled={disabled || drawing}
+            onClick={() => onRedo(current)}
+            sx={{ minHeight: 48, fontWeight: 700, width: { xs: "100%", sm: "auto" } }}
+          >
+            {current.assetId ? "Refazer esta imagem" : "Gerar esta imagem"}
+          </Button>
+        )}
       </Stack>
     </Box>
   );

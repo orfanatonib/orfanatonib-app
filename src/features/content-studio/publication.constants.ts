@@ -15,11 +15,14 @@ export const PUBLICATION_TESTAMENT_OPTIONS: ReadonlyArray<{ value: PublicationTe
 ];
 
 export const PUBLICATION_TEXTS = {
-  BUTTON: "Publicar no site",
+  BUTTON: "Publicar",
   BUTTON_PUBLISHING: "Publicando…",
-  DIALOG_TITLE: "Publicar no site?",
-  DIALOG_WARNING:
-    "Vamos criar uma página em Materiais para Visita com o tema, as referências e o objetivo do material, e anexar os documentos (DOCX e PDF) gerados das versões aprovadas. A página fica pública para quem tiver o link.",
+  DIALOG_TITLE: "Publicar em Materiais de Visita?",
+  DIALOG_WARNING_FIRST:
+    "Vamos criar a página em Materiais de Visita com o tema, as referências e o objetivo do material, e anexar os documentos (DOCX e PDF) das categorias aprovadas. A página fica pública para quem tiver o link.",
+  DIALOG_WARNING_NEXT:
+    "A página deste material já existe: vamos acrescentar só as categorias aprovadas que ainda não foram publicadas. O que já foi publicado não é alterado.",
+  CATEGORIES_LABEL: "Entram agora",
   TESTAMENT_LABEL: "Testamento da página",
   CANCEL: "Cancelar",
   CONFIRM: "Publicar",

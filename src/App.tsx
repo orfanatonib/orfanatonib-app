@@ -8,7 +8,7 @@ import {
 } from "./features/attendance/pages";
 import PendingVisitReportsPage from "./features/visit-reports/pages/PendingVisitReportsPage";
 import { Suspense, lazy, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Routes, Route } from "react-router-dom";
 import { LegacyFeedRedirect } from "./features/shelter-feed/LegacyFeedRedirect";
 import { SHELTER_FEED_PATH } from "./features/shelter-feed/routes";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,6 +60,7 @@ import ImagePageCreator from "./components/Adm/PageCreator/Templates/ImagePageCr
 import VideoPageCreator from "./components/Adm/PageCreator/Templates/VideoPageCreator/VideoPageCreator";
 import VisitMaterialPageCreator from "./components/Adm/PageCreator/Templates/VisitMaterialPageCreator/VisitMaterialPageCreator";
 import SelectPageTemplate from "./components/Adm/PageCreator/SelectPageTemplate";
+import { PAGE_TEMPLATE_OPTIONS } from "./components/Adm/PageCreator/SelectPageTemplate/constants";
 
 import AdminDashboardPage from "./components/Adm/AdminDashboardPage";
 import AdminLayout from "./components/Adm/AdminLayout/AdminLayout";
@@ -81,6 +82,7 @@ import {
   ContentStudioProductionPage,
   ContentStudioGuidelinesPage,
   ContentStudioReviewPage,
+  ContentReviewPackagePage,
 } from "./features/content-studio";
 
 import type { RouteData as DynamicRouteType } from "./store/slices/route/routeSlice";
@@ -670,10 +672,19 @@ function App() {
                         <FeatureFlagRoute
                           featureKey={FeatureFlagKeys.PAGE_MANAGEMENT}
                         >
-                          <SelectPageTemplate />
+                          <Outlet />
                         </FeatureFlagRoute>
                       }
-                    />
+                    >
+                      <Route index element={<SelectPageTemplate />} />
+                      {PAGE_TEMPLATE_OPTIONS.map((option) => (
+                        <Route
+                          key={option.key}
+                          path={option.path}
+                          element={<SelectPageTemplate templateKey={option.key} />}
+                        />
+                      ))}
+                    </Route>
                     <Route
                       path="estudio"
                       element={
@@ -706,6 +717,16 @@ function App() {
                             featureKey={FeatureFlagKeys.CONTENT_STUDIO_REVIEW}
                           >
                             <ContentStudioReviewPage />
+                          </FeatureFlagRoute>
+                        }
+                      />
+                      <Route
+                        path="revisao/:id"
+                        element={
+                          <FeatureFlagRoute
+                            featureKey={FeatureFlagKeys.CONTENT_STUDIO_REVIEW}
+                          >
+                            <ContentReviewPackagePage />
                           </FeatureFlagRoute>
                         }
                       />

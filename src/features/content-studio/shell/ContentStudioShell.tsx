@@ -38,19 +38,24 @@ export function ContentStudioShell() {
             </Button>
           )}
         </Box>
-        <Typography
-          component="h1"
-          variant="h4"
-          fontWeight={700}
-          textAlign="center"
-          data-testid="content-studio-shell-title"
-          sx={{ color: "#1a3c34", fontSize: { xs: "1.5rem", md: "2.125rem" } }}
-        >
-          {meta.title}
-        </Typography>
-        <Typography textAlign="center" color="text.secondary" sx={{ mt: 0.5, minHeight: { sm: 24 } }}>
-          {meta.description}
-        </Typography>
+        {/* Tela de detalhe: o tema e o andamento já estão na própria tela; sem título repetido. */}
+        {!meta.detail && (
+          <>
+            <Typography
+              component="h1"
+              variant="h4"
+              fontWeight={700}
+              textAlign="center"
+              data-testid="content-studio-shell-title"
+              sx={{ color: "#1a3c34", fontSize: { xs: "1.5rem", md: "2.125rem" } }}
+            >
+              {meta.title}
+            </Typography>
+            <Typography textAlign="center" color="text.secondary" sx={{ mt: 0.5, minHeight: { sm: 24 } }}>
+              {meta.description}
+            </Typography>
+          </>
+        )}
       </Box>
       <Outlet />
     </Box>

@@ -1,7 +1,6 @@
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FactCheck from "@mui/icons-material/FactCheck";
-import AutoAwesome from "@mui/icons-material/AutoAwesome";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Grid2, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Chip, Grid2, List, ListItem, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -17,6 +16,7 @@ import { useContentStudioDashboard } from "../hooks/useContentStudioDashboard";
 import { PRODUCTION_SEARCH_DEBOUNCE_MS } from "../production-list.constants";
 import { REVIEW_DEFAULT_PAGE_SIZE, REVIEW_EMPTY_TEXTS, REVIEW_PAGE_SIZE_OPTIONS, REVIEW_QUEUE_VIEWS, REVIEW_TEXTS } from "../review-list.constants";
 import { formatMaterialsCount } from "../production.utils";
+import { reviewPackagePath } from "../review-workspace.constants";
 import { readReviewListState, reviewQueueCounts, reviewViewStatuses, writeReviewListState, type ReviewListState } from "../review-list.utils";
 import type { ContentAudience } from "../types";
 
@@ -118,16 +118,6 @@ export function ContentStudioReviewPage() {
                   setSearch("");
                   patch({ audience: "", search: "", page: 1 });
                 }}
-                action={
-                  <Button
-                    variant="outlined"
-                    startIcon={<AutoAwesome />}
-                    onClick={() => navigate("/adm/estudio/producao")}
-                    sx={{ borderRadius: 2.5, fontWeight: 700, textTransform: "none", minHeight: 44 }}
-                  >
-                    Ir para a produção
-                  </Button>
-                }
               />
             </Stack>
           }
@@ -150,7 +140,7 @@ export function ContentStudioReviewPage() {
         >
           {packages.map((item) => (
             <Grid2 key={item.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-              <ReviewPackageCard item={item} audiences={audiences} onOpen={(packageId) => navigate(`/adm/estudio/pacotes/${packageId}`)} />
+              <ReviewPackageCard item={item} audiences={audiences} onOpen={(packageId) => navigate(reviewPackagePath(packageId))} />
             </Grid2>
           ))}
         </ListingLayout>

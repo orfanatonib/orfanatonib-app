@@ -75,7 +75,7 @@ test("Estúdio: cria o material para todas as categorias, edita conteúdo, prese
     await editor.click();
     await page.keyboard.type("Deus cuida de nós");
     await page.getByTestId("content-studio-doc-save").click();
-    await expect(page.getByTestId("content-studio-feedback")).toContainText("Nova versão salva");
+    await expect(page.getByTestId("content-studio-feedback")).toContainText("salvo como nova versão");
     const response = await request.get(`${API_URL}/content-studio/packages/${packageId}`, { headers });
     expect(response.ok()).toBeTruthy();
     const persisted = (await response.json()) as ContentPackageResponse;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Box, Tab, Tabs } from "@mui/material";
+import { Alert, Box, Typography, Tab, Tabs } from "@mui/material";
 import { StudioEditorMode, type ContentEditorProps } from "../workspace.types";
 import { ContentFieldsEditor } from "./ContentFieldsEditor";
 import { StageDocumentTab } from "./StageDocumentTab";
@@ -26,6 +26,7 @@ export function ContentStageEditor({
   audienceName,
   pdfVersionSuffix,
   documentFooter,
+  previewOnly = false,
   onSaveDocument,
   onResetDocument,
   onDocumentDirtyChange,
@@ -66,6 +67,38 @@ export function ContentStageEditor({
     );
   }
 
+  // Bloqueado (em revisão, categoria publicada…): não há o que editar, então só a "Prévia" (o PDF real).
+  if (previewOnly) {
+    return (
+      <Box
+        data-testid="content-studio-stage-editor"
+        sx={{ minWidth: 0, maxWidth: "100%" }}
+      >
+        <Typography
+          variant="subtitle1"
+          component="h3"
+          fontWeight={800}
+          sx={{ mb: 2 }}
+          data-testid="content-studio-preview-title"
+        >
+          Prévia
+        </Typography>
+        <StagePdfTab
+          packageId={packageId!}
+          stageId={stage.id}
+          versionKey={
+            stage.currentVersionId
+              ? `${stage.currentVersionId}${pdfVersionSuffix ?? ""}`
+              : null
+          }
+          hasUnsavedChanges={false}
+          active
+          fileBaseName={fileBaseName ?? "material-para-visita"}
+        />
+      </Box>
+    );
+  }
+
   return (
     <Box
       data-testid="content-studio-stage-editor"
@@ -81,13 +114,13 @@ export function ContentStageEditor({
         <Tab
           sx={TAB_SX}
           value={StudioEditorMode.DOCUMENT}
-          label="Documento"
+          label="Edição"
           data-testid="content-studio-document-tab"
         />
         <Tab
           sx={TAB_SX}
           value={StudioEditorMode.PDF}
-          label="PDF"
+          label="Prévia"
           data-testid="content-studio-pdf-tab-button"
         />
       </Tabs>

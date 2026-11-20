@@ -1,50 +1,23 @@
-import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 
 import type { StudioWorkspace } from "../../hooks/useStudioWorkspace";
-import {
-  ContentPackageStatus,
-  ContentReviewCommentStatus,
-  ContentReviewDecisionType,
-  ContentStageStatus,
-  type ContentPackageResponse,
-  type ContentStageResponse,
-} from "../../types";
+import { ContentReviewCommentStatus, type ContentStageResponse } from "../../types";
+import { ReviewTimeline } from "../ReviewTimeline";
 import { formatContentStudioDateTime } from "../../utils";
 
 interface StageReviewSectionProps {
-  contentPackage: ContentPackageResponse;
   stage: ContentStageResponse;
   workspace: StudioWorkspace;
   busy: boolean;
 }
 
-/** Revisão da etapa: aprovar/pedir ajustes, comentários abertos e histórico de decisões. */
-export function StageReviewSection({ contentPackage, stage, workspace, busy }: StageReviewSectionProps) {
-  const canReview =
-    workspace.reviewEnabled &&
-    [ContentPackageStatus.IN_REVIEW, ContentPackageStatus.CHANGES_REQUESTED].includes(contentPackage.status) &&
-    stage.status === ContentStageStatus.IN_REVIEW;
+/**
+ * O que a revisão disse sobre a etapa: observações (a produção as resolve depois de ajustar) e histórico de decisões.
+ * Aprovar e devolver acontecem SÓ na tela de revisão; a produção não decide.
+ */
+export function StageReviewSection({ stage, workspace, busy }: StageReviewSectionProps) {
   return (
     <>
-      {canReview && (
-        <Stack spacing={2} data-testid="content-studio-review-actions">
-          <TextField
-            label="Comentário para ajustes"
-            multiline
-            minRows={2}
-            value={workspace.changeMessages[stage.id] ?? ""}
-            onChange={(event) => workspace.handleChangeMessage(stage.id, event.target.value)}
-          />
-          <Stack direction="row" gap={1} flexWrap="wrap">
-            <Button variant="contained" disabled={busy} onClick={() => void workspace.handleApproveStage(stage)} sx={{ minHeight: 44 }}>
-              Aprovar etapa
-            </Button>
-            <Button variant="outlined" disabled={busy} onClick={() => void workspace.handleRequestChanges(stage)} sx={{ minHeight: 44 }}>
-              Solicitar ajustes
-            </Button>
-          </Stack>
-        </Stack>
-      )}
       {stage.reviewComments.length > 0 && (
         <Stack spacing={0.75} mt={1} data-testid={`content-studio-stage-comments-${stage.id}`}>
           {stage.reviewComments.map((comment) => (
@@ -76,19 +49,7 @@ export function StageReviewSection({ contentPackage, stage, workspace, busy }: S
           ))}
         </Stack>
       )}
-      {stage.reviewDecisions.length > 0 && (
-        <Stack spacing={0.5} mt={1} data-testid={`content-studio-stage-review-history-${stage.id}`}>
-          <Typography variant="caption" fontWeight={700}>
-            Histórico de decisões
-          </Typography>
-          {stage.reviewDecisions.map((decision) => (
-            <Typography key={decision.id} variant="caption" color="text.secondary">
-              {decision.decision === ContentReviewDecisionType.APPROVED ? "Aprovada" : "Ajustes solicitados"} · versão{" "}
-              {decision.versionNumber ?? decision.versionId} · {formatContentStudioDateTime(decision.decidedAt)}
-            </Typography>
-          ))}
-        </Stack>
-      )}
+      <ReviewTimeline decisions={stage.reviewDecisions} testId={`content-studio-stage-review-history-${stage.id}`} />
     </>
   );
 }

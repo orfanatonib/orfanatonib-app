@@ -14,5 +14,7 @@ export interface PageTemplateOption {
   subtitle: string;
   description: string;
   iconName: IconType;
+  /** Segmento da subrota: /adm/criar-pagina/<path> */
+  path: string;
   testId: string;
 }

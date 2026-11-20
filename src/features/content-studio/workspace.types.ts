@@ -28,6 +28,8 @@ export interface ContentEditorProps {
   pdfVersionSuffix?: string;
   /** Conteúdo logo abaixo do documento, só no modo Documento (some na aba PDF, que já traz a imagem na última página). */
   documentFooter?: ReactNode;
+  /** Item bloqueado (em revisão, categoria publicada…): só a "Prévia", sem a aba de edição. */
+  previewOnly?: boolean;
   onSaveDocument?: (
     stage: ContentStageResponse,
     document: TiptapDocument,

@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { CONTENT_STAGE_STATUS_LABELS, CONTENT_STAGE_TYPE_LABELS } from "../constants";
 import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
 import { ContentAudience, ContentStageStatus, ContentStageType, VisualOrientation } from "../types";
 import { VisualConfigWizard } from "../components/visuals/VisualConfigWizard";
 import { StageVisualsPanel } from "../components/visuals/StageVisualsPanel";
-import { GENERATION_ALLOWED_STATUSES } from "../workspace.constants";
-import { isGenerationActive } from "../generation.utils";
+import { CATEGORY_BUSY_MESSAGE, FUN_STAGE_TYPES, GENERATION_ALLOWED_STATUSES, IMAGE_ONLY_STAGE_TYPES } from "../workspace.constants";
+import { isCategoryBusy, isGenerationActive, isStageWorking } from "../generation.utils";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
+import { SendReviewDialog } from "../components/detail/SendReviewDialog";
 import { ContentStageEditor } from "../components/ContentStageEditor";
 import { PackageSummaryCard } from "../components/detail/PackageSummaryCard";
 import { StageActionsBar } from "../components/detail/StageActionsBar";
@@ -17,16 +18,11 @@ import { StageReviewSection } from "../components/detail/StageReviewSection";
 import { StageStatusAlerts } from "../components/detail/StageStatusAlerts";
 import { exportFileName } from "../export.utils";
 import { ExportFormat } from "../types";
-import { MANUAL_EDIT_ALLOWED_STATUSES, PACKAGE_PRODUCTION_LOCKED_STATUSES } from "../workspace.constants";
-import { TRACK_REVIEW_STATE_COLORS, TRACK_REVIEW_STATE_LABELS } from "../review.constants";
-import { TrackReviewState, trackReviewState } from "../workspace.utils";
+import { MANUAL_EDIT_ALLOWED_STATUSES, PACKAGE_PRODUCTION_LOCKED_STATUSES, STAGE_PRODUCTION_LOCKED_STATUSES } from "../workspace.constants";
+import { SEND_REVIEW_TEXTS, TRACK_REVIEW_STATE_COLORS, TRACK_REVIEW_STATE_LABELS } from "../review.constants";
+import { REVIEW_QUERY, reviewPackagePath } from "../review-workspace.constants";
+import { TrackReviewState, nextProductionStage, submittableTracks, trackReviewState } from "../workspace.utils";
 import { stageDraftValue } from "../workspace.utils";
-
-/** Etapas com documento E imagem compilada (infográfico): o documento e o PDF ficam no editor; a imagem, acima dele. */
-const FUN_STAGE_TYPES: readonly ContentStageType[] = [ContentStageType.VERSE_FIXATION, ContentStageType.STANDARD_GAME];
-
-/** Etapas que viram imagens (carrossel + PDF de imagens), sem documento de texto. */
-const IMAGE_STAGE_TYPES: readonly ContentStageType[] = [ContentStageType.LESSON_VISUALS, ContentStageType.VERSE_VISUALS];
 
 export function ContentPackageDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -65,12 +61,41 @@ export function ContentPackageDetailPage() {
     setParams(next, { replace: true });
   }, [audienceKey, stageKey, params, setParams]);
   const busy = busyStageId !== null || packageBusy;
-  // Bloqueia o pacote encerrado e a etapa que já foi enviada para revisão; as outras categorias seguem em produção.
+  const navigate = useNavigate();
+  /** Envio para a revisão pendente de confirmação: uma categoria (o normal) ou todas as prontas (só quando tudo está pronto). */
+  const [sending, setSending] = useState<{ audiences: readonly ContentAudience[]; all: boolean } | null>(null);
+  const sendingNames = (contentPackage?.tracks ?? [])
+    .filter((item) => sending?.audiences.includes(item.audience))
+    .map((item) => item.audienceName);
+  const confirmSend = () => {
+    const request = sending;
+    setSending(null);
+    if (!request) return;
+    // Só acontece quando o usuário manda. Enviou: vai para a revisão, onde a categoria fica "Pendente de revisão".
+    void workspace.handleSubmitReview(request.audiences).then((sent) => {
+      if (!sent || !contentPackage) return;
+      navigate(`${reviewPackagePath(contentPackage.id)}?${REVIEW_QUERY.audience}=${request.audiences[0]}`);
+    });
+  };
+  /** Item concluído: abre o próximo item da categoria (sem gerar nada: o usuário decide quando gerar). */
+  const goToNextItem = () => {
+    const next = nextProductionStage(track, stage?.id);
+    if (!next) return;
+    const nextParams = new URLSearchParams(params);
+    nextParams.set("stage", next.stageType);
+    setParams(nextParams);
+  };
+  // Bloqueia o pacote encerrado e o item enviado para a revisão (em revisão ou já aprovado); as outras categorias seguem em produção.
+  // Categoria já publicada em Materiais de Visita também fica travada: a página mostra a versão aprovada e publicada.
+  const trackPublished = !!track?.publishedAt;
   const locked =
     (!!contentPackage && PACKAGE_PRODUCTION_LOCKED_STATUSES.includes(contentPackage.status)) ||
-    stage?.status === ContentStageStatus.IN_REVIEW;
+    (!!stage && STAGE_PRODUCTION_LOCKED_STATUSES.includes(stage.status)) ||
+    trackPublished;
   const conflict = !!stage && workspace.conflictingDraftIds.includes(stage.id);
   const dirty = !!stage && dirtyIds.includes(stage.id);
+  const generatingNow = !!stage && isStageWorking(stage, workspace.generationJobs[stage.id], workspace.awaitingImages[stage.id] === true);
+  const categoryBusy = !!stage && !!track && isCategoryBusy(track.stages, stage.id, workspace.generationJobs);
   const dependenciesReady =
     !!stage &&
     stage.dependencies.every((dependency) =>
@@ -117,6 +142,15 @@ export function ContentPackageDetailPage() {
               completeCount={completeCount}
               totalStages={allStages.length}
               hasUnsavedWork={hasDrafts || documentDirty}
+              onSendAll={() => setSending({ audiences: submittableTracks(contentPackage.tracks).map((item) => item.audience), all: true })}
+            />
+            <SendReviewDialog
+              open={sending !== null}
+              names={sendingNames}
+              all={sending?.all ?? false}
+              busy={busy}
+              onClose={() => setSending(null)}
+              onConfirm={confirmSend}
             />
             {hasDrafts && (
               <Alert severity="warning" data-testid="content-studio-unsaved-notice">
@@ -151,12 +185,21 @@ export function ContentPackageDetailPage() {
                   label={
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 0.25, sm: 1 }} alignItems="center">
                       <span>{item.audienceName}</span>
-                      {trackReviewState(item) !== TrackReviewState.IN_PRODUCTION && (
+                      {item.publishedAt ? (
                         <Chip
                           size="small"
-                          color={TRACK_REVIEW_STATE_COLORS[trackReviewState(item)]}
-                          label={TRACK_REVIEW_STATE_LABELS[trackReviewState(item)]}
+                          color="success"
+                          label="Publicada"
+                          data-testid={`content-studio-track-published-${item.audience}`}
                         />
+                      ) : (
+                        trackReviewState(item) !== TrackReviewState.IN_PRODUCTION && (
+                          <Chip
+                            size="small"
+                            color={TRACK_REVIEW_STATE_COLORS[trackReviewState(item)]}
+                            label={TRACK_REVIEW_STATE_LABELS[trackReviewState(item)]}
+                          />
+                        )
                       )}
                     </Stack>
                   }
@@ -193,6 +236,34 @@ export function ContentPackageDetailPage() {
                         </Box>
                         <Chip label={CONTENT_STAGE_STATUS_LABELS[stage.status]} variant="outlined" />
                       </Stack>
+                      {trackReviewState(track) === TrackReviewState.READY_TO_SUBMIT && (
+                        <Alert
+                          severity="info"
+                          data-testid="content-studio-track-ready-notice"
+                          action={
+                            workspace.canSubmitReview && (
+                              <Button
+                                color="inherit"
+                                variant="outlined"
+                                size="small"
+                                disabled={busy || hasDrafts || documentDirty}
+                                onClick={() => setSending({ audiences: [track.audience], all: false })}
+                                data-testid="content-studio-track-send-review"
+                                sx={{ minHeight: 44, fontWeight: 700, whiteSpace: "nowrap" }}
+                              >
+                                {SEND_REVIEW_TEXTS.sendCategory}
+                              </Button>
+                            )
+                          }
+                        >
+                          {SEND_REVIEW_TEXTS.categoryReadyNotice(track.audienceName)}
+                        </Alert>
+                      )}
+                      {trackPublished && (
+                        <Alert severity="success" data-testid="content-studio-track-published-notice">
+                          Esta categoria já foi publicada em Materiais de Visita e não pode mais ser alterada.
+                        </Alert>
+                      )}
                       <StageStatusAlerts
                         stage={stage}
                         workspace={workspace}
@@ -201,99 +272,139 @@ export function ContentPackageDetailPage() {
                         dependenciesReady={dependenciesReady}
                         conflict={conflict}
                       />
-                      {!locked && !(stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled) && (
-                        <StageActionsToolbar>
-                          <StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />
-                        </StageActionsToolbar>
-                      )}
-                      {stage.stageType === ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
-                        <VisualConfigWizard
-                          audience={track.audience}
-                          savedConfig={stage.currentVersion?.structuredContent?.visualConfig}
-                          hasVersion={Boolean(stage.currentVersion)}
-                          disabled={busy || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
-                          generating={
-                            stage.status === ContentStageStatus.GENERATING || isGenerationActive(workspace.generationJobs[stage.id] ?? null)
-                          }
-                          onGenerate={(config) => void workspace.handleRequestGeneration(stage, config)}
-                        />
-                      )}
-                      {IMAGE_STAGE_TYPES.includes(stage.stageType) && (
-                        <StageVisualsPanel
-                          packageId={contentPackage.id}
-                          stageId={stage.id}
-                          versionKey={stage.currentVersionId}
-                          orientation={
-                            (stage.currentVersion?.structuredContent?.visualConfig as { orientation?: VisualOrientation } | undefined)
-                              ?.orientation
-                          }
-                          job={workspace.generationJobs[stage.id] ?? null}
-                          disabled={locked || busy}
-                          fileBaseName={exportFileName(
-                            [contentPackage.theme, track.audienceName, CONTENT_STAGE_TYPE_LABELS[stage.stageType]],
-                            ExportFormat.PDF,
-                          ).replace(/\.pdf$/, "")}
-                          onRegenerate={(slots, instructions) => void workspace.handleRegenerateImages(stage, { slots, instructions })}
-                        />
-                      )}
-                      {stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
-                        <StageGenerationPanel
-                          stage={stage}
-                          workspace={workspace}
-                          busy={busy}
-                          dirty={dirty}
-                          dependenciesReady={dependenciesReady}
-                          actions={<StageActionsBar stage={stage} workspace={workspace} busy={busy} dirty={dirty} conflict={conflict} />}
-                        />
-                      )}
-                      {!IMAGE_STAGE_TYPES.includes(stage.stageType) && (
-                        <ContentStageEditor
-                          pdfVersionSuffix={FUN_STAGE_TYPES.includes(stage.stageType) ? `:${funImageKeys[stage.id] ?? ""}` : undefined}
-                          documentFooter={
-                            FUN_STAGE_TYPES.includes(stage.stageType) ? (
-                              <StageVisualsPanel
-                                packageId={contentPackage.id}
-                                stageId={stage.id}
-                                versionKey={stage.currentVersionId}
-                                orientation={VisualOrientation.PORTRAIT}
-                                job={workspace.generationJobs[stage.id] ?? null}
-                                disabled={locked || busy}
-                                fileBaseName=""
-                                showPdf={false}
-                                title={
-                                  stage.stageType === ContentStageType.STANDARD_GAME && track.audience === ContentAudience.CHILD
-                                    ? "Últimas páginas do documento: imagens compiladas, uma por faixa etária (A4 retrato)"
-                                    : "Última página do documento: imagem compilada (A4 retrato)"
-                                }
-                                onFingerprint={(fingerprint) =>
-                                  setFunImageKeys((current) =>
-                                    current[stage.id] === fingerprint ? current : { ...current, [stage.id]: fingerprint },
-                                  )
-                                }
-                                onRegenerate={(slots, instructions) =>
-                                  void workspace.handleRegenerateImages(stage, { slots, instructions })
-                                }
+                      {/* Enquanto o texto é gerado só o painel de progresso fica; o resto volta quando ele some. */}
+                      {!generatingNow && (
+                        <>
+                          {!locked && !(stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled) && (
+                            <StageActionsToolbar>
+                              <StageActionsBar
+                                stage={stage}
+                                workspace={workspace}
+                                busy={busy}
+                                dirty={dirty}
+                                conflict={conflict}
+                                onCompleted={goToNextItem}
                               />
-                            ) : undefined
-                          }
-                          key={stage.id}
-                          stage={stage}
-                          value={drafts[stage.id] ?? stageDraftValue(stage)}
-                          disabled={locked || busy || !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)}
-                          onChange={(value) => workspace.handleDraftChange(stage.id, value)}
-                          packageId={contentPackage.id}
-                          audienceName={track.audienceName}
-                          fileBaseName={exportFileName(
-                            [contentPackage.theme, track.audienceName, CONTENT_STAGE_TYPE_LABELS[stage.stageType]],
-                            ExportFormat.PDF,
-                          ).replace(/\.pdf$/, "")}
-                          onSaveDocument={workspace.handleSaveDocument}
-                          onResetDocument={workspace.handleResetDocument}
-                          onDocumentDirtyChange={setDocumentDirty}
-                          fieldsDirty={dirty}
-                        />
+                            </StageActionsToolbar>
+                          )}
+                          {categoryBusy && (
+                            <Alert severity="info" data-testid="content-studio-category-busy">
+                              {CATEGORY_BUSY_MESSAGE}
+                            </Alert>
+                          )}
+                          {stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
+                            <StageGenerationPanel
+                              stage={stage}
+                              workspace={workspace}
+                              busy={busy}
+                              dirty={dirty}
+                              dependenciesReady={dependenciesReady}
+                              categoryBusy={categoryBusy}
+                              actions={
+                                <StageActionsBar
+                                  stage={stage}
+                                  workspace={workspace}
+                                  busy={busy}
+                                  dirty={dirty}
+                                  conflict={conflict}
+                                  onCompleted={goToNextItem}
+                                />
+                              }
+                            />
+                          )}
+                          {stage.stageType === ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
+                            <VisualConfigWizard
+                              audience={track.audience}
+                              savedConfig={stage.currentVersion?.structuredContent?.visualConfig}
+                              hasVersion={Boolean(stage.currentVersion)}
+                              disabled={busy || categoryBusy || !dependenciesReady || !GENERATION_ALLOWED_STATUSES.includes(stage.status)}
+                              generating={
+                                stage.status === ContentStageStatus.GENERATING ||
+                                isGenerationActive(workspace.generationJobs[stage.id] ?? null)
+                              }
+                              onGenerate={(config) => void workspace.handleRequestGeneration(stage, config)}
+                            />
+                          )}
+                          {IMAGE_ONLY_STAGE_TYPES.includes(stage.stageType) && (
+                            <StageVisualsPanel
+                              packageId={contentPackage.id}
+                              stageId={stage.id}
+                              versionKey={stage.currentVersionId}
+                              orientation={
+                                (stage.currentVersion?.structuredContent?.visualConfig as { orientation?: VisualOrientation } | undefined)
+                                  ?.orientation
+                              }
+                              job={workspace.generationJobs[stage.id] ?? null}
+                              disabled={locked || busy}
+                              fileBaseName={exportFileName(
+                                [contentPackage.theme, track.audienceName, CONTENT_STAGE_TYPE_LABELS[stage.stageType]],
+                                ExportFormat.PDF,
+                              ).replace(/\.pdf$/, "")}
+                              previewOnly={locked}
+                              onRegenerate={(slots, instructions) =>
+                                void workspace.handleRegenerateImages(stage, {
+                                  slots,
+                                  instructions,
+                                })
+                              }
+                            />
+                          )}
+                          {!IMAGE_ONLY_STAGE_TYPES.includes(stage.stageType) && (
+                            <ContentStageEditor
+                              previewOnly={locked}
+                              pdfVersionSuffix={FUN_STAGE_TYPES.includes(stage.stageType) ? `:${funImageKeys[stage.id] ?? ""}` : undefined}
+                              documentFooter={
+                                FUN_STAGE_TYPES.includes(stage.stageType) ? (
+                                  <StageVisualsPanel
+                                    packageId={contentPackage.id}
+                                    stageId={stage.id}
+                                    versionKey={stage.currentVersionId}
+                                    orientation={VisualOrientation.PORTRAIT}
+                                    job={workspace.generationJobs[stage.id] ?? null}
+                                    disabled={locked || busy}
+                                    fileBaseName=""
+                                    showPdf={false}
+                                    title={
+                                      stage.stageType === ContentStageType.STANDARD_GAME && track.audience === ContentAudience.CHILD
+                                        ? "Últimas páginas do documento: imagens compiladas, uma por faixa etária (A4 retrato)"
+                                        : "Última página do documento: imagem compilada (A4 retrato)"
+                                    }
+                                    onFingerprint={(fingerprint) =>
+                                      setFunImageKeys((current) =>
+                                        current[stage.id] === fingerprint
+                                          ? current
+                                          : {
+                                              ...current,
+                                              [stage.id]: fingerprint,
+                                            },
+                                      )
+                                    }
+                                    onRegenerate={(slots, instructions) =>
+                                      void workspace.handleRegenerateImages(stage, { slots, instructions })
+                                    }
+                                  />
+                                ) : undefined
+                              }
+                              key={stage.id}
+                              stage={stage}
+                              value={drafts[stage.id] ?? stageDraftValue(stage)}
+                              disabled={locked || busy || !MANUAL_EDIT_ALLOWED_STATUSES.includes(stage.status)}
+                              onChange={(value) => workspace.handleDraftChange(stage.id, value)}
+                              packageId={contentPackage.id}
+                              audienceName={track.audienceName}
+                              fileBaseName={exportFileName(
+                                [contentPackage.theme, track.audienceName, CONTENT_STAGE_TYPE_LABELS[stage.stageType]],
+                                ExportFormat.PDF,
+                              ).replace(/\.pdf$/, "")}
+                              onSaveDocument={workspace.handleSaveDocument}
+                              onResetDocument={workspace.handleResetDocument}
+                              onDocumentDirtyChange={setDocumentDirty}
+                              fieldsDirty={dirty}
+                            />
+                          )}
+                          <StageReviewSection stage={stage} workspace={workspace} busy={busy} />
+                        </>
                       )}
-                      <StageReviewSection contentPackage={contentPackage} stage={stage} workspace={workspace} busy={busy} />
                     </Stack>
                   </CardContent>
                 </Card>

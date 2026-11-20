@@ -12,10 +12,12 @@ interface StageActionsBarProps {
   busy: boolean;
   dirty: boolean;
   conflict: boolean;
+  /** Item concluído: a página leva ao próximo item (sem gerar nada sozinha). */
+  onCompleted?: () => void;
 }
 
-/** Salvar versão (campos), descartar rascunho e concluir a produção da etapa. */
-export function StageActionsBar({ stage, workspace, busy, dirty, conflict }: StageActionsBarProps) {
+/** Salvar versão (campos), descartar rascunho e concluir o item (concluir NÃO envia para a revisão). */
+export function StageActionsBar({ stage, workspace, busy, dirty, conflict, onCompleted }: StageActionsBarProps) {
   return (
     <>
       <Button
@@ -47,10 +49,14 @@ export function StageActionsBar({ stage, workspace, busy, dirty, conflict }: Sta
         variant="contained"
         startIcon={<TaskAlt />}
         disabled={busy || dirty || !stage.currentVersionId || stage.status !== ContentStageStatus.DRAFT}
-        onClick={() => void workspace.handleCompleteProduction(stage)}
+        onClick={() =>
+          void workspace.handleCompleteProduction(stage).then((done) => {
+            if (done) onCompleted?.();
+          })
+        }
         sx={{ minHeight: 44 }}
       >
-        Concluir produção
+        Concluir este item
       </Button>
     </>
   );

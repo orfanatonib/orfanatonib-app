@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   canArchivePackage,
   canExportPackage,
-  nextStep,
   productionQuery,
   readProductionListState,
   relativeTimeLabel,
@@ -50,15 +49,6 @@ describe("cartão", () => {
     expect(stageTone(ContentStageStatus.FAILED)).toBe("problem");
     expect(stageTone(ContentStageStatus.STALE)).toBe("stale");
     expect(stageTone(ContentStageStatus.NOT_STARTED)).toBe("todo");
-  });
-  it("próximo passo: falha e geração mandam; depois a situação", () => {
-    const base = { status: ContentPackageStatus.IN_PROGRESS, ...counts };
-    expect(nextStep({ ...base, failedStagesCount: 1, generatingStagesCount: 1 }).label).toBe("Resolver falha na geração");
-    expect(nextStep({ ...base, generatingStagesCount: 1 }).label).toBe("Acompanhar geração");
-    expect(nextStep(base).label).toBe("Começar produção");
-    expect(nextStep({ ...base, stagesWithContentCount: 2 }).label).toBe("Continuar produção");
-    expect(nextStep({ ...base, status: ContentPackageStatus.IN_REVIEW }).label).toBe("Revisar material");
-    expect(nextStep({ ...base, status: ContentPackageStatus.ARCHIVED, failedStagesCount: 3 }).label).toBe("Ver material");
   });
   it("PDF e arquivar", () => {
     expect(canExportPackage({ stagesWithContentCount: 0 })).toBe(false);

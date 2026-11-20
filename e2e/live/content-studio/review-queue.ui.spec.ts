@@ -59,9 +59,11 @@ test("recortes com contagem, filtros na URL e abertura do material", async ({ pa
   await expect(page.getByTestId(`content-studio-review-card-${idProd}`)).toHaveCount(0);
   await expect(page.getByTestId("content-studio-review-view-TO_REVIEW")).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("content-studio-review-view-TO_REVIEW")).toContainText(/Para revisar · \d+/);
-  await expect(page.getByTestId(`content-studio-review-card-progress-${idReview}`)).toContainText("etapas aprovadas");
+  // Só a categoria liberada entra na conta: "0 de 5", não "0 de 20".
+  await expect(page.getByTestId(`content-studio-review-card-progress-${idReview}`)).toContainText("0 de 5 itens aprovados");
   await expect(card.getByTestId("content-studio-stage-segments")).toBeVisible();
-  await expect(page.getByTestId(`content-studio-review-open-${idReview}`)).toContainText(/Iniciar revisão|Continuar revisão/);
+  // Enviado e sem nenhuma decisão ainda: é o começo da revisão.
+  await expect(page.getByTestId(`content-studio-review-open-${idReview}`)).toContainText("Iniciar revisão");
 
   // Trocar de recorte vai para a URL; em "Publicados" o material não está.
   await page.getByTestId("content-studio-review-view-PUBLISHED").click();
@@ -76,9 +78,10 @@ test("recortes com contagem, filtros na URL e abertura do material", async ({ pa
     await expect(page.getByTestId(`content-studio-review-card-${idReview}`)).toBeVisible({ timeout: 20_000 });
   }
 
-  // Abrir leva ao material.
+  // Abrir leva à tela de REVISÃO do material (nunca à produção), só com a categoria liberada.
   await page.getByTestId(`content-studio-review-open-${idReview}`).click();
-  await expect(page).toHaveURL(new RegExp(`/adm/estudio/pacotes/${idReview}`));
+  await expect(page).toHaveURL(new RegExp(`/adm/estudio/revisao/${idReview}`));
+  await expect(page.getByTestId("content-studio-review-workspace")).toBeVisible({ timeout: 20_000 });
 });
 
 test("link antigo com situação e URL inválida: caem num recorte válido sem quebrar; celular sem rolagem lateral", async ({ page, request }) => {

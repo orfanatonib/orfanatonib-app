@@ -15,6 +15,7 @@ import type {
   ContentStudioDashboardResponse,
   ContentStudioDashboardQuery,
   CreateContentPackagePayload,
+  GenerationActivityResponse,
   PaginatedContentPackagesResponse,
   QueryContentPackagesParams,
   RegenerateStageImagesPayload,
@@ -119,6 +120,16 @@ export async function regenerateStageImages(
     payload,
   );
   return data;
+}
+
+/** Refaz a capa (imagem de apresentação) do material. 202: desenha em segundo plano. */
+export async function regeneratePackageCover(
+  packageId: string,
+  instructions?: string,
+): Promise<void> {
+  await api.post(`/content-studio/packages/${packageId}/cover/regenerate`, {
+    instructions: instructions?.trim() || undefined,
+  });
 }
 
 /** Andamento da última geração da etapa; `null` se nunca houve. */
@@ -355,4 +366,15 @@ export async function getContentPackagePublication(
     { signal },
   );
   return data || null;
+}
+
+/** Gerações em andamento no Estúdio (todos os administradores), vagas livres e histórico das últimas 24 horas. */
+export async function getGenerationActivity(
+  signal?: AbortSignal,
+): Promise<GenerationActivityResponse> {
+  const { data } = await api.get<GenerationActivityResponse>(
+    "/content-studio/generations/activity",
+    { signal },
+  );
+  return data;
 }

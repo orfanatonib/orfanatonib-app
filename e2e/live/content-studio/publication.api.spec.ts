@@ -17,7 +17,7 @@ import {
 
 /**
  * Publicação do material (plano 44): material aprovado vira uma página de materiais para visita (`visit_material_pages`,
- * `sourceLessonId` = id do material) com os documentos DOCX/PDF das versões aprovadas. API ao vivo + MySQL + LibreOffice.
+ * `sourceLessonId` = id do material) com os PDFs (um por item) das versões aprovadas. API ao vivo + MySQL + LibreOffice.
  * Tudo o que o teste cria é removido no fim (páginas pela API; materiais arquivados).
  */
 const U = "00000000-0000-4000-8000-000000000000";
@@ -65,7 +65,9 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     await closeDb();
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#feliz] publica o material aprovado como página de materiais", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#feliz] publica o material aprovado como página de materiais", async ({
+    request,
+  }) => {
     test.setTimeout(100_000);
     ready = await readyPackage(request);
     const res = await publish(request, ready.id, { idempotencyKey: key, testament: "NEW_TESTAMENT" });
@@ -92,14 +94,23 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
       description: "Confiar no cuidado de Deus",
       testament: "NEW_TESTAMENT",
     });
+    // Na página (geral) só fica o material completo, em PDF; os PDFs de cada item vão para a seção da categoria dele.
     const media = await queryAll<{ mediaType: string; originalName: string; isLocalFile: number; size: number }>(
       "SELECT mediaType, originalName, isLocalFile, size FROM media_items WHERE targetId = ? AND targetType = 'VisitMaterialsPage'",
       [pages[0].id],
     );
-    // quatro categorias (PDF + DOCX cada) + o pacote completo (PDF + DOCX)
-    expect(media).toHaveLength(10);
-    expect(media.every((item) => item.mediaType === "document" && item.isLocalFile === 1 && Number(item.size) > 0)).toBe(true);
-    expect(media.map((item) => item.originalName.split(".").pop()).sort()).toEqual(Array(5).fill("docx").concat(Array(5).fill("pdf")));
+    expect(media).toHaveLength(1);
+    expect(media.map((item) => item.originalName.split(".").pop())).toEqual(["pdf"]);
+    const sectionMedia = await queryAll<{ mediaType: string; originalName: string; isLocalFile: number; size: number }>(
+      "SELECT m.mediaType, m.originalName, m.isLocalFile, m.size FROM media_items m JOIN visit_material_sections s ON s.id = m.targetId WHERE s.page_id = ? AND m.targetType = 'VisitMaterialsSection'",
+      [pages[0].id],
+    );
+    // quatro categorias × os itens com conteúdo (os dois de visuais ficam de fora: o material de teste não tem imagens), cada item um PDF
+    expect(sectionMedia).toHaveLength(12);
+    expect(
+      [...media, ...sectionMedia].every((item) => item.mediaType === "document" && item.isLocalFile === 1 && Number(item.size) > 0),
+    ).toBe(true);
+    expect(sectionMedia.every((item) => item.originalName.endsWith(".pdf"))).toBe(true);
     const row = await queryOne<{ status: string; visit_material_page_id: string }>(
       "SELECT status, visit_material_page_id FROM content_publications WHERE idempotencyKey = ?",
       [key],
@@ -107,7 +118,9 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect(row).toMatchObject({ status: "PUBLISHED", visit_material_page_id: pages[0].id });
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#idempotencia] mesma chave devolve a mesma publicação, sem segunda página", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#idempotencia] mesma chave devolve a mesma publicação, sem segunda página", async ({
+    request,
+  }) => {
     const res = await publish(request, ready.id, { idempotencyKey: key, testament: "NEW_TESTAMENT" });
     expect(res.status()).toBe(201);
     const again = (await res.json()) as Publication;
@@ -115,17 +128,21 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect(again.visitMaterialPageId).toBe(first.visitMaterialPageId);
     expect(await countRows("visit_material_pages", { sourceLessonId: ready.id })).toBe(1);
     expect(await countRows("content_publications", { package_id: ready.id })).toBe(1);
-    expect(await countRows("media_items", { targetId: first.visitMaterialPageId!, targetType: "VisitMaterialsPage" })).toBe(10);
+    expect(await countRows("media_items", { targetId: first.visitMaterialPageId!, targetType: "VisitMaterialsPage" })).toBe(1);
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#conflito-ou-duplicidade] chave de outro material ou material já publicado => 409", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#conflito-ou-duplicidade] chave de outro material ou material já publicado => 409", async ({
+    request,
+  }) => {
     expect((await publish(request, ready.id, { idempotencyKey: `${key}-novo` })).status()).toBe(409);
     const other = await newPackage(request);
     expect((await publish(request, other.id, { idempotencyKey: key })).status()).toBe(409);
     expect(await countRows("visit_material_pages", { sourceLessonId: ready.id })).toBe(1);
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#estado-invalido] material fora de READY_FOR_PUBLICATION => 409 sem efeito", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#estado-invalido] material fora de READY_FOR_PUBLICATION => 409 sem efeito", async ({
+    request,
+  }) => {
     const draft = await newPackage(request);
     const res = await publish(request, draft.id, { idempotencyKey: `e2e-draft-${Date.now()}` });
     expect(res.status()).toBe(409);
@@ -134,14 +151,18 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect(await countRows("content_publications", { package_id: draft.id })).toBe(0);
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#validacao] corpo sem chave ou testamento inválido => 400", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#validacao] corpo sem chave ou testamento inválido => 400", async ({
+    request,
+  }) => {
     const draft = createdPackages[createdPackages.length - 1];
     expect((await publish(request, draft, {})).status()).toBe(400);
     expect((await publish(request, draft, { idempotencyKey: "k", testament: "OUTRO" })).status()).toBe(400);
     expect((await publish(request, draft, { idempotencyKey: "x".repeat(192) })).status()).toBe(400);
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#nao-encontrado] material inexistente => 404", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#nao-encontrado] material inexistente => 404", async ({
+    request,
+  }) => {
     expect((await publish(request, U, { idempotencyKey: `e2e-404-${Date.now()}` })).status()).toBe(404);
   });
 
@@ -151,7 +172,9 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect((await publish(request, U, { idempotencyKey: "k" }, leader)).status()).toBe(403);
   });
 
-  test("[content-studio.post.content-studio-packages-packageid-publish#flag-desligada] flag de publicação desligada => 403 e nada muda", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-publish#flag-desligada] flag de publicação desligada => 403 e nada muda", async ({
+    request,
+  }) => {
     const second = await readyPackage(request);
     await setFlag(request, "content_studio_publication", false);
     try {
@@ -164,7 +187,9 @@ test.describe.serial("Estúdio — publicação como página de materiais para v
     expect(await countRows("visit_material_pages", { sourceLessonId: second.id })).toBe(0);
   });
 
-  test("[content-studio.get.content-studio-packages-packageid-publication#feliz] devolve a última publicação (200) ou 204 sem publicação", async ({ request }) => {
+  test("[content-studio.get.content-studio-packages-packageid-publication#feliz] devolve a última publicação (200) ou 204 sem publicação", async ({
+    request,
+  }) => {
     const res = await call(request, "get", `${CS}/packages/${ready.id}/publication`);
     expect(res.status()).toBe(200);
     const latest = (await res.json()) as Publication;

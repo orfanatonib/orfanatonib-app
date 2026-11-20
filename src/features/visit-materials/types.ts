@@ -96,6 +96,8 @@ export interface VisitMaterialPageResponseDto {
   audios: VisitMaterialMediaResponseDto[];
   /** Seções por categoria; vazio nas páginas antigas (as mídias delas são o "Geral"). */
   sections: VisitMaterialSectionResponseDto[];
+  /** Imagem de apresentação (capa) do card; `null` enquanto não há uma. */
+  coverImageUrl?: string | null;
   route: VisitMaterialRouteResponseDto;
 }
 

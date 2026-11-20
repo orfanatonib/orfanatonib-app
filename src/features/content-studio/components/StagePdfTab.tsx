@@ -18,10 +18,20 @@ interface StagePdfTabProps {
   hasUnsavedChanges: boolean;
   active: boolean;
   fileBaseName: string;
+  /** Revisão: só ler o documento (PDF). Sem baixar o DOCX (formato editável) e com o texto de "Documento". */
+  readOnly?: boolean;
 }
 
 /** Aba "PDF": prévia do PDF real (LibreOffice) da versão salva da etapa, com download de PDF e DOCX. */
-export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges, active, fileBaseName }: StagePdfTabProps) {
+export function StagePdfTab({
+  packageId,
+  stageId,
+  versionKey,
+  hasUnsavedChanges,
+  active,
+  fileBaseName,
+  readOnly = false,
+}: StagePdfTabProps) {
   const path = exportPath.stage(stageId, ExportFormat.PDF);
   const { url, loading, error, reload } = useExportPreview(packageId, path, versionKey, active);
   const [downloadError, setDownloadError] = useState(false);
@@ -42,22 +52,30 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
     <Stack spacing={2} data-testid="content-studio-pdf-tab">
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="space-between">
         <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }}>
-          Prévia do PDF da versão salva desta etapa.
+          {readOnly ? "Documento desta versão, somente para leitura." : "Prévia do PDF da versão salva desta etapa."}
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
-          <Button size="small" startIcon={<Refresh />} onClick={reload} disabled={loading} sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}>
-            Atualizar
-          </Button>
           <Button
             size="small"
-            variant="outlined"
-            startIcon={<Download />}
-            onClick={() => void download(ExportFormat.DOCX)}
-            data-testid="content-studio-download-docx"
+            startIcon={<Refresh />}
+            onClick={reload}
+            disabled={loading}
             sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
-            Baixar DOCX
+            Atualizar
           </Button>
+          {!readOnly && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Download />}
+              onClick={() => void download(ExportFormat.DOCX)}
+              data-testid="content-studio-download-docx"
+              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
+            >
+              Baixar DOCX
+            </Button>
+          )}
           <Button
             size="small"
             variant="contained"
@@ -70,7 +88,9 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
           </Button>
         </Stack>
       </Stack>
-      {hasUnsavedChanges && <Alert severity="warning">Há alterações não salvas: a prévia mostra a versão já salva. Salve para vê-las aqui.</Alert>}
+      {hasUnsavedChanges && (
+        <Alert severity="warning">Há alterações não salvas: a prévia mostra a versão já salva. Salve para vê-las aqui.</Alert>
+      )}
       {downloadError && <Alert severity="error">Não foi possível baixar o arquivo agora.</Alert>}
       {error && (
         <Alert
@@ -96,7 +116,7 @@ export function StagePdfTab({ packageId, stageId, versionKey, hasUnsavedChanges,
           spacing={1.5}
           alignItems="stretch"
           data-testid="content-studio-pdf-open-card"
-          sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2, bgcolor: "grey.50" }}
+          sx={readOnly ? { py: 1 } : { p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2, bgcolor: "grey.50" }}
         >
           <Typography variant="body2" color="text.secondary">
             O PDF está pronto. No celular ele abre no visualizador do aparelho, em tela cheia.

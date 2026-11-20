@@ -1,9 +1,11 @@
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import FilterAltOff from "@mui/icons-material/FilterAltOff";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   FormControl,
   InputLabel,
@@ -61,30 +63,35 @@ export function DashboardFilters({
   };
 
   return (
-    <Card variant="outlined" data-testid="content-studio-dashboard-filters">
-      <CardContent>
+    <Accordion
+      key={hasFilters ? "with-filters" : "no-filters"}
+      defaultExpanded={hasFilters}
+      disableGutters
+      variant="outlined"
+      sx={{ borderRadius: 2, "&:before": { display: "none" } }}
+      data-testid="content-studio-dashboard-filters"
+    >
+      <AccordionSummary expandIcon={<ExpandMore />} sx={{ minHeight: 48 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography component="h2" variant="subtitle1" fontWeight={700}>
+            Filtrar painel
+          </Typography>
+          {hasFilters && <Chip size="small" color="primary" label="Filtros ativos" />}
+        </Stack>
+      </AccordionSummary>
+      <AccordionDetails>
         <Stack spacing={2}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={1}
-          >
-            <Typography component="h2" variant="subtitle1" fontWeight={700}>
-              Filtrar painel
-            </Typography>
-            {hasFilters && (
-              <Button
-                size="small"
-                startIcon={<FilterAltOff />}
-                onClick={clearAll}
-                data-testid="content-studio-dashboard-clear-filters"
-                sx={{ minHeight: 36 }}
-              >
-                Limpar filtros
-              </Button>
-            )}
-          </Stack>
+          {hasFilters && (
+            <Button
+              size="small"
+              startIcon={<FilterAltOff />}
+              onClick={clearAll}
+              data-testid="content-studio-dashboard-clear-filters"
+              sx={{ minHeight: 44, alignSelf: "flex-start" }}
+            >
+              Limpar filtros
+            </Button>
+          )}
 
           <Box
             sx={{
@@ -155,7 +162,7 @@ export function DashboardFilters({
             ))}
           </Stack>
         </Stack>
-      </CardContent>
-    </Card>
+      </AccordionDetails>
+    </Accordion>
   );
 }

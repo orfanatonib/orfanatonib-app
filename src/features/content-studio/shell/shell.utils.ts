@@ -6,7 +6,12 @@ const normalize = (pathname: string): string => (pathname.length > 1 ? pathname.
 /** O cabeçalho da tela em que o usuário está (a visão geral é o padrão para rota desconhecida do Estúdio). */
 export function studioRouteMeta(pathname: string): StudioRouteMeta {
   const path = normalize(pathname);
-  const found = STUDIO_ROUTE_META.find((item) => (item.exact ? path === item.path : path === item.path || path.startsWith(`${item.path}/`)));
+  const found = STUDIO_ROUTE_META.find((item) => {
+    if (item.exact) return path === item.path;
+    // Tela de detalhe: só os subcaminhos (`/revisao/:id`), nunca a própria lista (`/revisao`).
+    if (item.detail) return path.startsWith(`${item.path}/`);
+    return path === item.path || path.startsWith(`${item.path}/`);
+  });
   return found ?? STUDIO_ROUTE_META[STUDIO_ROUTE_META.length - 1];
 }
 

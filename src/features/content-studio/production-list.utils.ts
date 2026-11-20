@@ -79,33 +79,6 @@ export function stageTone(status: ContentStageStatus): StageTone {
   }
 }
 
-export interface NextStep {
-  label: string;
-  color: "primary" | "info" | "error" | "warning" | "success" | "inherit";
-}
-
-/** O que fazer agora com o material (o texto do botão principal do cartão). */
-export function nextStep(
-  item: Pick<ContentPackageListItemResponse, "status" | "failedStagesCount" | "generatingStagesCount" | "stagesWithContentCount">,
-): NextStep {
-  if (item.status === ContentPackageStatus.ARCHIVED) return { label: "Ver material", color: "inherit" };
-  if (item.failedStagesCount > 0) return { label: "Resolver falha na geração", color: "error" };
-  if (item.generatingStagesCount > 0) return { label: "Acompanhar geração", color: "info" };
-  switch (item.status) {
-    case ContentPackageStatus.PACKAGE_READY:
-    case ContentPackageStatus.IN_REVIEW:
-      return { label: "Revisar material", color: "warning" };
-    case ContentPackageStatus.CHANGES_REQUESTED:
-      return { label: "Fazer os ajustes pedidos", color: "warning" };
-    case ContentPackageStatus.READY_FOR_PUBLICATION:
-    case ContentPackageStatus.PUBLISHING:
-    case ContentPackageStatus.PUBLISHED:
-      return { label: "Ver material", color: "success" };
-    default:
-      return item.stagesWithContentCount === 0 ? { label: "Começar produção", color: "primary" } : { label: "Continuar produção", color: "primary" };
-  }
-}
-
 /** O PDF só existe quando alguma etapa já tem conteúdo salvo. */
 export const canExportPackage = (item: Pick<ContentPackageListItemResponse, "stagesWithContentCount">): boolean => item.stagesWithContentCount > 0;
 

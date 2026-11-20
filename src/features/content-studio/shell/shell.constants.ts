@@ -9,6 +9,11 @@ export interface StudioRouteMeta {
   /** Para onde volta o botão "Voltar"; ausente na visão geral. */
   backTo?: string;
   backLabel?: string;
+  /**
+   * Tela de detalhe de um material (`.../:id`): a própria tela já mostra o tema e o andamento, então o cabeçalho
+   * deixa só UMA barra de "voltar" (sem título e descrição repetidos). Casa só com subcaminhos, nunca com a lista.
+   */
+  detail?: boolean;
 }
 
 export const STUDIO_ROOT = "/adm/estudio";
@@ -20,6 +25,15 @@ export const STUDIO_ROUTE_META: readonly StudioRouteMeta[] = [
     description: "Gere, escreva e revise cada etapa; veja o PDF e baixe em DOCX.",
     backTo: `${STUDIO_ROOT}/producao`,
     backLabel: "Voltar aos materiais",
+    detail: true,
+  },
+  {
+    path: `${STUDIO_ROOT}/revisao`,
+    title: "Revisão editorial",
+    description: "Confira segurança, fidelidade e adequação antes de aprovar uma versão.",
+    backTo: `${STUDIO_ROOT}/revisao`,
+    backLabel: "Voltar para a revisão",
+    detail: true,
   },
   {
     path: `${STUDIO_ROOT}/producao`,

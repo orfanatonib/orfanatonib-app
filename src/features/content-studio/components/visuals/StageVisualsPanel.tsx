@@ -17,7 +17,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { useStageImages } from "../../hooks/useStageImages";
-import { isGenerationActive } from "../../generation.utils";
+import { imageProgressOf, isGenerationActive } from "../../generation.utils";
 import { AiGenerationCapability, VisualOrientation, type ContentGenerationJobResponse, type StageImageItem } from "../../types";
 import { VISUAL_INSTRUCTIONS_MAX } from "../../visual.constants";
 import { StagePdfTab } from "../StagePdfTab";
@@ -41,7 +41,11 @@ interface StageVisualsPanelProps {
   title?: string;
   /** Muda quando uma imagem é refeita: o PDF do editor precisa ser refeito junto. */
   onFingerprint?: (fingerprint: string) => void;
-  onRegenerate: (slots: string[] | undefined, instructions: string | undefined) => void;
+  /** Item bloqueado (em revisão, categoria publicada…): só a "Prévia" (o PDF), sem a aba de edição das imagens. */
+  previewOnly?: boolean;
+  /** Revisão: só leitura. Sem refazer imagem nem gerar as que faltam. */
+  readOnly?: boolean;
+  onRegenerate?: (slots: string[] | undefined, instructions: string | undefined) => void;
 }
 
 /**
@@ -59,6 +63,8 @@ export function StageVisualsPanel({
   showPdf = true,
   title,
   onFingerprint,
+  readOnly = false,
+  previewOnly = false,
   onRegenerate,
 }: StageVisualsPanelProps) {
   const drawing = isGenerationActive(job) && job?.capability === AiGenerationCapability.IMAGE_GENERATION;
@@ -70,7 +76,7 @@ export function StageVisualsPanel({
 
   const items = data?.items ?? [];
   const missing = items.filter((item) => !item.assetId);
-  const progress = drawing ? job?.progress : null;
+  const progress = drawing ? imageProgressOf(job) : null;
   const ratio = orientation === VisualOrientation.PORTRAIT ? "210 / 297" : "297 / 210";
   // O PDF muda quando uma imagem é refeita (a versão do texto continua a mesma).
   const pdfKey = versionKey ? `${versionKey}:${items.map((item) => item.updatedAt ?? "-").join(",")}` : null;
@@ -79,6 +85,22 @@ export function StageVisualsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfKey]);
   if (!versionKey && !planning) return null;
+  if (previewOnly && versionKey)
+    return (
+      <Stack spacing={2} data-testid="content-studio-visuals-panel">
+        <Typography variant="subtitle1" component="h3" fontWeight={800} data-testid="content-studio-preview-title">
+          Prévia
+        </Typography>
+        <StagePdfTab
+          packageId={packageId}
+          stageId={stageId}
+          versionKey={pdfKey}
+          hasUnsavedChanges={false}
+          active
+          fileBaseName={fileBaseName}
+        />
+      </Stack>
+    );
 
   const close = () => {
     setTarget(null);
@@ -89,8 +111,8 @@ export function StageVisualsPanel({
     <Stack spacing={2} data-testid="content-studio-visuals-panel">
       {showPdf ? (
         <Tabs value={tab} onChange={(_, next: VisualsTab) => setTab(next)} variant="fullWidth" aria-label="Exibição dos visuais">
-          <Tab value={VisualsTab.IMAGES} label="Imagens" data-testid="content-studio-visuals-tab-images" />
-          <Tab value={VisualsTab.PDF} label="PDF" data-testid="content-studio-visuals-tab-pdf" />
+          <Tab value={VisualsTab.IMAGES} label="Edição" data-testid="content-studio-visuals-tab-images" />
+          <Tab value={VisualsTab.PDF} label="Prévia" data-testid="content-studio-visuals-tab-pdf" />
         </Tabs>
       ) : (
         <Typography variant="h6" fontWeight={800}>
@@ -111,11 +133,14 @@ export function StageVisualsPanel({
                 {progress ? `Desenhando ${Math.min(progress.done + 1, progress.total)} de ${progress.total}…` : "Preparando o desenho…"}
                 {progress && progress.failed.length > 0 && ` (${progress.failed.length} com falha)`}
               </Typography>
-              <LinearProgress variant={progress ? "determinate" : "indeterminate"} value={progress ? (progress.done / Math.max(1, progress.total)) * 100 : 0} />
+              <LinearProgress
+                variant={progress ? "determinate" : "indeterminate"}
+                value={progress ? (progress.done / Math.max(1, progress.total)) * 100 : 0}
+              />
             </Box>
           )}
           {error && <Alert severity="warning">Não foi possível carregar as imagens agora. Atualize a página.</Alert>}
-          {!drawing && missing.length > 0 && items.length > 0 && (
+          {!readOnly && onRegenerate && !drawing && missing.length > 0 && items.length > 0 && (
             <Button
               data-testid="content-studio-images-missing"
               startIcon={<AutoAwesome />}
@@ -127,12 +152,25 @@ export function StageVisualsPanel({
               Gerar as {missing.length} que faltam
             </Button>
           )}
-          <ImageCarousel items={items} ratio={ratio} drawing={drawing} disabled={disabled} onRedo={setTarget} />
+          <ImageCarousel
+            items={items}
+            ratio={ratio}
+            drawing={drawing}
+            disabled={disabled}
+            onRedo={readOnly || !onRegenerate ? undefined : setTarget}
+          />
         </Stack>
       )}
 
       {showPdf && tab === VisualsTab.PDF && (
-        <StagePdfTab packageId={packageId} stageId={stageId} versionKey={pdfKey} hasUnsavedChanges={false} active fileBaseName={fileBaseName} />
+        <StagePdfTab
+          packageId={packageId}
+          stageId={stageId}
+          versionKey={pdfKey}
+          hasUnsavedChanges={false}
+          active
+          fileBaseName={fileBaseName}
+        />
       )}
 
       <Dialog open={Boolean(target)} onClose={close} fullWidth maxWidth="sm" data-testid="content-studio-image-redo-dialog">
@@ -163,7 +201,7 @@ export function StageVisualsPanel({
             variant="contained"
             sx={{ minHeight: 48, fontWeight: 700 }}
             onClick={() => {
-              if (target) onRegenerate([target.slot], instructions.trim() || undefined);
+              if (target) onRegenerate?.([target.slot], instructions.trim() || undefined);
               close();
             }}
           >

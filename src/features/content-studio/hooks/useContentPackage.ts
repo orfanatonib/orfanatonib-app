@@ -38,11 +38,13 @@ export function useContentPackage(id: string | undefined) {
     void load();
     return () => requestController.current?.abort();
   }, [load]);
-  const generating = state.contentPackage?.tracks.some((track) =>
-    track.stages.some(
-      (stage) => stage.status === ContentStageStatus.GENERATING,
-    ),
-  );
+  const generating =
+    state.contentPackage?.coverGenerating ||
+    state.contentPackage?.tracks.some((track) =>
+      track.stages.some(
+        (stage) => stage.status === ContentStageStatus.GENERATING,
+      ),
+    );
   useEffect(() => {
     if (!generating) return;
     const timer = window.setTimeout(() => void load(), GENERATION_POLL_MS);

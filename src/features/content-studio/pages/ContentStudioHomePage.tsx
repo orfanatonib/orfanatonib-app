@@ -25,6 +25,7 @@ import type { ContentAudience } from "../types";
 import { useContentStudioCatalog } from "../hooks/useContentStudioCatalog";
 import { useContentStudioDashboard } from "../hooks/useContentStudioDashboard";
 import { formatContentStudioDateTime } from "../utils";
+import { GenerationActivityDashboard } from "../components/activity/GenerationActivityDashboard";
 import { DashboardFilters } from "../components/DashboardFilters";
 import { DashboardMetrics, DashboardMetricsSkeleton } from "../components/DashboardMetrics";
 import { PACKAGE_STATUS_COLORS } from "../period.utils";
@@ -50,8 +51,6 @@ export function ContentStudioHomePage() {
     ...(audience ? { audience: audience as ContentAudience } : {}),
   });
 
-  const failedJobs = dashboard?.jobs.failed ?? 0;
-  const activeJobs = (dashboard?.jobs.pending ?? 0) + (dashboard?.jobs.running ?? 0);
   const hasFilters = !!(startDate || endDate || audience);
 
   return (
@@ -125,6 +124,8 @@ export function ContentStudioHomePage() {
           </Stack>
         )}
 
+        {!catalogLoading && catalog && <GenerationActivityDashboard audiences={catalog.audiences} />}
+
         <DashboardFilters
           startDate={startDate}
           endDate={endDate}
@@ -156,31 +157,6 @@ export function ContentStudioHomePage() {
         )}
 
         {!dashboardLoading && dashboard && <DashboardMetrics dashboard={dashboard} />}
-
-        {!dashboardLoading && dashboard && failedJobs + activeJobs > 0 && (
-          <Alert
-            severity={failedJobs > 0 ? "error" : "info"}
-            data-testid="content-studio-dashboard-generation-alert"
-            action={
-              <Button
-                component={RouterLink}
-                to="/adm/estudio/producao"
-                color="inherit"
-                sx={{ minHeight: 44 }}
-              >
-                Abrir produção
-              </Button>
-            }
-          >
-            {failedJobs > 0 &&
-              `${failedJobs} geração(ões) de conteúdo falharam. `}
-            {activeJobs > 0 &&
-              `${activeJobs} geração(ões) em andamento. `}
-            {failedJobs > 0
-              ? "Abra a produção para tentar de novo ou editar o conteúdo manualmente."
-              : "Os resultados aparecem na produção assim que ficarem prontos."}
-          </Alert>
-        )}
 
         {!dashboardLoading && dashboard && (
           <Box>

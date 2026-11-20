@@ -2,11 +2,12 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 
 import SelectPageTemplate from './SelectPageTemplate';
 import { PAGE_CREATOR_TEST_IDS, PAGE_TEMPLATE_OPTIONS } from './constants';
+import { PageTemplateType } from './types';
 import imageReducer from '@/store/slices/image/imageSlice';
 
 // Mock sub-creator components to keep unit test isolated
@@ -39,7 +40,20 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
   return render(
     <Provider store={store}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={['/adm/criar-pagina']}>
+        <Routes>
+          <Route path="/adm/criar-pagina">
+            <Route index element={ui} />
+            {PAGE_TEMPLATE_OPTIONS.map((option) => (
+              <Route
+                key={option.key}
+                path={option.path}
+                element={React.cloneElement(ui as React.ReactElement<{ templateKey?: PageTemplateType }>, { templateKey: option.key })}
+              />
+            ))}
+          </Route>
+        </Routes>
+      </MemoryRouter>
     </Provider>
   );
 };

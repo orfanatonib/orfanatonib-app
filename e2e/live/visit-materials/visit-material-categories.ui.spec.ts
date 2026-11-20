@@ -127,18 +127,37 @@ test.describe.serial("Material de visita por categoria — ao vivo", () => {
     expect((await request.get(`${API_URL}/visit-material-pages?category=GENERAL`, { headers: authHeaders(token) })).status()).toBe(400);
   });
 
-  test("a lista do membro filtra pelo chip de categoria", async ({ page: browser, request }) => {
+  test("a lista do membro NÃO tem filtro por categoria (categoria só aparece dentro do material)", async ({ page: browser, request }) => {
     await seedBrowserSession(browser, await loginAs(request, "admin"));
     await browser.setViewportSize({ width: 390, height: 844 });
     await browser.goto("/area-do-membro/materiais-visita");
-    await expect(browser.getByTestId("visit-material-member-list-category-filter")).toBeVisible({ timeout: 60_000 });
-
-    await browser.getByTestId("visit-material-member-list-category-TEEN").click();
-    await expect(browser.getByText(title)).toHaveCount(0);
-    await browser.getByTestId("visit-material-member-list-category-ADULT").click();
+    await expect(browser.getByTestId("visit-material-member-list-tabs")).toBeVisible({ timeout: 60_000 });
+    await expect(browser.getByTestId("visit-material-member-list-category-filter")).toHaveCount(0);
     await expect(browser.getByText(title).first()).toBeVisible({ timeout: 20_000 });
-    await browser.getByTestId("visit-material-member-list-category-all").click();
     expect(await browser.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
+  test("o painel de materiais de visita só filtra por testamento (Todos/Antigo/Novo) e usa 95% (desktop) / 98% (celular) da largura", async ({
+    page: browser,
+    request,
+  }) => {
+    await seedBrowserSession(browser, await loginAs(request, "admin"));
+    for (const [width, ratio] of [
+      [1440, 0.95],
+      [390, 0.98],
+    ] as const) {
+      await browser.setViewportSize({ width, height: 900 });
+      await browser.goto("/adm/paginas-materiais-visita");
+      await expect(browser.getByTestId("visit-material-manager-testament-tabs")).toBeVisible({ timeout: 60_000 });
+      await expect(browser.getByTestId("visit-material-manager-category-filter")).toHaveCount(0);
+      await expect(browser.getByRole("tab")).toHaveCount(3);
+      const box = await browser.getByTestId("visit-material-manager-content").boundingBox();
+      expect(box!.width / width).toBeGreaterThan(ratio - 0.01);
+      expect(box!.width / width).toBeLessThan(ratio + 0.01);
+      expect(await browser.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(
+        0,
+      );
+    }
   });
 
   test("a página pública mostra o Geral e as categorias, e troca de categoria", async ({ page: browser, request }) => {

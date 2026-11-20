@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  approveReviewStage,
   archiveContentPackage,
   completeProductionStage,
   requestStageGeneration,
@@ -8,7 +7,6 @@ import {
   streamPackageGenerations,
   cancelStageGeneration,
   regenerateStageImages,
-  requestStageChanges,
   saveStageContent,
   submitPackageReview,
   resolveReviewComment,
@@ -35,17 +33,14 @@ import {
   GenerationJobStatus,
   generationErrorMessage,
   isGenerationActive,
+  generationRequestErrorMessage,
+  imageProgressOf,
 } from "../generation.utils";
 import { readStudioDrafts, writeStudioDrafts } from "../draftStorage";
 import { GenerationConnectionState, nextReconnectDelay } from "../stream.utils";
 import type { StudioDrafts } from "../workspace.types";
 import type { FeedbackState } from "../workspace.types";
-import {
-  capabilityForStage,
-  stageDraftValue,
-  isRecord,
-  submittableTracks,
-} from "../workspace.utils";
+import { capabilityForStage, stageDraftValue, isRecord, canSubmitForReview } from "../workspace.utils";
 
 /** Etapas cujo texto é só o plano: as imagens vêm depois, em um segundo job. */
 const IMAGE_STAGE_TYPES: readonly ContentStageType[] = [
@@ -57,88 +52,58 @@ const IMAGE_STAGE_TYPES: readonly ContentStageType[] = [
 
 export function useStudioWorkspace(id: string | undefined) {
   const { contentPackage, loading, error, reload } = useContentPackage(id);
-  const reviewEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.CONTENT_STUDIO_REVIEW,
-  );
+  const reviewEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTENT_STUDIO_REVIEW);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const localDrafts = useRef<StudioDrafts>({});
   const [draftStorageFailed, setDraftStorageFailed] = useState(false);
   useEffect(() => {
     localDrafts.current = id ? readStudioDrafts(id) : {};
-    setDrafts(
-      Object.fromEntries(
-        Object.entries(localDrafts.current).map(([key, draft]) => [
-          key,
-          draft.value,
-        ]),
-      ),
-    );
+    setDrafts(Object.fromEntries(Object.entries(localDrafts.current).map(([key, draft]) => [key, draft.value])));
   }, [id]);
-  const [changeMessages, setChangeMessages] = useState<Record<string, string>>(
-    {},
-  );
   const [busyStageId, setBusyStageId] = useState<string | null>(null);
   const [packageBusy, setPackageBusy] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [instructions, setInstructions] = useState<Record<string, string>>({});
   const generationKeys = useRef<Record<string, string>>({});
   /** Andamento por etapa (fila → gerando → nova tentativa → fim), alimentado por polling. */
-  const [generationJobs, setGenerationJobs] = useState<
-    Record<string, ContentGenerationJobResponse>
-  >({});
+  const [generationJobs, setGenerationJobs] = useState<Record<string, ContentGenerationJobResponse>>({});
   const pollControllers = useRef<Record<string, AbortController>>({});
   /** Stream SSE de andamento (um por pacote): empurra os jobs; o polling HTTP só entra se ele falhar. */
+  /** Etapas cujo texto acabou e cujo job de imagens ainda vai nascer: o progresso não pode sumir nesse intervalo. */
+  const [awaitingImages, setAwaitingImages] = useState<Record<string, boolean>>({});
   const streamJobs = useRef<Record<string, ContentGenerationJobResponse>>({});
   const streamController = useRef<AbortController | null>(null);
   const streamFailures = useRef(0);
   /** Só reabre o stream depois deste instante (backoff após falha). */
   const streamRetryAt = useRef(0);
-  const [connection, setConnection] = useState<GenerationConnectionState>(
-    GenerationConnectionState.IDLE,
-  );
+  const [connection, setConnection] = useState<GenerationConnectionState>(GenerationConnectionState.IDLE);
   const wakeups = useRef(new Set<() => void>());
   const wakeAll = () => wakeups.current.forEach((wake) => wake());
-  const generationEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.CONTENT_STUDIO_GENERATION,
-  );
+  const generationEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTENT_STUDIO_GENERATION);
 
   useEffect(() => {
     if (!contentPackage) return;
 
     const stages = contentPackage.tracks.flatMap((track) => track.stages);
-    setDrafts(
-      Object.fromEntries(
-        stages.map((stage) => [
-          stage.id,
-          localDrafts.current[stage.id]?.value ?? stageDraftValue(stage),
-        ]),
-      ),
-    );
+    setDrafts(Object.fromEntries(stages.map((stage) => [stage.id, localDrafts.current[stage.id]?.value ?? stageDraftValue(stage)])));
   }, [contentPackage]);
 
   const handleDraftChange = (stageId: string, value: string) => {
     setDrafts((current) => ({ ...current, [stageId]: value }));
-    const stage = contentPackage?.tracks
-      .flatMap((track) => track.stages)
-      .find((item) => item.id === stageId);
+    const stage = contentPackage?.tracks.flatMap((track) => track.stages).find((item) => item.id === stageId);
     if (!stage || !id) return;
     if (value === stageDraftValue(stage)) delete localDrafts.current[stageId];
     else
       localDrafts.current[stageId] = {
         value,
-        baseVersionId: localDrafts.current[stageId]
-          ? localDrafts.current[stageId].baseVersionId
-          : stage.currentVersionId,
+        baseVersionId: localDrafts.current[stageId] ? localDrafts.current[stageId].baseVersionId : stage.currentVersionId,
       };
     setDraftStorageFailed(!writeStudioDrafts(id, localDrafts.current));
   };
 
-  const handleChangeMessage = (stageId: string, value: string) => {
-    setChangeMessages((current) => ({ ...current, [stageId]: value }));
-  };
-
-  const handleSubmitReview = async (audiences?: readonly ContentAudience[]) => {
-    if (!contentPackage) return;
+  /** Envia as categorias para a revisão (só quando o usuário manda). Devolve `true` se enviou. */
+  const handleSubmitReview = async (audiences?: readonly ContentAudience[]): Promise<boolean> => {
+    if (!contentPackage) return false;
 
     setFeedback(null);
     setPackageBusy(true);
@@ -155,12 +120,13 @@ export function useStudioWorkspace(id: string | undefined) {
         message: `Enviado para revisão: ${sent}.`,
       });
       await reload();
+      return true;
     } catch {
       setFeedback({
         severity: "error",
-        message:
-          "Não foi possível enviar para revisão. Confira se as etapas das categorias escolhidas estão concluídas.",
+        message: "Não foi possível enviar para revisão. Confira se os itens das categorias escolhidas estão concluídos.",
       });
+      return false;
     } finally {
       setPackageBusy(false);
     }
@@ -197,8 +163,7 @@ export function useStudioWorkspace(id: string | undefined) {
       })
       .finally(() => {
         window.clearInterval(watchdog);
-        if (streamController.current === controller)
-          streamController.current = null;
+        if (streamController.current === controller) streamController.current = null;
         // Abortado por saída da tela: não reconecta. Qualquer outro fim (queda, 5xx, conexão parada, rodízio do
         // servidor) reconecta com backoff.
         if (controller.signal.aborted && !stale) return;
@@ -207,8 +172,7 @@ export function useStudioWorkspace(id: string | undefined) {
           streamRetryAt.current = 0;
         } else {
           streamFailures.current += 1;
-          streamRetryAt.current =
-            Date.now() + nextReconnectDelay(streamFailures.current);
+          streamRetryAt.current = Date.now() + nextReconnectDelay(streamFailures.current);
           setConnection(GenerationConnectionState.RECONNECTING);
         }
         wakeAll();
@@ -260,18 +224,11 @@ export function useStudioWorkspace(id: string | undefined) {
     let seeded = false;
     let followedImages = false;
 
-    while (
-      !controller.signal.aborted &&
-      Date.now() - startedAt < GENERATION_POLL_MAX_MS
-    ) {
+    while (!controller.signal.aborted && Date.now() - startedAt < GENERATION_POLL_MAX_MS) {
       ensureStream(packageId);
       const streamed = streamJobs.current[stageId];
       const streamUsable =
-        seeded &&
-        !!streamed &&
-        (!seed ||
-          streamed.id === seed.id ||
-          new Date(streamed.createdAt) > new Date(seed.createdAt));
+        seeded && !!streamed && (!seed || streamed.id === seed.id || new Date(streamed.createdAt) > new Date(seed.createdAt));
       let job: ContentGenerationJobResponse | null = null;
       if (streamUsable) {
         job = streamed;
@@ -301,6 +258,7 @@ export function useStudioWorkspace(id: string | undefined) {
             .some((item) => item.id === stageId && IMAGE_STAGE_TYPES.includes(item.stageType))
         ) {
           followedImages = true;
+          setAwaitingImages((current) => ({ ...current, [stageId]: true }));
           let next: ContentGenerationJobResponse | null = null;
           for (let attempt = 0; attempt < 6 && !next && !controller.signal.aborted; attempt += 1) {
             await waitForUpdate(1_000, controller.signal);
@@ -311,6 +269,7 @@ export function useStudioWorkspace(id: string | undefined) {
               // tenta de novo no próximo ciclo
             }
           }
+          setAwaitingImages((current) => ({ ...current, [stageId]: false }));
           if (next) {
             seed = next;
             setGenerationJobs((current) => ({ ...current, [stageId]: next as ContentGenerationJobResponse }));
@@ -324,8 +283,8 @@ export function useStudioWorkspace(id: string | undefined) {
             severity: "success",
             message:
               job.capability === AiGenerationCapability.IMAGE_GENERATION
-                ? job.progress && job.progress.failed.length > 0
-                  ? `Imagens prontas, mas ${job.progress.failed.length} falharam. Use “Refazer” nas que faltam.`
+                ? (imageProgressOf(job)?.failed.length ?? 0) > 0
+                  ? `Imagens prontas, mas ${imageProgressOf(job)?.failed.length} falharam. Use “Refazer” nas que faltam.`
                   : "Imagens geradas. Confira e refaça só as que não gostar."
                 : "Conteúdo gerado. Revise antes de seguir.",
           });
@@ -338,18 +297,12 @@ export function useStudioWorkspace(id: string | undefined) {
         await reload();
         return;
       }
-      await waitForUpdate(
-        streamController.current
-          ? STREAM_FALLBACK_WAIT_MS
-          : GENERATION_POLL_INTERVAL_MS,
-        controller.signal,
-      );
+      await waitForUpdate(streamController.current ? STREAM_FALLBACK_WAIT_MS : GENERATION_POLL_INTERVAL_MS, controller.signal);
     }
     if (!controller.signal.aborted) {
       setFeedback({
         severity: "error",
-        message:
-          "A geração está demorando mais que o normal. Atualize a página para ver o resultado.",
+        message: "A geração está demorando mais que o normal. Atualize a página para ver o resultado.",
       });
     }
   };
@@ -357,13 +310,8 @@ export function useStudioWorkspace(id: string | undefined) {
   // Ao abrir o pacote, retoma o acompanhamento de etapas que já estavam gerando; ao sair, para tudo.
   useEffect(() => {
     if (!contentPackage) return;
-    for (const stage of contentPackage.tracks.flatMap(
-      (track) => track.stages,
-    )) {
-      if (
-        stage.status === ContentStageStatus.GENERATING &&
-        !pollControllers.current[stage.id]
-      ) {
+    for (const stage of contentPackage.tracks.flatMap((track) => track.stages)) {
+      if (stage.status === ContentStageStatus.GENERATING && !pollControllers.current[stage.id]) {
         void pollGeneration(stage.id);
       } else if (IMAGE_STAGE_TYPES.includes(stage.stageType) && stage.currentVersionId && !pollControllers.current[stage.id]) {
         // Visuais com versão: as imagens podem estar sendo geradas (a etapa fica em rascunho). Retoma o acompanhamento
@@ -379,8 +327,7 @@ export function useStudioWorkspace(id: string | undefined) {
         // Etapa que já abriu falhada: busca o motivo para a mensagem ser específica.
         void getLatestStageGeneration(contentPackage.id, stage.id)
           .then((job) => {
-            if (job)
-              setGenerationJobs((current) => ({ ...current, [stage.id]: job }));
+            if (job) setGenerationJobs((current) => ({ ...current, [stage.id]: job }));
           })
           .catch(() => undefined);
       }
@@ -389,9 +336,7 @@ export function useStudioWorkspace(id: string | undefined) {
   }, [contentPackage?.id]);
   useEffect(
     () => () => {
-      Object.values(pollControllers.current).forEach((controller) =>
-        controller.abort(),
-      );
+      Object.values(pollControllers.current).forEach((controller) => controller.abort());
       streamController.current?.abort();
     },
     [],
@@ -403,8 +348,7 @@ export function useStudioWorkspace(id: string | undefined) {
     setFeedback(null);
     setBusyStageId(stage.id);
     try {
-      const idempotencyKey =
-        generationKeys.current[stage.id] ?? crypto.randomUUID();
+      const idempotencyKey = generationKeys.current[stage.id] ?? crypto.randomUUID();
       generationKeys.current[stage.id] = idempotencyKey;
       await requestStageGeneration(contentPackage.id, stage.id, {
         capability: capabilityForStage(),
@@ -414,16 +358,15 @@ export function useStudioWorkspace(id: string | undefined) {
       });
       setFeedback({
         severity: "success",
-        message:
-          "Geração iniciada. O conteúdo aparecerá aqui quando estiver pronto.",
+        message: "Geração iniciada. O conteúdo aparecerá aqui quando estiver pronto.",
       });
       delete generationKeys.current[stage.id];
       await reload();
       void pollGeneration(stage.id);
-    } catch {
+    } catch (failure: unknown) {
       setFeedback({
         severity: "error",
-        message: "Não foi possível solicitar geração para esta etapa.",
+        message: generationRequestErrorMessage(failure, "Não foi possível solicitar geração para esta etapa."),
       });
     } finally {
       setBusyStageId(null);
@@ -439,8 +382,11 @@ export function useStudioWorkspace(id: string | undefined) {
       await regenerateStageImages(contentPackage.id, stage.id, payload);
       setFeedback({ severity: "success", message: "Gerando as imagens. O andamento aparece aqui." });
       void pollGeneration(stage.id);
-    } catch {
-      setFeedback({ severity: "error", message: "Não foi possível pedir as imagens. Tente de novo em instantes." });
+    } catch (failure: unknown) {
+      setFeedback({
+        severity: "error",
+        message: generationRequestErrorMessage(failure, "Não foi possível pedir as imagens. Tente de novo em instantes."),
+      });
     } finally {
       setBusyStageId(null);
     }
@@ -459,8 +405,7 @@ export function useStudioWorkspace(id: string | undefined) {
     } catch {
       setFeedback({
         severity: "error",
-        message:
-          "Não foi possível cancelar a geração. Atualize para verificar se ela já terminou.",
+        message: "Não foi possível cancelar a geração. Atualize para verificar se ela já terminou.",
       });
     } finally {
       setBusyStageId(null);
@@ -488,8 +433,7 @@ export function useStudioWorkspace(id: string | undefined) {
       });
       delete generationKeys.current[stage.id];
       delete localDrafts.current[stage.id];
-      if (id)
-        setDraftStorageFailed(!writeStudioDrafts(id, localDrafts.current));
+      if (id) setDraftStorageFailed(!writeStudioDrafts(id, localDrafts.current));
       setFeedback({ severity: "success", message: "Nova versão salva." });
       await reload();
     } catch {
@@ -503,10 +447,7 @@ export function useStudioWorkspace(id: string | undefined) {
   };
 
   /** Salva o documento rico como nova versão (os campos estruturados da versão atual seguem como estão). */
-  const handleSaveDocument = async (
-    stage: ContentStageResponse,
-    document: TiptapDocument,
-  ): Promise<boolean> => {
+  const handleSaveDocument = async (stage: ContentStageResponse, document: TiptapDocument): Promise<boolean> => {
     if (!contentPackage) return false;
     setFeedback(null);
     try {
@@ -523,8 +464,7 @@ export function useStudioWorkspace(id: string | undefined) {
       await reload();
       return true;
     } catch (error: unknown) {
-      const status = (error as { response?: { status?: number } })?.response
-        ?.status;
+      const status = (error as { response?: { status?: number } })?.response?.status;
       setFeedback({
         severity: "error",
         message:
@@ -537,9 +477,7 @@ export function useStudioWorkspace(id: string | undefined) {
   };
 
   /** Descarta as edições do documento: salva a versão só com os campos (o documento volta a ser montado deles). */
-  const handleResetDocument = async (
-    stage: ContentStageResponse,
-  ): Promise<boolean> => {
+  const handleResetDocument = async (stage: ContentStageResponse): Promise<boolean> => {
     if (!contentPackage || !stage.currentVersion) return false;
     setFeedback(null);
     try {
@@ -562,124 +500,39 @@ export function useStudioWorkspace(id: string | undefined) {
     }
   };
 
-  const handleCompleteProduction = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
+  /** Conclui o item na produção (NÃO envia nada para a revisão). Devolve `true` se concluiu. */
+  const handleCompleteProduction = async (stage: ContentStageResponse): Promise<boolean> => {
+    if (!contentPackage) return false;
 
     setFeedback(null);
     setBusyStageId(stage.id);
     try {
       await completeProductionStage(contentPackage.id, stage.id);
-      setFeedback({
-        severity: "success",
-        message: "Etapa concluída para revisão.",
-      });
+      setFeedback({ severity: "success", message: "Item concluído." });
       await reload();
+      return true;
     } catch {
       setFeedback({
         severity: "error",
-        message: "Não foi possível concluir esta etapa.",
+        message: "Não foi possível concluir este item.",
       });
+      return false;
     } finally {
       setBusyStageId(null);
     }
   };
 
-  const handleApproveStage = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      if (!stage.currentVersionId || !stage.currentVersion) {
-        setFeedback({
-          severity: "error",
-          message: "A etapa não possui versão atual para aprovar.",
-        });
-        return;
-      }
-      await approveReviewStage(contentPackage.id, stage.id, {
-        versionId: stage.currentVersionId,
-        lockVersion: stage.lockVersion,
-        contentChecksum: stage.currentVersion.contentChecksum,
-      });
-      setFeedback({ severity: "success", message: "Etapa aprovada." });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível aprovar esta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const handleRequestChanges = async (stage: ContentStageResponse) => {
-    if (!contentPackage) return;
-
-    const message = changeMessages[stage.id]?.trim();
-    if (!message) {
-      setFeedback({
-        severity: "error",
-        message: "Informe o comentário de ajuste antes de solicitar mudanças.",
-      });
-      return;
-    }
-
-    setFeedback(null);
-    setBusyStageId(stage.id);
-    try {
-      if (!stage.currentVersionId || !stage.currentVersion) {
-        setFeedback({
-          severity: "error",
-          message: "A etapa não possui versão atual para solicitar ajustes.",
-        });
-        return;
-      }
-      await requestStageChanges(contentPackage.id, stage.id, {
-        versionId: stage.currentVersionId,
-        lockVersion: stage.lockVersion,
-        contentChecksum: stage.currentVersion.contentChecksum,
-        message,
-      });
-      setFeedback({ severity: "success", message: "Ajustes solicitados." });
-      await reload();
-    } catch {
-      setFeedback({
-        severity: "error",
-        message: "Não foi possível solicitar ajustes nesta etapa.",
-      });
-    } finally {
-      setBusyStageId(null);
-    }
-  };
-
-  const canSubmitReview =
-    reviewEnabled &&
-    contentPackage !== null &&
-    [
-      ContentPackageStatus.IN_PROGRESS,
-      ContentPackageStatus.PACKAGE_READY,
-      ContentPackageStatus.IN_REVIEW,
-      ContentPackageStatus.CHANGES_REQUESTED,
-    ].includes(contentPackage.status) &&
-    submittableTracks(contentPackage.tracks).length > 0;
+  const canSubmitReview = contentPackage !== null && canSubmitForReview(contentPackage.status, contentPackage.tracks, reviewEnabled);
 
   const canArchive =
     contentPackage !== null &&
-    contentPackage.tracks.some((track) =>
-      track.stages.some((stage) => stage.currentVersionId !== null),
-    ) &&
-    ![ContentPackageStatus.PUBLISHING, ContentPackageStatus.ARCHIVED].includes(
-      contentPackage.status,
-    );
+    contentPackage.tracks.some((track) => track.stages.some((stage) => stage.currentVersionId !== null)) &&
+    ![ContentPackageStatus.PUBLISHING, ContentPackageStatus.ARCHIVED].includes(contentPackage.status);
 
   const handleArchive = async () => {
     if (!contentPackage) return;
 
-    const confirmed = window.confirm(
-      "Tem certeza de que deseja arquivar este pacote? Esta ação não pode ser desfeita facilmente.",
-    );
+    const confirmed = window.confirm("Tem certeza de que deseja arquivar este pacote? Esta ação não pode ser desfeita facilmente.");
     if (!confirmed) return;
 
     setFeedback(null);
@@ -719,12 +572,7 @@ export function useStudioWorkspace(id: string | undefined) {
   const conflictingDraftIds =
     contentPackage?.tracks
       .flatMap((track) => track.stages)
-      .filter(
-        (stage) =>
-          localDrafts.current[stage.id] &&
-          localDrafts.current[stage.id].baseVersionId !==
-            stage.currentVersionId,
-      )
+      .filter((stage) => localDrafts.current[stage.id] && localDrafts.current[stage.id].baseVersionId !== stage.currentVersionId)
       .map((stage) => stage.id) ?? [];
   return {
     draftStorageFailed,
@@ -738,15 +586,14 @@ export function useStudioWorkspace(id: string | undefined) {
     drafts,
     instructions,
     setInstructions,
-    changeMessages,
     busyStageId,
     generationJobs,
+    awaitingImages,
     generationConnection: connection,
     packageBusy,
     feedback,
     setFeedback,
     handleDraftChange,
-    handleChangeMessage,
     handleSubmitReview,
     handleRequestGeneration,
     handleRegenerateImages,
@@ -755,8 +602,6 @@ export function useStudioWorkspace(id: string | undefined) {
     handleSaveDocument,
     handleResetDocument,
     handleCompleteProduction,
-    handleApproveStage,
-    handleRequestChanges,
     canSubmitReview,
     canArchive,
     handleArchive,
