@@ -4,14 +4,17 @@ import { Link } from "react-router-dom";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 import { memberAreaColors as colors } from "@/theme/memberArea";
 import { memberActionMap } from "./memberActions";
+import { MEMBER_SUBPAGE_PATHS } from "../../constants/navigation";
 import type { MemberQuickActionsProps } from "../../types";
 
 const MemberQuickActions = ({ references }: MemberQuickActionsProps) => {
   const shelteredEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
+  const photoUploadEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PHOTO_UPLOAD);
   const actions = references.filter(
     (key) =>
       memberActionMap[key] &&
-      (memberActionMap[key].to !== "/area-dos-acolhidos" || shelteredEnabled),
+      (memberActionMap[key].to !== "/area-dos-acolhidos" || shelteredEnabled) &&
+      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.photos || photoUploadEnabled),
   );
   if (!actions.length) return null;
   return (

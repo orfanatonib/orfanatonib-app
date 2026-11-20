@@ -37,10 +37,14 @@ export interface MemberNavItemDefinition {
   /** A Home monta o próprio topo (avisos e banners), então não recebe o cabeçalho padrão. */
   hidePageHeader?: boolean;
   requires?: MemberNavRequirement;
+  /** Flag que precisa estar ligada para o item aparecer (a rota e a API têm a própria proteção). */
+  featureKey?: string;
 }
 
 export interface MemberNavAccess {
   isAdminOrLeader: boolean;
+  /** Sem o predicado, nenhuma flag é aplicada (compatível com quem só filtra por perfil). */
+  isFeatureEnabled?: (key: string) => boolean;
 }
 
 export interface MemberAreaSidebarProps {

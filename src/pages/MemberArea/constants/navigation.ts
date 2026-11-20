@@ -10,6 +10,7 @@ import {
   ShareOutlined,
   StarRateOutlined,
 } from '@mui/icons-material';
+import { FeatureFlagKeys } from '@/features/feature-flags/types';
 import { MediaTargetType } from '@/store/slices/types';
 import {
   MemberNavGroup,
@@ -114,6 +115,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: PhotoCameraOutlined,
     accentColor: '#16a34a',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.SHELTER_PHOTO_UPLOAD,
   },
   {
     id: MemberNavItemId.Manual,

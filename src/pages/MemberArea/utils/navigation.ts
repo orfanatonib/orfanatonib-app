@@ -22,6 +22,7 @@ export function filterNavItems(
   access: MemberNavAccess,
 ): MemberNavItemDefinition[] {
   return items.filter((item) => {
+    if (item.featureKey && access.isFeatureEnabled && !access.isFeatureEnabled(item.featureKey)) return false;
     switch (item.requires) {
       case MemberNavRequirement.AdminOrLeader:
         return access.isAdminOrLeader;

@@ -12,6 +12,14 @@ import {
 const ids = (items: readonly { id: MemberNavItemId }[]) => items.map((item) => item.id);
 
 describe('filterNavItems', () => {
+  it('Fotos do Abrigo some do menu com a flag de envio desligada e volta ligada', () => {
+    const off = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: false, isFeatureEnabled: () => false }));
+    const on = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: false, isFeatureEnabled: () => true }));
+    expect(off).not.toContain(MemberNavItemId.Photos);
+    expect(off).toContain(MemberNavItemId.Overview);
+    expect(on).toContain(MemberNavItemId.Photos);
+  });
+
   it('esconde Integrações para quem não é admin/líder', () => {
     const visible = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: false }));
     expect(visible).not.toContain(MemberNavItemId.Integrations);
