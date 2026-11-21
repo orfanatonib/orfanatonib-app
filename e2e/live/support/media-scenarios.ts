@@ -8,6 +8,7 @@ import {
   listObjects,
   snapshotBucket,
 } from "./s3";
+import { addedKeys } from "./s3-invariants";
 
 /** Arquivo de teste pequeno, gerado em memória. */
 export interface TestFile {
@@ -87,8 +88,9 @@ export function mediaScenarios(slug: string): MediaScenario[] {
       await invariants();
     } },
     { id: id(4), title: "substituir um arquivo remove o antigo só depois do commit", run: async (a) => {
+      const beforeCreate = await snapshotBucket();
       const owner = await a.create([testImage("old.png")]);
-      const [oldKey] = (await listObjects()).slice(-1);
+      const [oldKey] = addedKeys(beforeCreate, await snapshotBucket());
       await a.replaceFirst(owner, testImage("new.png"));
       expect(await listObjects()).not.toContain(oldKey);
       expect(await a.mediaCount(owner)).toBe(1);
@@ -124,10 +126,10 @@ export function mediaScenarios(slug: string): MediaScenario[] {
     } },
     { id: id(9), title: "dois uploads de mesmo nome geram chaves distintas", run: async (a) => {
       test_skip_guard(a.uploadSameNameTwice, a.uploadSameNameTwice, id(9));
+      const beforeUpload = await snapshotBucket();
       const owner = await a.uploadSameNameTwice!();
       expect(await a.mediaCount(owner)).toBe(2);
-      const keys = new Set((await listObjects()).slice(-2));
-      expect(keys.size).toBe(2);
+      expect(addedKeys(beforeUpload, await snapshotBucket())).toHaveLength(2);
       await invariants();
     } },
     { id: id(10), title: "arquivo inválido e acima do limite são recusados sem efeito", run: async (a) => {

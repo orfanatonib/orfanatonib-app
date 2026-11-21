@@ -1,37 +1,25 @@
-import { useEffect, useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  Paper,
-  Snackbar,
-  Alert as MuiAlert,
-  useMediaQuery,
-  useTheme,
-  Container,
-  Typography,
-} from '@mui/material';
+import { useState } from 'react';
+import { Snackbar, Alert as MuiAlert } from '@mui/material';
 import { VideoLibrary } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { AppDispatch } from '@/store/slices';
-import { setVideoData, VideoPageData } from 'store/slices/video/videoSlice';
+import { VideoPageData } from './types';
 
 import { useVideoPages } from './hooks';
-import VideoPageToolbar from './components/VideoPageToolbar';
+import { videoPageEditPath } from './utils';
+import { VIDEO_PAGES_MESSAGES } from './constants';
 import VideoPageCard from './components/VideoPageCard';
 import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import VideoPageDetailsModal from './components/VideoPageDetailsModal';
-import BackHeader from '@/components/common/header/BackHeader';
+import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
+import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
+import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
+import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
+import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
+import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
+import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
 
 export default function VideosManager() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-
   const {
     pages,
     filtered,
@@ -53,8 +41,7 @@ export default function VideosManager() {
   });
 
   const handleEdit = (page: VideoPageData) => {
-    dispatch(setVideoData(page));
-    navigate('/adm/editar-pagina-videos');
+    if (page.id) navigate(videoPageEditPath(page.id));
   };
 
   const handleDelete = async () => {
@@ -71,169 +58,81 @@ export default function VideosManager() {
   };
 
   const isFiltering = pages.length > 0 && pages.length !== filtered.length;
+  const showSkeleton = loading && filtered.length === 0;
 
   return (
-    <Box data-testid="video-pages-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="🎥 Páginas de Vídeos" />
-        </motion.div>
+    <AdminPageShell testId="video-pages-manager" title={VIDEO_PAGES_MESSAGES.TITLE}>
+      <AdminSearchBar
+        testId="video-pages-search"
+        clearTestId="video-pages-search-clear"
+        refreshTestId="video-pages-refresh"
+        label="Buscar páginas"
+        value={search}
+        onChange={setSearch}
+        onRefresh={fetchPages}
+        loading={isFiltering}
+      />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <VideoPageToolbar
-              search={search}
-              onSearch={setSearch}
-              onRefresh={fetchPages}
-              isFiltering={isFiltering}
+      {showSkeleton ? (
+        <AdminListSkeleton testId="video-pages-loading" withCover={false} />
+      ) : error ? (
+        <AdminErrorAlert testId="video-pages-error" message={error} onClose={() => setError('')} />
+      ) : filtered.length === 0 ? (
+        <AdminEmptyState
+          testId="video-pages-empty"
+          message={
+            isFiltering
+              ? VIDEO_PAGES_MESSAGES.EMPTY_FILTERED
+              : resolveEmptyMessage(Boolean(search), VIDEO_PAGES_MESSAGES.EMPTY)
+          }
+          icon={<VideoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
+        />
+      ) : (
+        <AdminCardGrid testId="video-pages-list">
+          {filtered.map((page) => (
+            <VideoPageCard
+              key={page.id}
+              page={page}
+              onView={() => setSelectedPage(page)}
+              onEdit={() => handleEdit(page)}
+              onDelete={() => setPageToDelete(page)}
             />
-          </Paper>
-        </motion.div>
+          ))}
+        </AdminCardGrid>
+      )}
 
-        {loading && filtered.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-            >
-              {error}
-            </Alert>
-          </motion.div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <VideoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma página encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {isFiltering
-                  ? 'Nenhuma página corresponde ao filtro aplicado.'
-                  : search
-                    ? 'Tente ajustar sua busca ou limpar os filtros.'
-                    : 'Ainda não há páginas de vídeos cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {loading && filtered.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3} alignItems="stretch">
-              {filtered.map((page, index) => (
-                <Grid
-                  item
-                  key={page.id}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: 'flex' }}
-                >
-                  <VideoPageCard
-                    page={page}
-                    onView={() => setSelectedPage(page)}
-                    onEdit={() => handleEdit(page)}
-                    onDelete={() => setPageToDelete(page)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
+      <DeleteConfirmationModal
+        open={!!pageToDelete}
+        testId="video-pages-delete-modal"
+        description={`Você está prestes a excluir permanentemente: ${pageToDelete?.title ?? "esta página"}.`}
+        onClose={() => setPageToDelete(null)}
+        onConfirm={handleDelete}
+      />
 
-        <DeleteConfirmationModal
-          open={!!pageToDelete}
-          description={`Você está prestes a excluir permanentemente: ${pageToDelete?.title ?? "esta página"}.`}
-          onClose={() => setPageToDelete(null)}
-          onConfirm={handleDelete}
-        />
+      <VideoPageDetailsModal
+        page={selectedPage}
+        open={!!selectedPage}
+        onClose={() => setSelectedPage(null)}
+      />
 
-        <VideoPageDetailsModal
-          page={selectedPage}
-          open={!!selectedPage}
-          onClose={() => setSelectedPage(null)}
-        />
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={5000}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MuiAlert
+          data-testid="video-pages-snackbar"
+          severity={snackbar.severity}
+          variant="filled"
           onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          sx={{
+            borderRadius: 2,
+          }}
         >
-          <MuiAlert
-            severity={snackbar.severity}
-            variant="filled"
-            onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-            sx={{
-              borderRadius: 2,
-            }}
-          >
-            {snackbar.message}
-          </MuiAlert>
-        </Snackbar>
-      </Container>
-    </Box>
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
+    </AdminPageShell>
   );
 }

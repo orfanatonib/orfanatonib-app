@@ -53,3 +53,10 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
 export function useIsFeatureEnabled(key: string): boolean {
   return useSelector(selectIsFeatureEnabled(key));
 }
+
+/** Basta UMA das flags ligada (ex.: vídeos públicos ou de formação). */
+export function useIsAnyFeatureEnabled(keys: readonly string[]): boolean {
+  return useSelector((state: Parameters<ReturnType<typeof selectIsFeatureEnabled>>[0]) =>
+    keys.some((key) => selectIsFeatureEnabled(key)(state)),
+  );
+}

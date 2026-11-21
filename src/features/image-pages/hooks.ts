@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiDeleteImagePage, apiListImagePages } from './api';
-import { ImagePageData } from 'store/slices/image/imageSlice';
+import { ImagePageData } from '@/features/image-pages/types';
 
 export function useImagePages() {
   const [pages, setPages] = useState<ImagePageData[]>([]);

@@ -1,5 +1,6 @@
 import { IdeasSection } from 'store/slices/ideas/ideasSlice';
 import { MediaItem, MediaUploadType } from 'store/slices/types';
+import { validateMediaURL } from 'utils/validateMediaURL';
 import { DEFAULT_UPLOAD_EXTENSION, IDEAS_FORM_FIELD } from './constants';
 import {
   IdeasMediaPayload,
@@ -66,4 +67,25 @@ export function buildIdeasFormData(input: BuildIdeasFormDataInput): FormData {
   };
   formData.append(IDEAS_FORM_FIELD, JSON.stringify(payload));
   return formData;
+}
+
+/** Título e descrição gerados para o vídeo `number` da ideia. */
+export function buildGeneratedVideoInfo(ideaTitle: string, number: number): { title: string; description: string } {
+  const named = ideaTitle.trim();
+  return {
+    title: named ? `Vídeo ${number} da ideia "${ideaTitle}"` : `Vídeo ${number}`,
+    description: named ? `Vídeo ${number} para auxiliar na Ideia "${ideaTitle}"` : `Vídeo ${number}`,
+  };
+}
+
+/** `true` quando o rascunho de vídeo não pode ser adicionado (sem URL/arquivo, ou link inválido). */
+export function hasVideoDraftError(draft: Pick<MediaItem, 'url' | 'uploadType' | 'platformType'>): boolean {
+  if (!draft.url) return true;
+  return draft.uploadType === MediaUploadType.LINK && !validateMediaURL(draft.url, draft.platformType);
+}
+
+/** URL de incorporação do YouTube (sem autoplay) a partir de um link `watch?v=` ou já `embed`. */
+export function toYoutubeEmbedUrl(url: string): string {
+  const embed = url.includes('embed') ? url : url.replace(/watch\?v=/, 'embed/');
+  return `${embed}?autoplay=0&mute=0`;
 }

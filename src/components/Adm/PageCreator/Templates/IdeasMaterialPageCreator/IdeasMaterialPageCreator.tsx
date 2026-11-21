@@ -17,11 +17,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'store/slices';
 import { fetchRoutes } from 'store/slices/route/routeSlice';
 import { clearIdeasData, IdeasSection } from 'store/slices/ideas/ideasSlice';
-import api from '@/config/axiosConfig';
+import { apiSaveIdeasPage } from '@/features/ideas-pages/api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import { IdeasMaterialSection } from './IdeasMaterialSection';
 import {
-  IDEAS_PAGES_ENDPOINT,
   IDEAS_PAGE_MESSAGES,
   IDEAS_PAGE_TEST_ID,
 } from './constants';
@@ -117,18 +117,18 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
         fromTemplatePage: Boolean(fromTemplatePage),
         existingId: ideasData?.id,
       });
-      const headers = { 'Content-Type': 'multipart/form-data' };
-      const response = await (fromTemplatePage
-        ? api.post(IDEAS_PAGES_ENDPOINT, formData, { headers })
-        : api.patch(`${IDEAS_PAGES_ENDPOINT}/${ideasData?.id}`, formData, { headers }));
-
-      if (!response?.data) throw new Error(IDEAS_PAGE_MESSAGES.SAVE_FAILED);
+      const saved = await apiSaveIdeasPage(formData, fromTemplatePage ? undefined : ideasData?.id);
+      if (!saved?.route?.path) throw new Error(IDEAS_PAGE_MESSAGES.SAVE_FAILED);
 
       setSnackbar({ open: true, message: IDEAS_PAGE_MESSAGES.SAVED, severity: 'success' });
       await dispatch(fetchRoutes());
-      navigate(`/${response.data.route.path}`);
-    } catch {
-      setSnackbar({ open: true, message: IDEAS_PAGE_MESSAGES.SAVE_ERROR, severity: 'error' });
+      navigate(`/${saved.route.path}`);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getApiErrorMessage(err, IDEAS_PAGE_MESSAGES.SAVE_ERROR),
+        severity: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -156,12 +156,13 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
       />
 
       {sections.length > 0 && (
-        <Paper elevation={2} sx={PAGE_PAPER_SX}>
+        <Paper data-testid={`${IDEAS_PAGE_TEST_ID}-sections`} elevation={2} sx={PAGE_PAPER_SX}>
           <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
             📚 Seções ({sections.length})
           </Typography>
           {sections.map((section, index) => (
             <Accordion
+              data-testid={`${IDEAS_PAGE_TEST_ID}-section`}
               key={index}
               expanded={expandedSectionIndex === index}
               onChange={() => setExpandedSectionIndex(expandedSectionIndex === index ? null : index)}
@@ -186,6 +187,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
               </AccordionDetails>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, borderTop: 1, borderColor: 'divider' }}>
                 <IconButton
+                  data-testid={`${IDEAS_PAGE_TEST_ID}-section-delete`}
                   color="error"
                   aria-label="Excluir seção"
                   onClick={() => handleDeleteSectionClick(index)}
@@ -201,6 +203,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
 
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Button
+          data-testid={`${IDEAS_PAGE_TEST_ID}-add-section`}
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={handleAddSection}
@@ -235,6 +238,7 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={confirmDeleteSection}
         loading={false}
+        testId={`${IDEAS_PAGE_TEST_ID}-delete-section-dialog`}
         description={IDEAS_PAGE_MESSAGES.DELETE_SECTION}
       />
 

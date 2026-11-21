@@ -30,6 +30,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import { FeedCommentsPendingBadge } from "@/features/feed-comments";
+import { ImageSectionsPendingBadge } from "@/features/image-sections";
 import { RootState } from "@/store/slices";
 
 import {
@@ -435,6 +436,10 @@ function AdminLayout() {
                           <FeedCommentsPendingBadge>
                             <ItemIcon />
                           </FeedCommentsPendingBadge>
+                        ) : item.id === AdminNavigationItemId.SHELTER_PHOTOS ? (
+                          <ImageSectionsPendingBadge>
+                            <ItemIcon />
+                          </ImageSectionsPendingBadge>
                         ) : (
                           <ItemIcon />
                         )}

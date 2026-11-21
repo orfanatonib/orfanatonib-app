@@ -80,3 +80,36 @@ export const REVIEW_STATUS_COLORS: Readonly<Record<string, 'warning' | 'success'
   approved: 'success',
   rejected: 'error',
 };
+
+/** Fila de revisão: o selo do painel atualiza sozinho e some com a flag. */
+export const IMAGE_SECTIONS_PENDING_COUNT_ENDPOINT = `${IMAGE_SECTIONS_ENDPOINT}/pending-count`;
+export const IMAGE_SECTIONS_PENDING_POLL_MS = 60_000;
+export const IMAGE_SECTIONS_STALE_TIME_MS = 15_000;
+export const IMAGE_SECTIONS_PENDING_BADGE_MAX = 99;
+export const IMAGE_SECTIONS_PENDING_BADGE_ARIA = 'publicações de fotos aguardando aprovação';
+
+/** Chaves do cache de servidor da feature (todas dentro de `image-sections`). */
+export const imageSectionKeys = {
+  root: ['image-sections'] as const,
+  pendingCount: (userId: string | null) => ['image-sections', 'pending-count', userId] as const,
+};
+
+export const IMAGE_SECTION_TEST_IDS = {
+  PENDING_BADGE: 'image-sections-pending-badge',
+  MANAGER: 'image-sections-manager',
+  SEARCH: 'image-sections-search',
+  SEARCH_CLEAR: 'image-sections-search-clear',
+  REFRESH: 'image-sections-refresh',
+  LOADING: 'image-sections-loading',
+  ERROR: 'image-sections-error',
+  EMPTY: 'image-sections-empty',
+  LIST: 'image-sections-list',
+  DELETE_DIALOG: 'image-section-delete-dialog',
+} as const;
+
+export const IMAGE_SECTIONS_MESSAGES = {
+  TITLE: '📸 Imagens dos Abrigos',
+  EMPTY: 'Ainda não há publicações de fotos dos abrigos aguardando revisão.',
+  LOAD_FAILED: 'Erro ao buscar seções de imagens',
+  DELETE_FAILED: 'Erro ao deletar seção de imagens',
+} as const;

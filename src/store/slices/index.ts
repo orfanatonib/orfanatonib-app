@@ -2,11 +2,9 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
-import imageReducer from './image/imageSlice';
 import imageSectionReducer from './image-section/imageSectionSlice';
 import authReducer from './auth/authSlice';
 import routesReducer from './route/routeSlice';
-import videoReducer from './video/videoSlice';
 import meditationReducer from './meditation/meditationSlice';
 import visitMaterialReducer from './visit-material/visitMaterialSlice';
 import eventsReducer from './events/eventsSlice';
@@ -26,10 +24,8 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
-  image: imageReducer,
   imageSection: imageSectionReducer,
   routes: routesReducer,
-  video: videoReducer,
   meditation: meditationReducer,
   visitMaterial: visitMaterialReducer,
   events: eventsReducer,

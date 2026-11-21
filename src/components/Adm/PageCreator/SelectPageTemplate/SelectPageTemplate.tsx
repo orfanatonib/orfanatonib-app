@@ -1,7 +1,5 @@
 import React, { ReactElement } from 'react';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { clearImageData } from '@/store/slices/image/imageSlice';
 import {
   Box,
   Typography,
@@ -43,13 +41,9 @@ interface SelectPageTemplateProps {
 
 export default function SelectPageTemplate({ templateKey }: SelectPageTemplateProps = {}) {
   const selectedOption: PageTemplateType | '' = templateKey ?? '';
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSelectOption = (option: PageTemplateOption) => {
-    if (option.key === PageTemplateType.GALLERY) {
-      dispatch(clearImageData());
-    }
     navigate(getTemplateRoute(option));
   };
 

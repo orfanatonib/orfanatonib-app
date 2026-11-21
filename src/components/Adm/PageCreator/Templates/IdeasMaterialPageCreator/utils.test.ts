@@ -47,3 +47,41 @@ describe('ideas utils', () => {
     expect(updated.sections[0].medias[0].id).toBe('m1');
   });
 });
+
+describe('vídeo da ideia', () => {
+  it('buildGeneratedVideoInfo: com e sem título da ideia', async () => {
+    const { buildGeneratedVideoInfo } = await import('./utils');
+    expect(buildGeneratedVideoInfo('Gincana', 2)).toEqual({
+      title: 'Vídeo 2 da ideia "Gincana"',
+      description: 'Vídeo 2 para auxiliar na Ideia "Gincana"',
+    });
+    expect(buildGeneratedVideoInfo('  ', 1)).toEqual({ title: 'Vídeo 1', description: 'Vídeo 1' });
+  });
+
+  it('hasVideoDraftError: exige URL; link precisa ser válido', async () => {
+    const { hasVideoDraftError } = await import('./utils');
+    const { MediaUploadType, MediaPlatform } = await import('store/slices/types');
+    expect(hasVideoDraftError({ url: '', uploadType: MediaUploadType.UPLOAD })).toBe(true);
+    expect(hasVideoDraftError({ url: 'blob:x', uploadType: MediaUploadType.UPLOAD })).toBe(false);
+    expect(
+      hasVideoDraftError({ url: 'https://exemplo.com/x', uploadType: MediaUploadType.LINK, platformType: MediaPlatform.YOUTUBE }),
+    ).toBe(true);
+    expect(
+      hasVideoDraftError({
+        url: 'https://www.youtube.com/watch?v=abc12345678',
+        uploadType: MediaUploadType.LINK,
+        platformType: MediaPlatform.YOUTUBE,
+      }),
+    ).toBe(false);
+  });
+
+  it('toYoutubeEmbedUrl: converte watch e mantém embed', async () => {
+    const { toYoutubeEmbedUrl } = await import('./utils');
+    expect(toYoutubeEmbedUrl('https://www.youtube.com/watch?v=abc')).toBe(
+      'https://www.youtube.com/embed/abc?autoplay=0&mute=0',
+    );
+    expect(toYoutubeEmbedUrl('https://www.youtube.com/embed/abc')).toBe(
+      'https://www.youtube.com/embed/abc?autoplay=0&mute=0',
+    );
+  });
+});

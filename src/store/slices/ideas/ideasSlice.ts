@@ -12,9 +12,9 @@ export interface IdeasSection {
   medias: MediaItem[];
 }
 
+/** Página de ideias é sempre privada: o contrato não tem `public` (só as seções têm). */
 export interface IdeasPageData {
   id?: string;
-  public?: boolean;
   title: string;
   subtitle?: string;
   description: string;
@@ -26,12 +26,10 @@ export interface IdeasPageData {
 
 interface IdeasState {
   ideasData: IdeasPageData | null;
-  ideasSectionData: IdeasSection | null;
 }
 
 const initialState: IdeasState = {
   ideasData: null,
-  ideasSectionData: null,
 };
 
 const ideasSlice = createSlice({
@@ -44,14 +42,8 @@ const ideasSlice = createSlice({
     clearIdeasData: (state) => {
       state.ideasData = null;
     },
-    setIdeasSectionData: (state, action: PayloadAction<IdeasSection>) => {
-      state.ideasSectionData = action.payload;
-    },
-    clearIdeasSectionData: (state) => {
-      state.ideasSectionData = null;
-    },
   },
 });
 
-export const { setIdeasData, clearIdeasData, setIdeasSectionData, clearIdeasSectionData } = ideasSlice.actions;
+export const { setIdeasData, clearIdeasData } = ideasSlice.actions;
 export default ideasSlice.reducer;

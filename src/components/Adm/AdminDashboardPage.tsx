@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 
 import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import { FeedCommentsPendingBadge } from "@/features/feed-comments";
+import { ImageSectionsPendingBadge } from "@/features/image-sections";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
@@ -237,6 +238,10 @@ export default function AdminDashboardPage() {
                           <FeedCommentsPendingBadge>
                             <ItemIcon color="primary" />
                           </FeedCommentsPendingBadge>
+                        ) : item.id === AdminNavigationItemId.SHELTER_PHOTOS ? (
+                          <ImageSectionsPendingBadge>
+                            <ItemIcon color="primary" />
+                          </ImageSectionsPendingBadge>
                         ) : (
                           <ItemIcon color="primary" />
                         )}
@@ -359,6 +364,10 @@ export default function AdminDashboardPage() {
                       <FeedCommentsPendingBadge>
                         <ItemIcon fontSize="large" color="primary" />
                       </FeedCommentsPendingBadge>
+                    ) : item.id === AdminNavigationItemId.SHELTER_PHOTOS ? (
+                      <ImageSectionsPendingBadge>
+                        <ItemIcon fontSize="large" color="primary" />
+                      </ImageSectionsPendingBadge>
                     ) : (
                       <ItemIcon fontSize="large" color="primary" />
                     )}

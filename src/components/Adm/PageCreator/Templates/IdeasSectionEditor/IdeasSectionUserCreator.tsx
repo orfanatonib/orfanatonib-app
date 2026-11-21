@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, CircularProgress, Paper, Stack } from '@mui/material';
 import { LightbulbOutlined as LightbulbIcon } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { clearIdeasSectionData, type IdeasSection } from '@/store/slices/ideas/ideasSlice';
+import type { IdeasSection } from '@/store/slices/ideas/ideasSlice';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { MEMBER_AREA_HOME_PATH, MEMBER_CARD_SX } from '@/pages/MemberArea/constants/navigation';
 import {
   IDEA_DRAFT_ISSUE_MESSAGES,
@@ -12,6 +12,7 @@ import {
   createIdeasSection,
   getSendableMedias,
   ideasSectionErrorMessage,
+  isDraftDirty,
   validateIdeaDraft,
 } from '@/features/ideas-sections';
 import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
@@ -28,7 +29,6 @@ import type { IdeaFeedbackState } from './types';
 import { buildMemberIdeaFormData, getIdeaMediaStatus, getIdeaMediaStatusMessage } from './utils';
 
 export function IdeasSectionUserCreator() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [sectionData, setSectionData] = useState<IdeasSection>(EMPTY_IDEA_SECTION);
@@ -38,6 +38,8 @@ export function IdeasSectionUserCreator() {
 
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
+  useUnsavedChangesGuard(isDraftDirty(sectionData, EMPTY_IDEA_SECTION));
+
   const sendableMediaCount = getSendableMedias(sectionData.medias).length;
   const mediaStatus = getIdeaMediaStatus(sendableMediaCount, sectionData.medias.length);
 
@@ -45,7 +47,6 @@ export function IdeasSectionUserCreator() {
     setFeedback({ open: true, message, severity });
 
   const handleCancel = () => {
-    dispatch(clearIdeasSectionData());
     navigate(MEMBER_AREA_HOME_PATH);
   };
 
@@ -61,7 +62,6 @@ export function IdeasSectionUserCreator() {
       // A ideia enviada por um membro nasce pública e sempre com mídia nova.
       await createIdeasSection(buildMemberIdeaFormData(sectionData));
 
-      dispatch(clearIdeasSectionData());
       setSectionData(EMPTY_IDEA_SECTION);
       showMessage(IDEA_SHARE_COPY.SUCCESS, 'success');
       redirectTimer.current = setTimeout(() => navigate(MEMBER_AREA_HOME_PATH), IDEA_SHARE_REDIRECT_DELAY_MS);

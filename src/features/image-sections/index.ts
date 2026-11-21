@@ -10,3 +10,4 @@ export { RejectImageSectionDialog } from './components/RejectImageSectionDialog'
 export { ShelterMediaPreview } from './components/ShelterMediaPreview';
 /** Player reutilizável: o card do feed pode usá-lo para exibir o vídeo do post. */
 export { ShelterVideoPlayer } from './components/ShelterVideoPlayer';
+export { ImageSectionsPendingBadge } from './components/ImageSectionsPendingBadge';

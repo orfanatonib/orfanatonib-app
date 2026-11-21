@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { VideoPageData } from 'store/slices/video/videoSlice';
-import { apiDeleteVideoPage, apiListVideoPages } from './api';
+import { VideoPageData } from './types';
+import { apiDeleteVideoPage, apiGetVideoPage, apiListVideoPages } from './api';
+import { filterVideoPagesByTitle } from './utils';
 
 function useDebounced<T>(value: T, delay = 300) {
   const [debounced, setDebounced] = useState(value);
@@ -41,11 +42,10 @@ export function useVideoPages() {
     fetchPages();
   }, [fetchPages]);
 
-  const filtered = useMemo(() => {
-    const term = debouncedSearch.trim().toLowerCase();
-    if (!term) return pages;
-    return pages.filter((p) => p.title?.toLowerCase().includes(term));
-  }, [pages, debouncedSearch]);
+  const filtered = useMemo(
+    () => filterVideoPagesByTitle(pages, debouncedSearch),
+    [pages, debouncedSearch],
+  );
 
   const removePage = useCallback(async (id: string) => {
     await apiDeleteVideoPage(id);
@@ -63,4 +63,39 @@ export function useVideoPages() {
     removePage,
     setError,
   };
+}
+
+export const VIDEO_PAGE_LOAD_ERROR = 'Erro ao carregar a página de vídeos. Tente novamente mais tarde.';
+export const VIDEO_PAGE_MISSING_ID = 'ID da página de vídeos não fornecido.';
+
+/** Dono único da página de vídeos carregada por id (visualização e edição). */
+export function useVideoPageById(id: string | null | undefined) {
+  const [page, setPage] = useState<VideoPageData | null>(null);
+  const [loading, setLoading] = useState(Boolean(id));
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!id) {
+      setPage(null);
+      setError(VIDEO_PAGE_MISSING_ID);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      setPage(await apiGetVideoPage(id));
+    } catch {
+      setPage(null);
+      setError(VIDEO_PAGE_LOAD_ERROR);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { page, loading, error, reload: load } as const;
 }

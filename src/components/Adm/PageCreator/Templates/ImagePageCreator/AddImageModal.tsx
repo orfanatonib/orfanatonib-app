@@ -86,13 +86,14 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="add-image-modal" open={isOpen} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>Adicionar Nova(s) Imagem(ns)</DialogTitle>
 
       <DialogContent>
         <FormControl fullWidth margin="normal">
           <InputLabel>Modo de envio</InputLabel>
           <Select
+            data-testid="add-image-mode"
             value={mode}
             label="Modo de envio"
             onChange={(e) => setMode(e.target.value as MediaUploadType)}
@@ -107,6 +108,7 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
             <Button variant="outlined" component="label" fullWidth sx={{ mt: 1 }}>
               Upload de imagens
               <input
+                data-testid="add-image-file-input"
                 hidden
                 type="file"
                 accept={upload.accept}
@@ -122,11 +124,14 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
                 {tempUrls.map((url, index) => (
                   <Box key={index} sx={{ position: 'relative', mb: 2 }}>
                     <img
+                      data-testid="add-image-preview"
                       src={url}
                       alt={`Preview ${index + 1}`}
                       style={{ maxWidth: '100%', borderRadius: 8 }}
                     />
                     <IconButton
+                      data-testid="add-image-remove"
+                      aria-label="Remover imagem"
                       onClick={() => handleRemoveImage(index)}
                       sx={{
                         position: 'absolute',
@@ -164,6 +169,7 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
             <TextField
               fullWidth
               label="URLs das imagens (separadas por vírgula)"
+              inputProps={{ 'data-testid': 'add-image-urls' }}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               margin="normal"
@@ -173,8 +179,9 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button data-testid="add-image-cancel" onClick={onClose}>Cancelar</Button>
         <Button
+          data-testid="add-image-submit"
           onClick={handleSubmit}
           variant="contained"
           disabled={

@@ -2,14 +2,15 @@ import type { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Box, CircularProgress, Typography, Paper } from '@mui/material';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { useIsAnyFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 import {
     selectFeatureFlagsLastFetched,
     selectFeatureFlagsLoading,
 } from '@/store/selectors/featureFlagsSelectors';
 
 interface FeatureFlagRouteProps {
-    featureKey: FeatureFlagKeys | string;
+    /** Uma flag, ou uma lista em que basta UMA estar ligada (`anyOf`). */
+    featureKey: FeatureFlagKeys | string | readonly (FeatureFlagKeys | string)[];
     children: ReactElement;
     fallbackPath?: string;
     showMessage?: boolean;
@@ -21,7 +22,9 @@ export const FeatureFlagRoute = ({
     fallbackPath = '/',
     showMessage = false,
 }: FeatureFlagRouteProps) => {
-    const isEnabled = useIsFeatureEnabled(featureKey);
+    const isEnabled = useIsAnyFeatureEnabled(
+        typeof featureKey === 'string' ? [featureKey] : featureKey,
+    );
     const loading = useSelector(selectFeatureFlagsLoading);
     const lastFetched = useSelector(selectFeatureFlagsLastFetched);
 

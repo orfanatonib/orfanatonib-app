@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Button } from '@mui/material';
-import { AppDispatch, RootState } from '@/store/slices';
-import api from '@/config/axiosConfig';
+import { AppDispatch } from '@/store/slices';
+import { apiCreateImagePage, apiUpdateImagePage } from '@/features/image-pages/api';
+import type { ImagePageEditState } from '@/features/image-pages/types';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
 import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import { MediaItem } from 'store/slices/types';
@@ -13,7 +14,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import ImageSection from './ImageSection';
 import {
   GALLERY_FALLBACK_PATH,
-  IMAGE_PAGES_ENDPOINT,
   IMAGE_PAGE_MESSAGES,
   IMAGE_PAGE_TEST_ID,
 } from './constants';
@@ -29,12 +29,11 @@ interface ImageProps {
   fromTemplatePage?: boolean;
 }
 
-const MULTIPART_HEADERS = { 'Content-Type': 'multipart/form-data' };
-
 export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const imageData = useSelector((state: RootState) => state.image.imageData);
+  const location = useLocation();
+  const imageData = (location.state as ImagePageEditState | null)?.imagePage ?? null;
 
   const [sections, setSections] = useState<SectionData[]>([]);
   const [title, setTitle] = useState('');
@@ -82,14 +81,12 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         fromTemplatePage: Boolean(fromTemplatePage),
         existingId: imageData?.id,
       });
-      const response = fromTemplatePage
-        ? await api.post(IMAGE_PAGES_ENDPOINT, formData, { headers: MULTIPART_HEADERS })
-        : await api.patch(`${IMAGE_PAGES_ENDPOINT}/${imageData?.id}`, formData, {
-          headers: MULTIPART_HEADERS,
-        });
+      const saved = fromTemplatePage
+        ? await apiCreateImagePage(formData)
+        : await apiUpdateImagePage(imageData?.id ?? '', formData);
 
       await dispatch(fetchRoutes());
-      navigate(`/${response.data.route.path}`);
+      navigate(`/${saved.route?.path}`);
       setSuccessSnackbarOpen(true);
     } catch {
       showError(IMAGE_PAGE_MESSAGES.SAVE_ERROR);

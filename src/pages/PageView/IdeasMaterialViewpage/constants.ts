@@ -13,7 +13,20 @@ export const IDEAS_VIEW_COPY = {
   LOADING: 'Carregando página de ideias...',
   EMPTY: 'Nenhuma ideia encontrada.',
   EMPTY_SECTION: 'Esta ideia ainda não tem mídias.',
+  IDEA: 'Ideia',
+  IDEAS: 'Ideias',
   SHARED_BY: 'Compartilhado por',
+} as const;
+
+export const IDEAS_VIEW_TEST_IDS = {
+  HEADER: 'ideas-page-header',
+  BACK: 'ideas-page-back',
+  TITLE: 'ideas-page-title',
+  EDIT: 'ideas-page-edit',
+  DELETE: 'ideas-page-delete',
+  LOADING: 'ideas-page-loading',
+  ERROR: 'ideas-page-error',
+  EMPTY: 'ideas-page-empty',
 } as const;
 
 /** Largura mínima de cada cartão de mídia na grade. */

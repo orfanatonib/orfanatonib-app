@@ -48,10 +48,11 @@ export default function ImageSection({
 
   return (
     <Paper
+      data-testid="image-section-editor"
       elevation={2}
       sx={{
-        mb: 4,
-        p: { xs: 3, md: 4 },
+        mb: { xs: 2, md: 4 },
+        p: { xs: 2, md: 4 },
         borderRadius: 3,
         bgcolor: 'background.paper',
         position: 'relative',
@@ -62,6 +63,8 @@ export default function ImageSection({
           📸 Seção de Imagens
         </Typography>
         <IconButton
+          data-testid="image-section-editor-remove"
+          aria-label="Remover seção"
           color="error"
           onClick={onRemoveSection}
           sx={{
@@ -78,6 +81,7 @@ export default function ImageSection({
         <Grid item xs={12} md={6}>
           <ImageItem mediaItems={mediaItems} onRemoveMedia={onRemoveMedia} />
           <Button
+            data-testid="image-section-editor-add-media"
             variant="contained"
             fullWidth
             onClick={onOpenModal}
@@ -102,6 +106,7 @@ export default function ImageSection({
           <TextField
             fullWidth
             label="Título/Legenda da seção"
+            inputProps={{ 'data-testid': 'image-section-editor-caption' }}
             required
             value={caption}
             onChange={(e) => {
@@ -138,6 +143,7 @@ export default function ImageSection({
           <TextField
             fullWidth
             label="Descrição da seção"
+            inputProps={{ 'data-testid': 'image-section-editor-description' }}
             required
             value={description}
             onChange={(e) => {
@@ -175,7 +181,11 @@ export default function ImageSection({
 
           <FormControlLabel
             control={
-              <Switch checked={isPublic} onChange={(e) => onPublicChange(e.target.checked)} />
+              <Switch
+                checked={isPublic}
+                onChange={(e) => onPublicChange(e.target.checked)}
+                inputProps={{ 'data-testid': 'image-section-editor-public' } as object}
+              />
             }
             label="Seção pública"
           />

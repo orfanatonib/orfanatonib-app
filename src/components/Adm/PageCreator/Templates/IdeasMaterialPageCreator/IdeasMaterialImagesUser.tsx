@@ -155,7 +155,7 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
               }}
             >
               Escolher Imagem (JPG, PNG, GIF, etc.)
-              <input type="file" hidden accept="image/*" onChange={handleUpload} />
+              <input data-testid="idea-image-file" type="file" hidden accept="image/*" onChange={handleUpload} />
             </Button>
           </Grid>
 
@@ -220,6 +220,7 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
 
           <Grid item xs={12}>
             <Button
+              data-testid="idea-image-add"
               ref={addButtonRef}
               variant="contained"
               fullWidth
@@ -282,12 +283,12 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
               )}
               <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                 <Tooltip title="Editar">
-                  <IconButton onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="idea-image-edit" onClick={() => handleEdit(index)}>
                     <Edit />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton color="error" onClick={() => handleRemoveClick(index)}>
+                  <IconButton data-testid="idea-image-remove" color="error" onClick={() => handleRemoveClick(index)}>
                     <Delete />
                   </IconButton>
                 </Tooltip>
@@ -297,7 +298,7 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
         ))}
       </Grid>
 
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <Dialog data-testid="idea-image-delete-dialog" open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -305,8 +306,8 @@ export function IdeasMaterialImagesUser({ images, setImages, ideaTitle, onPendin
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-          <Button onClick={confirmRemove} color="error">
+          <Button data-testid="idea-image-delete-cancel" onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
+          <Button data-testid="idea-image-delete-confirm" onClick={confirmRemove} color="error">
             Excluir
           </Button>
         </DialogActions>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
@@ -9,19 +9,18 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
-import api from '@/config/axiosConfig';
-import { AppDispatch, RootState } from '@/store/slices';
+import { AppDispatch } from '@/store/slices';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
-import { clearVideoData } from '@/store/slices/video/videoSlice';
+import { apiSaveVideoPage } from '@/features/video-pages/api';
+import { useVideoPageById } from '@/features/video-pages/hooks';
+import { VIDEO_PAGES_LIST_PATH } from '@/features/video-pages/utils';
 import { MediaItem, MediaPlatform, MediaType, MediaUploadType } from 'store/slices/types';
 import VideoForm from './VideoForm';
 import VideoList from './VideoList';
 import {
   UPLOAD_SIMULATED_DELAY_MS,
-  VIDEO_PAGES_ENDPOINT,
   VIDEO_PAGE_MESSAGES,
   VIDEO_PAGE_TEST_ID,
-  GALLERY_FALLBACK_PATH,
 } from './constants';
 import { SnackbarKind, VideoFieldErrors } from './types';
 import {
@@ -44,12 +43,12 @@ interface VideoProps {
   fromTemplatePage?: boolean;
 }
 
-const MULTIPART_HEADERS = { 'Content-Type': 'multipart/form-data' };
-
 export default function VideoPageCreator({ fromTemplatePage = false }: VideoProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const videoData = useSelector((state: RootState) => state.video.videoData);
+  const [searchParams] = useSearchParams();
+  const editId = fromTemplatePage ? null : searchParams.get('id');
+  const { page: videoData, error: loadError } = useVideoPageById(editId);
   const upload = useMediaUpload({ kind: MediaFileKind.VIDEO });
 
   const [title, setTitle] = useState('');
@@ -69,23 +68,24 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
   const [uploadProgress, setUploadProgress] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!videoData && !fromTemplatePage) {
-      navigate(GALLERY_FALLBACK_PATH);
-      return;
-    }
     if (fromTemplatePage) {
-      dispatch(clearVideoData());
       setTitle('');
       setDescription('');
       setVideos([]);
       setIsPublic(true);
-    } else if (videoData) {
+      return;
+    }
+    if (!editId || loadError) {
+      navigate(VIDEO_PAGES_LIST_PATH, { replace: true });
+      return;
+    }
+    if (videoData) {
       setTitle(videoData.title ?? '');
       setDescription(videoData.description ?? '');
       setIsPublic(videoData.public ?? true);
       setVideos(videoData.videos.map(videoToEditable));
     }
-  }, [fromTemplatePage, videoData, dispatch, navigate]);
+  }, [fromTemplatePage, editId, loadError, videoData, navigate]);
 
   const areUploadsComplete = () => Object.values(uploadProgress).every((v) => v !== false);
 
@@ -118,14 +118,10 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         fromTemplatePage,
         existingId: videoData?.id,
       });
-      const response = fromTemplatePage
-        ? await api.post(VIDEO_PAGES_ENDPOINT, formData, { headers: MULTIPART_HEADERS })
-        : await api.patch(`${VIDEO_PAGES_ENDPOINT}/${videoData!.id}`, formData, {
-          headers: MULTIPART_HEADERS,
-        });
+      const response = await apiSaveVideoPage(formData, fromTemplatePage ? undefined : videoData?.id);
 
       await dispatch(fetchRoutes());
-      navigate(`/${response.data.route.path}`);
+      navigate(`/${response.route.path}`);
       notify(
         fromTemplatePage ? VIDEO_PAGE_MESSAGES.CREATED : VIDEO_PAGE_MESSAGES.UPDATED,
         SnackbarKind.SUCCESS,
@@ -254,7 +250,7 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         onSave={handleSavePage}
       />
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog data-testid={`${VIDEO_PAGE_TEST_ID}-delete-dialog`} open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -262,10 +258,19 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+          <Button
+            data-testid={`${VIDEO_PAGE_TEST_ID}-delete-cancel`}
+            onClick={() => setDeleteDialogOpen(false)}
+            color="primary"
+          >
             Cancelar
           </Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
+          <Button
+            data-testid={`${VIDEO_PAGE_TEST_ID}-delete-confirm`}
+            onClick={handleConfirmDelete}
+            color="error"
+            autoFocus
+          >
             Excluir
           </Button>
         </DialogActions>

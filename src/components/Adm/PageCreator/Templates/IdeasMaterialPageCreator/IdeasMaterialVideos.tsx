@@ -192,7 +192,7 @@ export function IdeasMaterialVideos({ videos, setVideos }: VideosProps) {
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload de Vídeo
-              <input type="file" hidden accept="video/*" onChange={handleUpload} />
+              <input data-testid="ideas-material-video-file" type="file" hidden accept="video/*" onChange={handleUpload} />
             </Button>
             {fileName && (
               <Typography variant="body2" mt={1}>
@@ -202,7 +202,7 @@ export function IdeasMaterialVideos({ videos, setVideos }: VideosProps) {
           </Grid>
         )}
         <Grid item xs={12}>
-          <Button variant="contained" fullWidth onClick={handleAddOrUpdate} sx={{ mt: 2 }}>
+          <Button data-testid="ideas-material-video-add" variant="contained" fullWidth onClick={handleAddOrUpdate} sx={{ mt: 2 }}>
             {editingIndex !== null ? 'Salvar Alterações' : 'Adicionar Vídeo'}
           </Button>
         </Grid>
@@ -235,12 +235,12 @@ export function IdeasMaterialVideos({ videos, setVideos }: VideosProps) {
               )}
               <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                 <Tooltip title="Editar">
-                  <IconButton onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="ideas-material-video-edit" onClick={() => handleEdit(index)}>
                     <Edit />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton color="error" onClick={() => handleRemoveClick(index)}>
+                  <IconButton data-testid="ideas-material-video-remove" color="error" onClick={() => handleRemoveClick(index)}>
                     <Delete />
                   </IconButton>
                 </Tooltip>
@@ -250,7 +250,7 @@ export function IdeasMaterialVideos({ videos, setVideos }: VideosProps) {
         ))}
       </Grid>
 
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <Dialog data-testid="ideas-material-video-delete-dialog" open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -258,8 +258,8 @@ export function IdeasMaterialVideos({ videos, setVideos }: VideosProps) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-          <Button onClick={confirmRemove} color="error">
+          <Button data-testid="ideas-material-video-delete-cancel" onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
+          <Button data-testid="ideas-material-video-delete-confirm" onClick={confirmRemove} color="error">
             Excluir
           </Button>
         </DialogActions>

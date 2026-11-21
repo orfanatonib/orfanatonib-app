@@ -104,7 +104,6 @@ test.describe.serial("Ideias (grupo IdeasSectionEditor) — criação e edição
           title: pageTitle,
           subtitle: "Subtítulo do cenário",
           description: "Página de destino do cenário",
-          public: true,
           sections: [{ title: "Seção base", description: "Base", public: true, medias: [] }],
         }),
       },

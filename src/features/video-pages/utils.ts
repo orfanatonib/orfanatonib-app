@@ -12,3 +12,14 @@ export async function copyToClipboard(text: string) {
     return false;
   }
 }
+
+export const VIDEO_PAGES_LIST_PATH = '/adm/paginas-videos';
+
+export const videoPageEditPath = (id: string) =>
+  `/adm/editar-pagina-videos?id=${encodeURIComponent(id)}`;
+
+export function filterVideoPagesByTitle<T extends { title?: string }>(pages: T[], term: string): T[] {
+  const needle = term.trim().toLowerCase();
+  if (!needle) return pages;
+  return pages.filter((p) => p.title?.toLowerCase().includes(needle));
+}

@@ -170,7 +170,7 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
               }}
             >
               Escolher Arquivo (PDF, DOC, DOCX)
-              <input type="file" hidden accept=".pdf,.doc,.docx" onChange={handleUpload} />
+              <input data-testid="idea-document-file" type="file" hidden accept=".pdf,.doc,.docx" onChange={handleUpload} />
             </Button>
           </Grid>
 
@@ -211,6 +211,7 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
 
           <Grid item xs={12}>
             <Button
+              data-testid="idea-document-add"
               ref={addButtonRef}
               variant="contained"
               fullWidth
@@ -306,18 +307,18 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
               <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                 {canPreview(doc) && (
                   <Tooltip title="Visualizar">
-                    <IconButton onClick={() => handlePreview(doc)}>
+                    <IconButton data-testid="idea-document-preview" onClick={() => handlePreview(doc)}>
                       <Visibility />
                     </IconButton>
                   </Tooltip>
                 )}
                 <Tooltip title="Editar">
-                  <IconButton onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="idea-document-edit" onClick={() => handleEdit(index)}>
                     <Edit />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton color="error" onClick={() => handleRemoveClick(index)}>
+                  <IconButton data-testid="idea-document-remove" color="error" onClick={() => handleRemoveClick(index)}>
                     <Delete />
                   </IconButton>
                 </Tooltip>
@@ -327,7 +328,7 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
         ))}
       </Grid>
 
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <Dialog data-testid="idea-document-delete-dialog" open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -335,8 +336,8 @@ export function IdeasMaterialDocumentsUser({ documents, setDocuments, ideaTitle,
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-          <Button onClick={confirmRemove} color="error">
+          <Button data-testid="idea-document-delete-cancel" onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
+          <Button data-testid="idea-document-delete-confirm" onClick={confirmRemove} color="error">
             Excluir
           </Button>
         </DialogActions>

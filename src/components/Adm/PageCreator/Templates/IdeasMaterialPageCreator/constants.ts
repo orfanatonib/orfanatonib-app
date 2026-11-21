@@ -1,5 +1,4 @@
 export const IDEAS_PAGE_TEST_ID = 'ideas-page-creator';
-export const IDEAS_PAGES_ENDPOINT = '/ideas-pages';
 export const IDEAS_FORM_FIELD = 'ideasMaterialsPageData';
 export const DEFAULT_UPLOAD_EXTENSION = 'bin';
 

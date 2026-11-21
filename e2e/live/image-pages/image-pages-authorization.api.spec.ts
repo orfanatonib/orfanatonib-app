@@ -188,10 +188,10 @@ test.describe.serial("Páginas de imagem — autorização", () => {
     expect(await countRows("image_pages")).toBe(before);
   });
 
-  test("[image-page.delete.image-pages-id#perfil-admin] DELETE /image-pages/:id como admin: 400/404", async ({ request }) => {
+  test("[image-page.delete.image-pages-id#perfil-admin] DELETE /image-pages/:id como admin: 404", async ({ request }) => {
     const before = await countRows("image_pages");
     const res = await send(request, "DELETE", "/image-pages/{BAD}", admin);
-    expect([400, 404]).toContain(res.status());
+    expect(res.status()).toBe(404);
     expect(await countRows("image_pages")).toBe(before);
   });
 

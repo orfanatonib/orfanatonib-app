@@ -28,7 +28,15 @@ export default function PageFormActions({
   return (
     <Box
       data-testid={`${testId}-${PAGE_FORM_TEST_IDS.ACTIONS}`}
-      sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        alignItems: 'stretch',
+        justifyContent: 'center',
+        gap: 2,
+        mb: { xs: 2, md: 4 },
+        '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+      }}
     >
       <Button
         data-testid={`${testId}-${PAGE_FORM_TEST_IDS.CANCEL}`}

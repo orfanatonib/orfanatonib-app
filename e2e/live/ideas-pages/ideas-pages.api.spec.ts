@@ -85,7 +85,7 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
   test("busca a página de ideias criada por ID", async ({ request }) => {
     expect(createdPageId, "a criação do teste anterior precisa ter funcionado").toBeTruthy();
 
-    // A página criada não é pública: com sessão aparece; anônimo recebe 404.
+    // A página de ideias é sempre privada: com sessão aparece; anônimo recebe 401.
     const response = await request.get(`${API_URL}/ideas-pages/${createdPageId}`, {
       headers: authHeaders(adminToken),
     });
@@ -94,7 +94,7 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(body.id).toBe(createdPageId);
 
     const anonymous = await request.get(`${API_URL}/ideas-pages/${createdPageId}`);
-    expect(anonymous.status()).toBe(404);
+    expect(anonymous.status()).toBe(401);
   });
 
   test("[ideas-page.patch.ideas-pages-id#feliz] atualiza a página de ideias (título novo no banco)", async ({ request }) => {

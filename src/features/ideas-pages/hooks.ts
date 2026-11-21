@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiDeleteIdeasPage, apiListIdeasPages } from './api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 import { IdeasPageData } from 'store/slices/ideas/ideasSlice';
 
 export function useIdeasPages() {
@@ -14,11 +15,7 @@ export function useIdeasPages() {
       const data = await apiListIdeasPages();
       setPages(data);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? `Erro ao buscar páginas: ${err.message}. Tente novamente mais tarde.`
-          : 'Erro desconhecido ao buscar páginas.'
-      );
+      setError(`Erro ao buscar páginas: ${getApiErrorMessage(err, 'erro desconhecido')}. Tente novamente mais tarde.`);
     } finally {
       setLoading(false);
     }
@@ -51,15 +48,17 @@ export function useIdeasSearch(pages: IdeasPageData[]) {
 export function useIdeasMutations(fetchPages: () => Promise<void> | void) {
   const [mutError, setMutError] = useState<string | null>(null);
 
-  const deletePage = useCallback(async (id: string) => {
+  /** `true` quando a página foi excluída; em falha expõe a mensagem da API em `mutError`. */
+  const deletePage = useCallback(async (id: string): Promise<boolean> => {
     setMutError(null);
     try {
       await apiDeleteIdeasPage(id);
-      await fetchPages();
-    } catch {
-      setMutError('Erro ao excluir a página. Tente novamente.');
-      throw new Error('delete failed');
+    } catch (err) {
+      setMutError(getApiErrorMessage(err, 'Erro ao excluir a página. Tente novamente.'));
+      return false;
     }
+    await fetchPages();
+    return true;
   }, [fetchPages]);
 
   return { mutError, setMutError, deletePage };

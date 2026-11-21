@@ -1,7 +1,11 @@
 import api from '@/config/axiosConfig';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import type { MyImageSection } from './types';
-import { IMAGE_SECTIONS_ENDPOINT, SHELTER_UPLOAD_TIMEOUT_MS } from './constants';
+import type { ImageSectionPendingCount, MyImageSection } from './types';
+import {
+  IMAGE_SECTIONS_ENDPOINT,
+  IMAGE_SECTIONS_PENDING_COUNT_ENDPOINT,
+  SHELTER_UPLOAD_TIMEOUT_MS,
+} from './constants';
 
 export async function listImageSections(): Promise<SectionData[]> {
   const { data } = await api.get<SectionData[]>(IMAGE_SECTIONS_ENDPOINT);
@@ -36,5 +40,14 @@ export async function rejectImageSection(id: string, reason: string): Promise<vo
 /** Publicações do próprio autor: status e motivo da reprovação. */
 export async function listMyImageSections(): Promise<MyImageSection[]> {
   const { data } = await api.get<MyImageSection[]>(`${IMAGE_SECTIONS_ENDPOINT}/mine`);
+  return data;
+}
+
+/** Quantas publicações aguardam revisão (só admin; alimenta o selo do painel). */
+export async function getImageSectionsPendingCount(signal?: AbortSignal): Promise<ImageSectionPendingCount> {
+  const { data } = await api.get<ImageSectionPendingCount>(IMAGE_SECTIONS_PENDING_COUNT_ENDPOINT, {
+    signal,
+    skipGlobalError: true,
+  });
   return data;
 }

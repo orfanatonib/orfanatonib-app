@@ -35,6 +35,7 @@ interface UserInfoModalProps {
 export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserInfoModalProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const getInitials = (name: string) => {
     const parts = name.split(" ");
@@ -47,10 +48,13 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
   const handleCopy = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopyFailed(false);
       setCopied(field);
       setSnackbarOpen(true);
       setTimeout(() => setCopied(null), 2000);
     } catch {
+      setCopyFailed(true);
+      setSnackbarOpen(true);
     }
   };
 
@@ -67,6 +71,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
   return (
     <>
       <Dialog
+        data-testid="user-info-modal"
         open={open}
         onClose={onClose}
         maxWidth="xs"
@@ -87,6 +92,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
           }}
         >
           <IconButton
+            data-testid="user-info-close"
             onClick={onClose}
             sx={{
               position: "absolute",
@@ -175,6 +181,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
               </Box>
               <IconButton
                 size="small"
+                data-testid="user-info-copy-email"
                 onClick={() => handleCopy(user.email, "email")}
                 sx={{
                   color: copied === "email" ? "success.main" : "grey.500",
@@ -206,6 +213,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
                 </Box>
                 <IconButton
                   size="small"
+                  data-testid="user-info-copy-phone"
                   onClick={() => handleCopy(user.phone!, "phone")}
                   sx={{
                     color: copied === "phone" ? "success.main" : "grey.500",
@@ -222,6 +230,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
               variant="outlined"
               fullWidth
               startIcon={<EmailIcon />}
+              data-testid="user-info-email"
               onClick={handleEmail}
               sx={{
                 borderRadius: 2,
@@ -237,6 +246,7 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
                 variant="contained"
                 fullWidth
                 startIcon={<WhatsAppIcon />}
+                data-testid="user-info-whatsapp"
                 onClick={handleWhatsApp}
                 sx={{
                   borderRadius: 2,
@@ -260,11 +270,14 @@ export default function UserInfoModal({ open, onClose, user, ideaTitle }: UserIn
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
-          severity="success"
+          data-testid="user-info-copy-feedback"
+          severity={copyFailed ? "error" : "success"}
           variant="filled"
           sx={{ borderRadius: 2 }}
         >
-          Copiado para a área de transferência!
+          {copyFailed
+            ? "Não foi possível copiar. Copie manualmente."
+            : "Copiado para a área de transferência!"}
         </Alert>
       </Snackbar>
     </>

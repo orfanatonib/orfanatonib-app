@@ -26,11 +26,18 @@ export const MEDIA_TYPE_ICONS: Readonly<Record<string, string>> = {
   document: '📄',
 };
 
+export const IDEAS_SECTION_ADMIN_EDIT_PATH = '/adm/editar-ideias-compartilhadas';
+
 export const IDEAS_SECTION_MESSAGES = {
   LOAD_FAILED: 'Erro ao buscar Ideias compartilhadas',
   LOAD_PAGES_FAILED: 'Erro ao buscar páginas de ideias',
   DELETE_FAILED: 'Erro ao deletar seção de ideias',
   SAVE_FAILED: 'Erro ao salvar a seção.',
+  LOAD_ONE_FAILED: 'Erro ao carregar a ideia',
+  MISSING_ID: 'Nenhuma ideia selecionada para editar.',
+  MANAGER_TITLE: '💡 Ideias Compartilhadas',
+  EMPTY_TITLE: '📭 Nenhuma seção encontrada',
+  EMPTY: 'Ainda não há seções de ideias compartilhadas cadastradas.',
 } as const;
 
 export const IDEA_DRAFT_ISSUE_MESSAGES: Readonly<Record<IdeaDraftIssue, string>> = {

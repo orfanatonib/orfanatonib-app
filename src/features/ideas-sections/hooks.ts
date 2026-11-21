@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { IdeasSection, IdeasPage } from './types';
-import { listIdeasSections, listIdeasPages } from './api';
+import type { IdeasSection as DraftSection } from '@/store/slices/ideas/ideasSlice';
+import { filterSections, toDraftSection } from './utils';
+import { getIdeasSection, listIdeasSections, listIdeasPages } from './api';
 import { ideasSectionErrorMessage } from './errors';
 import { IDEAS_SECTION_MESSAGES } from './constants';
 
@@ -29,17 +31,7 @@ export function useIdeasSections() {
   useEffect(() => {
     setIsFiltering(true);
     const t = setTimeout(() => {
-      const term = searchTerm.trim().toLowerCase();
-      if (!term) {
-        setFilteredSections(sections);
-      } else {
-        setFilteredSections(
-          sections.filter((s) =>
-            (s.title ?? '').toLowerCase().includes(term) ||
-            (s.description ?? '').toLowerCase().includes(term)
-          )
-        );
-      }
+      setFilteredSections(filterSections(sections, searchTerm));
       setIsFiltering(false);
     }, 300);
     return () => clearTimeout(t);
@@ -85,3 +77,36 @@ export function useIdeasPages() {
   };
 }
 
+/** Carrega a ideia que o admin vai editar; sem id, não chama a API. */
+export function useIdeasSectionToEdit(sectionId: string | null) {
+  const [section, setSection] = useState<DraftSection | null>(null);
+  const [loading, setLoading] = useState(Boolean(sectionId));
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!sectionId) {
+      setSection(null);
+      setLoading(false);
+      setError('');
+      return undefined;
+    }
+    let active = true;
+    setLoading(true);
+    setError('');
+    getIdeasSection(sectionId)
+      .then((data) => {
+        if (active) setSection(toDraftSection(data));
+      })
+      .catch((e: unknown) => {
+        if (active) setError(ideasSectionErrorMessage(e, IDEAS_SECTION_MESSAGES.LOAD_ONE_FAILED));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [sectionId]);
+
+  return { section, loading, error };
+}

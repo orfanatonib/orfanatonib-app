@@ -1,25 +1,19 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  Container,
-  Paper,
-  Typography,
-} from '@mui/material';
 import { PhotoLibrary } from '@mui/icons-material';
-import { AppDispatch } from '@/store/slices';
-import { setImageData, ImagePageData } from 'store/slices/image/imageSlice';
-import { motion } from 'framer-motion';
+import type { ImagePageData, ImagePageEditState } from './types';
 
 import { useImagePages } from './hooks';
-import ImagePageToolbar from './components/ImagePageToolbar';
+import { IMAGE_PAGES_MESSAGES } from './constants';
 import ImagePageCard from './components/ImagePageCard';
 import ImagePageDetailsModal from './components/ImagePageDetailsModal';
-import BackHeader from '@/components/common/header/BackHeader';
+import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
+import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
+import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
+import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
+import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
+import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
+import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 
 export default function ImagePageManager() {
@@ -38,15 +32,14 @@ export default function ImagePageManager() {
   const [pageToDelete, setPageToDelete] = React.useState<ImagePageData | null>(null);
   const [selectedPage, setSelectedPage] = React.useState<ImagePageData | null>(null);
 
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const handleEdit = React.useCallback(
     (page: ImagePageData) => {
-      dispatch(setImageData(page));
-      navigate('/adm/editar-pagina-imagens');
+      const state: ImagePageEditState = { imagePage: page };
+      navigate('/adm/editar-pagina-imagens', { state });
     },
-    [dispatch, navigate]
+    [navigate]
   );
 
   const handleConfirmDelete = React.useCallback(async () => {
@@ -62,144 +55,59 @@ export default function ImagePageManager() {
   }, [pageToDelete, removePage, setError, fetchPages]);
 
   const isBusy = loading || isFiltering;
+  const showSkeleton = isBusy && filtered.length === 0;
 
   return (
-    <Box data-testid="image-pages-manager" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="📸 Páginas de Imagens" />
-        </motion.div>
+    <AdminPageShell testId="image-pages-manager" title={IMAGE_PAGES_MESSAGES.TITLE}>
+      <AdminSearchBar
+        testId="image-pages-search"
+        clearTestId="image-pages-search-clear"
+        refreshTestId="image-pages-refresh"
+        label="Buscar"
+        ariaLabel="Buscar páginas de imagens"
+        value={search}
+        onChange={setSearch}
+        onRefresh={fetchPages}
+        loading={isFiltering}
+      />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <ImagePageToolbar search={search} onSearchChange={setSearch} loading={isFiltering} />
-          </Paper>
-        </motion.div>
-
-        {isBusy && filtered.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-            >
-              {error}
-            </Alert>
-          </motion.div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <PhotoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma página encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {search
-                  ? 'Tente ajustar sua busca ou limpar os filtros.'
-                  : 'Ainda não há páginas de imagens cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {(loading || isFiltering) && filtered.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3} alignItems="stretch">
-              {filtered.map((page, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  key={page.id}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: 'flex' }}
-                >
-                  <ImagePageCard
-                    page={page}
-                    onDelete={setPageToDelete}
-                    onEdit={handleEdit}
-                    onViewDetails={setSelectedPage}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-
-        <DeleteConfirmDialog
-          open={!!pageToDelete}
-          title={pageToDelete?.title || pageToDelete?.title || 'Página de imagens'}
-          onClose={() => setPageToDelete(null)}
-          onConfirm={handleConfirmDelete}
+      {showSkeleton ? (
+        <AdminListSkeleton testId="image-pages-loading" />
+      ) : error ? (
+        <AdminErrorAlert testId="image-pages-error" message={error} onClose={() => setError('')} />
+      ) : filtered.length === 0 ? (
+        <AdminEmptyState
+          testId="image-pages-empty"
+          message={resolveEmptyMessage(Boolean(search), IMAGE_PAGES_MESSAGES.EMPTY)}
+          icon={<PhotoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
         />
+      ) : (
+        <AdminCardGrid testId="image-pages-list">
+          {filtered.map((page) => (
+            <ImagePageCard
+              key={page.id}
+              page={page}
+              onDelete={setPageToDelete}
+              onEdit={handleEdit}
+              onViewDetails={setSelectedPage}
+            />
+          ))}
+        </AdminCardGrid>
+      )}
 
-        <ImagePageDetailsModal
-          page={selectedPage}
-          open={!!selectedPage}
-          onClose={() => setSelectedPage(null)}
-        />
-      </Container>
-    </Box>
+      <DeleteConfirmDialog
+        testId="image-page-delete-dialog"
+        open={!!pageToDelete}
+        title={pageToDelete?.title || pageToDelete?.title || 'Página de imagens'}
+        onClose={() => setPageToDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <ImagePageDetailsModal
+        page={selectedPage}
+        open={!!selectedPage}
+        onClose={() => setSelectedPage(null)}
+      />
+    </AdminPageShell>
   );
 }

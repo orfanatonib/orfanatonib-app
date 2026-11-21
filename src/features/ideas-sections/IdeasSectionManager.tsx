@@ -1,32 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  TextField,
-  Container,
-  InputAdornment,
-  IconButton,
-  Tooltip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Stack,
-  Paper,
-} from '@mui/material';
-import { Search, Clear, Edit, Delete, Add, Lightbulb } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { Lightbulb } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { motion } from 'framer-motion';
 import IdeasSectionCard from './components/IdeasSectionCard';
 import IdeasSectionDetailsModal from './components/IdeasSectionDetailsModal';
 import { deleteIdeasSection } from './api';
@@ -34,15 +8,18 @@ import { ideasSectionErrorMessage } from './errors';
 import { IDEAS_SECTION_MESSAGES } from './constants';
 import { useIdeasSections } from './hooks';
 import { IdeasSection as IdeasSectionType } from './types';
-import { setIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
-import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
-import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
-import BackHeader from '@/components/common/header/BackHeader';
+import { buildEditSectionPath } from './utils';
+import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
+import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
+import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
+import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
+import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
+import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
+import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 
 export default function IdeasSectionManager() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const {
     filteredSections,
@@ -63,32 +40,7 @@ export default function IdeasSectionManager() {
   }, [fetchSections]);
 
   const handleEdit = (section: IdeasSectionType) => {
-    const ideasSection: IdeasSection = {
-      id: section.id,
-      title: section.title,
-      description: section.description,
-      public: section.public,
-      createdAt: section.createdAt,
-      updatedAt: section.updatedAt,
-      medias: (section.medias || []).map(media => ({
-        id: media.id,
-        title: media.title,
-        description: media.description,
-        uploadType: media.uploadType as MediaUploadType,
-        mediaType: media.mediaType as MediaType,
-        isLocalFile: media.isLocalFile,
-        url: media.url,
-        platformType: media.platformType as MediaPlatform || undefined,
-        originalName: media.originalName || undefined,
-        size: media.size || undefined,
-        createdAt: media.createdAt,
-        updatedAt: media.updatedAt,
-      })),
-    };
-    
-    dispatch(setIdeasSectionData(ideasSection));
-    
-    navigate('/adm/editar-ideias-compartilhadas');
+    navigate(buildEditSectionPath(section.id));
   };
 
   const handleDelete = async () => {
@@ -107,203 +59,60 @@ export default function IdeasSectionManager() {
 
   const isBusy = loading || isFiltering;
   const hasQuery = Boolean(searchTerm);
+  const showSkeleton = isBusy && filteredSections.length === 0;
 
   return (
-    <Box
-      data-testid="ideas-sections-page"
-      sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}
-    >
-      <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', px: { xs: 1, md: 2 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="💡 Ideias Compartilhadas" />
-        </motion.div>
+    <AdminPageShell testId="ideas-sections-page" title={IDEAS_SECTION_MESSAGES.MANAGER_TITLE}>
+      <AdminSearchBar
+        testId="ideas-sections-search"
+        clearTestId="ideas-sections-search-clear"
+        refreshTestId="ideas-sections-refresh"
+        label="Buscar seções"
+        placeholder="Buscar por título ou descrição..."
+        ariaLabel="Buscar Ideias compartilhadas"
+        value={searchTerm}
+        onChange={setSearchTerm}
+        onRefresh={fetchSections}
+        loading={isFiltering}
+      />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <TextField
-              fullWidth
-              placeholder="Buscar por título ou descrição..."
-              label="Buscar seções"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              inputProps={{
-                'aria-label': 'Buscar Ideias compartilhadas',
-                'data-testid': 'ideas-sections-search',
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {isFiltering && <CircularProgress size={20} sx={{ mr: hasQuery ? 1 : 0 }} />}
-                    {hasQuery && (
-                      <Tooltip title="Limpar busca">
-                        <IconButton
-                          size="small"
-                          onClick={() => setSearchTerm('')}
-                          sx={{
-                            '&:hover': {
-                              bgcolor: 'action.hover',
-                            },
-                          }}
-                        >
-                          <Clear fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '&:hover': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    },
-                  },
-                  '&.Mui-focused': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderWidth: 2,
-                    },
-                  },
-                },
-              }}
+      {showSkeleton ? (
+        <AdminListSkeleton testId="ideas-sections-loading" />
+      ) : error ? (
+        <AdminErrorAlert testId="ideas-sections-error" message={error} onClose={() => setError('')} />
+      ) : filteredSections.length === 0 ? (
+        <AdminEmptyState
+          testId="ideas-sections-empty"
+          title={IDEAS_SECTION_MESSAGES.EMPTY_TITLE}
+          message={resolveEmptyMessage(hasQuery, IDEAS_SECTION_MESSAGES.EMPTY)}
+          icon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
+        />
+      ) : (
+        <AdminCardGrid testId="ideas-sections-list">
+          {filteredSections.map((section) => (
+            <IdeasSectionCard
+              key={section.id}
+              section={section}
+              onDelete={(target) => setSectionToDelete(target)}
+              onEdit={handleEdit}
+              onViewDetails={(target) => setSelectedSection(target)}
             />
-          </Paper>
-        </motion.div>
+          ))}
+        </AdminCardGrid>
+      )}
 
-        {isBusy && filteredSections.length === 0 ? (
-          <Box
-            data-testid="ideas-sections-loading"
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              data-testid="ideas-sections-error"
-              severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-            >
-              {error}
-            </Alert>
-          </motion.div>
-        ) : filteredSections.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              data-testid="ideas-sections-empty"
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma seção encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {hasQuery
-                  ? 'Tente ajustar sua busca ou limpar os filtros.'
-                  : 'Ainda não há seções de ideias compartilhadas cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {(loading || isFiltering) && filteredSections.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid data-testid="ideas-sections-list" container spacing={3} alignItems="stretch">
-              {filteredSections.map((section, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  key={section.id}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: 'flex' }}
-                >
-                  <IdeasSectionCard
-                    section={section}
-                    onDelete={(section) => setSectionToDelete(section)}
-                    onEdit={handleEdit}
-                    onViewDetails={(section) => setSelectedSection(section)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
+      <DeleteConfirmDialog
+        open={!!sectionToDelete}
+        title={sectionToDelete?.title || 'Seção'}
+        onClose={() => setSectionToDelete(null)}
+        onConfirm={handleDelete}
+      />
 
-        <DeleteConfirmDialog
-          open={!!sectionToDelete}
-          title={sectionToDelete?.title || 'Seção'}
-          onClose={() => setSectionToDelete(null)}
-          onConfirm={handleDelete}
-        />
-
-        <IdeasSectionDetailsModal
-          section={selectedSection}
-          open={!!selectedSection}
-          onClose={() => setSelectedSection(null)}
-        />
-
-      </Container>
-    </Box>
+      <IdeasSectionDetailsModal
+        section={selectedSection}
+        open={!!selectedSection}
+        onClose={() => setSelectedSection(null)}
+      />
+    </AdminPageShell>
   );
 }

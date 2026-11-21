@@ -46,3 +46,7 @@ flag in the shared catalog.
 ## Comentários do feed
 
 `Comentários do Feed` (`/adm/comentarios-feed`, só admin) fica em `Abrigos e visitas` e exige as flags `shelter_feed` e `shelter_feed_comments`. O ícone mostra no menu lateral e no cartão do painel o total de comentários aguardando aprovação (`GET /feed-section-comments/moderation/pending-count`, atualizado a cada 60 s). O código fica em `src/features/feed-comments`.
+
+## Fotos dos Abrigos
+
+`Fotos dos Abrigos` (`/adm/fotos-abrigos`, só admin, flag `photo_moderation`) é a fila de revisão das publicações enviadas por membros e líderes. O ícone mostra no menu lateral e no cartão do painel o total de publicações aguardando revisão (`GET /image-sections/pending-count`, atualizado a cada 60 s e refeito ao aprovar, reprovar ou excluir). A tela usa a casca `admin-shell`; o código fica em `src/features/image-sections` (`ImageSectionsPendingBadge`).

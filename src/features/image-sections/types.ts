@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { SectionData } from '@/store/slices/image-section/imageSectionSlice';
 import type { MediaItem, MediaPlatform, MediaType, MediaUploadType } from '@/store/slices/types';
 
@@ -97,4 +98,13 @@ export interface MyImageSection {
 /** Corpo de `PATCH /image-sections/:id/reject`. */
 export interface RejectImageSectionInput {
   reason: string;
+}
+
+/** `GET /image-sections/pending-count`: publicações aguardando revisão (selo do painel). */
+export interface ImageSectionPendingCount {
+  pending: number;
+}
+
+export interface ImageSectionsPendingBadgeProps {
+  children: ReactNode;
 }

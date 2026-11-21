@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Chip, FormControl, Grid, InputLabel, MenuItem, Paper, Select, Typography } from '@mui/material';
 import { Lock, Public } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '@/store/slices';
-import { clearIdeasSectionData, type IdeasSection } from '@/store/slices/ideas/ideasSlice';
-import { attachIdeasSectionToPage, ideasSectionErrorMessage } from '@/features/ideas-sections';
+import type { IdeasSection } from '@/store/slices/ideas/ideasSlice';
+import { attachIdeasSectionToPage, ideasSectionErrorMessage, isDraftDirty } from '@/features/ideas-sections';
 import { IdeasMaterialSection } from '../IdeasMaterialPageCreator/IdeasMaterialSection';
 import PageFormBase from '../shared/PageFormBase';
 import PageFormActions from '../shared/PageFormActions';
@@ -33,13 +31,11 @@ import {
 } from './utils';
 
 export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEditorProps) {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { ideasSectionData } = useSelector((state: RootState) => state.ideas);
 
-  const [sectionData, setSectionData] = useState<IdeasSection>(
-    existingSection || ideasSectionData || EMPTY_IDEA_SECTION,
-  );
+  const baseline = existingSection ?? EMPTY_IDEA_SECTION;
+  const [sectionData, setSectionData] = useState<IdeasSection>(baseline);
+  const [saved, setSaved] = useState(false);
   const [selectedPage, setSelectedPage] = useState<IdeasPageOption | null>(null);
   const [loading, setLoading] = useState(false);
   const [pageTouched, setPageTouched] = useState(false);
@@ -51,8 +47,9 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
 
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
+  const isDirty = !saved && (isDraftDirty(sectionData, baseline) || selectedPage !== null);
+
   const handleBack = () => {
-    dispatch(clearIdeasSectionData());
     navigate(ADMIN_IDEAS_SECTIONS_PATH);
   };
 
@@ -68,7 +65,7 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
     setLoading(true);
     try {
       await attachIdeasSectionToPage(existingSection.id, selectedPage.id, buildAdminSectionFormData(sectionData));
-      dispatch(clearIdeasSectionData());
+      setSaved(true);
       setFeedback({ open: true, message: IDEAS_SECTION_ADMIN_COPY.SUCCESS, severity: 'success' });
       redirectTimer.current = setTimeout(() => navigate(ADMIN_IDEAS_SECTIONS_PATH), ADMIN_REDIRECT_DELAY_MS);
     } catch (error: unknown) {
@@ -85,6 +82,8 @@ export function IdeasSectionAdminEditor({ existingSection }: IdeasSectionAdminEd
       testId={IDEAS_SECTION_ADMIN_TEST_ID}
       heading={IDEAS_SECTION_ADMIN_COPY.HEADING}
       onBack={handleBack}
+      warnOnUnsavedChanges
+      isDirty={isDirty}
     >
       <Paper
         data-testid={IDEAS_SECTION_ADMIN_TEST_IDS.SETTINGS}

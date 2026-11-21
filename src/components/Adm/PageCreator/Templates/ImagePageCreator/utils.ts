@@ -1,6 +1,6 @@
 import { MediaItem, MediaPlatform, MediaType, MediaUploadType } from 'store/slices/types';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { ImagePageData } from '@/store/slices/image/imageSlice';
+import { ImagePageData } from '@/features/image-pages/types';
 import { IMAGE_FORM_FIELD_PREFIX, IMAGE_PAGE_MESSAGES } from './constants';
 
 export function sectionToEditable(section: SectionData): SectionData {

@@ -110,6 +110,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
       fullWidth
       maxWidth="lg"
       aria-labelledby="dialog-title"
+      data-testid="ideas-section-details-modal"
       sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}
     >
       <DialogTitle 
@@ -123,7 +124,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
       >
         Detalhes da Seção de Ideias
         <Tooltip title="Fechar">
-          <IconButton onClick={onClose} size="small">
+          <IconButton data-testid="ideas-section-details-close-icon" onClick={onClose} size="small" aria-label="Fechar">
             <Close />
           </IconButton>
         </Tooltip>
@@ -132,7 +133,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
       <DialogContent sx={{ pb: 1 }}>
         {section ? (
           <Stack spacing={3} mt={0.5}>
-            <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+            <Paper data-testid="ideas-section-details-general" elevation={0} sx={{ p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
               <Typography variant="h6" gutterBottom color="primary">Informações Gerais</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -236,7 +237,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
             )}
 
             <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom color="primary">
+              <Typography data-testid="ideas-section-details-media-count" variant="h6" gutterBottom color="primary">
                 Mídias ({section.medias?.length || 0})
               </Typography>
               
@@ -245,6 +246,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
                   {section.medias.map((media, index) => (
                     <Grid item xs={12} sm={6} md={4} key={media.id}>
                       <Paper 
+                        data-testid={`ideas-section-details-media-${media.id}`}
                         elevation={1} 
                         sx={{ 
                           p: 2, 
@@ -297,14 +299,14 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
                   ))}
                 </Grid>
               ) : (
-                <Typography variant="body2" color="text.secondary">
+                <Typography data-testid="ideas-section-details-no-media" variant="body2" color="text.secondary">
                   Nenhuma mídia disponível.
                 </Typography>
               )}
             </Paper>
           </Stack>
         ) : (
-          <Typography variant="body2" color="text.secondary">Nenhuma seção selecionada.</Typography>
+          <Typography data-testid="ideas-section-details-empty" variant="body2" color="text.secondary">Nenhuma seção selecionada.</Typography>
         )}
       </DialogContent>
 
@@ -317,6 +319,7 @@ export default function IdeasSectionDetailsModal({ section, open, onClose }: Pro
         }}
       >
         <Button
+          data-testid="ideas-section-details-close"
           onClick={onClose}
           variant="outlined"
           color="primary"

@@ -19,16 +19,6 @@ export interface IdeaMediaGroup {
   items: MediaItem[];
 }
 
-export interface IdeasPageHeaderProps {
-  title: string;
-  subtitle?: string;
-  description?: string;
-  isAdmin: boolean;
-  onBack: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
 export interface IdeaSectionCardProps {
   section: IdeaSectionView;
   /** Posição da seção na página, usada na chave e no `data-testid`. */

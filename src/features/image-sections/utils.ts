@@ -75,3 +75,8 @@ export function buildSectionUpload(section: SectionDraftInput): SectionUploadPar
   if (section.pageId) payload.pageId = section.pageId;
   return { payload, uploads };
 }
+
+/** Contagem do selo: acima do teto vira "99+". */
+export function clampBadgeCount(count: number, max: number): string {
+  return count > max ? `${max}+` : String(count);
+}

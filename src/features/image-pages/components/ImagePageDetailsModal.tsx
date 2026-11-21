@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Close, ContentCopy } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { ImagePageData } from 'store/slices/image/imageSlice';
+import { ImagePageData } from '@/features/image-pages/types';
 import { copyToClipboard } from '../utils';
 import { fmtDate } from '@/utils/dateUtils';
 
@@ -23,6 +23,7 @@ export default function ImagePageDetailsModal({ page, open, onClose }: Props) {
 
   return (
     <Dialog
+      data-testid="image-page-details-modal"
       open={open}
       onClose={onClose}
       fullWidth
@@ -48,6 +49,7 @@ export default function ImagePageDetailsModal({ page, open, onClose }: Props) {
       >
         Detalhes da Página de Imagens
         <IconButton
+          data-testid="image-page-details-close-icon"
           onClick={onClose}
           size="small"
           sx={{ position: 'absolute', top: 8, right: 8, color: '#777' }}
@@ -185,6 +187,7 @@ export default function ImagePageDetailsModal({ page, open, onClose }: Props) {
         }}
       >
         <Button
+          data-testid="image-page-details-close"
           variant="outlined"
           onClick={onClose}
           sx={{ minWidth: 120 }}
@@ -193,6 +196,7 @@ export default function ImagePageDetailsModal({ page, open, onClose }: Props) {
           Fechar
         </Button>
         <Button
+          data-testid="image-page-details-open"
           variant="contained"
           onClick={() => page && navigate(`/${page.route?.path}`)}
           disabled={!page || !page.route}

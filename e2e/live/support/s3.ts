@@ -17,6 +17,12 @@ import { addedKeys, diffBucketAndRefs, keyFromUrl } from "./s3-invariants";
 export const MEDIA_URL_COLUMNS: ReadonlyArray<{ table: string; column: string }> = [
   { table: "media_items", column: "url" },
   { table: "routes", column: "image" },
+  { table: "content_packages", column: "coverImageUrl" },
+];
+
+/** Colunas que guardam a chave do objeto (sem URL), como `content_assets.storage_key` do Estúdio. */
+export const MEDIA_KEY_COLUMNS: ReadonlyArray<{ table: string; column: string }> = [
+  { table: "content_assets", column: "storageKey" },
 ];
 
 let client: S3Client | null = null;
@@ -61,6 +67,10 @@ export async function referencedKeys(): Promise<string[]> {
       const key = row.url ? keyFromUrl(row.url, bucket) : null;
       if (key) keys.add(key);
     }
+  }
+  for (const { table, column } of MEDIA_KEY_COLUMNS) {
+    const rows = await queryAll<{ key: string | null }>(`SELECT \`${column}\` AS \`key\` FROM \`${table}\` WHERE \`${column}\` IS NOT NULL`);
+    for (const row of rows) if (row.key) keys.add(row.key);
   }
   return [...keys].sort();
 }

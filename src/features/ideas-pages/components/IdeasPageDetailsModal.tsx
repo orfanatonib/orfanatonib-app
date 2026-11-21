@@ -127,7 +127,7 @@ export default function IdeasPageDetailsModal({ page, open, onClose }: Props) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg" aria-labelledby="dialog-title">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg" aria-labelledby="dialog-title" data-testid="ideas-page-details-modal">
       <IconButton onClick={onClose} sx={{ position: 'absolute', top: 16, right: 16 }} aria-label="Fechar modal">
         <Close />
       </IconButton>
@@ -139,7 +139,7 @@ export default function IdeasPageDetailsModal({ page, open, onClose }: Props) {
       <DialogContent sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
         {page && (
           <Stack spacing={4}>
-            <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
+            <Paper data-testid="ideas-page-details-general" elevation={2} sx={{ p: 4, borderRadius: 2 }}>
               <Typography variant="h5" textAlign="center" fontWeight="bold" color="primary" mb={3}>
                 Informações Gerais
               </Typography>
@@ -161,20 +161,13 @@ export default function IdeasPageDetailsModal({ page, open, onClose }: Props) {
                 <Grid item xs={12} md={6}>
                   <Typography variant="body1"><strong>Atualizado em:</strong> {formatPtBrDate(page.updatedAt)}</Typography>
                 </Grid>
-                <Grid item xs={12}>
-                  <Chip
-                    label={page.public ? 'Pública' : 'Privada'}
-                    color={page.public ? 'success' : 'default'}
-                    aria-label={`Página ${page.public ? 'pública' : 'privada'}`}
-                  />
-                </Grid>
               </Grid>
             </Paper>
 
             <Divider />
 
             {Array.isArray(page.sections) && page.sections.map((section) => (
-              <Paper key={section.id} elevation={2} sx={{ p: 4, borderRadius: 2 }}>
+              <Paper key={section.id} data-testid={`ideas-page-details-section-${section.id}`} elevation={2} sx={{ p: 4, borderRadius: 2 }}>
                 <Typography variant="h5" textAlign="center" fontWeight="bold" color="primary" mb={2}>
                   {section.title}
                 </Typography>
@@ -194,7 +187,7 @@ export default function IdeasPageDetailsModal({ page, open, onClose }: Props) {
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'center', mt: 2, pb: 3 }}>
-        <Button onClick={onClose} variant="outlined" aria-label="Fechar modal">Fechar</Button>
+        <Button onClick={onClose} variant="outlined" aria-label="Fechar modal" data-testid="ideas-page-details-close">Fechar</Button>
         {hasRoutePath(page) && (
           <Button
             variant="contained"

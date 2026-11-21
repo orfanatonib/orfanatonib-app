@@ -153,3 +153,12 @@ Refatoração completa dos componentes de visualização de páginas de vídeos 
 ## 🎯 Resultado Final
 
 Interface moderna, responsiva e intuitiva que proporciona uma excelente experiência tanto para usuários finais quanto para administradores, com foco total em **mobile-first** e design system consistente com tema de vídeos em laranja/vermelho.
+
+## 🧱 Estrutura atual (plano 34)
+
+- `PageVideoView.tsx` só orquestra: estados em `VideoPageStates.tsx` (carregando, erro, não encontrada, vazia) e cabeçalho em `VideoPageHero.tsx`.
+- **Dono único do estado de servidor:** `features/video-pages/hooks.ts` (`useVideoPageById`, `useVideoPages`). O antigo `videoSlice` foi removido do Redux; `hooks.ts` desta pasta só compõe o hook da feature e acrescenta a exclusão.
+- Toda chamada HTTP de vídeo (listar, buscar, salvar, excluir) está em `features/video-pages/api.ts`; o criador (`VideoPageCreator`) não usa mais Axios direto e a edição abre por `/adm/editar-pagina-videos?id=<id>` (sem `id` volta para `/adm/paginas-videos`).
+- `data-testid`: `video-page-view|loading|error|not-found|empty|list|title|description|back`, `video-card`; criador `video-page-creator-*`, `video-form-*`, `video-list-*`; painel `video-pages-*`, `video-page-card-*`.
+- Flags: a página dinâmica de vídeo abre se `public_videos` **ou** `training_videos` estiver ligada (`FeatureFlagRoute` aceita lista, `anyOf`); gestão exige `page_management`.
+- Testes: Vitest de lógica pura (`api.test.ts`, `hooks.test.ts`, `features/video-pages/*.test.ts`) e Playwright em `e2e/live/video-pages`.

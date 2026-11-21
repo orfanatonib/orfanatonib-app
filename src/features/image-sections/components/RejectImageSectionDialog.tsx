@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { REJECTION_MESSAGES, REJECTION_REASON_MAX_LENGTH, TOUCH_TARGET_PX } from '../constants';
 import { rejectImageSection } from '../api';
+import { useRefreshImageSectionsPending } from '../hooks';
 import { extractErrorMessage } from '@/utils/apiError';
 
 interface RejectImageSectionDialogProps {
@@ -35,6 +36,7 @@ export function RejectImageSectionDialog({
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const refreshPending = useRefreshImageSectionsPending();
 
   const empty = reason.trim().length === 0;
   const close = () => {
@@ -52,6 +54,7 @@ export function RejectImageSectionDialog({
     setError('');
     try {
       await rejectImageSection(sectionId, reason.trim());
+      void refreshPending();
       setReason('');
       setTouched(false);
       onRejected();

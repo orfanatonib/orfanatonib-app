@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
-import { listImageSections, listMyImageSections } from './api';
+import { getImageSectionsPendingCount, listImageSections, listMyImageSections } from './api';
+import {
+  IMAGE_SECTIONS_MESSAGES,
+  IMAGE_SECTIONS_PENDING_POLL_MS,
+  IMAGE_SECTIONS_STALE_TIME_MS,
+  imageSectionKeys,
+} from './constants';
 import type { MyImageSection } from './types';
 
 export function useImageSections() {
@@ -18,8 +25,9 @@ export function useImageSections() {
       const data = await listImageSections();
       setSections(data);
       setFilteredSections(data);
-    } catch (e) {
-      setError('Erro ao buscar seções de imagens');
+    } catch (error: unknown) {
+      console.error('Falha ao listar as seções de imagens', error);
+      setError(IMAGE_SECTIONS_MESSAGES.LOAD_FAILED);
     } finally {
       setLoading(false);
     }
@@ -68,7 +76,8 @@ export function useMyImageSections() {
     setFailed(false);
     try {
       setItems(await listMyImageSections());
-    } catch {
+    } catch (error: unknown) {
+      console.error('Falha ao listar as próprias publicações', error);
       setFailed(true);
     } finally {
       setLoading(false);
@@ -80,4 +89,25 @@ export function useMyImageSections() {
   }, [reload]);
 
   return { items, loading, failed, reload };
+}
+
+/** Pendentes para o selo do painel. Só liga quando `enabled` (admin logado). */
+export function usePendingImageSectionsCount(userId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: imageSectionKeys.pendingCount(userId),
+    queryFn: ({ signal }) => getImageSectionsPendingCount(signal),
+    enabled,
+    refetchInterval: IMAGE_SECTIONS_PENDING_POLL_MS,
+    staleTime: IMAGE_SECTIONS_STALE_TIME_MS,
+    retry: false,
+  });
+}
+
+/** Refaz o selo depois de aprovar, reprovar ou apagar uma publicação. */
+export function useRefreshImageSectionsPending(): () => Promise<void> {
+  const queryClient = useQueryClient();
+  return useCallback(
+    () => queryClient.invalidateQueries({ queryKey: imageSectionKeys.root }),
+    [queryClient],
+  );
 }

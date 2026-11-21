@@ -16,8 +16,8 @@ export const PAGE_FIELD_SX: SxProps<Theme> = {
 };
 
 export const PAGE_PAPER_SX: SxProps<Theme> = {
-  p: { xs: 3, md: 4 },
-  mb: 4,
+  p: { xs: 2, md: 4 },
+  mb: { xs: 2, md: 4 },
   borderRadius: 3,
   bgcolor: 'background.paper',
 };
@@ -26,7 +26,9 @@ export const PAGE_ACTION_BUTTON_SX: SxProps<Theme> = {
   borderRadius: 2,
   textTransform: 'none',
   fontWeight: 600,
-  px: 4,
+  px: { xs: 2, sm: 4 },
   py: 1.5,
+  minHeight: 48,
+  whiteSpace: 'nowrap',
   transition: 'all 0.2s ease',
 };

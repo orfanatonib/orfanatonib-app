@@ -19,7 +19,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({ entityType, idToFetch }) =>
       return <PageGalleryView idToFetch={idToFetch} />;
     case MediaTargetType.VideosPage:
       return (
-        <FeatureFlagRoute featureKey={FeatureFlagKeys.PUBLIC_VIDEOS}>
+        <FeatureFlagRoute
+          featureKey={[FeatureFlagKeys.PUBLIC_VIDEOS, FeatureFlagKeys.TRAINING_VIDEOS]}
+        >
           <PageVideoView idToFetch={idToFetch} />
         </FeatureFlagRoute>
       );

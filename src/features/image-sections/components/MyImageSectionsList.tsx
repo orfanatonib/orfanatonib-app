@@ -29,9 +29,9 @@ export function MyImageSectionsList({ items, loading, failed }: MyImageSectionsL
         Minhas publicações
       </Typography>
       {loading && items.length === 0 ? (
-        <CircularProgress size={24} aria-label="Carregando suas publicações" />
+        <CircularProgress data-testid="my-image-sections-loading" size={24} aria-label="Carregando suas publicações" />
       ) : failed ? (
-        <Alert severity="warning">Não foi possível carregar suas publicações agora.</Alert>
+        <Alert data-testid="my-image-sections-error" severity="warning">Não foi possível carregar suas publicações agora.</Alert>
       ) : items.length === 0 ? (
         <Typography data-testid="my-image-sections-empty" color="text.secondary">
           Você ainda não enviou nenhuma publicação.

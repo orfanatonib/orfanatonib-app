@@ -1,14 +1,11 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { configureStore } from '@reduxjs/toolkit';
 
 import SelectPageTemplate from './SelectPageTemplate';
 import { PAGE_CREATOR_TEST_IDS, PAGE_TEMPLATE_OPTIONS } from './constants';
 import { PageTemplateType } from './types';
-import imageReducer from '@/store/slices/image/imageSlice';
 
 // Mock sub-creator components to keep unit test isolated
 vi.mock('@/components/Adm/PageCreator/Templates/VideoPageCreator/VideoPageCreator', () => ({
@@ -32,14 +29,7 @@ vi.mock('@/components/Adm/PageCreator/Templates/IdeasMaterialPageCreator/IdeasMa
 }));
 
 const renderWithProviders = (ui: React.ReactElement) => {
-  const store = configureStore({
-    reducer: {
-      image: imageReducer,
-    },
-  });
-
   return render(
-    <Provider store={store}>
       <MemoryRouter initialEntries={['/adm/criar-pagina']}>
         <Routes>
           <Route path="/adm/criar-pagina">
@@ -54,7 +44,6 @@ const renderWithProviders = (ui: React.ReactElement) => {
           </Route>
         </Routes>
       </MemoryRouter>
-    </Provider>
   );
 };
 
@@ -106,7 +95,7 @@ describe('SelectPageTemplate Component', () => {
     expect(screen.getByTestId('page-creator-empty-selection-info')).toBeInTheDocument();
   });
 
-  it('supports selecting photo gallery template and dispatches clearImageData', () => {
+  it('supports selecting photo gallery template and renders the gallery creator', () => {
     renderWithProviders(<SelectPageTemplate />);
 
     const photoCard = screen.getByTestId('page-template-card-gallery');

@@ -2,9 +2,9 @@ import { API_URL } from "../../../playwright.live.config";
 import { closeDb, countRows, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 
-/** Autorização de `/ideas-pages` (plano 31): leitura aberta (só páginas públicas para visitante; id não público dá 404); escrita só admin (visitante 401, membro/líder 403); escrita recusada não grava; `page_management` desligada ⇒ 403 FEATURE_DISABLED nas escritas. As leituras NÃO têm flag (decisão pendente do usuário). */
+/** Autorização de `/ideas-pages` (plano 31): a página de ideias é sempre privada: leitura exige sessão (visitante 401; membro/líder/admin conforme a flag `ideas_sharing`); escrita só admin (visitante 401, membro/líder 403); escrita recusada não grava; flags desligadas ⇒ 403 FEATURE_DISABLED (leitura e escrita). */
 const BAD = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
-const FLAGS = ["page_management"] as const;
+const FLAGS = ["page_management", "ideas_sharing"] as const;
 
 test.describe.serial("Páginas de ideias — autorização", () => {
   let admin: string;
@@ -43,9 +43,9 @@ test.describe.serial("Páginas de ideias — autorização", () => {
     await closeDb();
   });
 
-  test("[ideas-page.get.ideas-pages#perfil-anonimo] GET /ideas-pages como visitante: 200", async ({ request }) => {
+  test("[ideas-page.get.ideas-pages#perfil-anonimo] GET /ideas-pages como visitante: 401", async ({ request }) => {
     const res = await send(request, "GET", "/ideas-pages", undefined);
-    expect([200]).toContain(res.status());
+    expect([401]).toContain(res.status());
   });
 
   test("[ideas-page.get.ideas-pages#perfil-membro] GET /ideas-pages como membro: 200", async ({ request }) => {
@@ -63,9 +63,9 @@ test.describe.serial("Páginas de ideias — autorização", () => {
     expect([200]).toContain(res.status());
   });
 
-  test("[ideas-page.get.ideas-pages-id#perfil-anonimo] GET /ideas-pages/:id como visitante: 404", async ({ request }) => {
+  test("[ideas-page.get.ideas-pages-id#perfil-anonimo] GET /ideas-pages/:id como visitante: 401", async ({ request }) => {
     const res = await send(request, "GET", "/ideas-pages/{BAD}", undefined);
-    expect([404]).toContain(res.status());
+    expect([401]).toContain(res.status());
   });
 
   test("[ideas-page.get.ideas-pages-id#perfil-membro] GET /ideas-pages/:id como membro: 404", async ({ request }) => {
@@ -201,5 +201,19 @@ test.describe.serial("Páginas de ideias — autorização", () => {
     expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
     expect(await countRows("ideas_pages")).toBe(before);
     await setFlags(request, true);
+  });
+
+  test("[ideas-page.get.ideas-pages#flag-desligada] GET /ideas-pages com `ideas_sharing` desligada: 403 FEATURE_DISABLED com sessão (líder) e 401 sem sessão", async ({
+    request,
+  }) => {
+    await setFlags(request, false);
+    try {
+      const res = await send(request, "GET", "/ideas-pages", leader);
+      expect(res.status()).toBe(403);
+      expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
+      expect((await send(request, "GET", "/ideas-pages", undefined)).status()).toBe(401);
+    } finally {
+      await setFlags(request, true);
+    }
   });
 });
