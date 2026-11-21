@@ -13,9 +13,9 @@ export enum AdminNavigationSectionId {
   SHELTERS_AND_VISITS = "shelters-and-visits",
   CONTENT_STUDIO = "content-studio",
   CONTENT = "content",
-  PAGES_AND_MEDIA = "pages-and-media",
-  INTERACTION = "interaction",
-  MESSAGES = "messages",
+  MATERIALS_AND_IDEAS = "materials-and-ideas",
+  MEDIA = "media",
+  COMMUNICATION = "communication",
 }
 
 export enum AdminNavigationItemId {

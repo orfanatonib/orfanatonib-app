@@ -1,6 +1,9 @@
 import Chat from "@mui/icons-material/Chat";
+import Comment from "@mui/icons-material/Comment";
 import ContactMail from "@mui/icons-material/ContactMail";
 import RateReview from "@mui/icons-material/RateReview";
+
+import { FeatureFlagKeys } from "@/features/feature-flags/types";
 
 import {
   AdminNavigationItemId,
@@ -9,12 +12,20 @@ import {
 } from "../types";
 import { ADMIN_ONLY_ROLES } from "../roles";
 
-/** Mensagens que chegam de fora: contatos e feedbacks. */
-export const ADMIN_MESSAGES_SECTION: AdminNavigationSection = {
-  id: AdminNavigationSectionId.MESSAGES,
-  title: "Mensagens",
+export const ADMIN_COMMUNICATION_SECTION: AdminNavigationSection = {
+  id: AdminNavigationSectionId.COMMUNICATION,
+  title: "Comunicação",
   icon: Chat,
   items: [
+    {
+      id: AdminNavigationItemId.COMMENTS,
+      label: "Comentários",
+      description: "Modere comentários dos usuários.",
+      path: "/adm/comentarios",
+      icon: Comment,
+      allowedRoles: ADMIN_ONLY_ROLES,
+      requiredFeatureFlag: FeatureFlagKeys.COMMENT_MODERATION,
+    },
     {
       id: AdminNavigationItemId.CONTACTS,
       label: "Contatos",
@@ -22,6 +33,7 @@ export const ADMIN_MESSAGES_SECTION: AdminNavigationSection = {
       path: "/adm/contatos",
       icon: ContactMail,
       allowedRoles: ADMIN_ONLY_ROLES,
+      requiredFeatureFlag: FeatureFlagKeys.CONTACT_MANAGEMENT,
     },
     {
       id: AdminNavigationItemId.FEEDBACKS,
@@ -30,6 +42,7 @@ export const ADMIN_MESSAGES_SECTION: AdminNavigationSection = {
       path: "/adm/feedbacks",
       icon: RateReview,
       allowedRoles: ADMIN_ONLY_ROLES,
+      requiredFeatureFlag: FeatureFlagKeys.FEEDBACK_MANAGEMENT,
     },
   ],
 };

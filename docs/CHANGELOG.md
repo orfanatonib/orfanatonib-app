@@ -1,5 +1,16 @@
 # Changelog do app (orfanatonib-app)
 
+## 2026-11-21 — Catálogo do menu do /adm dividido e Integração Feira de Ministério
+
+### Alterado
+- Catálogo do menu do `/adm` dividido em um arquivo por grupo (`navigation/sections/`, `roles.ts`); organização, textos e ordem do menu original preservados. Detalhes em `docs/admin-navigation.md`.
+- Itens Fotos dos Abrigos, Ideias Compartilhadas, Comentários do Feed, Comentários, Contatos e Feedbacks mostram o selo de pendentes (`features/admin-pending-counts`; API `GET /ideas-sections/pending-count`, `/comments/pending-count`, `/contact/pending-count` e `/site-feedbacks/pending-count`).
+- Menu e painel leem as seções por `useVisibleAdminNavigation()` (corrige o painel que ignorava as flags de Revisão e de Provedores do Estúdio).
+- Flag `integration` agora se chama **Integração Feira de Ministério** (a chave não muda); o seed do `run.sh local` a registra ligada.
+
+### Corrigido
+- O botão **Integrações FM** voltou à Home da Área do Membro (admin/líder), que a refatoração do plano 41 havia removido; ele e o item do menu lateral agora respeitam a flag `integration`.
+
 ## 2026-11-21 — Plano 07: usuários e perfis
 
 ### Alterado

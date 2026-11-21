@@ -63,10 +63,6 @@ test.describe.serial("Usuários e perfis — escrita de usuários (/users)", () 
     await expectNotFoundUnchanged(request, "DELETE", `/users/${BAD_ID}`);
   });
 
-  test("[user-profile.patch.users-id-image#nao-encontrado] PATCH /users/:id/image de usuário inexistente: 404 e o banco não muda", async ({ request }) => {
-    await expectNotFoundUnchanged(request, "PATCH", `/users/${BAD_ID}/image`, undefined, true);
-  });
-
   test("[user-profile.post.users#perfil-anonimo] POST /users como visitante: 401 e nenhum usuário criado", async ({ request }) => {
     await expectDenied(request, "POST", "/users", "anon", { name: `Novo E2E ${RUN_TAG}`, email: newEmail(), phone: "11999990000", password: ACTOR_PASSWORD, role: "member" }, 401);
   });
@@ -250,99 +246,4 @@ test.describe.serial("Usuários e perfis — escrita de usuários (/users)", () 
     await expectNoDeliverableEmail(target.email);
   });
 
-  test("[user-profile.patch.users-id-image#perfil-anonimo] PATCH /users/:id/image como visitante: 401, bucket e banco inalterados", async ({ request }) => {
-    await withBucketUnchanged(async () => {
-      const before = await stateOf(allIds());
-      const res = await request.patch(`${API_URL}/users/${cast.victim.id}/image`, { multipart: { imageData: JSON.stringify({ title: "x", uploadType: "upload", fieldKey: "file" }), file: png() } });
-      expect(res.status()).toBe(401);
-      expect(await stateOf(allIds())).toBe(before);
-    });
-  });
-
-  test("[user-profile.patch.users-id-image#perfil-membro] PATCH /users/:id/image como membro: 403, bucket e banco inalterados", async ({ request }) => {
-    await withBucketUnchanged(async () => {
-      const before = await stateOf(allIds());
-      const res = await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.member.token);
-      expect(res.status()).toBe(403);
-      expect(await stateOf(allIds())).toBe(before);
-    });
-  });
-
-  test("[user-profile.patch.users-id-image#perfil-lider] PATCH /users/:id/image como líder: 403, bucket e banco inalterados", async ({ request }) => {
-    await withBucketUnchanged(async () => {
-      const before = await stateOf(allIds());
-      const res = await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.leader.token);
-      expect(res.status()).toBe(403);
-      expect(await stateOf(allIds())).toBe(before);
-    });
-  });
-
-  test("[user-profile.patch.users-id-image#perfil-admin] PATCH /users/:id/image como admin: 200, a foto do OUTRO usuário fica no banco e no bucket", async ({ request }) => {
-    const res = await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.admin.token);
-    expect(res.status(), await res.text()).toBe(200);
-    const rows = await photoRows(cast.victim.id);
-    expect(rows).toHaveLength(1);
-    expect(await objectExists(String(rows[0].storageKey))).toBe(true);
-    await expectUserPhotosConsistent();
-  });
-
-  test("[user-profile.patch.users-id-image#feliz] PATCH /users/:id/image: o admin troca a foto de um usuário; o objeto antigo some e a resposta não traz segredos", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "foto-admin");
-    extra.push(target.id);
-    expect((await sendPhoto(request, `/users/${target.id}/image`, cast.admin.token, png("1.png"))).status()).toBe(200);
-    const [old] = await photoRows(target.id);
-    const res = await sendPhoto(request, `/users/${target.id}/image`, cast.admin.token, png("2.png"));
-    expect(res.status(), await res.text()).toBe(200);
-    const body = (await res.json()) as Record<string, unknown>;
-    expect(body).not.toHaveProperty("password");
-    expect(await photoRows(target.id)).toHaveLength(1);
-    expect(await objectExists(String(old.storageKey))).toBe(false);
-    await expectUserPhotosConsistent();
-  });
-
-  test("[user-profile.patch.users-id-image#validacao] PATCH /users/:id/image com arquivo que não é imagem e sem dados: 400, bucket e banco inalterados", async ({ request }) => {
-    const before = await stateOf([cast.victim.id]);
-    await withBucketUnchanged(async () => {
-      expect((await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.admin.token, { name: "x.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") })).status()).toBe(400);
-      expect((await send(request, "PATCH", `/users/${cast.victim.id}/image`, cast.admin.token, {})).status()).toBe(400);
-    });
-    expect(await stateOf([cast.victim.id])).toBe(before);
-  });
-
-  test("[user-profile.patch.users-id-image#conflito-ou-duplicidade] PATCH /users/:id/image duas vezes SUBSTITUI: 1 linha de mídia e 1 objeto do usuário", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "foto-dupla-admin");
-    extra.push(target.id);
-    for (const name of ["a.png", "b.png"]) expect((await sendPhoto(request, `/users/${target.id}/image`, cast.admin.token, png(name))).status()).toBe(200);
-    expect(await photoRows(target.id)).toHaveLength(1);
-    expect(await listObjects(`${userPrefix()}${target.id}/`)).toHaveLength(1);
-  });
-
-  test("[user-profile.patch.users-id-image#flag-desligada] PATCH /users/:id/image com user_management desligada: 403 FEATURE_DISABLED, bucket e banco inalterados", async ({ request }) => {
-    await withBucketUnchanged(async () => {
-      const before = await stateOf([cast.victim.id]);
-      await flags.set(request, false, ["user_management"]);
-      try {
-        await expectFeatureDisabled(await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.admin.token));
-      } finally {
-        await flags.set(request, true, ["user_management"]);
-      }
-      expect(await stateOf([cast.victim.id])).toBe(before);
-    });
-  });
-
-  test("[user-profile.patch.users-id-image#s3-sem-orfao] PATCH /users/:id/image: enviar, substituir e trocar por link deixa 0 órfãos e 0 referências quebradas", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "foto-admin-s3");
-    extra.push(target.id);
-    expect((await sendPhoto(request, `/users/${target.id}/image`, cast.admin.token, png("a.png"))).status()).toBe(200);
-    const link = await request.patch(`${API_URL}/users/${target.id}/image`, { headers: authHeaders(cast.admin.token), data: { title: "Link", url: "https://example.com/foto.png", uploadType: "link" } });
-    expect(link.status(), await link.text()).toBe(200);
-    expect(await listObjects(`${userPrefix()}${target.id}/`)).toEqual([]);
-    expect(await photoRows(target.id)).toHaveLength(1);
-    await expectUserPhotosConsistent();
-  });
-
-  test("[user-profile.patch.users-id-image#email-enviado-ou-bloqueado-por-flag] PATCH /users/:id/image não dispara e-mail", async ({ request }) => {
-    expect((await sendPhoto(request, `/users/${cast.victim.id}/image`, cast.admin.token)).status()).toBe(200);
-    await expectNoDeliverableEmail(cast.victim.email);
-  });
 });

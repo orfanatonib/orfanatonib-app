@@ -247,7 +247,7 @@ test.describe.serial("App shell — UI", () => {
     expect((await readFlagFromDb("pagelas")).enabled).toBe(false);
   });
 
-  test("[app-shell.get.menu-admin#selo-pendencias] o item Fotos dos abrigos (selo de pendências) continua no menu do painel", async ({ page }) => {
+  test("[app-shell.get.menu-admin#selo-pendencias] o item Fotos dos Abrigos (selo de pendências) continua no menu do painel", async ({ page }) => {
     await loginPage(page, "admin");
     await page.goto("/adm");
     await expect(page.getByTestId("admin-layout")).toBeVisible({ timeout: 20_000 });
@@ -270,7 +270,7 @@ test.describe.serial("App shell — UI", () => {
     for (let i = 0; i < (await filters.count()); i++) await expectTouchTarget(filters.nth(i));
     await page.getByTestId("admin-sidebar-filter-people").click();
     await expect(page.getByTestId("admin-sidebar-group-people")).toBeVisible();
-    await expect(page.getByTestId("admin-sidebar-group-interaction")).toHaveCount(0);
+    await expect(page.getByTestId("admin-sidebar-group-communication")).toHaveCount(0);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
   });

@@ -15,7 +15,7 @@ export interface AdminNavigationItemIconProps {
 }
 
 /**
- * Ícone do item do menu/painel. Os itens das filas de interação (fotos, ideias, comentários)
+ * Ícone do item do menu/painel. Os itens que esperam o admin (fotos, ideias, comentários, contatos e feedbacks)
  * mostram o selo com o total aguardando o admin; os demais, só o ícone.
  */
 export function AdminNavigationItemIcon({
@@ -41,6 +41,14 @@ export function AdminNavigationItemIcon({
         <PendingCountBadge kind={PendingCountKind.COMMENTS}>
           {icon}
         </PendingCountBadge>
+      );
+    case AdminNavigationItemId.CONTACTS:
+      return (
+        <PendingCountBadge kind={PendingCountKind.CONTACTS}>{icon}</PendingCountBadge>
+      );
+    case AdminNavigationItemId.FEEDBACKS:
+      return (
+        <PendingCountBadge kind={PendingCountKind.FEEDBACKS}>{icon}</PendingCountBadge>
       );
     default:
       return icon;

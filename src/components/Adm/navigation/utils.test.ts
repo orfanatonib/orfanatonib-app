@@ -18,72 +18,43 @@ import {
   isAdminNavigationItemActive,
 } from "./utils";
 
-const enabledFlags = {
-  [FeatureFlagKeys.SHELTERED_MANAGEMENT]: true,
-  [FeatureFlagKeys.PAGELAS]: true,
-  [FeatureFlagKeys.CONTENT_STUDIO]: true,
-  [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: true,
-  [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: true,
-};
+const enabledFlags = Object.fromEntries(
+  Object.values(FeatureFlagKeys).map((flag) => [flag, true]),
+) as Record<FeatureFlagKeys, boolean>;
 
 describe("admin navigation", () => {
   it("keeps the task-oriented section and item order", () => {
     expect(ADMIN_NAVIGATION_SECTIONS.map((section) => section.id)).toEqual([
+      AdminNavigationSectionId.CONTENT_STUDIO,
       AdminNavigationSectionId.PEOPLE,
       AdminNavigationSectionId.SHELTERS_AND_VISITS,
-      AdminNavigationSectionId.CONTENT_STUDIO,
       AdminNavigationSectionId.CONTENT,
-      AdminNavigationSectionId.PAGES_AND_MEDIA,
-      AdminNavigationSectionId.INTERACTION,
-      AdminNavigationSectionId.MESSAGES,
+      AdminNavigationSectionId.MATERIALS_AND_IDEAS,
+      AdminNavigationSectionId.MEDIA,
+      AdminNavigationSectionId.COMMUNICATION,
     ]);
 
-    const idsOf = (sectionId: AdminNavigationSectionId) =>
-      ADMIN_NAVIGATION_SECTIONS.find((section) => section.id === sectionId)!
-        .items.map((item) => item.id);
-
-    expect(idsOf(AdminNavigationSectionId.PEOPLE)).toEqual([
-      AdminNavigationItemId.SHELTERED,
-      AdminNavigationItemId.MEMBERS,
-      AdminNavigationItemId.LEADERS,
-      AdminNavigationItemId.USERS,
-      AdminNavigationItemId.BACKGROUND_CHECKS,
-      AdminNavigationItemId.PROFILES,
-    ]);
-    expect(idsOf(AdminNavigationSectionId.SHELTERS_AND_VISITS)).toEqual([
-      AdminNavigationItemId.SHELTERS,
-      AdminNavigationItemId.SCHEDULES,
-      AdminNavigationItemId.ATTENDANCE,
-      AdminNavigationItemId.PAGELAS,
-      AdminNavigationItemId.VISIT_REPORTS,
-    ]);
-    expect(idsOf(AdminNavigationSectionId.CONTENT_STUDIO)).toEqual([
+    expect(ADMIN_NAVIGATION_SECTIONS[0].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.CONTENT_STUDIO,
       AdminNavigationItemId.CONTENT_STUDIO_PRODUCTION,
       AdminNavigationItemId.CONTENT_STUDIO_REVIEW,
       AdminNavigationItemId.CONTENT_STUDIO_GUIDELINES,
     ]);
-    expect(idsOf(AdminNavigationSectionId.CONTENT)).toEqual([
-      AdminNavigationItemId.MEDITATIONS,
-      AdminNavigationItemId.DOCUMENTS,
-      AdminNavigationItemId.INFORMATIVE_BANNERS,
+    expect(ADMIN_NAVIGATION_SECTIONS[1].items.map((item) => item.id)).toEqual([
+      AdminNavigationItemId.SHELTERED,
+      AdminNavigationItemId.MEMBERS,
+      AdminNavigationItemId.LEADERS,
+      AdminNavigationItemId.PROFILES,
+      AdminNavigationItemId.USERS,
+      AdminNavigationItemId.BACKGROUND_CHECKS,
     ]);
-    expect(idsOf(AdminNavigationSectionId.PAGES_AND_MEDIA)).toEqual([
-      AdminNavigationItemId.CREATE_PAGE,
-      AdminNavigationItemId.VISIT_MATERIALS,
-      AdminNavigationItemId.IDEAS_PAGES,
-      AdminNavigationItemId.PHOTO_GALLERIES,
-      AdminNavigationItemId.VIDEOS,
-    ]);
-    expect(idsOf(AdminNavigationSectionId.INTERACTION)).toEqual([
-      AdminNavigationItemId.SHELTER_PHOTOS,
-      AdminNavigationItemId.SHARED_IDEAS,
+    expect(ADMIN_NAVIGATION_SECTIONS[2].items.map((item) => item.id)).toEqual([
+      AdminNavigationItemId.SHELTERS,
+      AdminNavigationItemId.SCHEDULES,
+      AdminNavigationItemId.ATTENDANCE,
+      AdminNavigationItemId.VISIT_REPORTS,
+      AdminNavigationItemId.PAGELAS,
       AdminNavigationItemId.FEED_COMMENTS,
-      AdminNavigationItemId.COMMENTS,
-    ]);
-    expect(idsOf(AdminNavigationSectionId.MESSAGES)).toEqual([
-      AdminNavigationItemId.CONTACTS,
-      AdminNavigationItemId.FEEDBACKS,
     ]);
   });
 
@@ -101,15 +72,8 @@ describe("admin navigation", () => {
     expect(sections[0].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.SHELTERED,
       AdminNavigationItemId.MEMBERS,
-      AdminNavigationItemId.BACKGROUND_CHECKS,
       AdminNavigationItemId.PROFILES,
-    ]);
-    expect(sections[1].items.map((item) => item.id)).toEqual([
-      AdminNavigationItemId.SHELTERS,
-      AdminNavigationItemId.SCHEDULES,
-      AdminNavigationItemId.ATTENDANCE,
-      AdminNavigationItemId.PAGELAS,
-      AdminNavigationItemId.VISIT_REPORTS,
+      AdminNavigationItemId.BACKGROUND_CHECKS,
     ]);
   });
 
@@ -146,7 +110,7 @@ describe("admin navigation", () => {
       AdminNavigationSectionId.CONTENT_STUDIO,
     );
     expect(getAdminNavigationSectionForPath("/adm/editar-pagina-visita")).toBe(
-      AdminNavigationSectionId.PAGES_AND_MEDIA,
+      AdminNavigationSectionId.MATERIALS_AND_IDEAS,
     );
     expect(getAdminNavigationSectionForPath("/adm/relatorios/pendencias")).toBe(
       AdminNavigationSectionId.SHELTERS_AND_VISITS,
@@ -155,9 +119,7 @@ describe("admin navigation", () => {
   });
 
   it("highlights only the active Estúdio submenu", () => {
-    const studioItems = ADMIN_NAVIGATION_SECTIONS.find(
-      (section) => section.id === AdminNavigationSectionId.CONTENT_STUDIO,
-    )!.items;
+    const studioItems = ADMIN_NAVIGATION_SECTIONS[0].items;
     const dashboard = studioItems.find(
       (item) => item.id === AdminNavigationItemId.CONTENT_STUDIO,
     )!;
@@ -188,7 +150,7 @@ describe("admin navigation", () => {
     );
 
     expect(filtered).toHaveLength(1);
-    expect(filtered[0].id).toBe(AdminNavigationSectionId.PAGES_AND_MEDIA);
+    expect(filtered[0].id).toBe(AdminNavigationSectionId.MEDIA);
     expect(filtered[0].items.map((item) => item.id)).toEqual([
       AdminNavigationItemId.VIDEOS,
     ]);

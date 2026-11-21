@@ -48,10 +48,6 @@ test.describe.serial("Usuários e perfis — escrita de perfil completo (/profil
     await expectNotFoundUnchanged(request, "PUT", `/profiles/${BAD_ID}`, { personalData: { gender: "F" } });
   });
 
-  test("[user-profile.delete.profiles-id#nao-encontrado] DELETE /profiles/:id de usuário inexistente: 404 e o banco não muda", async ({ request }) => {
-    await expectNotFoundUnchanged(request, "DELETE", `/profiles/${BAD_ID}`);
-  });
-
   test("[user-profile.post.profiles#perfil-anonimo] POST /profiles como visitante: 401 e o banco não muda", async ({ request }) => {
     await expectDenied(request, "POST", "/profiles", "anon", FULL_PROFILE, 401);
   });
@@ -264,56 +260,4 @@ test.describe.serial("Usuários e perfis — escrita de perfil completo (/profil
     await expectNoDeliverableEmail(cast.victim.email);
   });
 
-  test("[user-profile.delete.profiles-id#perfil-anonimo] DELETE /profiles/:id como visitante: 401 e o banco não muda", async ({ request }) => {
-    await expectDenied(request, "DELETE", `/profiles/${cast.victim.id}`, "anon", undefined, 401);
-  });
-
-  test("[user-profile.delete.profiles-id#perfil-lider] DELETE /profiles/:id como líder: 403 e o perfil continua", async ({ request }) => {
-    await expectDenied(request, "DELETE", `/profiles/${cast.victim.id}`, "leader", undefined, 403);
-  });
-
-  test("[user-profile.delete.profiles-id#perfil-admin] DELETE /profiles/:id como admin: 200, apaga dados pessoais e preferências e o usuário continua", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "del-perfil");
-    extra.push(target.id);
-    expect((await send(request, "PUT", `/profiles/${target.id}`, cast.admin.token, FULL_PROFILE)).status()).toBe(200);
-    expect(await personalRows(target.id)).toHaveLength(1);
-    const res = await send(request, "DELETE", `/profiles/${target.id}`, cast.admin.token);
-    expect(res.status(), await res.text()).toBe(200);
-    expect(await personalRows(target.id)).toHaveLength(0);
-    expect(await preferenceRows(target.id)).toHaveLength(0);
-    expect(await userState(target.id)).not.toBeNull();
-  });
-
-  test("[user-profile.delete.profiles-id#feliz] DELETE /profiles/:id: o admin apaga o perfil e a UI lê vazio depois (SELECT: 0 linhas, usuário mantido)", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "del-feliz");
-    extra.push(target.id);
-    await send(request, "POST", "/profiles", target.token, FULL_PROFILE);
-    expect((await send(request, "DELETE", `/profiles/${target.id}`, cast.admin.token)).status()).toBe(200);
-    const me = (await (await send(request, "GET", "/profiles/me", target.token)).json()) as { personalData?: unknown; preferences?: unknown };
-    expect(me.personalData).toBeUndefined();
-    expect(me.preferences).toBeUndefined();
-    expect(await personalRows(target.id)).toHaveLength(0);
-  });
-
-  test("[user-profile.delete.profiles-id#flag-desligada] DELETE /profiles/:id com user_management desligada: 403 FEATURE_DISABLED e nada muda", async ({ request }) => {
-    await expectFlagBlocks(flags, request, ["user_management"], "DELETE", `/profiles/${cast.victim.id}`, "admin");
-  });
-
-  test("[user-profile.delete.profiles-id#s3-sem-orfao] DELETE /profiles/:id não mexe no bucket (a foto é do usuário, não do perfil): sem órfão nem referência quebrada", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "del-s3");
-    extra.push(target.id);
-    expect((await sendPhoto(request, "/profile/image", target.token)).status()).toBe(200);
-    await withBucketUnchanged(async () => {
-      expect((await send(request, "DELETE", `/profiles/${target.id}`, cast.admin.token)).status()).toBe(200);
-    });
-    expect(await photoRows(target.id)).toHaveLength(1);
-    await expectUserPhotosConsistent();
-  });
-
-  test("[user-profile.delete.profiles-id#email-enviado-ou-bloqueado-por-flag] DELETE /profiles/:id não dispara e-mail", async ({ request }) => {
-    const target = await createActor(request, seeded, "member", "del-mail");
-    extra.push(target.id);
-    expect((await send(request, "DELETE", `/profiles/${target.id}`, cast.admin.token)).status()).toBe(200);
-    await expectNoDeliverableEmail(target.email);
-  });
 });

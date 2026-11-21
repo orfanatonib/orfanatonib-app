@@ -20,7 +20,7 @@ export const ADMIN_CONTENT_STUDIO_SECTION: AdminNavigationSection = {
   items: [
     {
       id: AdminNavigationItemId.CONTENT_STUDIO,
-      label: "Início",
+      label: "Visão geral",
       description: "Acompanhe indicadores e os materiais para visita recentes.",
       path: "/adm/estudio",
       exact: true,

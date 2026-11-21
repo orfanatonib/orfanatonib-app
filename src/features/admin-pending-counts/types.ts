@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 export enum PendingCountKind {
   SHARED_IDEAS = 'shared-ideas',
   COMMENTS = 'comments',
+  CONTACTS = 'contacts',
+  FEEDBACKS = 'feedbacks',
 }
 
 /** `GET <fila>/pending-count`: quantos itens aguardam o admin. */

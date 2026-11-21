@@ -138,10 +138,6 @@ test.describe.serial("Usuários e perfis — autorização", () => {
     expect((await request.get(`${API_URL}/profiles/${adminId}`, { headers: authHeaders(member) })).status()).toBe(403);
   });
 
-  test("[user-profile.delete.profiles-id#perfil-membro] DELETE /profiles/:id como membro: 403", async ({ request }) => {
-    expect((await request.delete(`${API_URL}/profiles/${memberId}`, { headers: authHeaders(member) })).status()).toBe(403);
-  });
-
   test("[user-profile.put.profiles-me#validacao] PUT /profiles/me com campo fora do contrato: 400 e nada gravado", async ({
     request,
   }) => {

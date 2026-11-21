@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import FeedbackCard from "./components/FeedbackCard";
 import FeedbackDetailsModal from "./components/FeedbackDetailsModal";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import { useRefreshPendingCounts } from "@/features/admin-pending-counts";
 import { useFeedbackList, useFeedbackMutations, useFeedbackSearch } from "./hooks";
 import { FeedbackData } from "@/store/slices/feedback/feedbackSlice";
 import BackHeader from "@/components/common/header/BackHeader";
@@ -25,7 +26,16 @@ import BackHeader from "@/components/common/header/BackHeader";
 const FeedbackManager: React.FC = () => {
   const { items, loading, error, setError, refresh } = useFeedbackList();
   const { search, setSearch, filtered } = useFeedbackSearch(items);
-  const { mLoading, mError, setMError, deleteOne, markAsRead } = useFeedbackMutations(refresh);
+  const refreshPending = useRefreshPendingCounts();
+  const refreshAll = React.useCallback(async () => {
+    await refresh();
+    void refreshPending();
+  }, [refresh, refreshPending]);
+  const { mLoading, mError, setMError, deleteOne, markAsRead } = useFeedbackMutations(refreshAll);
+
+  React.useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
   const [selected, setSelected] = React.useState<FeedbackData | null>(null);
   const [toDelete, setToDelete] = React.useState<FeedbackData | null>(null);
   const [snackbar, setSnackbar] = React.useState({

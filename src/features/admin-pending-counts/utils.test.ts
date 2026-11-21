@@ -14,5 +14,7 @@ describe('admin-pending-counts', () => {
   it('cada fila tem o seu endpoint de contagem', () => {
     expect(PENDING_COUNT_ENDPOINTS[PendingCountKind.SHARED_IDEAS]).toBe('/ideas-sections/pending-count');
     expect(PENDING_COUNT_ENDPOINTS[PendingCountKind.COMMENTS]).toBe('/comments/pending-count');
+    expect(PENDING_COUNT_ENDPOINTS[PendingCountKind.CONTACTS]).toBe('/contact/pending-count');
+    expect(PENDING_COUNT_ENDPOINTS[PendingCountKind.FEEDBACKS]).toBe('/site-feedbacks/pending-count');
   });
 });

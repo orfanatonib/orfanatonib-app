@@ -12,6 +12,8 @@ describe('getPendingCount', () => {
   it.each([
     [PendingCountKind.SHARED_IDEAS, '/ideas-sections/pending-count'],
     [PendingCountKind.COMMENTS, '/comments/pending-count'],
+    [PendingCountKind.CONTACTS, '/contact/pending-count'],
+    [PendingCountKind.FEEDBACKS, '/site-feedbacks/pending-count'],
   ])('lê %s em %s sem erro global', async (kind, url) => {
     get.mockResolvedValue({ data: { pending: 3 } });
     const signal = new AbortController().signal;

@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Snackbar, Alert, Container } from "@mui/material";
 import { motion } from "framer-motion";
+import { useRefreshPendingCounts } from "@/features/admin-pending-counts";
 import { useContacts, useContactMutations, useContactSearch } from "./hooks";
 import ContactToolbar from "./components/ContactToolbar";
 import ContactGrid from "./components/ContactGrid";
@@ -12,8 +13,17 @@ import { Contact, SnackbarKind } from "./types";
 export default function ContactsManager() {
   const { contacts, loading, error, setError, fetchContacts } = useContacts();
   const { searchTerm, setSearchTerm, filtered } = useContactSearch(contacts);
+  const refreshPending = useRefreshPendingCounts();
+  const refetchAll = React.useCallback(async () => {
+    await fetchContacts();
+    void refreshPending();
+  }, [fetchContacts, refreshPending]);
   const { busy, error: mError, setError: setMError, remove, markAsRead } =
-    useContactMutations(fetchContacts);
+    useContactMutations(refetchAll);
+
+  React.useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
 
   const [selected, setSelected] = React.useState<Contact | null>(null);
   const [toDelete, setToDelete] = React.useState<Contact | null>(null);
