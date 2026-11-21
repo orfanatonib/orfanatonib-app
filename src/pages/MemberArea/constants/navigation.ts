@@ -64,6 +64,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     group: MemberNavGroup.Area,
     exact: true,
     hidePageHeader: true,
+    featureKey: FeatureFlagKeys.MEMBER_AREA,
   },
   {
     id: MemberNavItemId.Materials,
@@ -73,6 +74,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: MenuBookOutlined,
     accentColor: '#0284c7',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.VISIT_MATERIALS,
   },
   {
     id: MemberNavItemId.Documents,
@@ -82,6 +84,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: DescriptionOutlined,
     accentColor: '#0284c7',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.DOCUMENTS_LIBRARY,
   },
   {
     id: MemberNavItemId.Ideas,
@@ -91,6 +94,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: LightbulbOutlined,
     accentColor: '#9333ea',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.IDEAS_SHARING,
   },
   {
     id: MemberNavItemId.Videos,
@@ -100,6 +104,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: VideoLibraryOutlined,
     accentColor: '#4f46e5',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.TRAINING_VIDEOS,
   },
   {
     id: MemberNavItemId.ShareIdea,
@@ -109,6 +114,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: ShareOutlined,
     accentColor: '#7c3aed',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.IDEA_SUBMISSION,
   },
   {
     id: MemberNavItemId.Photos,
@@ -128,6 +134,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: AutoStoriesOutlined,
     accentColor: '#ed6c02',
     group: MemberNavGroup.Area,
+    featureKey: FeatureFlagKeys.MEMBER_MANUAL,
   },
   {
     id: MemberNavItemId.Rate,
@@ -137,6 +144,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     icon: StarRateOutlined,
     accentColor: '#2e7d32',
     group: MemberNavGroup.More,
+    featureKey: FeatureFlagKeys.SITE_FEEDBACK,
   },
   {
     id: MemberNavItemId.Integrations,

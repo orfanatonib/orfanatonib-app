@@ -1,22 +1,26 @@
 import { Box, Button, Typography } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { useVisibleRoutes } from "@/features/feature-flags";
+import { selectAllFeatureFlags } from "@/store/selectors/featureFlagsSelectors";
 import { memberAreaColors as colors } from "@/theme/memberArea";
 import { memberActionMap } from "./memberActions";
-import { MEMBER_SUBPAGE_PATHS } from "../../constants/navigation";
+import { isMemberActionVisible } from "../../utils/navigation";
 import type { MemberQuickActionsProps } from "../../types";
 
 const MemberQuickActions = ({ references }: MemberQuickActionsProps) => {
-  const shelteredEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
-  const photoUploadEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PHOTO_UPLOAD);
-  const integrationEnabled = useIsFeatureEnabled(FeatureFlagKeys.INTEGRATION);
+  const featureFlags = useSelector(selectAllFeatureFlags);
+  const dynamicRoutes = useVisibleRoutes();
+  const visibleDynamicPaths = useMemo(() => dynamicRoutes.map((route) => route.path), [dynamicRoutes]);
   const actions = references.filter(
     (key) =>
       memberActionMap[key] &&
-      (memberActionMap[key].to !== "/area-dos-acolhidos" || shelteredEnabled) &&
-      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.photos || photoUploadEnabled) &&
-      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.integrations || integrationEnabled),
+      isMemberActionVisible(memberActionMap[key], {
+        isFeatureEnabled: (flag) => featureFlags[flag] === true,
+        visibleDynamicPaths,
+      }),
   );
   if (!actions.length) return null;
   return (

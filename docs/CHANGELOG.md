@@ -8,6 +8,12 @@
 - Menu e painel leem as seções por `useVisibleAdminNavigation()` (corrige o painel que ignorava as flags de Revisão e de Provedores do Estúdio).
 - Flag `integration` agora se chama **Integração Feira de Ministério** (a chave não muda); o seed do `run.sh local` a registra ligada.
 
+### Feature flags em todas as superfícies
+- Menu do `/adm`: os 29 itens exigem a flag da rota (antes só 7). Teste `routeFlags.test.ts` impede divergência.
+- Área do Membro: itens do menu lateral e atalhos da Home exigem a flag (atalhos de página dinâmica só aparecem se a rota existir). `IntegrationButton` (cartão do acolhido) só para admin/líder com a flag `integration`.
+- Home: depoimentos (`home_comments`, sem consultar a API quando desligada), banner de materiais (`visit_materials`), botões de Área do Membro e Contato; banner de compartilhar ideia (`idea_submission`); `Gerenciar Equipe` (`shelter_management`); sino de pendências só com `attendance`/`visit_reports`.
+- Componente `FeatureGate` (`components/common`) para esconder botões e seções por flag.
+
 ### Corrigido
 - O botão **Integrações FM** voltou à Home da Área do Membro (admin/líder), que a refatoração do plano 41 havia removido; ele e o item do menu lateral agora respeitam a flag `integration`.
 

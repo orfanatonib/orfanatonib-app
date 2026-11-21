@@ -3,6 +3,8 @@ import { Button, Tooltip, Box } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import GroupIcon from "@mui/icons-material/Group";
 import { useNavigate } from "react-router-dom";
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
+import { useAuthRole } from "@/utils/useAuthRole";
 
 interface IntegrationButtonProps {
   shelteredId?: string;
@@ -22,6 +24,10 @@ export default function IntegrationButton({
   sx = {},
 }: IntegrationButtonProps) {
   const navigate = useNavigate();
+  const integrationEnabled = useIsFeatureEnabled(FeatureFlagKeys.INTEGRATION);
+  const { isAdminOrLeader } = useAuthRole();
+  // A rota e a API são de admin/líder e dependem da flag `integration`: sem isso o botão nem aparece.
+  if (!integrationEnabled || !isAdminOrLeader) return null;
 
   const handleClick = () => {
     if (shelteredId) {

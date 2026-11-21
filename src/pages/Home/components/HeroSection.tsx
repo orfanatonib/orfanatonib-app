@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Container } from '@mui/material';
+import { FeatureGate } from "@/components/common/FeatureGate";
+import { FeatureFlagKeys } from "@/features/feature-flags/types";
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HeroSectionProps } from '../types';
@@ -137,7 +139,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
         >
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
             {isAuthenticated && (
-              <motion.div
+              <FeatureGate flag={FeatureFlagKeys.MEMBER_AREA}>
+<motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -166,6 +169,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated }) => {
                   Área do Membro
                 </Button>
               </motion.div>
+</FeatureGate>
             )}
           </Box>
         </motion.div>

@@ -5,12 +5,13 @@ import { setComments } from 'store/slices/comment/commentsSlice';
 import { apiGetPublishedComments } from '@/features/comments/api';
 import { logger } from '@/utils/logger';
 
-export const useComments = () => {
+/** `enabled` = flag `home_comments`: desligada, a Home nem consulta a API de depoimentos. */
+export const useComments = (enabled = true) => {
   const comments = useSelector((state: RootState) => state.comments.comments);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    if (comments !== null) return;
+    if (!enabled || comments !== null) return;
 
     const fetchComments = async () => {
       try {
@@ -21,7 +22,7 @@ export const useComments = () => {
       }
     };
     fetchComments();
-  }, [dispatch, comments]);
+  }, [dispatch, comments, enabled]);
 
   return comments;
 };

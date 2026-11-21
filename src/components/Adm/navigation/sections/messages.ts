@@ -1,5 +1,4 @@
 import Chat from "@mui/icons-material/Chat";
-import Comment from "@mui/icons-material/Comment";
 import ContactMail from "@mui/icons-material/ContactMail";
 import RateReview from "@mui/icons-material/RateReview";
 
@@ -12,20 +11,12 @@ import {
 } from "../types";
 import { ADMIN_ONLY_ROLES } from "../roles";
 
-export const ADMIN_COMMUNICATION_SECTION: AdminNavigationSection = {
-  id: AdminNavigationSectionId.COMMUNICATION,
-  title: "Comunicação",
+/** Mensagens que chegam de fora: contatos e feedbacks. */
+export const ADMIN_MESSAGES_SECTION: AdminNavigationSection = {
+  id: AdminNavigationSectionId.MESSAGES,
+  title: "Mensagens",
   icon: Chat,
   items: [
-    {
-      id: AdminNavigationItemId.COMMENTS,
-      label: "Comentários",
-      description: "Modere comentários dos usuários.",
-      path: "/adm/comentarios",
-      icon: Comment,
-      allowedRoles: ADMIN_ONLY_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.COMMENT_MODERATION,
-    },
     {
       id: AdminNavigationItemId.CONTACTS,
       label: "Contatos",

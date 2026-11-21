@@ -47,15 +47,6 @@ export const ADMIN_PEOPLE_SECTION: AdminNavigationSection = {
       requiredFeatureFlag: FeatureFlagKeys.LEADER_MANAGEMENT,
     },
     {
-      id: AdminNavigationItemId.PROFILES,
-      label: "Perfis",
-      description: "Conheça melhor as pessoas do ministério.",
-      path: "/adm/perfis",
-      icon: Favorite,
-      allowedRoles: ADMIN_AND_LEADER_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.USER_MANAGEMENT,
-    },
-    {
       id: AdminNavigationItemId.USERS,
       label: "Usuários",
       description: "Gerencie contas de acesso ao sistema.",
@@ -72,6 +63,15 @@ export const ADMIN_PEOPLE_SECTION: AdminNavigationSection = {
       icon: Badge,
       allowedRoles: ADMIN_AND_LEADER_ROLES,
       requiredFeatureFlag: FeatureFlagKeys.CRIMINAL_RECORDS,
+    },
+    {
+      id: AdminNavigationItemId.PROFILES,
+      label: "Perfis",
+      description: "Conheça melhor as pessoas do ministério.",
+      path: "/adm/perfis",
+      icon: Favorite,
+      allowedRoles: ADMIN_AND_LEADER_ROLES,
+      requiredFeatureFlag: FeatureFlagKeys.USER_MANAGEMENT,
     },
   ],
 };

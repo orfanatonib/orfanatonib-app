@@ -270,7 +270,7 @@ test.describe.serial("App shell — UI", () => {
     for (let i = 0; i < (await filters.count()); i++) await expectTouchTarget(filters.nth(i));
     await page.getByTestId("admin-sidebar-filter-people").click();
     await expect(page.getByTestId("admin-sidebar-group-people")).toBeVisible();
-    await expect(page.getByTestId("admin-sidebar-group-communication")).toHaveCount(0);
+    await expect(page.getByTestId("admin-sidebar-group-interaction")).toHaveCount(0);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
   });

@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 
 type Props = {
   open: boolean;
@@ -36,6 +37,7 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const shelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   // const [teamManagementOpen, setTeamManagementOpen] = React.useState(false); // No longer needed
 
@@ -60,7 +62,7 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold">Detalhes do Membro</Typography>
-          {shelterId && user?.role === UserRole.ADMIN && (
+          {shelterId && user?.role === UserRole.ADMIN && shelterManagementEnabled && (
             <Button
               startIcon={<EditIcon />}
               size="small"

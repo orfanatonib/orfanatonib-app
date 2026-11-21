@@ -1,4 +1,6 @@
 import { Box, Typography } from "@mui/material";
+import { FeatureGate } from "@/components/common/FeatureGate";
+import { FeatureFlagKeys } from "@/features/feature-flags/types";
 import { memberAreaColors as colors } from "@/theme/memberArea";
 import { BannerSectionProps } from "../../types";
 import {
@@ -43,9 +45,11 @@ const BannerSection = ({
       {showWeekBanner && <MemberWeekBanner />}
       {showMeditationBanner && <MemberMeditationBanner />}
       <Box sx={{ gridColumn: showMeditationBanner ? "1 / -1" : undefined }}>
-        <IdeasSharingBanner
-          variant={showWeekBanner && !showMeditationBanner ? "compact" : "full"}
-        />
+        <FeatureGate flag={FeatureFlagKeys.IDEA_SUBMISSION}>
+          <IdeasSharingBanner
+            variant={showWeekBanner && !showMeditationBanner ? "compact" : "full"}
+          />
+        </FeatureGate>
       </Box>
     </Box>
   </Box>

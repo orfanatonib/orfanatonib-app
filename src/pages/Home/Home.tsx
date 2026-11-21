@@ -7,10 +7,13 @@ import CardsSection from './CardsSection';
 import SheltersSection from './components/SheltersSection';
 import { FEATURES } from './constants';
 import { useComments, useAuth } from './hooks';
+import { FeatureGate } from '@/components/common/FeatureGate';
+import { FeatureFlagKeys, useIsFeatureEnabled } from '@/features/feature-flags';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const comments = useComments();
+  const homeCommentsEnabled = useIsFeatureEnabled(FeatureFlagKeys.HOME_COMMENTS);
+  const comments = useComments(homeCommentsEnabled);
 
   return (
     <Box
@@ -23,11 +26,15 @@ const Home: React.FC = () => {
       }}
     >
       <HeroSection isAuthenticated={isAuthenticated} />
-      {isAuthenticated && <VisitMaterialsBanner />}
+      {isAuthenticated && (
+        <FeatureGate flag={FeatureFlagKeys.VISIT_MATERIALS}>
+          <VisitMaterialsBanner />
+        </FeatureGate>
+      )}
       <SheltersSection />
       <CardsSection />
       <FeaturesSection features={FEATURES} />
-      {comments && comments.length > 0 && (
+      {homeCommentsEnabled && comments && comments.length > 0 && (
         <TestimonialsSection testimonials={comments.flatMap(({ id, comment, name, shelter, neighborhood }) =>
             id ? [{ id, comment, name, shelter, neighborhood }] : [],
           )} />

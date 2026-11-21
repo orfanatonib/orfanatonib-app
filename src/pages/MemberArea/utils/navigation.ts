@@ -24,6 +24,19 @@ export function getMemberHomeQuickActionKeys(isAdminOrLeader: boolean): string[]
   return [...MEMBER_HOME_QUICK_ACTIONS, ...(isAdminOrLeader ? MEMBER_HOME_LEADER_QUICK_ACTIONS : [])];
 }
 
+/** Atalho visível: flag ligada e, se for página dinâmica, a rota precisa existir. */
+export function isMemberActionVisible(
+  action: { to: string; featureKey?: string; dynamicRoute?: boolean },
+  access: { isFeatureEnabled: (key: string) => boolean; visibleDynamicPaths: readonly string[] },
+): boolean {
+  if (action.featureKey && !access.isFeatureEnabled(action.featureKey)) return false;
+  if (action.dynamicRoute) {
+    const target = stripSlashes(action.to);
+    return access.visibleDynamicPaths.some((path) => stripSlashes(path) === target);
+  }
+  return true;
+}
+
 export function filterNavItems(
   items: readonly MemberNavItemDefinition[],
   access: MemberNavAccess,

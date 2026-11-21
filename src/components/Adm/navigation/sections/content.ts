@@ -2,7 +2,6 @@ import Article from "@mui/icons-material/Article";
 import Campaign from "@mui/icons-material/Campaign";
 import Description from "@mui/icons-material/Description";
 import MenuBook from "@mui/icons-material/MenuBook";
-import NoteAdd from "@mui/icons-material/NoteAdd";
 
 import { FeatureFlagKeys } from "@/features/feature-flags/types";
 
@@ -15,18 +14,9 @@ import { ADMIN_ONLY_ROLES } from "../roles";
 
 export const ADMIN_CONTENT_SECTION: AdminNavigationSection = {
   id: AdminNavigationSectionId.CONTENT,
-  title: "Conteúdo",
+  title: "Conteúdo do site",
   icon: Article,
   items: [
-    {
-      id: AdminNavigationItemId.CREATE_PAGE,
-      label: "Criar Página",
-      description: "Crie novas páginas de conteúdo para o site.",
-      path: "/adm/criar-pagina",
-      icon: NoteAdd,
-      allowedRoles: ADMIN_ONLY_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.PAGE_MANAGEMENT,
-    },
     {
       id: AdminNavigationItemId.MEDITATIONS,
       label: "Meditações",
