@@ -141,7 +141,7 @@ test.describe.serial("Ideias (grupo IdeasSectionEditor) — criação e edição
       await captureFormData(page);
       await page.goto("/adm/ideias-compartilhadas");
       await page.getByTestId(`ideas-section-edit-${section.id}`).click();
-      await expect(page).toHaveURL(/\/adm\/editar-ideias-compartilhadas$/);
+      await expect(page).toHaveURL(/\/adm\/editar-ideias-compartilhadas(\?id=[0-9a-f-]+)?$/);
 
       await expect(page.getByTestId("ideas-section-admin-heading")).toBeVisible();
       await expectMobileFit(page, [

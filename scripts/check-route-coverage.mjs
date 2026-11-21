@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Toda rota de `App.tsx` precisa ser visitada por pelo menos um spec de
+ * Toda rota de `src/routes/{public,member,admin}Routes.tsx` precisa ser visitada por pelo menos um spec de
  * `e2e/live` (`page.goto("/rota")`). Rotas hoje sem E2E ficam na baseline
  * (`e2e/route-coverage.baseline.json`): o gate falha se surgir rota nova sem
  * teste, e a baseline só pode encolher.
@@ -14,18 +14,26 @@ import { join, resolve } from "node:path";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const args = new Set(process.argv.slice(2));
-const app = readFileSync(join(root, "src/App.tsx"), "utf8");
-const body = app.slice(app.indexOf("<Routes>"), app.indexOf("</Routes>"));
+// As rotas vivem em src/routes (plano 01, T5.1); a ordem importa: /adm vem por último.
+const ROUTE_FILES = ["publicRoutes.tsx", "memberRoutes.tsx", "adminRoutes.tsx"];
+const body = ROUTE_FILES.map((f) => readFileSync(join(root, "src/routes", f), "utf8")).join("\n");
 
 const routes = [];
-let adm = false;
-for (const line of body.split("\n")) {
-  if (/<Route[^>]*path="\/adm"/.test(line)) adm = true;
-  const m = /<Route[^>]*\bpath="([^"]+)"/.exec(line) ?? /^\s*path="([^"]+)"/.exec(line);
-  if (m && m[1] !== "*" && !/\$\{/.test(m[1])) {
-    const p = m[1];
-    routes.push(p.startsWith("/") ? p : adm ? `/adm/${p}` : `/${p}`);
-  }
+const lines = body.split("\n");
+const stack = []; // ancestrais por indentação: { indent, path }
+for (let i = 0; i < lines.length; i++) {
+  const open = /^(\s*)<Route\b/.exec(lines[i]);
+  if (!open) continue;
+  const indent = open[1].length;
+  while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+  // o `path` fica na própria linha ou nas duas seguintes, antes de `element=`
+  const head = lines.slice(i, i + 3).join(" ");
+  const m = /\bpath="([^"]+)"/.exec(head.split("element=")[0]);
+  const raw = m && !/\$\{/.test(m[1]) ? m[1] : "";
+  const parent = stack.length ? stack[stack.length - 1].full : "";
+  const full = raw ? (raw.startsWith("/") ? raw : `${parent}/${raw}`) : parent;
+  stack.push({ indent, full });
+  if (raw && raw !== "*") routes.push(full);
 }
 const uniqueRoutes = [...new Set(routes)].sort();
 
