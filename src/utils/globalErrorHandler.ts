@@ -252,7 +252,7 @@ class GlobalErrorHandler {
     }
   }
 
-  reportCustomError(error: unknown, context: Record<string, any> = {}): void {
+  reportCustomError(error: unknown, context: Record<string, unknown> = {}): void {
     const errorKey = `custom-error-${error?.toString() || 'unknown'}`;
 
     if (!this.shouldReportError(errorKey)) {

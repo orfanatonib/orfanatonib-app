@@ -105,14 +105,16 @@ export default function ErrorDetailsCard({
                       variant="outlined"
                     />
                   </Grid>
-                  {error.correlationId && (
+                  {(error.metadata?.requestId || error.correlationId) && (
                     <Grid item xs={12}>
                       <Typography variant="caption" color="text.secondary">
-                        ID do erro:
+                        Código do erro:
                       </Typography>
                       <Typography
+                        data-testid="error-screen-request-id"
                         variant="body2"
                         sx={{
+                          overflowWrap: "anywhere",
                           fontFamily: "monospace",
                           bgcolor: "grey.100",
                           p: 1,
@@ -120,7 +122,7 @@ export default function ErrorDetailsCard({
                           mt: 0.5,
                         }}
                       >
-                        {error.correlationId}
+                        {error.metadata?.requestId ?? error.correlationId}
                       </Typography>
                     </Grid>
                   )}

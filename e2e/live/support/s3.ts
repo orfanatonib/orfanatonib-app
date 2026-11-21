@@ -11,18 +11,21 @@ import { addedKeys, diffBucketAndRefs, keyFromUrl } from "./s3-invariants";
 
 /**
  * Colunas que guardam URL de mídia do bucket. **Toda** coluna nova que guarde
- * URL de arquivo precisa entrar aqui (há teste de arquitetura na API que varre
- * as entidades e compara com esta lista).
+ * URL de arquivo precisa entrar aqui (o teste de arquitetura
+ * `orfanatonib-api/src/shared/media/media-columns.architecture.spec.ts` varre as entidades e compara com as duas listas).
  */
 export const MEDIA_URL_COLUMNS: ReadonlyArray<{ table: string; column: string }> = [
   { table: "media_items", column: "url" },
   { table: "routes", column: "image" },
   { table: "content_packages", column: "coverImageUrl" },
+  { table: "lessons", column: "cover_image_url" },
 ];
 
 /** Colunas que guardam a chave do objeto (sem URL), como `content_assets.storage_key` do Estúdio. */
 export const MEDIA_KEY_COLUMNS: ReadonlyArray<{ table: string; column: string }> = [
   { table: "content_assets", column: "storageKey" },
+  { table: "lesson_versions", column: "docxS3Key" },
+  { table: "lesson_versions", column: "pdfS3Key" },
 ];
 
 let client: S3Client | null = null;
@@ -58,10 +61,24 @@ export async function objectExists(key: string): Promise<boolean> {
   return (await listObjects(key)).includes(key);
 }
 
+/**
+ * Tabelas que existem no banco do ambiente. Uma entidade pode estar no código sem migration aplicada
+ * (módulo ainda não ativado): sem tabela não há referência, e o `SELECT` não pode derrubar os invariantes
+ * das demais features. A correspondência lista × entidades é garantida pelo teste de arquitetura da API.
+ */
+async function existingTables(): Promise<Set<string>> {
+  const rows = await queryAll<{ name: string }>(
+    "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE()",
+  );
+  return new Set(rows.map((row) => row.name));
+}
+
 export async function referencedKeys(): Promise<string[]> {
   const { bucket } = s3Config();
   const keys = new Set<string>();
+  const tables = await existingTables();
   for (const { table, column } of MEDIA_URL_COLUMNS) {
+    if (!tables.has(table)) continue;
     const rows = await queryAll<{ url: string | null }>(`SELECT \`${column}\` AS url FROM \`${table}\` WHERE \`${column}\` IS NOT NULL`);
     for (const row of rows) {
       const key = row.url ? keyFromUrl(row.url, bucket) : null;
@@ -69,6 +86,7 @@ export async function referencedKeys(): Promise<string[]> {
     }
   }
   for (const { table, column } of MEDIA_KEY_COLUMNS) {
+    if (!tables.has(table)) continue;
     const rows = await queryAll<{ key: string | null }>(`SELECT \`${column}\` AS \`key\` FROM \`${table}\` WHERE \`${column}\` IS NOT NULL`);
     for (const row of rows) if (row.key) keys.add(row.key);
   }

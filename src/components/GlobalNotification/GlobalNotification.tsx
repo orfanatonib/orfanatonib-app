@@ -68,6 +68,7 @@ export default function GlobalNotification() {
 
             return (
               <Alert
+                data-testid="global-notification"
                 key={notification.id}
                 severity={notification.type}
                 variant={notification.variant || 'filled'}
@@ -88,8 +89,10 @@ export default function GlobalNotification() {
                     {!notification.persistent && (
                       <IconButton
                         size="small"
+                        data-testid="global-notification-close"
+                        aria-label="Fechar aviso"
                         onClick={() => handleClose(notification.id)}
-                        sx={{ color: 'inherit' }}
+                        sx={{ color: 'inherit', minWidth: 44, minHeight: 44 }}
                       >
                         <CloseIcon fontSize="small" />
                       </IconButton>
@@ -108,15 +111,19 @@ export default function GlobalNotification() {
               >
                 <Box>
                   {notification.title && (
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                    <Typography data-testid="global-notification-title" variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                       {notification.title}
                     </Typography>
                   )}
-                  <Typography variant="body2">
+                  <Typography data-testid="global-notification-message" variant="body2">
                     {notification.message}
                   </Typography>
                   {notification.description && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.9 }}>
+                    <Typography
+                      data-testid="global-notification-description"
+                      variant="caption"
+                      sx={{ display: 'block', mt: 0.5, opacity: 0.9, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}
+                    >
                       {notification.description}
                     </Typography>
                   )}

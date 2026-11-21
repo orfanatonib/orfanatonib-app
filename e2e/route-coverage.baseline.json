@@ -1,6 +1,5 @@
 {
   "uncovered": [
-    "/adm/abrigos/:id/edit",
     "/adm/abrigos/novo",
     "/adm/editar-imagens-shelter",
     "/adm/editar-meditacao",

@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import type { AppError } from "@/types/error";
 import ErrorDetailsCard from "./ErrorDetailsCard";
+import { slugify } from "./ErrorScreen.utils";
 import { errorConfigs } from "./ErrorScreen.config";
 import type { ErrorScreenAction, ErrorScreenProps } from "./ErrorScreen.config";
 
@@ -225,7 +226,7 @@ export default function ErrorScreen({
                     whileTap={{ scale: 0.98 }}
                   >
                     <Button
-                      data-testid={`error-screen-action-${index}`}
+                      data-testid={`error-screen-action-${slugify(action.label)}`}
                       variant={action.variant}
                       color={action.color || "primary"}
                       size="large"

@@ -107,3 +107,30 @@ quatro cenários em banco vazio — e um teste que pula não prova nada.
 - `expectAuditEvent(request, adminToken, API_URL, { actionName, requestId?, outcome? })` prova na API `/log-records/audit` que a ação foi auditada (devolve `storage-unavailable` se o ambiente grava em arquivo). Dentro da janela de 60 s o mesmo evento vira contador: use `actionName`.
 - Variáveis: `E2E_API_URL`, `E2E_APP_URL`, `E2E_API_AUDIT_DIR` (só para storage em arquivo).
 - Gates: `npm run check:scenarios` (ID de matriz com teste), `npm run check:routes` (toda rota visitada por `page.goto("/literal")` — o script lê o texto, não constantes), `npm run check:test-ids`.
+
+## Regras da plataforma E2E (plano 02)
+
+**Mídia (S3 sem órfão)**
+- Toda coluna nova que guarde URL de arquivo entra em `MEDIA_URL_COLUMNS`; coluna que guarde só a **chave** do objeto entra em `MEDIA_KEY_COLUMNS` (ambas em `support/s3.ts`). Hoje: `media_items.url`, `routes.image`, `content_packages.coverImageUrl`, `lessons.cover_image_url` (URL) e `content_assets.storageKey`, `lesson_versions.docxS3Key/pdfS3Key` (chave). Tabela ainda sem migration no banco do ambiente é ignorada pelo `referencedKeys`.
+- O teste de arquitetura da API `orfanatonib-api/src/shared/media/media-columns.architecture.spec.ts` varre as entidades e **falha** se uma coluna com cara de mídia (`url`, `image`, `cover`, `photo`, `logo`, `avatar`, `thumb`, `storageKey`, `s3Key`) não estiver nas duas listas nem na exceção justificada (`NOT_A_REFERENCE`), ou se a lista citar coluna que não existe mais. Sem o repositório do app ao lado, a comparação se declara ignorada.
+- Feature com upload reaproveita `mediaScenarios(slug)` (`support/media-scenarios.ts`, 12 cenários `<slug>.s3.NN`); exemplos: `image-pages/image-pages.s3.api.spec.ts`, `image-sections/image-sections.s3.api.spec.ts`. Cenário que a feature não tem **lança erro** (nunca pula). Specs com asserções próprias mais finas (ideias, vídeos) seguem com as invariantes `expectNoOrphans`/`expectNoBrokenRefs`.
+
+**Layout mobile**
+- `support/card-layout.ts` (`expectCardActionsAligned`) confere o alinhamento das ações de cartões em 375×812; use nos fluxos `@mobile` que tenham cartões.
+
+**`request` em specs seriais**
+- O Playwright proíbe reusar a fixture `request` fora do teste em que nasceu. Quem guarda o `request` do `beforeAll` numa variável de módulo/`describe` deve **renová-lo em cada `beforeEach`** (`request = api`) e também no `afterEach`/`afterAll` antes de limpar. Veja `image-pages.s3.api.spec.ts`.
+
+**E-mail**
+- Não há Mailpit nem SES: o envio é SMTP do Gmail e o sink de teste é a tabela `email_outbox` (`expectOutbox`/`expectNoOutbox`). O projeto `setup` desliga **todas** as flags `email_*`/`email-*`; religar uma flag é opt-in do cenário que prova o envio e deve ser desfeito no `afterAll`.
+
+**Asserções**
+- Negativos de autorização usam `expectForbiddenWithoutSideEffects` (status + contagem das tabelas + bucket inalterados); exemplo: `video-pages/video-pages-authorization.api.spec.ts`. Auditoria: `expectAuditEvent`.
+
+**LLM**
+- Sempre simulado: `AI_PROVIDER_MODE=fake` (a API recusa `fake` em produção). Marcadores `[[fake:429]]`, `[[fake:quota]]`, `[[fake:moderation]]` etc. nos prompts; ver `security/llm-generation.api.spec.ts`.
+
+**Gates e CI**
+- `npm run check:scenarios` (ID de matriz ↔ título `[id]`; só julga IDs de unidades que têm matriz), `check:routes`, `check:test-ids`; o gate de cenários tem teste próprio (`support/check-scenario-coverage.test.ts`, roda com `npx vitest run e2e/live/support`).
+- `.github/workflows/e2e-live.yml`: sobe MySQL, LocalStack e DynamoDB Local, a API (com `AI_PROVIDER_MODE=fake`) e o app e roda os gates + o Playwright escolhido. **É opcional e manual** (`workflow_dispatch`); não é gate de merge, e o secret `E2E_API_CHECKOUT_TOKEN` (leitura da API) precisa ser criado pela infra. Ativar como gate/noturno é decisão do solicitante.
+- API: `coverageThreshold` global em `orfanatonib-api/package.json` (piso 80/64/68/80 em statements/branches/functions/lines, medido em 2026-11-20) além dos pisos de 100% por diretório; o piso só sobe.

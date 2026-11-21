@@ -7,12 +7,15 @@
  *   node scripts/check-scenario-coverage.mjs                 # relatório + falha em ID desconhecido
  *   node scripts/check-scenario-coverage.mjs --unit=team     # exige 100% da unidade
  *   node scripts/check-scenario-coverage.mjs --strict        # exige 100% de todas
+ *   node scripts/check-scenario-coverage.mjs --root=<dir>    # outra raiz de projeto (teste do gate)
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const root = resolve(new URL("..", import.meta.url).pathname);
 const args = new Set(process.argv.slice(2));
+// `--root=<dir>` aponta outra raiz de projeto (usado pelo teste do próprio gate, com uma árvore de fixture).
+const rootArg = [...args].find((a) => a.startsWith("--root="))?.split("=")[1];
+const root = rootArg ? resolve(rootArg) : resolve(new URL("..", import.meta.url).pathname);
 const unitArg = [...args].find((a) => a.startsWith("--unit="))?.split("=")[1];
 const strict = args.has("--strict");
 
@@ -49,6 +52,10 @@ function walk(dir, acc = []) {
   return acc;
 }
 
+// Só IDs de unidades que TÊM matriz podem ser "inexistentes": títulos de testes de features sem matriz
+// (ex.: `shelter-feed.ui#mobile`, `t8.1#aviso`) usam outro esquema de rótulo e não são julgados por este gate.
+const matrixPrefixes = new Set([...scenarios.keys()].map((id) => id.split(".")[0]));
+
 const roots = [join(root, "e2e/live"), join(root, "src"), join(root, "../orfanatonib-api/src"), join(root, "../orfanatonib-api/test")];
 const covered = new Set();
 const unknown = new Set();
@@ -61,7 +68,7 @@ for (const r of roots) {
     for (const m of text.matchAll(TITLE)) {
       const id = m[1];
       if (scenarios.has(id)) covered.add(id);
-      else if (/^[a-z-]+\.(get|post|put|patch|delete|s3)\./.test(id) || id.includes("#")) unknown.add(`${id}  (${f.replace(root, ".")})`);
+      else if (matrixPrefixes.has(id.split(".")[0]) && (/^[a-z-]+\.(get|post|put|patch|delete|s3)\./.test(id) || id.includes("#"))) unknown.add(`${id}  (${f.replace(root, ".")})`);
     }
   }
 }

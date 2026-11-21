@@ -1,5 +1,6 @@
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, countRows, queryOne } from "../support/db";
+import { expectForbiddenWithoutSideEffects } from "../support/assertions";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /** Autorização de `/video-pages` (plano 34): leitura aberta (só páginas públicas para visitante; id inexistente 404); escrita só admin (visitante 401, membro/líder 403); escrita recusada não grava; flags desligadas ⇒ 403 FEATURE_DISABLED. */
@@ -84,24 +85,15 @@ test.describe.serial("Páginas de vídeo — autorização", () => {
   });
 
   test("[video-page.post.video-pages#perfil-anonimo] POST /video-pages como visitante: 401", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "POST", "/video-pages", undefined);
-    expect([401]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "POST", "/video-pages", undefined), [{ table: "videos_pages" }], [401]);
   });
 
   test("[video-page.post.video-pages#perfil-membro] POST /video-pages como membro: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "POST", "/video-pages", member);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "POST", "/video-pages", member), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.post.video-pages#perfil-lider] POST /video-pages como líder: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "POST", "/video-pages", leader);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "POST", "/video-pages", leader), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.post.video-pages#perfil-admin] POST /video-pages como admin: 400", async ({ request }) => {
@@ -112,24 +104,15 @@ test.describe.serial("Páginas de vídeo — autorização", () => {
   });
 
   test("[video-page.patch.video-pages-id#perfil-anonimo] PATCH /video-pages/:id como visitante: 401", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "PATCH", "/video-pages/{BAD}", undefined);
-    expect([401]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "PATCH", "/video-pages/{BAD}", undefined), [{ table: "videos_pages" }], [401]);
   });
 
   test("[video-page.patch.video-pages-id#perfil-membro] PATCH /video-pages/:id como membro: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "PATCH", "/video-pages/{BAD}", member);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "PATCH", "/video-pages/{BAD}", member), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.patch.video-pages-id#perfil-lider] PATCH /video-pages/:id como líder: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "PATCH", "/video-pages/{BAD}", leader);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "PATCH", "/video-pages/{BAD}", leader), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.patch.video-pages-id#perfil-admin] PATCH /video-pages/:id como admin: 400/404", async ({ request }) => {
@@ -140,24 +123,15 @@ test.describe.serial("Páginas de vídeo — autorização", () => {
   });
 
   test("[video-page.delete.video-pages-id#perfil-anonimo] DELETE /video-pages/:id como visitante: 401", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "DELETE", "/video-pages/{BAD}", undefined);
-    expect([401]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "DELETE", "/video-pages/{BAD}", undefined), [{ table: "videos_pages" }], [401]);
   });
 
   test("[video-page.delete.video-pages-id#perfil-membro] DELETE /video-pages/:id como membro: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "DELETE", "/video-pages/{BAD}", member);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "DELETE", "/video-pages/{BAD}", member), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.delete.video-pages-id#perfil-lider] DELETE /video-pages/:id como líder: 403", async ({ request }) => {
-    const before = await countRows("videos_pages");
-    const res = await send(request, "DELETE", "/video-pages/{BAD}", leader);
-    expect([403]).toContain(res.status());
-    expect(await countRows("videos_pages")).toBe(before);
+    await expectForbiddenWithoutSideEffects(() => send(request, "DELETE", "/video-pages/{BAD}", leader), [{ table: "videos_pages" }], [403]);
   });
 
   test("[video-page.delete.video-pages-id#perfil-admin] DELETE /video-pages/:id como admin: 400/404", async ({ request }) => {

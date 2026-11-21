@@ -9,4 +9,7 @@ export type { AppError, ErrorHandlingOptions };
 export * from './errors/analyze';
 export * from './errors/retry';
 export * from './errors/handle';
+export * from './errors/wrappers';
+export { planNotification } from './errors/notification.plan';
+export type { NotificationPlan } from './errors/notification.types';
 export * from './errors/predicates';

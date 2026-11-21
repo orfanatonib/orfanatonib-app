@@ -6,6 +6,8 @@
   "http-errors-observability.get.users#perfil-anonimo",
   "http-errors-observability.get.users#perfil-membro",
   "http-errors-observability.get.users-id#nao-encontrado",
-  "http-errors-observability.post.auth-login#validacao"
+  "http-errors-observability.post.auth-login#validacao",
+  "http-errors-observability.ui.shelters-id#codigo-do-erro-mobile",
+  "http-errors-observability.ui.shelters-id#codigo-do-erro-na-tela"
  ]
 }
