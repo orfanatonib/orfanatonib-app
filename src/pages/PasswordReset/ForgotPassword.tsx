@@ -12,7 +12,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { apiForgotPassword } from '@/features/auth/api';
 import {
-    AuthErrorStatus,
     AUTH_ERROR_MESSAGES,
     AUTH_SUCCESS_MESSAGES,
     AUTH_VALIDATION
@@ -48,12 +47,7 @@ const ForgotPassword: React.FC = () => {
         try {
             const data = await apiForgotPassword(email);
 
-            if (data.status === AuthErrorStatus.VERIFICATION_EMAIL_SENT) {
-                setErrorMessage(null);
-                setSuccessMessage(AUTH_SUCCESS_MESSAGES.SES_NOT_VERIFIED);
-            } else {
-                setSuccessMessage(data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
-            }
+            setSuccessMessage(data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
             setCooldown(AUTH_VALIDATION.COOLDOWN_SECONDS);
         } catch (error: unknown) {
             const msg = getApiErrorMessage(error, AUTH_ERROR_MESSAGES.FORGOT_PASSWORD_GENERIC);

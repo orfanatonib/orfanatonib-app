@@ -16,10 +16,8 @@ import { apiResendVerification } from '@/features/auth/api';
 /**
  * Instruções de confirmação de e-mail.
  *
- * Esta tela descrevia a verificação de identidade do AWS SES em sandbox —
- * pedia para procurar um e-mail da Amazon. A API migrou para SMTP do Gmail e
- * passou a enviar o próprio link de confirmação, então as instruções agora são
- * do fluxo real, com reenvio.
+ * A API envia o próprio link de confirmação por SMTP (Gmail); a tela explica o
+ * fluxo e permite reenviar o e-mail.
  */
 const EmailVerificationInstructions: React.FC = () => {
   const navigate = useNavigate();

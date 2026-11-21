@@ -59,7 +59,7 @@ export default function SelectPageTemplate({ templateKey }: SelectPageTemplatePr
       sx={{
         minHeight: '100vh',
         pb: 6,
-        px: { xs: 2, md: 3 },
+        px: selectedOption ? { xs: 0, md: 3 } : { xs: 2, md: 3 },
         bgcolor: '#f8fafc',
       }}
     >
@@ -137,10 +137,10 @@ export default function SelectPageTemplate({ templateKey }: SelectPageTemplatePr
         <Container
           maxWidth={false}
           sx={{
-            width: { xs: '98%', md: '95%' },
+            width: { xs: '100%', md: '95%' },
             mx: 'auto',
             pt: 3,
-            px: { xs: 1, sm: 2 },
+            px: { xs: 0, sm: 2 },
           }}
         >
           {/* Header Navigation with Back Arrow */}
@@ -153,6 +153,7 @@ export default function SelectPageTemplate({ templateKey }: SelectPageTemplatePr
               gap: 2,
               mb: 3,
               pb: 2,
+              px: { xs: 2, md: 0 },
               borderBottom: '1px solid',
               borderColor: 'divider',
             }}
@@ -212,9 +213,10 @@ export default function SelectPageTemplate({ templateKey }: SelectPageTemplatePr
             elevation={3}
             data-testid={PAGE_CREATOR_TEST_IDS.SELECTED_PREVIEW}
             sx={{
-              p: { xs: 2, md: 4 },
-              borderRadius: 3,
-              bgcolor: '#ffffff',
+              p: { xs: 0, md: 4 },
+              borderRadius: { xs: 0, md: 3 },
+              boxShadow: { xs: 'none', md: 3 },
+              bgcolor: { xs: 'transparent', md: '#ffffff' },
               transition: 'all 0.3s ease-in-out',
             }}
           >

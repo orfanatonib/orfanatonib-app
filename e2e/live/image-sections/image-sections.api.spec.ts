@@ -120,6 +120,10 @@ test.describe.serial("Seções de imagem — API (banco e bucket reais)", () => 
     await closeDb();
   });
 
+  test.beforeEach(async ({ request: api }) => {
+    request = api;
+  });
+
   // ------------------------------------------------------------------ POST /image-sections
 
   test("[image-section.post.image-sections#feliz] o membro envia: nasce privada e pendente, com autor, sem galeria, e a mídia fica no bucket", async () => {

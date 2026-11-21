@@ -42,8 +42,9 @@ test.describe.serial("Páginas de Ideias — API ao vivo", () => {
     expect(response.status()).toBe(401);
   });
 
-  test("a rota GET /ideas-pages permite acesso público", async ({ request }) => {
-    const response = await request.get(`${API_URL}/ideas-pages`);
+  test("a rota GET /ideas-pages é privada: visitante 401 e, com sessão, a lista", async ({ request }) => {
+    expect((await request.get(`${API_URL}/ideas-pages`)).status()).toBe(401);
+    const response = await request.get(`${API_URL}/ideas-pages`, { headers: authHeaders(adminToken) });
     expect(response.status()).toBe(200);
     const body = (await response.json()) as IdeasPageResponse[];
     expect(Array.isArray(body)).toBe(true);
