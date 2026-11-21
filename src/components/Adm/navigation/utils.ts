@@ -1,7 +1,5 @@
-import {
-  ADMIN_NAVIGATION_FILTER_ALL_ID,
-  ADMIN_NAVIGATION_SECTIONS,
-} from "./constants";
+import { ADMIN_NAVIGATION_FILTER_ALL_ID } from "./constants";
+import { ADMIN_NAVIGATION_SECTIONS } from "./sections";
 import type {
   AdminNavigationFilterId,
   AdminNavigationItem,

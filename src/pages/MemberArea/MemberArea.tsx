@@ -7,7 +7,8 @@ import {
   MemberQuickActions,
 } from './components';
 import { useMemberArea } from './hooks';
-import { MEMBER_HOME_QUICK_ACTIONS } from './constants/navigation';
+import { useAuthRole } from '@/utils/useAuthRole';
+import { getMemberHomeQuickActionKeys } from './utils/navigation';
 
 /**
  * Home: avisos, preparação da semana, acesso rápido, guia e mural.
@@ -15,6 +16,7 @@ import { MEMBER_HOME_QUICK_ACTIONS } from './constants/navigation';
  */
 const MemberArea: React.FC = () => {
   const { loading, showWeek, showMeditation } = useMemberArea();
+  const { isAdminOrLeader } = useAuthRole();
 
   return (
     <Box data-testid="member-area-home">
@@ -23,7 +25,7 @@ const MemberArea: React.FC = () => {
       <BannerSection showWeekBanner={showWeek} showMeditationBanner={showMeditation} />
 
       <Box data-testid="member-area-home-help" sx={{ mb: { xs: 3, md: 4 } }}>
-        <MemberQuickActions references={[...MEMBER_HOME_QUICK_ACTIONS]} />
+        <MemberQuickActions references={getMemberHomeQuickActionKeys(isAdminOrLeader)} />
       </Box>
 
       {loading ? (

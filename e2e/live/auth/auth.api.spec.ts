@@ -202,7 +202,7 @@ test.describe.serial("Auth — API ao vivo", () => {
     expect(body.message).toBe("User already exists");
   });
 
-  test("complete-register de e-mail sem conta responde 404", async ({
+  test("complete-register sem token de conclusão (só o e-mail) é recusado: não revela se a conta existe", async ({
     request,
   }) => {
     const response = await request.post("/auth/complete-register", {
@@ -213,19 +213,25 @@ test.describe.serial("Auth — API ao vivo", () => {
       },
     });
 
-    expect(response.status()).toBe(404);
+    expect(response.status()).toBe(400);
+
+    const withBadToken = await request.post("/auth/complete-register", {
+      data: { completionToken: "lixo", name: "Sem conta", phone: "92999990000" },
+    });
+    expect(withBadToken.status()).toBe(401);
   });
 
-  test("recuperação de senha recusa e-mail desconhecido e token inválido", async ({
+  test("recuperação de senha responde igual para e-mail desconhecido e recusa token inválido", async ({
     request,
   }) => {
+    // Resposta genérica: e-mail desconhecido não é 400 (não revela quais contas existem).
     expect(
       (
         await request.post("/auth/forgot-password", {
           data: { email: `${RUN_TAG}@orfanatonib.test` },
         })
       ).status(),
-    ).toBe(400);
+    ).toBe(201);
 
     expect(
       (await request.get("/auth/reset-password/validate?token=lixo")).status(),

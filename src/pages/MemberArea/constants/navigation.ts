@@ -37,6 +37,9 @@ export const MEMBER_SUBPAGE_PATHS = {
 /** Ferramentas de preparação e contato em destaque na Home. */
 export const MEMBER_HOME_QUICK_ACTIONS: readonly string[] = ['materials', 'photos', 'training', 'rate', 'events', 'help'];
 
+/** Atalhos da Home só para admin/líder (a API de integrações é admin/líder); a flag `integration` também vale. */
+export const MEMBER_HOME_LEADER_QUICK_ACTIONS: readonly string[] = ['integrations'];
+
 /** Endereços antigos (antes do padrão `/area-do-membro/<slug>`); redirecionam para os novos. */
 export const MEMBER_LEGACY_PATH_REDIRECTS: Readonly<Record<string, string>> = {
   '/lista-materias-visita': MEMBER_SUBPAGE_PATHS.materials,
@@ -144,6 +147,7 @@ export const MEMBER_NAV_ITEMS: readonly MemberNavItemDefinition[] = [
     accentColor: '#9c27b0',
     group: MemberNavGroup.More,
     requires: MemberNavRequirement.AdminOrLeader,
+    featureKey: FeatureFlagKeys.INTEGRATION,
   },
 ];
 

@@ -151,12 +151,14 @@ export function FeatureFlagFormDialog({
               onChange={(event) =>
                 setValue('key', event.target.value.toLowerCase())
               }
-              disabled={saving}
+              disabled={saving || Boolean(flag?.protected)}
               error={errors.key}
               helperText={
                 errors.key
                   ? 'Use letras minúsculas, números, "_" ou "-".'
-                  : 'É por esta chave que a aplicação consulta a flag.'
+                  : flag?.protected
+                    ? 'Flag de fábrica: a chave não pode ser alterada.'
+                    : 'É por esta chave que a aplicação consulta a flag.'
               }
               inputProps={{ 'data-testid': 'feature-flags-form-key' }}
             />

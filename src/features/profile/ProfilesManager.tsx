@@ -1,185 +1,41 @@
-import { logger } from '@/utils/logger';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  InputAdornment,
-  Grid,
-  Chip,
-  Stack,
-  Alert,
-  Collapse,
-  useTheme,
-  useMediaQuery,
-  Paper,
-  Pagination,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  Skeleton,
-  SelectChangeEvent,
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  Clear as ClearIcon,
-  Sort as SortIcon,
-  Refresh as RefreshIcon,
-  Person as PersonIcon,
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { apiGetAllProfiles } from './api';
-import { CompleteProfileListItem, QueryProfilesDto, PaginationMeta } from './types';
-import { roleConfig, getBirthdayStatus, getDaysUntilBirthday } from './utils';
+import React from 'react';
+import { Alert, Box, Chip, CircularProgress, Grid, Paper, Skeleton, Stack, Typography } from '@mui/material';
+import { Person as PersonIcon } from '@mui/icons-material';
+import { AnimatePresence } from 'framer-motion';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/slices';
+import BackHeader from '@/components/common/header/BackHeader';
+import NoTeamLinked from '@/components/common/NoTeamLinked';
 import { useAuthRole } from '../../utils/useAuthRole';
 import BirthdaySection from './components/BirthdaySection';
 import { ProfileCard, ProfileCardSkeleton } from './components/ProfileCard';
 import ProfileDetailModal from './components/ProfileDetailModal';
-import BackHeader from '@/components/common/header/BackHeader';
-import NoTeamLinked from '@/components/common/NoTeamLinked';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/slices';
-import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import { MANAGER_PAPER_SX, MANAGER_TEXTS } from './manager/constants';
+import ProfilesAdvancedFilters from './manager/ProfilesAdvancedFilters';
+import ProfilesPagination from './manager/ProfilesPagination';
+import ProfilesToolbar from './manager/ProfilesToolbar';
+import { useProfilesManager } from './manager/useProfilesManager';
+import { hasBirthdays } from './manager/utils';
+
+const SKELETON_COUNT = 8;
+const SKELETON_KEYS = Array.from({ length: SKELETON_COUNT }, (_, i) => `profile-skeleton-${i + 1}`);
 
 const ProfilesManager: React.FC = () => {
-  const [profiles, setProfiles] = useState<CompleteProfileListItem[]>([]);
-  const [allProfiles, setAllProfiles] = useState<CompleteProfileListItem[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
-  const [selectedProfile, setSelectedProfile] = useState<CompleteProfileListItem | null>(null);
   const { isLeader } = useAuthRole();
   const user = useSelector((state: RootState) => state.auth.user);
-
-  const [loading, setLoading] = useState(true);
-  const [loadingBirthdays, setLoadingBirthdays] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-
-  const [filters, setFilters] = useState<QueryProfilesDto>({
-    page: 1,
-    limit: 12,
-    sortBy: 'name',
-    order: 'ASC',
-  });
-
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchInput), 500);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  useEffect(() => {
-    setFilters(prev => ({ ...prev, q: debouncedSearch || undefined, page: 1 }));
-  }, [debouncedSearch]);
-
-  const loadProfiles = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiGetAllProfiles(filters);
-      setProfiles(response.items);
-      setMeta(response.meta);
-    } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Erro ao carregar perfis'));
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  const loadAllProfilesForBirthdays = useCallback(async () => {
-    try {
-      setLoadingBirthdays(true);
-      const response = await apiGetAllProfiles({ limit: 1000 });
-      setAllProfiles(response.items);
-    } catch (error: unknown) {
-      // Só alimenta o painel de aniversários: sem ele a tela segue funcionando.
-      logger.warn('Não foi possível carregar os perfis para os aniversários', { feature: 'profiles' }, error);
-    } finally {
-      setLoadingBirthdays(false);
-    }
-  }, []);
-
-  useEffect(() => { loadProfiles(); }, [loadProfiles]);
-  useEffect(() => { loadAllProfilesForBirthdays(); }, [loadAllProfilesForBirthdays]);
-
-  const { birthdayToday, birthdayWeek, birthdayMonth } = useMemo(() => {
-    const today: CompleteProfileListItem[] = [];
-    const week: CompleteProfileListItem[] = [];
-    const month: CompleteProfileListItem[] = [];
-
-    allProfiles.forEach((profile) => {
-      const status = getBirthdayStatus(profile.personalData?.birthDate);
-      if (status === 'today') today.push(profile);
-      else if (status === 'this-week') week.push(profile);
-      else if (status === 'this-month') month.push(profile);
-    });
-
-    const sortByBirthday = (a: CompleteProfileListItem, b: CompleteProfileListItem) => {
-      const daysA = getDaysUntilBirthday(a.personalData?.birthDate) ?? 999;
-      const daysB = getDaysUntilBirthday(b.personalData?.birthDate) ?? 999;
-      return daysA - daysB;
-    };
-
-    week.sort(sortByBirthday);
-    month.sort(sortByBirthday);
-
-    return { birthdayToday: today, birthdayWeek: week, birthdayMonth: month };
-  }, [allProfiles]);
-
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
-    setFilters(prev => ({ ...prev, page }));
-  };
-
-  const handleRoleFilterChange = (role: string) => {
-    setFilters(prev => ({ ...prev, role: role === 'all' ? undefined : role, page: 1 }));
-  };
-
-  const handleSortChange = (e: SelectChangeEvent<string>) => {
-    const [sortBy, order] = e.target.value.split('-') as [QueryProfilesDto['sortBy'], QueryProfilesDto['order']];
-    setFilters(prev => ({ ...prev, sortBy, order, page: 1 }));
-  };
-
-  const handleLimitChange = (e: SelectChangeEvent<number>) => {
-    setFilters(prev => ({ ...prev, limit: e.target.value as number, page: 1 }));
-  };
-
-  const handleAdvancedFilterChange = (field: keyof QueryProfilesDto, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value || undefined, page: 1 }));
-  };
-
-  const clearFilters = () => {
-    setSearchInput('');
-    setFilters({ page: 1, limit: 12, sortBy: 'name', order: 'ASC' });
-  };
-
-  const hasActiveFilters = Boolean(
-    filters.q || filters.role || filters.temperaments || filters.loveLanguages || filters.favoriteColor
-  );
-
-  const handleRefresh = () => {
-    loadProfiles();
-    loadAllProfilesForBirthdays();
-  };
+  const state = useProfilesManager();
+  const { profiles, loading, birthdays, selectedProfile, setSelectedProfile } = state;
 
   if (loading && profiles.length === 0) {
     return (
-      <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%' }}>
+      <Box sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%' }} data-testid="profiles-loading">
         <Box sx={{ mb: 3, textAlign: 'center' }}>
-          <Skeleton variant="text" width={300} height={50} sx={{ mx: 'auto' }} />
-          <Skeleton variant="text" width={400} height={24} sx={{ mx: 'auto', mt: 1 }} />
+          <Skeleton variant="text" width={300} height={50} sx={{ mx: 'auto', maxWidth: '100%' }} />
+          <Skeleton variant="text" width={400} height={24} sx={{ mx: 'auto', mt: 1, maxWidth: '100%' }} />
         </Box>
         <Grid container spacing={2}>
-          {[...Array(8)].map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+          {SKELETON_KEYS.map((key) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={key}>
               <ProfileCardSkeleton />
             </Grid>
           ))}
@@ -188,170 +44,42 @@ const ProfilesManager: React.FC = () => {
     );
   }
 
-  // Check if leader has no teams linked - show message instead of content
+  // Líder sem equipe vinculada: mostra o aviso em vez do conteúdo.
   if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
     return <NoTeamLinked showBackButton={false} />;
   }
 
   return (
     <Box data-testid="profiles-manager" sx={{ p: { xs: 2, sm: 3 }, width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <BackHeader title="Nossa Família ❤️" />
+      <BackHeader title={MANAGER_TEXTS.title} />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+      {state.error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={state.dismissError} data-testid="profiles-error">
+          {state.error}
         </Alert>
       )}
 
-      {!loadingBirthdays && (birthdayToday.length > 0 || birthdayWeek.length > 0 || birthdayMonth.length > 0) && (
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
-          sx={{ mb: 2 }}
-        >
-          <BirthdaySection
-            title="Aniversário Hoje! 🎉"
-            emoji="🎂"
-            profiles={birthdayToday}
-            variant="today"
-            onProfileClick={setSelectedProfile}
-          />
-          <BirthdaySection
-            title="Esta Semana"
-            emoji="🎈"
-            profiles={birthdayWeek}
-            variant="week"
-            onProfileClick={setSelectedProfile}
-          />
-          <BirthdaySection
-            title="Este Mês"
-            emoji="🎁"
-            profiles={birthdayMonth}
-            variant="month"
-            onProfileClick={setSelectedProfile}
-          />
+      {!state.loadingBirthdays && hasBirthdays(birthdays) && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }} data-testid="profiles-birthdays">
+          <BirthdaySection title="Aniversário Hoje! 🎉" emoji="🎂" profiles={birthdays.today} variant="today" onProfileClick={setSelectedProfile} />
+          <BirthdaySection title="Esta Semana" emoji="🎈" profiles={birthdays.week} variant="week" onProfileClick={setSelectedProfile} />
+          <BirthdaySection title="Este Mês" emoji="🎁" profiles={birthdays.month} variant="month" onProfileClick={setSelectedProfile} />
         </Stack>
       )}
 
-      <Paper
-        elevation={0}
-        sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(255,255,255,0.8)' }}
-      >
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2 }} alignItems={{ xs: 'stretch', md: 'center' }}>
-          <TextField
-            placeholder="Buscar por nome ou email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            size="small"
-            sx={{ flex: 1, minWidth: { xs: '100%', md: 200 }, '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'white' } }}
-            InputProps={{
-              startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment>,
-              endAdornment: searchInput && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchInput('')}><ClearIcon sx={{ fontSize: 18 }} /></IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}>
-            {!isLeader && (['all', 'member', 'leader', 'admin'] as const).map((role) => {
-              const isSelected = (filters.role || 'all') === (role === 'all' ? 'all' : role) && (role === 'all' ? !filters.role : true);
-              const config = role === 'all' ? null : roleConfig[role];
-              return (
-                <Chip
-                  key={role}
-                  label={role === 'all' ? 'Todos' : config?.label}
-                  size="small"
-                  onClick={() => handleRoleFilterChange(role)}
-                  sx={{
-                    fontWeight: isSelected ? 700 : 500,
-                    fontSize: { xs: '0.7rem', sm: '0.8125rem' },
-                    height: { xs: 28, sm: 32 },
-                    bgcolor: isSelected ? (config?.color || '#667eea') : 'rgba(0,0,0,0.04)',
-                    color: isSelected ? 'white' : 'text.secondary',
-                    '&:hover': { bgcolor: isSelected ? (config?.color || '#667eea') : 'rgba(0,0,0,0.08)' },
-                  }}
-                />
-              );
-            })}
-          </Stack>
-
-          <Stack direction="row" spacing={1} sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}>
-            <Tooltip title="Filtros avançados">
-              <IconButton
-                size="small"
-                onClick={() => setShowFilters(!showFilters)}
-                sx={{
-                  bgcolor: showFilters ? 'primary.main' : 'rgba(0,0,0,0.04)',
-                  color: showFilters ? 'white' : 'text.secondary',
-                  '&:hover': { bgcolor: showFilters ? 'primary.dark' : 'rgba(0,0,0,0.08)' },
-                }}
-              >
-                <FilterIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Atualizar">
-              <IconButton size="small" onClick={handleRefresh} disabled={loading} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }}>
-                {loading ? <CircularProgress size={20} /> : <RefreshIcon fontSize="small" />}
-              </IconButton>
-            </Tooltip>
-            {hasActiveFilters && (
-              <Tooltip title="Limpar filtros">
-                <IconButton size="small" onClick={clearFilters} sx={{ bgcolor: 'rgba(244,67,54,0.1)', color: '#f44336' }}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Stack>
-        </Stack>
-      </Paper>
-
-      <Collapse in={showFilters}>
-        <Paper
-          elevation={0}
-          sx={{ p: 2, mb: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(248,248,255,0.5)' }}
-        >
-          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2, color: 'text.secondary' }}>
-            <FilterIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} /> Filtros Avançados
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField label="Temperamento" placeholder="Ex: Sanguíneo" value={filters.temperaments || ''} onChange={(e) => handleAdvancedFilterChange('temperaments', e.target.value)} size="small" fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField label="Linguagem do Amor" placeholder="Ex: Palavras" value={filters.loveLanguages || ''} onChange={(e) => handleAdvancedFilterChange('loveLanguages', e.target.value)} size="small" fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField label="Cor Favorita" placeholder="Ex: Azul" value={filters.favoriteColor || ''} onChange={(e) => handleAdvancedFilterChange('favoriteColor', e.target.value)} size="small" fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl size="small" fullWidth>
-                <InputLabel><SortIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} /> Ordenar por</InputLabel>
-                <Select value={`${filters.sortBy}-${filters.order}`} onChange={handleSortChange} label="Ordenar por">
-                  <MenuItem value="name-ASC">Nome (A-Z)</MenuItem>
-                  <MenuItem value="name-DESC">Nome (Z-A)</MenuItem>
-                  <MenuItem value="email-ASC">Email (A-Z)</MenuItem>
-                  <MenuItem value="email-DESC">Email (Z-A)</MenuItem>
-                  <MenuItem value="createdAt-DESC">Mais recentes</MenuItem>
-                  <MenuItem value="createdAt-ASC">Mais antigos</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Collapse>
+      <ProfilesToolbar state={state} isLeader={isLeader} />
+      <ProfilesAdvancedFilters state={state} />
 
       {profiles.length === 0 && !loading ? (
-        <Paper elevation={0} sx={{ p: 6, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)' }}>
+        <Paper elevation={0} sx={{ p: 6, textAlign: 'center', ...MANAGER_PAPER_SX, borderRadius: 4 }} data-testid="profiles-empty">
           <PersonIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary" gutterBottom>Nenhum perfil encontrado</Typography>
-          <Typography variant="body2" color="text.disabled">Tente ajustar os filtros de busca</Typography>
-          {hasActiveFilters && <Chip label="Limpar filtros" onClick={clearFilters} sx={{ mt: 2 }} color="primary" variant="outlined" />}
+          <Typography variant="h6" color="text.secondary" gutterBottom>{MANAGER_TEXTS.empty}</Typography>
+          <Typography variant="body2" color="text.disabled">{MANAGER_TEXTS.emptyHint}</Typography>
+          {state.hasActiveFilters && <Chip label={MANAGER_TEXTS.clearFilters} onClick={state.clearFilters} sx={{ mt: 2 }} color="primary" variant="outlined" />}
         </Paper>
       ) : (
         <>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} data-testid="profiles-list">
             <AnimatePresence>
               {profiles.map((profile, index) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={profile.id}>
@@ -360,95 +88,20 @@ const ProfilesManager: React.FC = () => {
               ))}
             </AnimatePresence>
           </Grid>
-
-          {meta && (
-            <Paper
-              elevation={0}
-              sx={{
-                mt: 3,
-                p: { xs: 1.5, sm: 2 },
-                borderRadius: 3,
-                border: '1px solid rgba(0,0,0,0.06)',
-                bgcolor: 'rgba(255,255,255,0.8)'
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent="center"
-                alignItems="center"
-                spacing={{ xs: 1.5, sm: 2 }}
-                sx={{ position: 'relative' }}
-              >
-                {meta.totalPages > 1 && (
-                  <Pagination
-                    count={meta.totalPages}
-                    page={meta.currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    size={isMobile ? 'small' : 'medium'}
-                    showFirstButton
-                    showLastButton
-                    siblingCount={isMobile ? 0 : 1}
-                    boundaryCount={1}
-                  />
-                )}
-
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  sx={{
-                    position: { xs: 'static', sm: 'absolute' },
-                    right: { sm: 16 },
-                  }}
-                >
-                  <FormControl size="small" sx={{ minWidth: { xs: 60, sm: 70 } }}>
-                    <Select
-                      value={filters.limit || 12}
-                      onChange={handleLimitChange}
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.1)' },
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                        '& .MuiSelect-select': { py: 0.75 },
-                      }}
-                    >
-                      <MenuItem value={8}>8</MenuItem>
-                      <MenuItem value={12}>12</MenuItem>
-                      <MenuItem value={24}>24</MenuItem>
-                      <MenuItem value={48}>48</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, whiteSpace: 'nowrap' }}
-                  >
-                    de <strong>{meta.totalItems}</strong>
-                    {hasActiveFilters && ' (filtrado)'}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Paper>
-          )}
+          <ProfilesPagination state={state} />
         </>
       )}
 
       {loading && profiles.length > 0 && (
-        <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
+        <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }} data-testid="profiles-reloading">
           <Paper elevation={8} sx={{ p: 2, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'white' }}>
             <CircularProgress size={20} />
-            <Typography variant="body2" color="text.secondary">Carregando...</Typography>
+            <Typography variant="body2" color="text.secondary">{MANAGER_TEXTS.loading}</Typography>
           </Paper>
         </Box>
       )}
 
-      <ProfileDetailModal
-        profile={selectedProfile}
-        open={!!selectedProfile}
-        onClose={() => setSelectedProfile(null)}
-      />
+      <ProfileDetailModal profile={selectedProfile} open={!!selectedProfile} onClose={() => setSelectedProfile(null)} />
     </Box>
   );
 };

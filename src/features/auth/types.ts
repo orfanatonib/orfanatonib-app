@@ -24,6 +24,8 @@ export type GoogleLoginResponse = Partial<
   newUser?: boolean;
   name?: string;
   email?: string;
+  /** Prova de posse da conta Google (≈15 min, uso único); só vem com `newUser`. Vive em memória. */
+  completionToken?: string;
 };
 
 /** Equipe oferecida no cadastro de membro. */
@@ -39,6 +41,16 @@ export interface ShelterTeamOption {
 export interface RegisterRequest {
   name: string;
   email: string;
+  phone: string;
+  password?: string;
+  role?: string;
+  teamId?: string;
+}
+
+/** Corpo de `POST /auth/complete-register`: a identidade vem do token, nunca do e-mail. */
+export interface CompleteRegisterRequest {
+  completionToken: string;
+  name: string;
   phone: string;
   password?: string;
   role?: string;

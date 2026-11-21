@@ -59,6 +59,13 @@ export function renderPublicRoutes() {
         )}
       />
       <Route
+        path="/esqueci-minha-senha"
+        element={flaggedElement(
+          FeatureFlagKeys.PASSWORD_RECOVERY,
+          <Pages.ForgotPassword />,
+        )}
+      />
+      <Route
         path="/recuperar-senha/:token"
         element={flaggedElement(
           FeatureFlagKeys.PASSWORD_RECOVERY,

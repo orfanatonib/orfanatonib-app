@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 
 import { extractErrorMessage } from '@/utils/errorHandler';
@@ -8,22 +8,28 @@ import {
   apiDeleteFeatureFlag,
   apiGetFeatureFlagStats,
   apiListFeatureFlags,
+  apiSetFeatureFlagEnabled,
   apiSyncFeatureFlagCatalog,
-  apiToggleFeatureFlag,
   apiUpdateFeatureFlag,
 } from '../api';
+import { countFlagsByArea, featureFlagAreaOf, groupFlagsByArea } from '../areas';
 import {
   FEATURE_FLAGS_DEFAULT_LIMIT,
+  FEATURE_FLAGS_FETCH_LIMIT,
+  FEATURE_FLAGS_FETCH_MAX_PAGES,
   FEATURE_FLAGS_SEARCH_DEBOUNCE_MS,
 } from '../constants';
 import type {
+  FeatureFlagAreaId,
   FeatureFlagAudience,
   FeatureFlagFormValues,
   FeatureFlagListFilters,
+  FeatureFlagQuery,
   FeatureFlagResponse,
   FeatureFlagStats,
 } from '../types';
 import {
+  isFeatureFlagVersionConflict,
   toCreateFeatureFlagRequest,
   toUpdateFeatureFlagRequest,
 } from '../utils/featureFlagUtils';
@@ -60,9 +66,26 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+/** Lê o catálogo inteiro (poucas dezenas de flags): o painel agrupa e pagina no cliente. */
+async function fetchAllFlags(
+  query: Omit<FeatureFlagQuery, 'page' | 'limit'>,
+  signal: AbortSignal,
+): Promise<FeatureFlagResponse[]> {
+  const all: FeatureFlagResponse[] = [];
+  for (let page = 1; page <= FEATURE_FLAGS_FETCH_MAX_PAGES; page += 1) {
+    const listing = await apiListFeatureFlags(
+      { ...query, page, limit: FEATURE_FLAGS_FETCH_LIMIT },
+      { signal },
+    );
+    all.push(...(Array.isArray(listing.data) ? listing.data : []));
+    if (page >= listing.meta.totalPages) break;
+  }
+  return all;
+}
+
 export function useFeatureFlagsManagement() {
-  const [items, setItems] = useState<FeatureFlagResponse[]>([]);
-  const [total, setTotal] = useState(0);
+  const [allFlags, setAllFlags] = useState<FeatureFlagResponse[]>([]);
+  const [area, setArea] = useState<FeatureFlagAreaId | ''>('');
   const [stats, setStats] = useState<FeatureFlagStats>(EMPTY_STATS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(FEATURE_FLAGS_DEFAULT_LIMIT);
@@ -77,7 +100,7 @@ export function useFeatureFlagsManagement() {
     FEATURE_FLAGS_SEARCH_DEBOUNCE_MS,
   );
 
-  useEffect(() => setPage(1), [debouncedSearch, filters, pageSize]);
+  useEffect(() => setPage(1), [debouncedSearch, filters, pageSize, area]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -86,11 +109,9 @@ export function useFeatureFlagsManagement() {
       setLoading(true);
       setError('');
       try {
-        const [listing, summary] = await Promise.all([
-          apiListFeatureFlags(
+        const [flags, summary] = await Promise.all([
+          fetchAllFlags(
             {
-              page,
-              limit: pageSize,
               searchString: debouncedSearch.trim() || undefined,
               enabled:
                 filters.status === '' ? undefined : filters.status === 'true',
@@ -101,18 +122,16 @@ export function useFeatureFlagsManagement() {
               sort: filters.sort,
               order: filters.order,
             },
-            { signal: controller.signal },
+            controller.signal,
           ),
           apiGetFeatureFlagStats({ signal: controller.signal }),
         ]);
 
-        setItems(Array.isArray(listing.data) ? listing.data : []);
-        setTotal(listing.meta.totalItems);
+        setAllFlags(flags);
         setStats(summary);
       } catch (loadError: unknown) {
         if (axios.isCancel(loadError)) return;
-        setItems([]);
-        setTotal(0);
+        setAllFlags([]);
         setError(extractErrorMessage(loadError));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -121,12 +140,30 @@ export function useFeatureFlagsManagement() {
 
     void load();
     return () => controller.abort();
-  }, [page, pageSize, debouncedSearch, filters, reloadToken]);
+  }, [debouncedSearch, filters, reloadToken]);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
 
+  const areaCounts = useMemo(() => countFlagsByArea(allFlags), [allFlags]);
+  // Mesma ordem do painel: por área e, dentro dela, a ordenação escolhida.
+  const filtered = useMemo(
+    () =>
+      groupFlagsByArea(allFlags)
+        .flatMap((group) => group.items)
+        .filter((flag) => area === '' || featureFlagAreaOf(flag.key) === area),
+    [allFlags, area],
+  );
+  const total = filtered.length;
+  const items = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
+
   return {
     items,
+    area,
+    setArea,
+    areaCounts,
     stats,
     total,
     page,
@@ -159,6 +196,8 @@ export function useFeatureFlagMutations(refresh: () => void) {
         return true;
       } catch (mutationError: unknown) {
         setActionError(extractErrorMessage(mutationError));
+        // Versão desatualizada: recarrega para o admin ver o estado atual.
+        if (isFeatureFlagVersionConflict(mutationError)) refresh();
         return false;
       } finally {
         setSaving(false);
@@ -168,12 +207,16 @@ export function useFeatureFlagMutations(refresh: () => void) {
   );
 
   const save = useCallback(
-    (values: FeatureFlagFormValues, editingKey?: string) =>
+    (
+      values: FeatureFlagFormValues,
+      editingKey?: string,
+      expectedVersion?: number,
+    ) =>
       run(async () => {
         if (editingKey) {
           await apiUpdateFeatureFlag(
             editingKey,
-            toUpdateFeatureFlagRequest(values),
+            toUpdateFeatureFlagRequest(values, expectedVersion),
           );
           return 'Feature flag atualizada.';
         }
@@ -183,10 +226,14 @@ export function useFeatureFlagMutations(refresh: () => void) {
     [run],
   );
 
+  // Estado desejado + versão lida: dois admins no painel não se atropelam (409).
   const toggle = useCallback(
-    (key: string) =>
+    (target: FeatureFlagResponse) =>
       run(async () => {
-        const flag = await apiToggleFeatureFlag(key);
+        const flag = await apiSetFeatureFlagEnabled(target.key, {
+          enabled: !target.enabled,
+          expectedVersion: target.version,
+        });
         return `"${flag.name}" ${flag.enabled ? 'ligada' : 'desligada'}.`;
       }),
     [run],

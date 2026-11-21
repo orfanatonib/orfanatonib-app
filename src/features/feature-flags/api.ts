@@ -10,6 +10,7 @@ import type {
   FeatureFlagsMap,
   FeatureFlagStats,
   PaginatedFeatureFlags,
+  SetFeatureFlagEnabledRequest,
   UpdateFeatureFlagRequest,
 } from './types';
 
@@ -64,6 +65,18 @@ export async function apiUpdateFeatureFlag(
 ): Promise<FeatureFlagResponse> {
   const response = await apiAxios.patch<FeatureFlagResponse>(
     flagPath(key),
+    payload,
+  );
+  return response.data;
+}
+
+/** Estado desejado (idempotente); com `expectedVersion`, 409 se a flag já mudou. */
+export async function apiSetFeatureFlagEnabled(
+  key: string,
+  payload: SetFeatureFlagEnabledRequest,
+): Promise<FeatureFlagResponse> {
+  const response = await apiAxios.put<FeatureFlagResponse>(
+    `${flagPath(key)}/enabled`,
     payload,
   );
   return response.data;

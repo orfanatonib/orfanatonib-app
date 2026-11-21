@@ -263,7 +263,7 @@ const ProfilePage: React.FC = () => {
             </Box>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+              <Alert data-testid="profile-error" severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}

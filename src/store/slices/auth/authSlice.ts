@@ -95,6 +95,8 @@ interface User {
 interface GoogleUser {
   name: string;
   email: string;
+  /** Só em memória (fora do `whitelist` do persist): nunca vai para localStorage. */
+  completionToken?: string;
 }
 
 export interface LoginResponse {

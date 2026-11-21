@@ -1,12 +1,8 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Button, Stack } from '@mui/material';
-import { RootState } from '@/store/slices';
-import { UserRole } from '@/store/slices/auth/authSlice';
-import { useLogout } from './useLogout';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
-import { visiblePublicNavItems } from './publicNav';
+import { isShellPathActive } from './shellNav';
+import { useShellNavigation } from './useShellNavigation';
 
 interface Props {
   closeMenu?: () => void;
@@ -17,28 +13,12 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
-  const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_MANAGEMENT);
-  const feedEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_FEED);
-  const aboutEnabled = useIsFeatureEnabled(FeatureFlagKeys.ABOUT_PAGE);
-  const eventsEnabled = useIsFeatureEnabled(FeatureFlagKeys.EVENTS_SECTION);
-  const contactEnabled = useIsFeatureEnabled(FeatureFlagKeys.CONTACT_FORM);
-  const publicEnabled: Partial<Record<FeatureFlagKeys, boolean>> = {
-    [FeatureFlagKeys.SHELTER_FEED]: feedEnabled,
-    [FeatureFlagKeys.ABOUT_PAGE]: aboutEnabled,
-    [FeatureFlagKeys.EVENTS_SECTION]: eventsEnabled,
-    [FeatureFlagKeys.CONTACT_FORM]: contactEnabled,
-  };
+  const { publicItems } = useShellNavigation();
 
   const handleClick = () => closeMenu?.();
 
-  const handleLogout = useLogout(closeMenu);
-
   const renderLink = (to: string, label: string) => {
-    const active = location.pathname === to || location.pathname.startsWith(to + '/');
+    const active = isShellPathActive(location.pathname, to);
     return (
       <Button
         key={to}
@@ -87,7 +67,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
       mt={isMobile ? 6 : 0}
       sx={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}
     >
-      {visiblePublicNavItems((flag) => publicEnabled[flag] === true).map((item) => renderLink(item.to, item.label))}
+      {publicItems.map((item) => renderLink(item.to, item.label))}
     </Stack>
   );
 };

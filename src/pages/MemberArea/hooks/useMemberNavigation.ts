@@ -1,4 +1,5 @@
-import { FeatureFlagKeys, useIsFeatureEnabled, useVisibleRoutes } from '@/features/feature-flags';
+import { useVisibleRoutes } from '@/features/feature-flags';
+import { selectAllFeatureFlags } from '@/store/selectors/featureFlagsSelectors';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
@@ -19,15 +20,15 @@ export function useMemberNavigation(): MemberNavigationState {
   const { pathname } = useLocation();
   const { isAdminOrLeader } = useAuthRole();
   const dynamicRoutes = useVisibleRoutes();
-  const photoUploadEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PHOTO_UPLOAD);
+  const featureFlags = useSelector(selectAllFeatureFlags);
 
   const navItems = useMemo(
     () =>
       filterNavItems(MEMBER_NAV_ITEMS, {
         isAdminOrLeader,
-        isFeatureEnabled: (key) => key !== FeatureFlagKeys.SHELTER_PHOTO_UPLOAD || photoUploadEnabled,
+        isFeatureEnabled: (key) => featureFlags[key] === true,
       }),
-    [isAdminOrLeader, photoUploadEnabled],
+    [isAdminOrLeader, featureFlags],
   );
   const activeId = useMemo(
     () => resolveActiveNavItemId(navItems, pathname, dynamicRoutes),

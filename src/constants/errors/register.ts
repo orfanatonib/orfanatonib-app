@@ -10,6 +10,7 @@
 export const REGISTER_ERROR_MESSAGES = {
     GENERIC: 'Erro ao cadastrar. Tente novamente.',
     UNEXPECTED: 'Erro inesperado. Tente novamente mais tarde.',
+    GOOGLE_SESSION_EXPIRED: 'Sua sessão do Google expirou. Volte ao login e entre com o Google novamente.',
 } as const;
 
 /**

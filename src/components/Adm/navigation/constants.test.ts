@@ -24,7 +24,10 @@ describe("catálogo do menu administrativo", () => {
   it("toda flag exigida pelo menu existe no catálogo", () => {
     const known = new Set<string>(Object.values(FeatureFlagKeys));
     for (const item of items) {
-      for (const flag of [item.requiredFeatureFlag, ...(item.requiredFeatureFlags ?? [])]) {
+      for (const flag of [
+        item.requiredFeatureFlag,
+        ...(item.requiredFeatureFlags ?? []),
+      ]) {
         if (flag) expect(known.has(flag), `${item.id}: ${flag}`).toBe(true);
       }
     }

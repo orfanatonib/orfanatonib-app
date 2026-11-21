@@ -1,12 +1,10 @@
 
 export enum AuthErrorStatus {
     RESET_LINK_SENT = 'RESET_LINK_SENT',
-    USER_NOT_FOUND = 'USER_NOT_FOUND',
 }
 
 export const AUTH_ERROR_MESSAGES = {
     FORGOT_PASSWORD_GENERIC: 'Erro ao processar solicitação.',
-    USER_NOT_FOUND: 'Email não encontrado na base de dados.',
     TOKEN_INVALID: 'Token inválido ou expirado.',
     TOKEN_NOT_PROVIDED: 'Token não fornecido.',
     RESET_PASSWORD_GENERIC: 'Erro ao redefinir senha.',
@@ -15,8 +13,9 @@ export const AUTH_ERROR_MESSAGES = {
 } as const;
 
 export const AUTH_SUCCESS_MESSAGES = {
-    RESET_LINK_SENT: 'Email de recuperação de senha enviado com sucesso.',
-    RESET_INSTRUCTIONS_SENT: 'Instruções enviadas para o seu email.',
+    /** Mesma resposta para e-mail cadastrado ou não: a tela não revela quais contas existem. */
+    RESET_LINK_SENT: 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.',
+    RESET_INSTRUCTIONS_SENT: 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.',
     PASSWORD_CHANGED: 'Senha alterada com sucesso! Redirecionando para o login...',
 } as const;
 

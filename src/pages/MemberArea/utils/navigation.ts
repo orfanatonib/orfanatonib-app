@@ -1,5 +1,7 @@
 import {
   ENTITY_TYPE_NAV_ITEM,
+  MEMBER_HOME_LEADER_QUICK_ACTIONS,
+  MEMBER_HOME_QUICK_ACTIONS,
   MEMBER_AREA_DYNAMIC_ENTITY_TYPES,
   MEMBER_CONTENT_PAGE_BASE_PATH,
 } from '../constants/navigation';
@@ -15,6 +17,11 @@ const stripSlashes = (path: string): string => path.replace(/^\/+|\/+$/g, '');
 
 export function isMemberAreaEntityType(entityType: string): boolean {
   return MEMBER_AREA_DYNAMIC_ENTITY_TYPES.includes(entityType);
+}
+
+/** Atalhos da Home: os de todos e, para admin/líder, os de integração. */
+export function getMemberHomeQuickActionKeys(isAdminOrLeader: boolean): string[] {
+  return [...MEMBER_HOME_QUICK_ACTIONS, ...(isAdminOrLeader ? MEMBER_HOME_LEADER_QUICK_ACTIONS : [])];
 }
 
 export function filterNavItems(

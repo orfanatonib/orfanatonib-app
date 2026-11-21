@@ -26,9 +26,14 @@ const initialState: FeatureFlagsState = {
   loadedFromServer: false,
 };
 
+/** `silent`: releitura em segundo plano (foco da aba) — não acende `loading`, então nenhuma rota vira spinner. */
+export interface FetchFeatureFlagsArg {
+  silent?: boolean;
+}
+
 export const fetchFeatureFlags = createAsyncThunk<
   FeatureFlagsMap,
-  void,
+  FetchFeatureFlagsArg | void,
   { rejectValue: string }
 >('featureFlags/fetchFeatureFlags', async (_, { rejectWithValue }) => {
   try {
@@ -59,7 +64,7 @@ const featureFlagsSlice = createSlice({
     builder
       .addCase(fetchFeatureFlags.pending, (state, action) => {
         state.activeRequestId = action.meta.requestId;
-        state.loading = true;
+        if (!action.meta.arg?.silent) state.loading = true;
         state.error = null;
       })
       .addCase(

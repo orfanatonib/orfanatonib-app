@@ -1,4 +1,10 @@
-import { FEATURE_FLAG_AUDIENCE_OPTIONS } from '../constants';
+import axios from 'axios';
+
+import {
+  FEATURE_FLAG_AUDIENCE_OPTIONS,
+  FEATURE_FLAG_PROTECTED_CODE,
+  FEATURE_FLAG_VERSION_CONFLICT_CODE,
+} from '../constants';
 import { FEATURE_PROFILE_RULES } from '../profileRules';
 import type {
   CreateFeatureFlagRequest,
@@ -121,8 +127,10 @@ export function toCreateFeatureFlagRequest(
 
 export function toUpdateFeatureFlagRequest(
   values: FeatureFlagFormValues,
+  expectedVersion?: number,
 ): UpdateFeatureFlagRequest {
   return {
+    ...(expectedVersion !== undefined ? { expectedVersion } : {}),
     key: values.key.trim().toLowerCase(),
     name: values.name.trim(),
     description: values.description.trim(),
@@ -180,4 +188,20 @@ export function audienceWarning(
   return `Este recurso é usado por ${hidden
     .map((role) => ROLE_LABELS[role])
     .join(' e ')}; com este público ele ficará escondido deles.`;
+}
+
+function conflictCode(error: unknown): unknown {
+  if (!axios.isAxiosError(error) || error.response?.status !== 409) return null;
+  const data = error.response.data as { details?: { code?: unknown } } | undefined;
+  return data?.details?.code;
+}
+
+/** 409 de versão: outra pessoa alterou a flag depois da leitura do painel. */
+export function isFeatureFlagVersionConflict(error: unknown): boolean {
+  return conflictCode(error) === FEATURE_FLAG_VERSION_CONFLICT_CODE;
+}
+
+/** 409 de flag de fábrica (não pode ser renomeada nem removida). */
+export function isFeatureFlagProtectedError(error: unknown): boolean {
+  return conflictCode(error) === FEATURE_FLAG_PROTECTED_CODE;
 }

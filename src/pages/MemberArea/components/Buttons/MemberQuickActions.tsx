@@ -10,11 +10,13 @@ import type { MemberQuickActionsProps } from "../../types";
 const MemberQuickActions = ({ references }: MemberQuickActionsProps) => {
   const shelteredEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
   const photoUploadEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PHOTO_UPLOAD);
+  const integrationEnabled = useIsFeatureEnabled(FeatureFlagKeys.INTEGRATION);
   const actions = references.filter(
     (key) =>
       memberActionMap[key] &&
       (memberActionMap[key].to !== "/area-dos-acolhidos" || shelteredEnabled) &&
-      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.photos || photoUploadEnabled),
+      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.photos || photoUploadEnabled) &&
+      (memberActionMap[key].to !== MEMBER_SUBPAGE_PATHS.integrations || integrationEnabled),
   );
   if (!actions.length) return null;
   return (

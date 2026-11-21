@@ -19,6 +19,7 @@ import axios from 'axios';
 
 import api from '@/config/axiosConfig';
 import { apiGoogleLogin, apiLogin } from '@/features/auth/api';
+import { useAuthEntryOptions } from '@/features/auth/entryOptions';
 import { landingPathFor } from '@/features/auth/landing';
 import { logger } from '@/utils/logger';
 import { RootState as RootStateType, AppDispatch as AppDispatchType } from '@/store/slices';
@@ -168,7 +169,13 @@ const Login: React.FC = () => {
 
       if (res.data.newUser) {
         if (res.data.name && res.data.email) {
-          dispatch(setGoogleUser({ name: res.data.name, email: res.data.email }));
+          dispatch(
+            setGoogleUser({
+              name: res.data.name,
+              email: res.data.email,
+              completionToken: res.data.completionToken,
+            }),
+          );
         }
         navigate('/cadastrar-google');
         return;
@@ -193,6 +200,8 @@ const Login: React.FC = () => {
   const handleGoogleError = (): void => {
     setErrorMessage(LOGIN_ERROR_MESSAGES.GOOGLE_LOGIN_ERROR);
   };
+
+  const { canRegister, canRecoverPassword, canUseGoogle } = useAuthEntryOptions();
 
   const handleNavigateToRegister = (): void => {
     navigate('/cadastrar');
@@ -273,17 +282,19 @@ const Login: React.FC = () => {
                 helperText={!!errorMessage && !password ? LOGIN_ERROR_MESSAGES.PASSWORD_REQUIRED : ''}
               />
 
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  data-testid="login-forgot-password"
-                  variant="text"
-                  size="small"
-                  onClick={() => navigate('/esqueci-minha-senha')}
-                  sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
-                >
-                  Esqueci minha senha
-                </Button>
-              </Box>
+              {canRecoverPassword && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    data-testid="login-forgot-password"
+                    variant="text"
+                    size="small"
+                    onClick={() => navigate('/esqueci-minha-senha')}
+                    sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </Box>
+              )}
 
               <Button
                 data-testid="login-submit"
@@ -298,19 +309,23 @@ const Login: React.FC = () => {
               </Button>
             </Box>
 
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-            </Box>
+            {canUseGoogle && (
+              <Box data-testid="login-google" sx={{ mt: 2, textAlign: 'center' }}>
+                <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+              </Box>
+            )}
 
-            <Button
-              data-testid="login-register"
-              variant="outlined"
-              fullWidth
-              onClick={handleNavigateToRegister}
-              sx={{ mt: 3, fontWeight: 'bold' }}
-            >
-              Cadastre-se
-            </Button>
+            {canRegister && (
+              <Button
+                data-testid="login-register"
+                variant="outlined"
+                fullWidth
+                onClick={handleNavigateToRegister}
+                sx={{ mt: 3, fontWeight: 'bold' }}
+              >
+                Cadastre-se
+              </Button>
+            )}
           </Paper>
         </Container>
       </Box>

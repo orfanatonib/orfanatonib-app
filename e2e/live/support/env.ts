@@ -29,6 +29,13 @@ const apiEnv = loadApiLocalEnv();
 const pick = (e2e: string, api: string, fallback = ""): string =>
   process.env[e2e] ?? apiEnv[api] ?? fallback;
 
+/** `JWT_SECRET` da API local: só para assinar, nos testes, o token de conclusão que o login Google emitiria. */
+export function apiJwtSecret(): string {
+  const secret = pick("E2E_JWT_SECRET", "JWT_SECRET");
+  if (!secret) throw new Error("JWT_SECRET não encontrado (E2E_JWT_SECRET ou env/local.env da API).");
+  return secret;
+}
+
 export interface E2eDbConfig {
   host: string;
   port: number;

@@ -40,7 +40,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 const isAuthEndpoint = (url?: string) => {
   const u = (url || "").toLowerCase();
-  return /\/auth\/(login|google|register|refresh)$/.test(u);
+  return /\/auth\/(login|google|register|complete-register|refresh)$/.test(u);
 };
 
 const isOnAuthRoute = () => {

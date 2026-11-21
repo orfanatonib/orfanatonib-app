@@ -18,22 +18,18 @@ import {
   ListItemText,
   Button,
 } from '@mui/material';
-import {
-  Person as PersonIcon,
-  Logout as LogoutIcon,
-  School as SchoolIcon,
-  AdminPanelSettings as AdminIcon,
-  Home as HomeIcon,
-} from '@mui/icons-material';
+import { Person as PersonIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import DesktopNavigation from './DesktopNavigation';
 import MobileNavigation from './MobileNavigation';
 import CompleteProfileAlert from './CompleteProfileAlert';
 import { useProfileAlerts } from '@/features/profile/hooks/useProfileAlerts';
 import { useAttendancePendings } from '@/features/attendance/hooks';
 import { RootState } from '@/store/slices';
-import { UserRole } from '@/store/slices/auth/authSlice';
 import { useLogout } from './useLogout';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { useRefetchFlagsOnFocus } from '@/features/feature-flags';
+import { SHELL_PROFILE_PATH, ShellUserMenuEntryId } from './shellNav';
+import { SHELL_USER_MENU_ICONS } from './shellNavIcons';
+import { useShellNavigation } from './useShellNavigation';
 
 const NavBar: React.FC = () => {
   const theme = useTheme();
@@ -41,15 +37,16 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
+  // Voltar para a aba releia as flags (uma flag desligada não pode esperar um reload).
+  useRefetchFlagsOnFocus();
+
   const profileAlerts = useProfileAlerts();
   const attendancePendings = useAttendancePendings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
-  const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
+  const { userMenuEntries } = useShellNavigation();
+  const menuEntries = userMenuEntries.filter((entry) => entry.id !== ShellUserMenuEntryId.PROFILE);
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isAuthenticated) {
@@ -62,22 +59,12 @@ const NavBar: React.FC = () => {
   };
 
   const handleProfileMenu = () => {
-    navigate('/perfil');
+    navigate(SHELL_PROFILE_PATH);
     handleClose();
   };
 
-  const handleMemberArea = () => {
-    navigate('/area-do-membro');
-    handleClose();
-  };
-
-  const handleShelteredArea = () => {
-    navigate('/area-dos-acolhidos');
-    handleClose();
-  };
-
-  const handleAdminArea = () => {
-    navigate('/adm');
+  const handleEntry = (path: string) => {
+    navigate(path);
     handleClose();
   };
 
@@ -181,28 +168,21 @@ const NavBar: React.FC = () => {
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   >
-                    <MenuItem onClick={handleMemberArea}>
-                      <ListItemIcon>
-                        <SchoolIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
-                      </ListItemIcon>
-                      <ListItemText>Área do Membro</ListItemText>
-                    </MenuItem>
-                    {(isMember || isLeader) && isPagelasEnabled && (
-                      <MenuItem onClick={handleShelteredArea}>
-                        <ListItemIcon>
-                          <HomeIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
-                        </ListItemIcon>
-                        <ListItemText>Área dos Acolhidos</ListItemText>
-                      </MenuItem>
-                    )}
-                    {(isAdmin || isLeader) && (
-                      <MenuItem onClick={handleAdminArea}>
-                        <ListItemIcon>
-                          <AdminIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
-                        </ListItemIcon>
-                        <ListItemText>Administração</ListItemText>
-                      </MenuItem>
-                    )}
+                    {menuEntries.map((entry) => {
+                      const EntryIcon = SHELL_USER_MENU_ICONS[entry.id];
+                      return (
+                        <MenuItem
+                          key={entry.id}
+                          onClick={() => handleEntry(entry.path)}
+                          data-testid={`shell-user-menu-${entry.id}`}
+                        >
+                          <ListItemIcon>
+                            <EntryIcon sx={{ color: '#FFFF00', fontSize: 20 }} />
+                          </ListItemIcon>
+                          <ListItemText>{entry.label}</ListItemText>
+                        </MenuItem>
+                      );
+                    })}
                     <Divider sx={{ borderColor: 'rgba(255, 255, 0, 0.2)', my: 1 }} />
                     <MenuItem onClick={handleProfileMenu}>
                       <ListItemIcon>

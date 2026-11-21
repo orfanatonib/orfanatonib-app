@@ -29,6 +29,19 @@ Para semear à mão, sem subir tudo:
 cd ../orfanatonib-api && npm run seed:local
 ```
 
+**Admin nunca vem pela API.** O seed cria/promove `e2e.admin@orfanatonib.test`
+direto no banco (bcrypt, idempotente); leader/member continuam pelo cadastro
+normal. Os testes que precisam de um admin descartável criam a conta como
+membro por `POST /users` e a promovem com `promoteToAdminInDb`
+(`support/db-admin.ts`, único helper de escrita do E2E, só em banco local). Para
+promover alguém em staging/produção, veja o README do módulo auth
+(`orfanatonib-api/docs/modules/auth/README.md`).
+
+**Cadastro pelo Google nos E2E.** O Google real não entra: o teste assina o
+`completionToken` (mesmo segredo derivado da API, `completionTokenFor`) e, nas
+telas, semeia o estado em memória pelo `window.__APP_STORE__` (exposto só no dev
+server). A API e o banco são os reais.
+
 > `run.sh` encerra os serviços quando a shell que o chamou termina (tem
 > `trap cleanup EXIT`, para o Ctrl+C derrubar API e app juntos). Rode-o em um
 > terminal próprio e deixe aberto — em background de script ele se derruba.
@@ -56,6 +69,9 @@ subir e diz qual processo está segurando cada uma, em vez de encerrar calado.
 | `attendance.ui.spec.ts` | `live-ui` | as telas de frequência: hierarquia, busca, pendências, datas e o lançamento gravando no banco |
 | `ideas-sections.api.spec.ts` | `live-api` | contratos de `/ideas-sections`: autenticação das leituras, multipart, mídia, vinculação e remoção |
 | `ideas-sections.ui.spec.ts` | `live-ui` | as telas de ideias compartilhadas, inclusive um membro enviando a ideia pela tela |
+| `users/user-profile-{reads,profiles-writes,self-service,users-writes}.api.spec.ts` | `live-api` | matriz `user-profile` (199 IDs): `/users`, `/profiles`, `/profile` por perfil anônimo/membro/líder/admin, escopo próprio × outro, validação, flag ligada/desligada; contas descartáveis, prova por `SELECT`, negativos com banco e bucket inalterados |
+| `users/user-profile-s3.api.spec.ts` | `live-api` | foto de perfil sem órfão (`user-profile.s3.01-12`): enviar, trocar, link, falha de banco, cascata ao apagar o usuário, mesmo nome simultâneo, trocas simultâneas |
+| `users/user-profile.ui.spec.ts` | `live-ui`, `live-ui-mobile` | `/perfil`, `/adm/usuarios`, `/adm/perfis` (edição, foto, busca, vazio, flag desligada) e mobile 375 px |
 
 ## Rodando
 

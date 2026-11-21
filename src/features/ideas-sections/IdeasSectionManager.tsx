@@ -7,6 +7,7 @@ import { deleteIdeasSection } from './api';
 import { ideasSectionErrorMessage } from './errors';
 import { IDEAS_SECTION_MESSAGES } from './constants';
 import { useIdeasSections } from './hooks';
+import { useRefreshPendingCounts } from '@/features/admin-pending-counts';
 import { IdeasSection as IdeasSectionType } from './types';
 import { buildEditSectionPath } from './utils';
 import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
@@ -20,6 +21,7 @@ import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 
 export default function IdeasSectionManager() {
   const navigate = useNavigate();
+  const refreshPending = useRefreshPendingCounts();
 
   const {
     filteredSections,
@@ -35,9 +37,10 @@ export default function IdeasSectionManager() {
   const [sectionToDelete, setSectionToDelete] = useState<IdeasSectionType | null>(null);
   const [selectedSection, setSelectedSection] = useState<IdeasSectionType | null>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchSections();
-  }, [fetchSections]);
+    void refreshPending();
+  }, [fetchSections, refreshPending]);
 
   const handleEdit = (section: IdeasSectionType) => {
     navigate(buildEditSectionPath(section.id));
@@ -50,6 +53,7 @@ export default function IdeasSectionManager() {
     try {
       await deleteIdeasSection(id);
       await fetchSections();
+      void refreshPending();
     } catch (error: unknown) {
       setError(
         ideasSectionErrorMessage(error, IDEAS_SECTION_MESSAGES.DELETE_FAILED),

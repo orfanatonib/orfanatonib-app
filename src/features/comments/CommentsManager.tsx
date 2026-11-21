@@ -3,6 +3,7 @@ import { Box, Container } from "@mui/material";
 import { motion } from "framer-motion";
 
 import { CommentData } from "store/slices/comment/commentsSlice";
+import { useRefreshPendingCounts } from "@/features/admin-pending-counts";
 import { useCommentActions, useCommentsData, useCommentsFilter } from "./hooks";
 import CommentsToolbar from "./components/CommentsToolbar";
 import CommentsGrid from "./components/CommentsGrid";
@@ -15,7 +16,16 @@ import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 export default function CommentsManager() {
   const { comments, loading, error, setError, fetchComments } = useCommentsData();
   const { filtered, search, onSearchChange, status, setStatus, isFiltering } = useCommentsFilter(comments);
-  const { actionLoading, actionError, setActionError, publish, remove, update } = useCommentActions(fetchComments);
+  const refreshPending = useRefreshPendingCounts();
+  const refetchAll = React.useCallback(async () => {
+    await fetchComments();
+    void refreshPending();
+  }, [fetchComments, refreshPending]);
+  const { actionLoading, actionError, setActionError, publish, remove, update } = useCommentActions(refetchAll);
+
+  React.useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
 
   const [selected, setSelected] = React.useState<CommentData | null>(null);
   const [toDelete, setToDelete] = React.useState<CommentData | null>(null);

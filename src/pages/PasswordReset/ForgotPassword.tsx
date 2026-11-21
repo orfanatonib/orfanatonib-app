@@ -45,9 +45,10 @@ const ForgotPassword: React.FC = () => {
         setErrorMessage(null);
 
         try {
-            const data = await apiForgotPassword(email);
+            await apiForgotPassword(email);
 
-            setSuccessMessage(data.message || AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
+            // Texto fixo: a resposta é a mesma para e-mail cadastrado ou não.
+            setSuccessMessage(AUTH_SUCCESS_MESSAGES.RESET_INSTRUCTIONS_SENT);
             setCooldown(AUTH_VALIDATION.COOLDOWN_SECONDS);
         } catch (error: unknown) {
             const msg = getApiErrorMessage(error, AUTH_ERROR_MESSAGES.FORGOT_PASSWORD_GENERIC);
@@ -80,16 +81,6 @@ const ForgotPassword: React.FC = () => {
                     {successMessage && (
                         <Alert severity="success" sx={{ mb: 2 }} data-testid="forgot-password-success">
                             {successMessage}
-                            {successMessage.includes('verificado na AWS') && (
-                                <Button
-                                    color="inherit"
-                                    size="small"
-                                    onClick={() => navigate('/verificar-email')}
-                                    sx={{ display: 'block', mt: 1, textDecoration: 'underline' }}
-                                >
-                                    Ver como verificar
-                                </Button>
-                            )}
                         </Alert>
                     )}
                     {errorMessage && <Alert severity="error" sx={{ mb: 2 }} data-testid="forgot-password-error">{errorMessage}</Alert>}

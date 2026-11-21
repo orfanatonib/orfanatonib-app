@@ -23,6 +23,9 @@ export const ConfirmEmail = lazy(
   () => import("@/pages/EmailVerification/ConfirmEmail"),
 );
 export const Register = lazy(() => import("@/pages/Register/Register"));
+export const ForgotPassword = lazy(
+  () => import("@/pages/PasswordReset/ForgotPassword"),
+);
 export const ResetPassword = lazy(
   () => import("@/pages/PasswordReset/ResetPassword"),
 );

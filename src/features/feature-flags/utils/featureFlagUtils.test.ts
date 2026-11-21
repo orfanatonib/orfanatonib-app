@@ -1,9 +1,12 @@
+import { AxiosError, type AxiosResponse } from 'axios';
 import { describe, expect, it } from 'vitest';
 
 import { FeatureFlagTargetRole } from '../types';
 import type { FeatureFlagResponse } from '../types';
 import {
   hasFeatureFlagFormErrors,
+  isFeatureFlagProtectedError,
+  isFeatureFlagVersionConflict,
   isValidMetadataJson,
   parseFeatureFlagSort,
   audienceWarning,
@@ -20,6 +23,8 @@ const FLAG: FeatureFlagResponse = {
   name: 'Gestão de acolhidos',
   description: 'Cadastro e consulta',
   enabled: true,
+  protected: false,
+  version: 4,
   targetRoles: [FeatureFlagTargetRole.ADMIN, FeatureFlagTargetRole.LEADER],
   audience: 'ADMIN_LEADER',
   metadata: { rollout: 50 },
@@ -102,5 +107,33 @@ describe('audienceWarning', () => {
 
   it('ignora chaves fora do catálogo', () => {
     expect(audienceWarning('custom_flag', 'ADMIN')).toBeNull();
+  });
+});
+
+function conflict(status: number, code: string): AxiosError {
+  const response = {
+    status,
+    data: { details: { code } },
+  } as AxiosResponse;
+  return new AxiosError('x', 'ERR', undefined, undefined, response);
+}
+
+describe('controle otimista e flag protegida', () => {
+  it('o PATCH leva a versão lida (e só ela, quando informada)', () => {
+    const values = toFeatureFlagFormValues(FLAG);
+    expect(toUpdateFeatureFlagRequest(values, 4)).toMatchObject({ expectedVersion: 4 });
+    expect(toUpdateFeatureFlagRequest(values)).not.toHaveProperty('expectedVersion');
+  });
+
+  it('reconhece o 409 de versão desatualizada', () => {
+    expect(isFeatureFlagVersionConflict(conflict(409, 'FEATURE_FLAG_VERSION_CONFLICT'))).toBe(true);
+    expect(isFeatureFlagVersionConflict(conflict(409, 'FEATURE_FLAG_PROTECTED'))).toBe(false);
+    expect(isFeatureFlagVersionConflict(conflict(400, 'FEATURE_FLAG_VERSION_CONFLICT'))).toBe(false);
+    expect(isFeatureFlagVersionConflict(new Error('x'))).toBe(false);
+  });
+
+  it('reconhece o 409 de flag protegida', () => {
+    expect(isFeatureFlagProtectedError(conflict(409, 'FEATURE_FLAG_PROTECTED'))).toBe(true);
+    expect(isFeatureFlagProtectedError(conflict(409, 'OUTRO'))).toBe(false);
   });
 });

@@ -5,6 +5,7 @@ import { MemberNavItemId } from '../types/navigation';
 import {
   buildMemberContentPath,
   filterNavItems,
+  getMemberHomeQuickActionKeys,
   isMemberAreaEntityType,
   resolveActiveNavItemId,
 } from './navigation';
@@ -29,6 +30,13 @@ describe('filterNavItems', () => {
   it('mostra Integrações para admin/líder', () => {
     const visible = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: true }));
     expect(visible).toContain(MemberNavItemId.Integrations);
+  });
+
+  it('Integrações FM some do menu com a flag integration desligada, mesmo para admin/líder, e volta ligada', () => {
+    const off = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: true, isFeatureEnabled: () => false }));
+    const on = ids(filterNavItems(MEMBER_NAV_ITEMS, { isAdminOrLeader: true, isFeatureEnabled: () => true }));
+    expect(off).not.toContain(MemberNavItemId.Integrations);
+    expect(on).toContain(MemberNavItemId.Integrations);
   });
 
   it('não inclui a Área dos Acolhidos (página solo, fora do menu do membro)', () => {
@@ -84,5 +92,16 @@ describe('buildMemberContentPath', () => {
   it('devolve null para tipos sem esse padrão e codifica o id', () => {
     expect(buildMemberContentPath(MediaTargetType.ShelterPage, 'abc')).toBeNull();
     expect(buildMemberContentPath(MediaTargetType.IdeasPage, 'a b')).toBe('/area-do-membro/ideias/a%20b');
+  });
+});
+
+describe('getMemberHomeQuickActionKeys', () => {
+  it('o botão de integrações da Home é só de admin/líder', () => {
+    expect(getMemberHomeQuickActionKeys(true)).toContain('integrations');
+    expect(getMemberHomeQuickActionKeys(false)).not.toContain('integrations');
+  });
+
+  it('os atalhos de todos continuam para o membro comum', () => {
+    expect(getMemberHomeQuickActionKeys(false)).toEqual(expect.arrayContaining(['materials', 'photos', 'rate']));
   });
 });

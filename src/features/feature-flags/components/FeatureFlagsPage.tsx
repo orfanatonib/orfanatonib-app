@@ -18,6 +18,8 @@ import {
   Select,
   Snackbar,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -27,6 +29,7 @@ import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 import type { AppDispatch } from '@/store/slices';
 import { fetchFeatureFlags } from '@/store/slices/feature-flags/featureFlagsSlice';
 
+import { FEATURE_FLAG_AREAS, groupFlagsByArea } from '../areas';
 import {
   FEATURE_FLAGS_PAGE_SIZE_OPTIONS,
   FEATURE_FLAG_AUDIENCE_FILTER_OPTIONS,
@@ -46,6 +49,9 @@ export function FeatureFlagsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
     items,
+    area,
+    setArea,
+    areaCounts,
     total,
     stats,
     page,
@@ -94,7 +100,7 @@ export function FeatureFlagsPage() {
   };
 
   const handleSubmit = (values: FeatureFlagFormValues) =>
-    save(values, editing?.key);
+    save(values, editing?.key, editing?.version);
 
   const handleDelete = async () => {
     if (!toDelete) return;
@@ -271,6 +277,35 @@ export function FeatureFlagsPage() {
         </Grid2>
       </Grid2>
 
+      <Tabs
+        value={area}
+        onChange={(_, value: typeof area) => setArea(value)}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
+        aria-label="Áreas do catálogo de flags"
+        data-testid="feature-flags-areas"
+        sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab
+          value=""
+          label={`Todas (${stats.total})`}
+          data-testid="feature-flags-area-all"
+          sx={{ minHeight: 48 }}
+        />
+        {FEATURE_FLAG_AREAS.filter((item) => areaCounts[item.id] > 0).map(
+          (item) => (
+            <Tab
+              key={item.id}
+              value={item.id}
+              label={`${item.label} (${areaCounts[item.id]})`}
+              data-testid={`feature-flags-area-${item.id}`}
+              sx={{ minHeight: 48 }}
+            />
+          ),
+        )}
+      </Tabs>
+
       {error || actionError ? (
         <Alert
           severity="error"
@@ -307,20 +342,37 @@ export function FeatureFlagsPage() {
       ) : null}
 
       {items.length > 0 ? (
-        <Grid2 container spacing={2} data-testid="feature-flags-list">
-          {items.map((flag) => (
-            <Grid2 key={flag.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-              <FeatureFlagCard
-                flag={flag}
-                disabled={saving}
-                onToggle={(target) => void toggle(target.key)}
-                onEdit={openEdit}
-                onCopy={handleCopy}
-                onDelete={setToDelete}
-              />
-            </Grid2>
+        <Box data-testid="feature-flags-list">
+          {groupFlagsByArea(items).map((group) => (
+            <Box
+              key={group.area.id}
+              component="section"
+              data-testid={`feature-flags-group-${group.area.id}`}
+              sx={{ mb: 3 }}
+            >
+              <Typography variant="h6" component="h2" fontWeight={700}>
+                {group.area.label}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                {group.area.description}
+              </Typography>
+              <Grid2 container spacing={2}>
+                {group.items.map((flag) => (
+                  <Grid2 key={flag.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <FeatureFlagCard
+                      flag={flag}
+                      disabled={saving}
+                      onToggle={(target) => void toggle(target)}
+                      onEdit={openEdit}
+                      onCopy={handleCopy}
+                      onDelete={setToDelete}
+                    />
+                  </Grid2>
+                ))}
+              </Grid2>
+            </Box>
           ))}
-        </Grid2>
+        </Box>
       ) : null}
 
       {total > pageSize ? (

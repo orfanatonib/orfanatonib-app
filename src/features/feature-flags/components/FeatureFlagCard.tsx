@@ -1,7 +1,10 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import {
+  Alert,
   Avatar,
   Box,
   Card,
@@ -14,9 +17,11 @@ import {
   Typography,
 } from '@mui/material';
 
+import { isEnforcedByApi } from '../areas';
 import type { FeatureFlagResponse } from '../types';
 import {
   audienceInfo,
+  audienceWarning,
   featureFlagInitials,
   formatFeatureFlagDate,
 } from '../utils/featureFlagUtils';
@@ -39,6 +44,8 @@ export function FeatureFlagCard({
   onDelete,
 }: FeatureFlagCardProps) {
   const audience = audienceInfo(flag.audience);
+  const warning = audienceWarning(flag.key, flag.audience);
+  const enforced = isEnforcedByApi(flag.key);
 
   return (
     <Card
@@ -52,7 +59,7 @@ export function FeatureFlagCard({
             {featureFlagInitials(flag.key)}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" component="h2" noWrap title={flag.name}>
+            <Typography variant="h6" component="h3" noWrap title={flag.name}>
               {flag.name}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
@@ -78,7 +85,40 @@ export function FeatureFlagCard({
             label={flag.enabled ? 'Ligada' : 'Desligada'}
           />
           <Chip size="small" color={audience.color} label={audience.label} />
+          {enforced ? (
+            <Tooltip title="A API recusa (403) o recurso quando a flag está desligada, mesmo fora da interface.">
+              <Chip
+                size="small"
+                variant="outlined"
+                color="primary"
+                icon={<ShieldOutlinedIcon />}
+                label="Imposta na API"
+                data-testid={`feature-flags-card-enforced-${flag.id}`}
+              />
+            </Tooltip>
+          ) : null}
+          {flag.protected ? (
+            <Tooltip title="Flag de fábrica: não pode ser renomeada nem removida. Para desativar, desligue-a.">
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<LockOutlinedIcon />}
+                label="Protegida"
+                data-testid={`feature-flags-card-protected-${flag.id}`}
+              />
+            </Tooltip>
+          ) : null}
         </Stack>
+
+        {warning ? (
+          <Alert
+            severity="warning"
+            data-testid={`feature-flags-card-warning-${flag.id}`}
+            sx={{ py: 0 }}
+          >
+            {warning}
+          </Alert>
+        ) : null}
 
         <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
           {flag.description || audience.description}
@@ -110,17 +150,20 @@ export function FeatureFlagCard({
               <EditOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Excluir">
+          <Tooltip title={flag.protected ? 'Flag de fábrica: desligue em vez de excluir' : 'Excluir'}>
+            <span>
             <IconButton
               type="button"
               color="error"
               aria-label="Excluir"
               onClick={() => onDelete(flag)}
+              disabled={flag.protected}
               data-testid={`feature-flags-card-delete-${flag.id}`}
               sx={{ minWidth: 44, minHeight: 44 }}
             >
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
+            </span>
           </Tooltip>
         </Stack>
       </CardContent>

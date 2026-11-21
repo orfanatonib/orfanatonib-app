@@ -58,7 +58,7 @@ export enum FeatureFlagKeys {
   CONTENT_STUDIO_PUBLICATION = 'content_studio_publication',
   CONTENT_STUDIO_PROVIDER_ADMIN = 'content_studio_provider_admin',
 
-    EMAIL_DELIVERY = 'email_delivery',
+  EMAIL_DELIVERY = 'email_delivery',
 }
 
 export enum FeatureFlagTargetRole {
@@ -83,6 +83,10 @@ export interface FeatureFlagResponse {
   name: string;
   description: string | null;
   enabled: boolean;
+  /** Flag de fábrica: a API recusa renomear/remover (409). */
+  protected: boolean;
+  /** Versão para controle otimista (`expectedVersion`). */
+  version: number;
   targetRoles: FeatureFlagTargetRole[];
   audience: FeatureFlagAudience;
   metadata: Record<string, unknown> | null;
@@ -139,6 +143,7 @@ export interface CreateFeatureFlagRequest {
 }
 
 export interface UpdateFeatureFlagRequest {
+  expectedVersion?: number;
   key?: string;
   name?: string;
   description?: string;
@@ -162,4 +167,37 @@ export interface FeatureFlagFormErrors {
   metadataJson: boolean;
 }
 
-export type FeatureFlagsMap = Record<string, boolean>;
+/** Chaves que a interface consulta (o mapa público nunca traz as `email_*`). */
+export type UiFeatureFlagKey = Exclude<
+  FeatureFlagKeys,
+  FeatureFlagKeys.EMAIL_DELIVERY
+>;
+
+/**
+ * Mapa devolvido por `GET /feature-flags/map`: toda chave do catálogo é
+ * obrigatória (o padrão do catálogo preenche o que faltar) e flags
+ * personalizadas criadas no painel chegam como chaves extras.
+ */
+export type FeatureFlagsMap = Record<UiFeatureFlagKey, boolean> &
+  Partial<Record<string, boolean>>;
+
+export interface SetFeatureFlagEnabledRequest {
+  enabled: boolean;
+  expectedVersion?: number;
+}
+
+/** Área do painel em que a flag é exibida. */
+export type FeatureFlagAreaId =
+  | 'public'
+  | 'member'
+  | 'content-admin'
+  | 'people-admin'
+  | 'studio'
+  | 'email'
+  | 'custom';
+
+export interface FeatureFlagArea {
+  id: FeatureFlagAreaId;
+  label: string;
+  description: string;
+}

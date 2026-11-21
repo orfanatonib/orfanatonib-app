@@ -71,6 +71,21 @@
   "feature-flags.post.feature-flags-seed#perfil-anonimo",
   "feature-flags.post.feature-flags-seed#perfil-lider",
   "feature-flags.post.feature-flags-seed#perfil-membro",
-  "feature-flags.post.feature-flags-seed#validacao"
+  "feature-flags.post.feature-flags-seed#validacao",
+  "feature-flags.put.feature-flags-key-enabled#conflito-de-versao",
+  "feature-flags.put.feature-flags-key-enabled#feliz",
+  "feature-flags.put.feature-flags-key-enabled#idempotente",
+  "feature-flags.put.feature-flags-key-enabled#nao-encontrado",
+  "feature-flags.put.feature-flags-key-enabled#perfil-admin",
+  "feature-flags.put.feature-flags-key-enabled#perfil-anonimo",
+  "feature-flags.put.feature-flags-key-enabled#perfil-lider",
+  "feature-flags.put.feature-flags-key-enabled#perfil-membro",
+  "feature-flags.put.feature-flags-key-enabled#validacao",
+  "feature-flags.ui#agrupado-por-area",
+  "feature-flags.ui#aviso-de-perfil",
+  "feature-flags.ui#conflito-de-versao",
+  "feature-flags.ui#mobile",
+  "feature-flags.ui#refetch-no-foco",
+  "feature-flags.ui#selos"
  ]
 }

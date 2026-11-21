@@ -27,12 +27,12 @@ test.describe.serial("Reconciliação de mídia — ao vivo", () => {
     await closeDb();
   });
 
-  test("só admin; anônimo 401 e membro 403", async ({ request }) => {
+  test("[media-upload.reconcile.e2e#perfis] só admin; anônimo 401 e membro 403", async ({ request }) => {
     expect((await request.post(`${API_URL}/media-storage/reconcile`)).status()).toBe(401);
     expect((await request.post(`${API_URL}/media-storage/reconcile`, { headers: authHeaders(member) })).status()).toBe(403);
   });
 
-  test("por padrão só relata o órfão e não apaga nada", async ({ request }) => {
+  test("[media-upload.reconcile.e2e#dry-run] por padrão só relata o órfão e não apaga nada", async ({ request }) => {
     const res = await request.post(`${API_URL}/media-storage/reconcile?minAgeHours=0`, { headers: authHeaders(admin) });
     expect(res.status()).toBe(201);
     const report = (await res.json()) as Report;
@@ -49,7 +49,7 @@ test.describe.serial("Reconciliação de mídia — ao vivo", () => {
     expect(await objectExists(orphanKey)).toBe(true);
   });
 
-  test("dryRun=false com janela 0 remove o órfão", async ({ request }) => {
+  test("[media-upload.reconcile.e2e#orfao-removido] dryRun=false com janela 0 remove o órfão", async ({ request }) => {
     const res = await request.post(`${API_URL}/media-storage/reconcile?dryRun=false&minAgeHours=0`, { headers: authHeaders(admin) });
     const report = (await res.json()) as Report;
     expect(report.removedKeys).toContain(orphanKey);
@@ -57,7 +57,7 @@ test.describe.serial("Reconciliação de mídia — ao vivo", () => {
     expect(await listObjects(`${uploadsPrefix()}Recon/${TAG}/`)).toEqual([]);
   });
 
-  test("referência sem objeto é só reportada, a linha não é apagada", async ({ request }) => {
+  test("[media-upload.reconcile.e2e#referencia-quebrada-so-reportada] referência sem objeto é só reportada, a linha não é apagada", async ({ request }) => {
     const rows = await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM media_items");
     expect(rows[0].n).toBeGreaterThanOrEqual(0);
     const res = await request.post(`${API_URL}/media-storage/reconcile?dryRun=false&minAgeHours=0`, { headers: authHeaders(admin) });

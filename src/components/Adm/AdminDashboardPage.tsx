@@ -24,21 +24,18 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
-import { FeedCommentsPendingBadge } from "@/features/feed-comments";
-import { ImageSectionsPendingBadge } from "@/features/image-sections";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
+import { AdminNavigationItemIcon } from "./AdminNavigationItemIcon";
 import {
   ADMIN_FOOTER_HEIGHT_PX,
   ADMIN_NAVIGATION_FILTER_ALL_ID,
   ADMIN_NAVIGATION_FILTERS,
   ADMIN_NAVIGATION_TEST_IDS,
-  AdminNavigationItemId,
   type AdminNavigationFilterId,
   filterAdminNavigationSections,
-  getVisibleAdminNavigationSections,
+  useVisibleAdminNavigation,
 } from "./navigation";
 
 export default function AdminDashboardPage() {
@@ -51,17 +48,7 @@ export default function AdminDashboardPage() {
   const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
   const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
   const isSimpleMode = isLeader && !isAdmin;
-  const isShelterManagementEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.SHELTERED_MANAGEMENT,
-  );
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.PAGELAS);
-  const isShelterFeedEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_FEED);
-  const isFeedCommentsEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.SHELTER_FEED_COMMENTS,
-  );
-  const isContentStudioEnabled = useIsFeatureEnabled(
-    FeatureFlagKeys.CONTENT_STUDIO,
-  );
+  const visibleSections = useVisibleAdminNavigation();
 
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<AdminNavigationFilterId>(
@@ -77,30 +64,6 @@ export default function AdminDashboardPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isMobile]);
-
-  const visibleSections = useMemo(
-    () =>
-      getVisibleAdminNavigationSections({
-        isAuthenticated,
-        role: user?.role,
-        featureFlags: {
-          [FeatureFlagKeys.SHELTERED_MANAGEMENT]: isShelterManagementEnabled,
-          [FeatureFlagKeys.PAGELAS]: isPagelasEnabled,
-          [FeatureFlagKeys.SHELTER_FEED]: isShelterFeedEnabled,
-          [FeatureFlagKeys.SHELTER_FEED_COMMENTS]: isFeedCommentsEnabled,
-          [FeatureFlagKeys.CONTENT_STUDIO]: isContentStudioEnabled,
-        },
-      }),
-    [
-      isAuthenticated,
-      isContentStudioEnabled,
-      isPagelasEnabled,
-      isShelterFeedEnabled,
-      isFeedCommentsEnabled,
-      isShelterManagementEnabled,
-      user?.role,
-    ],
-  );
 
   const availableFilters = useMemo(
     () =>
@@ -220,7 +183,6 @@ export default function AdminDashboardPage() {
               }}
             >
               {section.items.map((item) => {
-                const ItemIcon = item.icon;
 
                 return (
                   <Paper
@@ -234,17 +196,7 @@ export default function AdminDashboardPage() {
                       sx={{ minHeight: 44 }}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>
-                        {item.id === AdminNavigationItemId.FEED_COMMENTS ? (
-                          <FeedCommentsPendingBadge>
-                            <ItemIcon color="primary" />
-                          </FeedCommentsPendingBadge>
-                        ) : item.id === AdminNavigationItemId.SHELTER_PHOTOS ? (
-                          <ImageSectionsPendingBadge>
-                            <ItemIcon color="primary" />
-                          </ImageSectionsPendingBadge>
-                        ) : (
-                          <ItemIcon color="primary" />
-                        )}
+                        <AdminNavigationItemIcon item={item} iconProps={{ color: "primary" }} />
                       </ListItemIcon>
                       <ListItemText
                         primary={
@@ -339,7 +291,6 @@ export default function AdminDashboardPage() {
 
       <Grid container spacing={3}>
         {filteredItems.map((item) => {
-          const ItemIcon = item.icon;
 
           return (
             <Grid item key={item.path} xs={12} sm={6} md={4} lg={3}>
@@ -360,17 +311,10 @@ export default function AdminDashboardPage() {
               >
                 <Box sx={{ mb: 2 }}>
                   <Box sx={{ mb: 1.5 }}>
-                    {item.id === AdminNavigationItemId.FEED_COMMENTS ? (
-                      <FeedCommentsPendingBadge>
-                        <ItemIcon fontSize="large" color="primary" />
-                      </FeedCommentsPendingBadge>
-                    ) : item.id === AdminNavigationItemId.SHELTER_PHOTOS ? (
-                      <ImageSectionsPendingBadge>
-                        <ItemIcon fontSize="large" color="primary" />
-                      </ImageSectionsPendingBadge>
-                    ) : (
-                      <ItemIcon fontSize="large" color="primary" />
-                    )}
+                    <AdminNavigationItemIcon
+                      item={item}
+                      iconProps={{ fontSize: "large", color: "primary" }}
+                    />
                   </Box>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     {item.label}

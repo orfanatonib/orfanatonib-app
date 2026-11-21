@@ -124,7 +124,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
 
   if (!profile) {
     return (
-      <Box data-testid="profile-edit-form" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+      <Box data-testid="profile-edit-loading" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -136,7 +136,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="profile-edit-form" sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>

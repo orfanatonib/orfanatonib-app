@@ -45,5 +45,10 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
+/** Só no dev server: os E2E semeiam o estado em memória que um login Google real deixaria (ver e2e/live/auth). */
+if (import.meta.env.DEV) {
+  (window as Window & { __APP_STORE__?: typeof store }).__APP_STORE__ = store;
+}
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

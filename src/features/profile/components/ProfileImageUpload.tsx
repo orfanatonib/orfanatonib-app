@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  LinearProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -20,6 +21,7 @@ import { apiUpdateProfileImage } from '../api';
 import { fetchCurrentUser } from '@/store/slices/auth/authSlice';
 import type { AppDispatch } from '@/store/slices';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import { acceptAttribute, formatFileSize, validateUploadFile } from '@/utils/mediaUpload';
 
 interface ProfileImageUploadProps {
   currentImageUrl?: string;
@@ -36,6 +38,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -45,10 +48,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      onError('Por favor, selecione apenas arquivos de imagem');
+    // Tipo e tamanho são conferidos ANTES do envio (a API repete a checagem e confere os bytes).
+    const check = validateUploadFile(file, 'image');
+    if (!check.ok) {
+      onError(check.message);
+      e.target.value = '';
       return;
     }
+    onError('');
 
     setSelectedFile(file);
     const reader = new FileReader();
@@ -59,6 +66,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   };
 
   const handleCameraCapture = (file: File) => {
+    const check = validateUploadFile(file, 'image');
+    if (!check.ok) {
+      onError(check.message);
+      return;
+    }
+    onError('');
     setSelectedFile(file);
     setPreview(URL.createObjectURL(file));
   };
@@ -74,6 +87,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     }
 
     setIsSubmitting(true);
+    setProgress(0);
     try {
       const formData = new FormData();
       formData.append('imageData', JSON.stringify({
@@ -84,7 +98,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       }));
       formData.append('file', selectedFile);
 
-      const updatedProfile = await apiUpdateProfileImage(formData);
+      const updatedProfile = await apiUpdateProfileImage(formData, setProgress);
       setSuccess(true);
       setSelectedFile(null);
       if (fileInputRef.current) {
@@ -111,6 +125,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       onError(errorMessage);
     } finally {
       setIsSubmitting(false);
+      setProgress(0);
     }
   };
 
@@ -123,6 +138,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       <Box data-testid="profile-image-upload" sx={{ width: '100%' }}>
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Avatar
+            data-testid="profile-image-avatar"
             src={preview || currentImageUrl}
             onClick={() => {
               const imageUrl = preview || currentImageUrl;
@@ -156,12 +172,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            data-testid="profile-image-input"
+            accept={acceptAttribute('image')}
             onChange={handleFileChange}
             style={{ display: 'none' }}
           />
           <Stack spacing={2}>
             <Button
+              data-testid="profile-image-select"
               variant="outlined"
               fullWidth
               startIcon={<CloudUploadIcon />}
@@ -184,6 +202,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               Selecionar da Galeria
             </Button>
             <Button
+              data-testid="profile-image-camera"
               variant="outlined"
               fullWidth
               startIcon={<CameraAltIcon />}
@@ -206,10 +225,16 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           </Stack>
           {selectedFile && (
             <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                Arquivo selecionado: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              <Typography
+                data-testid="profile-image-selected"
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 1, wordBreak: 'break-all' }}
+              >
+                Arquivo selecionado: {selectedFile.name} ({formatFileSize(selectedFile.size)})
               </Typography>
               <Button
+                data-testid="profile-image-remove"
                 variant="text"
                 size="small"
                 onClick={() => {
@@ -223,6 +248,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                   textTransform: 'none',
                   color: 'primary.main',
                   fontSize: '0.75rem',
+                  minHeight: 44,
                 }}
               >
                 Remover e escolher outra
@@ -232,13 +258,32 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         </Box>
 
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
+          <Alert data-testid="profile-image-success" severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
             Imagem atualizada com sucesso!
           </Alert>
         )}
 
+        {isSubmitting && (
+          <Box data-testid="profile-image-progress" sx={{ mb: 2 }}>
+            <LinearProgress
+              variant={progress > 0 ? 'determinate' : 'indeterminate'}
+              value={progress}
+              aria-label="Progresso do envio"
+            />
+            <Typography
+              data-testid="profile-image-progress-label"
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', textAlign: 'center', mt: 0.5 }}
+            >
+              {progress > 0 ? `Enviando ${progress}%` : 'Enviando...'}
+            </Typography>
+          </Box>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
           <Button
+            data-testid="profile-image-submit"
             variant="contained"
             fullWidth
             onClick={handleSubmit}

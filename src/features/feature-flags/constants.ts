@@ -5,6 +5,14 @@ export const FEATURE_FLAGS_ROUTE = '/adm/feature-flags';
 export const FEATURE_FLAGS_DEFAULT_LIMIT = 12;
 export const FEATURE_FLAGS_PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 export const FEATURE_FLAGS_SEARCH_DEBOUNCE_MS = 300;
+/** O painel lê o catálogo inteiro (limite máximo da API) e agrupa/pagina no cliente. */
+export const FEATURE_FLAGS_FETCH_LIMIT = 100;
+export const FEATURE_FLAGS_FETCH_MAX_PAGES = 10;
+/** Voltar para a aba só refaz a leitura do mapa se a última passou deste tempo. */
+export const FEATURE_FLAGS_FOCUS_REFETCH_MIN_MS = 15_000;
+/** `details.code` dos 409 da API de flags. */
+export const FEATURE_FLAG_VERSION_CONFLICT_CODE = 'FEATURE_FLAG_VERSION_CONFLICT';
+export const FEATURE_FLAG_PROTECTED_CODE = 'FEATURE_FLAG_PROTECTED';
 
 /**
  * Padrão do catálogo da API (`DEFAULT_FEATURE_FLAGS`), só as flags de interface.

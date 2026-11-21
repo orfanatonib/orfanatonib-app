@@ -122,9 +122,9 @@ test.describe.serial("Acesso e escopo — API ao vivo", () => {
   test("[feature-flags.delete.feature-flags-key#perfil-admin] flag de fábrica não pode ser removida nem renomeada", async ({ request }) => {
     const before = await countRows("feature_flags", { key: "shelter_management" });
     const del = await request.delete(`${API_URL}/feature-flags/shelter_management`, { headers: authHeaders(admin) });
-    expect(del.status()).toBe(400);
+    expect(del.status()).toBe(409);
     const ren = await request.patch(`${API_URL}/feature-flags/shelter_management`, { headers: authHeaders(admin), data: { key: "outro-nome" } });
-    expect(ren.status()).toBe(400);
+    expect(ren.status()).toBe(409);
     expect(await countRows("feature_flags", { key: "shelter_management" })).toBe(before);
   });
 

@@ -17,6 +17,13 @@
   "email-notification.get.email-previews-key-text#perfil-admin",
   "email-notification.get.email-previews-key-text#perfil-anonimo",
   "email-notification.get.email-previews-key-text#perfil-lider",
-  "email-notification.get.email-previews-key-text#perfil-membro"
+  "email-notification.get.email-previews-key-text#perfil-membro",
+  "email-notification.outbox#flag-do-tipo-desligada",
+  "email-notification.outbox#flag-ligada",
+  "email-notification.outbox#limpeza",
+  "email-notification.outbox#mestra-desligada",
+  "email-notification.outbox#segundo-tipo",
+  "email-notification.outbox#smtp-nao-derruba-origem",
+  "email-notification.outbox#validacao-sem-linha"
  ]
 }

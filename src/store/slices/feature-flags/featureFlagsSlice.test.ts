@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_FEATURE_FLAGS_MAP } from '@/features/feature-flags/constants';
+import type { FeatureFlagsMap } from '@/features/feature-flags/types';
 
 import reducer, { fetchFeatureFlags, resetFeatureFlags } from './featureFlagsSlice';
 
@@ -8,12 +9,36 @@ type State = ReturnType<typeof reducer>;
 
 const start = (state: State, requestId: string) =>
   reducer(state, fetchFeatureFlags.pending(requestId));
-const ok = (state: State, requestId: string, map: Record<string, boolean>) =>
-  reducer(state, fetchFeatureFlags.fulfilled(map as never, requestId));
+const ok = (state: State, requestId: string, map: FeatureFlagsMap) =>
+  reducer(state, fetchFeatureFlags.fulfilled(map, requestId));
 const fail = (state: State, requestId: string) =>
   reducer(state, fetchFeatureFlags.rejected(null, requestId, undefined, 'rede'));
 
 const initial = (): State => reducer(undefined, { type: 'init' });
+
+describe('featureFlagsSlice — releitura silenciosa (foco da aba)', () => {
+  it('não acende loading: nenhuma rota vira spinner', () => {
+    const loaded = ok(start(initial(), 'r1'), 'r1', { ...DEFAULT_FEATURE_FLAGS_MAP });
+    const state = reducer(loaded, fetchFeatureFlags.pending('r2', { silent: true }));
+    expect(state.loading).toBe(false);
+    expect(state.activeRequestId).toBe('r2');
+  });
+
+  it('aplica o mapa novo quando a resposta chega', () => {
+    let state = ok(start(initial(), 'r1'), 'r1', { ...DEFAULT_FEATURE_FLAGS_MAP });
+    state = reducer(state, fetchFeatureFlags.pending('r2', { silent: true }));
+    state = ok(state, 'r2', { ...DEFAULT_FEATURE_FLAGS_MAP, pagelas: false });
+    expect(state.flags.pagelas).toBe(false);
+    expect(state.loading).toBe(false);
+  });
+
+  it('falha da releitura mantém o último mapa do servidor', () => {
+    let state = ok(start(initial(), 'r1'), 'r1', { ...DEFAULT_FEATURE_FLAGS_MAP, pagelas: false });
+    state = reducer(state, fetchFeatureFlags.pending('r2', { silent: true }));
+    state = fail(state, 'r2');
+    expect(state.flags.pagelas).toBe(false);
+  });
+});
 
 describe('featureFlagsSlice', () => {
   it('começa com o padrão do catálogo e sem resposta do servidor', () => {

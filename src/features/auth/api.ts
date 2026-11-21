@@ -7,6 +7,7 @@ import type {
 import type { LoginResponse } from "@/store/slices/auth/authSlice";
 
 import type {
+  CompleteRegisterRequest,
   GoogleLoginResponse,
   RegisterRequest,
   RegisterResponse,
@@ -39,13 +40,21 @@ export async function apiGoogleLogin(
   return data;
 }
 
-/** `commonUser` = cadastro comum; senão é o complemento do cadastro iniciado pelo Google. */
 export async function apiRegister(
-  commonUser: boolean,
   payload: RegisterRequest,
 ): Promise<RegisterResponse> {
-  const endpoint = commonUser ? "/auth/register" : "/auth/complete-register";
-  const { data } = await api.post<RegisterResponse>(endpoint, payload);
+  const { data } = await api.post<RegisterResponse>("/auth/register", payload);
+  return data;
+}
+
+/** Complemento do cadastro iniciado pelo Google; exige o token de conclusão. */
+export async function apiCompleteRegister(
+  payload: CompleteRegisterRequest,
+): Promise<RegisterResponse> {
+  const { data } = await api.post<RegisterResponse>(
+    "/auth/complete-register",
+    payload,
+  );
   return data;
 }
 

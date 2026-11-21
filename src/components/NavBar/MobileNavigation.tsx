@@ -16,47 +16,33 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
-import PersonIcon from '@mui/icons-material/Person';
-import SchoolIcon from '@mui/icons-material/School';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
 import NavLinks from './NavLinks';
 import { RootState } from '@/store/slices';
-import { UserRole } from '@/store/slices/auth/authSlice';
 import { useLogout } from './useLogout';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { getRoleLabel, SHELL_LOGIN_PATH, SHELL_PROFILE_PATH, ShellUserMenuEntryId } from './shellNav';
+import { SHELL_USER_MENU_ICONS } from './shellNavIcons';
+import { useShellNavigation } from './useShellNavigation';
 
 const MobileNavigation: React.FC = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
-  const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTERED_AREA);
+  const { userMenuEntries } = useShellNavigation();
+  const menuEntries = userMenuEntries.filter((entry) => entry.id !== ShellUserMenuEntryId.PROFILE);
 
   const toggleDrawer = () => setOpen(s => !s);
   const closeDrawer = () => setOpen(false);
 
   const handleProfileClick = () => {
-    navigate('/perfil');
+    navigate(SHELL_PROFILE_PATH);
     closeDrawer();
   };
 
-  const handleMemberArea = () => {
-    navigate('/area-do-membro');
-    closeDrawer();
-  };
-
-  const handleShelteredArea = () => {
-    navigate('/area-dos-acolhidos');
-    closeDrawer();
-  };
-
-  const handleAdminArea = () => {
-    navigate('/adm');
+  const handleEntry = (path: string) => {
+    navigate(path);
     closeDrawer();
   };
 
@@ -151,62 +137,34 @@ const MobileNavigation: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  {user.role === UserRole.ADMIN && 'Administrador'}
-                  {user.role === UserRole.LEADER && 'Líder'}
-                  {user.role === UserRole.MEMBER && 'Membro'}
+                  {getRoleLabel(user.role)}
                 </Typography>
               </Stack>
             </Box>
             <Box sx={{ mb: 2 }}>
-              <MenuItem
-                onClick={handleMemberArea}
-                sx={{
-                  color: '#FFFF00',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: 'rgba(255, 255, 0, 0.1)',
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <SchoolIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
-                </ListItemIcon>
-                <ListItemText>Área do Membro</ListItemText>
-              </MenuItem>
-              {(isMember || isLeader) && isPagelasEnabled && (
-                <MenuItem
-                  onClick={handleShelteredArea}
-                  sx={{
-                    color: '#FFFF00',
-                    py: 1.5,
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 0, 0.1)',
-                    },
-                  }}
-                >
-                  <ListItemIcon>
-                    <HomeIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
-                  </ListItemIcon>
-                  <ListItemText>Área dos Acolhidos</ListItemText>
-                </MenuItem>
-              )}
-              {(isAdmin || isLeader) && (
-                <MenuItem
-                  onClick={handleAdminArea}
-                  sx={{
-                    color: '#FFFF00',
-                    py: 1.5,
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 0, 0.1)',
-                    },
-                  }}
-                >
-                  <ListItemIcon>
-                    <AdminPanelSettingsIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
-                  </ListItemIcon>
-                  <ListItemText>Administração</ListItemText>
-                </MenuItem>
-              )}
+              {menuEntries.map((entry) => {
+                const EntryIcon = SHELL_USER_MENU_ICONS[entry.id];
+                return (
+                  <MenuItem
+                    key={entry.id}
+                    onClick={() => handleEntry(entry.path)}
+                    data-testid={`shell-mobile-menu-${entry.id}`}
+                    sx={{
+                      color: '#FFFF00',
+                      py: 1.5,
+                      minHeight: 44,
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 0, 0.1)',
+                      },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <EntryIcon sx={{ color: '#FFFF00', fontSize: 24 }} />
+                    </ListItemIcon>
+                    <ListItemText>{entry.label}</ListItemText>
+                  </MenuItem>
+                );
+              })}
               <Divider sx={{ borderColor: 'rgba(255, 255, 0, 0.2)', my: 1 }} />
               <MenuItem
                 onClick={handleProfileClick}
@@ -248,7 +206,7 @@ const MobileNavigation: React.FC = () => {
           <Box sx={{ mt: 2, px: 2 }}>
             <Button
               onClick={() => {
-                navigate('/login');
+                navigate(SHELL_LOGIN_PATH);
                 closeDrawer();
               }}
               variant="contained"
