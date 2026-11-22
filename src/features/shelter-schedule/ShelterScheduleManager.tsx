@@ -3,6 +3,7 @@ import { Box, CircularProgress, Alert, Button, Fab, useTheme, useMediaQuery, Tex
 import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
+import { adminWorkspaceBleedSx, adminWorkspaceContentSx } from "@/theme/adminWorkspace";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
 import { useShelterSchedules, useMyTeams } from "./hooks";
@@ -238,7 +239,8 @@ export default function ShelterScheduleManager() {
   }
 
   return (
-    <Box data-testid="shelter-schedule-manager" sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
+    <Box sx={{ ...adminWorkspaceBleedSx, py: { xs: 2, md: 3 } }}>
+    <Box data-testid="shelter-schedule-manager" sx={adminWorkspaceContentSx}>
       {isLeader && !isAdmin && <LeaderInfoBanner />}
 
       <BackHeader title="Agendamentos de Visitas" />
@@ -253,8 +255,9 @@ export default function ShelterScheduleManager() {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
+          data-testid="schedule-new"
           onClick={handleOpenCreate}
-          sx={{ borderRadius: 2 }}
+          sx={{ borderRadius: 2, minHeight: 44 }}
         >
           Novo Agendamento
         </Button>
@@ -270,6 +273,7 @@ export default function ShelterScheduleManager() {
             <TextField
               fullWidth
               placeholder="Buscar por nome do abrigo..."
+              inputProps={{ "data-testid": "schedule-search", "aria-label": "Buscar abrigo" }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               size="small"
@@ -296,7 +300,7 @@ export default function ShelterScheduleManager() {
           >
             {filteredData.length === 0 ? (
               <Box sx={{ gridColumn: "1 / -1", textAlign: "center", py: 8 }}>
-                <Alert severity="info">
+                <Alert severity="info" data-testid="schedule-search-empty">
                   Nenhum abrigo encontrado com o termo "{searchTerm}"
                 </Alert>
               </Box>
@@ -323,6 +327,7 @@ export default function ShelterScheduleManager() {
         <Fab
           color="primary"
           aria-label="Novo Agendamento"
+          data-testid="schedule-new-fab"
           onClick={handleOpenCreate}
           sx={{ position: "fixed", bottom: 80, right: 16, zIndex: 10 }}
         >
@@ -357,6 +362,7 @@ export default function ShelterScheduleManager() {
         onClose={() => setDetailsModalOpen(false)}
         onEdit={handleOpenEdit}
       />
+    </Box>
     </Box>
   );
 }

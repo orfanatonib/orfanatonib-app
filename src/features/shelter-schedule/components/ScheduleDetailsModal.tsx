@@ -57,6 +57,7 @@ export default function ScheduleDetailsModal({
 
   return (
     <Dialog
+      data-testid="schedule-details-dialog"
       open={open}
       onClose={onClose}
       maxWidth="sm"

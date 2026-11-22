@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Alert, Box, CircularProgress, Container, Paper, Typography } from "@mui/material";
+import { Alert, Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { useTheme, useMediaQuery } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -19,6 +19,7 @@ import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 import { useSelector } from "react-redux";
 import { selectIsAdmin, selectIsLeader } from "@/store/selectors/routeSelectors";
 import ShelterDetailsPage from "./ShelterDetailsPage";
+import { adminWorkspaceBleedSx, adminWorkspaceContentSx } from "@/theme/adminWorkspace";
 
 export default function SheltersManager() {
   const navigate = useNavigate();
@@ -86,7 +87,8 @@ export default function SheltersManager() {
         pb: 4,
       }}
     >
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
+      <Box sx={{ ...adminWorkspaceBleedSx, py: { xs: 2, md: 3 } }}>
+      <Box data-testid="shelters-content" sx={adminWorkspaceContentSx}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -199,7 +201,8 @@ export default function SheltersManager() {
         }}
         onConfirm={submitDelete}
       />
-      </Container>
+      </Box>
+      </Box>
     </Box>
   );
 }

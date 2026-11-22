@@ -11,7 +11,6 @@ import {
     Typography,
     Alert,
     Button,
-    Container,
     Paper,
     useTheme
 } from '@mui/material';
@@ -23,6 +22,7 @@ import {
 
 import { useAttendancePendings } from '../../attendance/hooks/useAttendancePendings';
 import { RootState } from '@/store/slices';
+import { adminWorkspaceBleedSx, adminWorkspaceContentSx } from "@/theme/adminWorkspace";
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { LeaderPendingView } from '../components/LeaderPendingView';
 import { AdminPendingView } from '../components/AdminPendingView';
@@ -50,7 +50,8 @@ const PendingVisitReportsPage = () => {
     }
 
     return (
-        <Container data-testid="visit-reports-pendings-page" maxWidth="xl" sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ ...adminWorkspaceBleedSx, py: { xs: 2, md: 4 } }}>
+        <Box data-testid="visit-reports-pendings-page" sx={adminWorkspaceContentSx}>
             {/* Header Section */}
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <Button
@@ -122,7 +123,8 @@ const PendingVisitReportsPage = () => {
                     {isAdmin && <AdminPendingView pendings={visitReportPendings} onNavigate={handleNavigateToCreateReport} />}
                 </Box>
             )}
-        </Container>
+        </Box>
+        </Box>
     );
 };
 

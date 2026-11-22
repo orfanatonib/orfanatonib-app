@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ATTENDANCE_PATHS } from "../constants";
+import { adminWorkspaceBleedSx, adminWorkspaceContentSx } from "@/theme/adminWorkspace";
 import { attendanceColors } from "@/theme/attendance";
 import UnsavedChangesDialog from "@/components/common/modal/UnsavedChangesDialog";
 import { hasUnsavedChanges } from "@/utils/unsavedChanges";
@@ -25,14 +26,16 @@ export default function AttendanceLayout() {
     <Box
       data-testid="attendance-workspace"
       sx={{
-        width: "100%",
-        minWidth: 0,
+        ...adminWorkspaceBleedSx,
         bgcolor: attendanceColors.background,
-        p: { xs: 1.5, sm: 3 },
+        py: { xs: 1.5, sm: 3 },
         minHeight: "70vh",
       }}
     >
-      <Box sx={{ maxWidth: 1200, mx: "auto", minWidth: 0 }}>
+      <Box
+        data-testid="attendance-content"
+        sx={adminWorkspaceContentSx}
+      >
         <Typography
           component="h1"
           variant="h4"

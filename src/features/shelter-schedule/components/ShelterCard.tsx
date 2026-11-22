@@ -68,6 +68,7 @@ export default function ShelterCard({
 
   return (
     <Paper
+      data-testid={`schedule-shelter-${shelter.shelterId}`}
       elevation={2}
       sx={{
         borderRadius: 4,
@@ -79,7 +80,17 @@ export default function ShelterCard({
       }}
     >
       <Box
+        data-testid={`schedule-shelter-toggle-${shelter.shelterId}`}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
         onClick={() => onToggleExpand(shelter.shelterId)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onToggleExpand(shelter.shelterId);
+          }
+        }}
         sx={{
           p: { xs: 1.5, sm: 2.5 },
           cursor: "pointer",

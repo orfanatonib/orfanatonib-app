@@ -41,7 +41,7 @@ export default function ShelterScheduleDeleteDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog data-testid="schedule-delete-dialog" open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <WarningIcon color="error" />
         <Typography variant="h6" fontWeight="bold">
@@ -84,12 +84,14 @@ export default function ShelterScheduleDeleteDialog({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={loading}>
+        <Button data-testid="schedule-delete-cancel" onClick={onClose} disabled={loading} sx={{ minHeight: 44 }}>
           Cancelar
         </Button>
         <Button
           variant="contained"
           color="error"
+          data-testid="schedule-delete-confirm"
+          sx={{ minHeight: 44 }}
           onClick={onConfirm}
           disabled={loading}
           startIcon={loading ? <CircularProgress size={20} /> : null}

@@ -91,7 +91,9 @@ export default function VisitCard({
                 e.stopPropagation();
                 onViewDetails(schedule);
               }}
-              sx={{ p: 0.5 }}
+              sx={{ p: 1, minWidth: 44, minHeight: 44 }}
+              aria-label="Ver detalhes"
+              data-testid={`schedule-details-${schedule.id}`}
               title="Ver detalhes"
             >
               <VisibilityIcon sx={{ fontSize: 16 }} />
@@ -102,7 +104,9 @@ export default function VisitCard({
                 e.stopPropagation();
                 onEdit(schedule);
               }}
-              sx={{ p: 0.5 }}
+              sx={{ p: 1, minWidth: 44, minHeight: 44 }}
+              aria-label="Editar agendamento"
+              data-testid={`schedule-edit-${schedule.id}`}
             >
               <EditIcon sx={{ fontSize: 16 }} />
             </IconButton>
@@ -113,7 +117,9 @@ export default function VisitCard({
                 e.stopPropagation();
                 onDelete(schedule);
               }}
-              sx={{ p: 0.5 }}
+              sx={{ p: 1, minWidth: 44, minHeight: 44 }}
+              aria-label="Excluir agendamento"
+              data-testid={`schedule-delete-${schedule.id}`}
             >
               <DeleteIcon sx={{ fontSize: 16 }} />
             </IconButton>

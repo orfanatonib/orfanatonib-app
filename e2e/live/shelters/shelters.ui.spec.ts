@@ -52,13 +52,11 @@ test.describe.serial("Gerenciamento de Abrigos — Teste E2E Full-Stack (Sem Moc
     // Digita no filtro de busca por abrigo
     const searchInput = page.getByTestId("shelter-search-input");
     await searchInput.fill("a");
-    await page.waitForTimeout(600);
 
-    // Verifica se a tabela ou cards estão visíveis
-    const isTableVisible = await page.getByTestId("shelter-table").isVisible();
-    const isCardsVisible = await page.getByTestId("shelter-cards").isVisible();
-
-    expect(isTableVisible || isCardsVisible).toBe(true);
+    // A busca é assíncrona: espera o resultado em vez de um tempo fixo.
+    await expect(
+      page.getByTestId("shelter-table").or(page.getByTestId("shelter-cards")),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("3. Visualização de detalhes de um abrigo cadastrado (leitura de dados reais)", async ({

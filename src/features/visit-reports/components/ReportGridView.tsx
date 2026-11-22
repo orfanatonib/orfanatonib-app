@@ -69,6 +69,7 @@ export default function ReportGridView({ shelterGroups, onView, onEdit, onDelete
                                     {teamGroup.reports.map((report) => (
                                         <Grid item xs={12} sm={6} md={4} lg={3} key={report.id}>
                                             <Card
+                                                data-testid={`visit-report-card-${report.id}`}
                                                 elevation={1}
                                                 sx={{
                                                     height: '100%',
@@ -94,10 +95,10 @@ export default function ReportGridView({ shelterGroups, onView, onEdit, onDelete
                                                     </Box>
 
                                                     <Box display="flex" flexDirection="column">
-                                                        <IconButton size="small" onClick={(e) => onEdit(report, e)} sx={{ p: 0.5 }}>
+                                                        <IconButton size="small" aria-label="Editar relatório" data-testid={`visit-report-edit-${report.id}`} onClick={(e) => onEdit(report, e)} sx={{ minWidth: 44, minHeight: 44 }}>
                                                             <EditIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                                                         </IconButton>
-                                                        <IconButton size="small" onClick={(e) => onDelete(report.id, e)} color="error" sx={{ p: 0.5 }}>
+                                                        <IconButton size="small" aria-label="Excluir relatório" data-testid={`visit-report-delete-${report.id}`} onClick={(e) => onDelete(report.id, e)} color="error" sx={{ minWidth: 44, minHeight: 44 }}>
                                                             <DeleteIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                                                         </IconButton>
                                                     </Box>

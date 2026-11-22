@@ -142,6 +142,7 @@ export default function ShelterScheduleFormModal({
 
   return (
     <Dialog
+      data-testid="schedule-form-dialog"
       open={open}
       onClose={onClose}
       maxWidth="sm"
@@ -155,7 +156,7 @@ export default function ShelterScheduleFormModal({
         <Typography component="span" variant="h6" fontWeight="bold">
           {isEdit ? "Editar Agendamento" : "Novo Agendamento"}
         </Typography>
-        <IconButton onClick={onClose} edge="end">
+        <IconButton onClick={onClose} edge="end" aria-label="Fechar" sx={{ minWidth: 44, minHeight: 44 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -183,13 +184,13 @@ export default function ShelterScheduleFormModal({
         )}
 
         {teamsError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="schedule-form-teams-error">
             {teamsError}
           </Alert>
         )}
 
         {formError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }} data-testid="schedule-form-error">
             {formError}
           </Alert>
         )}
@@ -199,6 +200,7 @@ export default function ShelterScheduleFormModal({
             <FormControl fullWidth required disabled={teamsLoading} sx={{ flex: 2 }}>
               <InputLabel>Equipe</InputLabel>
               <Select
+                data-testid="schedule-form-team"
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
                 label="Equipe"
@@ -218,13 +220,14 @@ export default function ShelterScheduleFormModal({
               onChange={(e) => setVisitNumber(e.target.value ? Number(e.target.value) : "")}
               required
               sx={{ flex: 1, minWidth: 120 }}
-              inputProps={{ min: 1 }}
+              inputProps={{ min: 1, "data-testid": "schedule-form-visit-number" }}
               helperText="Ex: 1, 2, 3..."
             />
           </Box>
 
           <TextField
             label="Conteúdo da Lição"
+            inputProps={{ "data-testid": "schedule-form-lesson" }}
             value={lessonContent}
             onChange={(e) => setLessonContent(e.target.value)}
             multiline
@@ -274,6 +277,7 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
+                    inputProps: { "data-testid": "schedule-form-meeting-date" },
                   },
                 }}
               />
@@ -286,6 +290,7 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
+                    inputProps: { "data-testid": "schedule-form-meeting-time" },
                   },
                 }}
               />
@@ -304,6 +309,7 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
+                    inputProps: { "data-testid": "schedule-form-visit-date" },
                   },
                 }}
               />
@@ -316,6 +322,7 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
+                    inputProps: { "data-testid": "schedule-form-visit-time" },
                   },
                 }}
               />
@@ -324,6 +331,7 @@ export default function ShelterScheduleFormModal({
 
           <TextField
             label="Sala da Reunião"
+            inputProps={{ "data-testid": "schedule-form-room" }}
             value={meetingRoom}
             onChange={(e) => setMeetingRoom(e.target.value)}
             fullWidth
@@ -333,6 +341,7 @@ export default function ShelterScheduleFormModal({
 
           <TextField
             label="Observações"
+            inputProps={{ "data-testid": "schedule-form-observation" }}
             value={observation}
             onChange={(e) => setObservation(e.target.value)}
             multiline
@@ -355,15 +364,16 @@ export default function ShelterScheduleFormModal({
           },
         }}
       >
-        <Button onClick={onClose} disabled={loading}>
+        <Button data-testid="schedule-form-cancel" onClick={onClose} disabled={loading} sx={{ minHeight: 44 }}>
           Cancelar
         </Button>
         <Button
+          data-testid="schedule-form-submit"
           variant="contained"
           onClick={handleSubmit}
           disabled={loading || teamsLoading}
           startIcon={loading ? <CircularProgress size={20} /> : null}
-          sx={{ whiteSpace: "nowrap" }}
+          sx={{ whiteSpace: "nowrap", minHeight: 44 }}
         >
           {loading ? "Salvando..." : isEdit ? "Salvar" : "Criar"}
         </Button>

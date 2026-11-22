@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { adminWorkspaceBleedSx, adminWorkspaceContentSx } from "@/theme/adminWorkspace";
 import {
     Box,
     Button,
@@ -234,7 +235,8 @@ export default function VisitReportsManager() {
     }
 
     return (
-        <Box data-testid="visit-reports-manager" sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
+        <Box sx={{ ...adminWorkspaceBleedSx, py: { xs: 2, md: 3 } }}>
+        <Box data-testid="visit-reports-manager" sx={adminWorkspaceContentSx}>
             <BackHeader title="Relatórios das Visitas" />
 
             {actionError && (
@@ -264,7 +266,8 @@ export default function VisitReportsManager() {
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={openCreate}
-                    sx={{ borderRadius: 2 }}
+                    data-testid="visit-reports-new"
+                    sx={{ borderRadius: 2, minHeight: 44 }}
                 >
                     Novo Relatório
                 </Button>
@@ -363,6 +366,7 @@ export default function VisitReportsManager() {
                 loading={deleting}
                 description="Tem certeza que deseja excluir este relatório de visita? Esta ação não pode ser desfeita."
             />
+        </Box>
         </Box>
     );
 }
