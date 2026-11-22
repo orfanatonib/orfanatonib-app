@@ -128,7 +128,7 @@ test.describe.serial("Avaliações do site — cenários de contrato", () => {
     expect(body.read).toBe(false);
   });
 
-  test("[site-feedback.post.site-feedbacks] sessão obrigatória: visitante recebe 401 e nada é gravado", async ({ request }) => {
+  test("sessão obrigatória: visitante recebe 401 e nada é gravado", async ({ request }) => {
     const before = await allFeedbacks();
     expect((await createRaw(request, undefined, payload({ name: next() }))).status()).toBe(401);
     expect(await allFeedbacks()).toBe(before);

@@ -134,7 +134,7 @@ test.describe.serial("Contato — cenários de contrato e caixa do admin", () =>
     expect(after.sent ?? 0).toBe(before.sent ?? 0);
   });
 
-  test("[contact.post.contact#flag-desligada-publico] com contact_form desligada o formulário público responde 403 FEATURE_DISABLED e nada é gravado", async ({ request }) => {
+  test("com contact_form desligada o formulário público responde 403 FEATURE_DISABLED e nada é gravado", async ({ request }) => {
     const before = await allContacts();
     await withFlagsOff(request, admin, ["contact_form"], async () => {
       await expectFeatureDisabled(await createRaw(request, undefined, payload({ name: next() })));
@@ -142,7 +142,7 @@ test.describe.serial("Contato — cenários de contrato e caixa do admin", () =>
     expect(await allContacts()).toBe(before);
   });
 
-  test("[contact.post.contact] o texto é gravado aparado: espaços nas pontas do nome, e-mail, telefone e mensagem não entram", async ({ request }) => {
+  test("o texto é gravado aparado: espaços nas pontas do nome, e-mail, telefone e mensagem não entram", async ({ request }) => {
     const name = next();
     const receipt = await create(request, { name: `  ${name}  `, email: "  pessoa.e2e@orfanatonib.test ", phone: " 11999999999 ", message: "  Olá  " });
     created.push(receipt.id);

@@ -139,7 +139,7 @@ test.describe.serial("Comentários — cenários de contrato e moderação", () 
     expect(after.sent ?? 0).toBe(before.sent ?? 0);
   });
 
-  test("[comment.post.comments] sessão obrigatória: visitante recebe 401 e nada é gravado", async ({ request }) => {
+  test("sessão obrigatória: visitante recebe 401 e nada é gravado", async ({ request }) => {
     const before = await allComments();
     expect((await createRaw(request, undefined, payload({ name: next() }))).status()).toBe(401);
     expect(await allComments()).toBe(before);
