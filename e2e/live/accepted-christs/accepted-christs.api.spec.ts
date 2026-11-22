@@ -110,6 +110,19 @@ test.describe.serial("Aceitos a Cristo — API ao vivo", () => {
     expect(await countRows("accepted_christs", { sheltered_id: shelteredId })).toBe(before + 2);
   });
 
+  test("[accepted-christ.post.accepted-christs#falha-do-colaborador-sem-efeito-parcial] acolhido que não existe (o colaborador recusa antes de gravar): 404 e nenhuma decisão é criada", async ({
+    request,
+  }) => {
+    const before = await countRows("accepted_christs");
+    const res = await request.post(`${API_URL}/accepted-christs`, {
+      headers: authHeaders(admin),
+      data: { shelteredId: MISSING, decision: "ACCEPTED", notes: "não pode ficar" },
+    });
+    expect(res.status()).toBe(404);
+    expect(await countRows("accepted_christs")).toBe(before);
+    expect(await countRows("accepted_christs", { notes: "não pode ficar" })).toBe(0);
+  });
+
   test("[accepted-christ.post.accepted-christs#flag-desligada] com accepted_christs desligada: 403 FEATURE_DISABLED e nada é gravado", async ({
     request,
   }) => {
