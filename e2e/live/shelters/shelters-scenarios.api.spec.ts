@@ -6,6 +6,7 @@ import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs, test } from "../support/live";
 import {
   BAD_ID,
+  DIRECTORY_FLAGS,
   OVERSIZED_CITY,
   createShelter,
   createShelterRaw,
@@ -29,23 +30,6 @@ import {
  * pela API (prefixo RUN_TAG), prova o efeito por SELECT e o `afterAll` confere 0 sobras.
  * Os cenários de S3 estão em `shelters.s3.api.spec.ts`.
  */
-const DIRECTORY_FLAGS = [
-  "shelter_management",
-  "sheltered_management",
-  "sheltered_area",
-  "pagelas",
-  "attendance",
-  "shelter_schedule",
-  "visit_reports",
-  "member_management",
-  "leader_management",
-  "user_management",
-  "criminal_records",
-  "shelter_feed",
-  "shelter_photo_upload",
-  "photo_moderation",
-] as const;
-
 test.describe.serial("Abrigos — cenários por handler", () => {
   let admin: string;
   let leader: string;

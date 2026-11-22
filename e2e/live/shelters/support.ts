@@ -145,3 +145,22 @@ export async function snapshotDb(): Promise<{ shelters: number; addresses: numbe
 }
 
 export const label = (name: string): string => tagged(name);
+
+/** Flags de `SHELTER_DIRECTORY_FLAGS` (`anyOf`): as leituras de diretório só respondem 403 com todas desligadas. */
+export const DIRECTORY_FLAGS = [
+  "shelter_management",
+  "sheltered_management",
+  "sheltered_area",
+  "pagelas",
+  "attendance",
+  "shelter_schedule",
+  "visit_reports",
+  "member_management",
+  "leader_management",
+  "user_management",
+  "criminal_records",
+  "shelter_feed",
+  "shelter_photo_upload",
+  "photo_moderation",
+] as const;
+
