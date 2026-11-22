@@ -5,7 +5,12 @@ export const GENERATION_ALLOWED_STATUSES: readonly ContentStageStatus[] = [
   ContentStageStatus.FAILED,
   ContentStageStatus.STALE,
   ContentStageStatus.CHANGES_REQUESTED,
+  // Item concluído pela produção: pode ser gerado de novo; os itens seguintes voltam a ficar desatualizados.
+  ContentStageStatus.PRODUCER_APPROVED,
 ];
+
+/** Itens que já estão com a revisão: enquanto houver um, os itens concluídos da categoria não podem ser gerados de novo. */
+export const REVIEW_HELD_STAGE_STATUSES: readonly ContentStageStatus[] = [ContentStageStatus.IN_REVIEW, ContentStageStatus.APPROVED];
 
 export const MANUAL_EDIT_ALLOWED_STATUSES: readonly ContentStageStatus[] = [
   ContentStageStatus.NOT_STARTED,
@@ -44,6 +49,8 @@ export const EMPTY_STUDIO_FORM: CreateContentPackagePayload = {
 };
 
 /** Aviso quando outra etapa da mesma faixa etária já está sendo gerada (uma geração por categoria). */
+export const CATEGORY_IN_REVIEW_MESSAGE =
+  "Esta categoria já foi enviada para a revisão. Só um item devolvido pelo revisor pode ser gerado de novo.";
 export const CATEGORY_BUSY_MESSAGE =
   "Outra etapa desta faixa etária está sendo gerada agora. O Estúdio gera uma etapa por categoria de cada vez; assim que ela terminar, você pode gerar esta.";
 
@@ -59,6 +66,13 @@ export const PACKAGE_CLOSED_FOR_REVIEW_STATUSES: readonly ContentPackageStatus[]
 ];
 
 /** Etapas com documento E imagem compilada (infográfico): o documento e o PDF ficam no editor; a imagem, junto dele. */
+/** Título do bloco de imagens que fecha o documento da fixação e da brincadeira. */
+export const FUN_IMAGES_TITLE = {
+  FIXATION: "Últimas páginas do documento: folha de instruções e peças do versículo para imprimir (A4 paisagem)",
+  GAME_BY_AGE: "Últimas páginas do documento: imagens compiladas, uma por faixa etária (A4 retrato)",
+  GAME: "Última página do documento: imagem compilada (A4 retrato)",
+} as const;
+
 export const FUN_STAGE_TYPES: readonly ContentStageType[] = [ContentStageType.VERSE_FIXATION, ContentStageType.STANDARD_GAME];
 
 /** Etapas que viram só imagens (carrossel + PDF de imagens), sem documento de texto. */

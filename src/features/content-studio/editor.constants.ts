@@ -110,6 +110,10 @@ export const STAGE_CONTENT_TEMPLATES: Record<
     visualSummary: "",
     imagePrompt: "",
     verse: { text: "", reference: "" },
+    pieceTheme: "",
+    pieces: [{ id: "peca-01", text: "", figure: "" }],
+    referencePiece: { text: "" },
+    leaderTip: "",
     evaluation: "",
   },
   [ContentStageType.STANDARD_GAME]: {

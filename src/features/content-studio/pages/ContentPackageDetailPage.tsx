@@ -6,7 +6,7 @@ import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
 import { ContentAudience, ContentStageStatus, ContentStageType, VisualOrientation } from "../types";
 import { VisualConfigWizard } from "../components/visuals/VisualConfigWizard";
 import { StageVisualsPanel } from "../components/visuals/StageVisualsPanel";
-import { CATEGORY_BUSY_MESSAGE, FUN_STAGE_TYPES, GENERATION_ALLOWED_STATUSES, IMAGE_ONLY_STAGE_TYPES } from "../workspace.constants";
+import { CATEGORY_BUSY_MESSAGE, CATEGORY_IN_REVIEW_MESSAGE, FUN_IMAGES_TITLE, FUN_STAGE_TYPES, GENERATION_ALLOWED_STATUSES, IMAGE_ONLY_STAGE_TYPES, REVIEW_HELD_STAGE_STATUSES } from "../workspace.constants";
 import { isCategoryBusy, isGenerationActive, isStageWorking } from "../generation.utils";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { SendReviewDialog } from "../components/detail/SendReviewDialog";
@@ -95,7 +95,13 @@ export function ContentPackageDetailPage() {
   const conflict = !!stage && workspace.conflictingDraftIds.includes(stage.id);
   const dirty = !!stage && dirtyIds.includes(stage.id);
   const generatingNow = !!stage && isStageWorking(stage, workspace.generationJobs[stage.id], workspace.awaitingImages[stage.id] === true);
-  const categoryBusy = !!stage && !!track && isCategoryBusy(track.stages, stage.id, workspace.generationJobs);
+  // Categoria que já foi para a revisão: só o item devolvido pode ser gerado de novo (o concluído fica travado).
+  const heldByReview =
+    !!stage &&
+    !!track &&
+    stage.status === ContentStageStatus.PRODUCER_APPROVED &&
+    track.stages.some((item) => REVIEW_HELD_STAGE_STATUSES.includes(item.status));
+  const categoryBusy = heldByReview || (!!stage && !!track && isCategoryBusy(track.stages, stage.id, workspace.generationJobs));
   const dependenciesReady =
     !!stage &&
     stage.dependencies.every((dependency) =>
@@ -289,7 +295,7 @@ export function ContentPackageDetailPage() {
                           )}
                           {categoryBusy && (
                             <Alert severity="info" data-testid="content-studio-category-busy">
-                              {CATEGORY_BUSY_MESSAGE}
+                              {heldByReview ? CATEGORY_IN_REVIEW_MESSAGE : CATEGORY_BUSY_MESSAGE}
                             </Alert>
                           )}
                           {stage.stageType !== ContentStageType.LESSON_VISUALS && workspace.generationEnabled && !locked && (
@@ -359,16 +365,14 @@ export function ContentPackageDetailPage() {
                                     packageId={contentPackage.id}
                                     stageId={stage.id}
                                     versionKey={stage.currentVersionId}
-                                    orientation={VisualOrientation.PORTRAIT}
+                                    orientation={
+                                      stage.stageType === ContentStageType.VERSE_FIXATION ? VisualOrientation.LANDSCAPE : VisualOrientation.PORTRAIT
+                                    }
                                     job={workspace.generationJobs[stage.id] ?? null}
                                     disabled={locked || busy}
                                     fileBaseName=""
                                     showPdf={false}
-                                    title={
-                                      stage.stageType === ContentStageType.STANDARD_GAME && track.audience === ContentAudience.CHILD
-                                        ? "Últimas páginas do documento: imagens compiladas, uma por faixa etária (A4 retrato)"
-                                        : "Última página do documento: imagem compilada (A4 retrato)"
-                                    }
+                                    title={FUN_IMAGES_TITLE[stage.stageType === ContentStageType.VERSE_FIXATION ? "FIXATION" : track.audience === ContentAudience.CHILD ? "GAME_BY_AGE" : "GAME"]}
                                     onFingerprint={(fingerprint) =>
                                       setFunImageKeys((current) =>
                                         current[stage.id] === fingerprint

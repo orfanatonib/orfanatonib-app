@@ -26,7 +26,7 @@ export const PROMPT_STAGE_CONFIG: Record<ContentStageType, { icon: string; descr
   },
   [ContentStageType.VERSE_FIXATION]: {
     icon: "🏃",
-    description: "O modo divertido de repassar o versículo até todos o dizerem de cor.",
+    description: "O jogo do versículo: o passo a passo, a folha de instruções e as peças para imprimir e recortar.",
   },
   [ContentStageType.STANDARD_GAME]: {
     icon: "🎲",
@@ -46,7 +46,7 @@ export const PROMPT_STAGE_EXAMPLES: Record<ContentStageType, string> = {
   [ContentStageType.LESSON]: "Ex.: Use objetos que já existem em qualquer casa e termine com uma aplicação simples para a semana.",
   [ContentStageType.LESSON_VISUALS]: "Ex.: Cenas com personagens de expressão clara e cores vivas, sem rostos reais e sem texto dentro da imagem.",
   [ContentStageType.VERSE_VISUALS]: "Ex.: Fundo quente e letras bem grandes, com poucos desenhos pequenos ligados ao sentido do trecho.",
-  [ContentStageType.VERSE_FIXATION]: "Ex.: Uma corrida em equipes em que cada rodada esconde uma palavra a mais do versículo.",
+  [ContentStageType.VERSE_FIXATION]: "Ex.: Um varal em que cada dupla pendura uma peça do versículo na ordem, com as peças em forma de nuvem.",
   [ContentStageType.STANDARD_GAME]: "Ex.: Brincadeiras que funcionem em pátio pequeno, só com materiais baratos, em que todos participem ao mesmo tempo.",
 };
 
