@@ -186,11 +186,11 @@ test.describe.serial("Presença — autorização", () => {
     expect([403]).toContain(res.status());
   });
 
-  test("[attendance.get.attendance-team-teamid-schedules#perfil-admin] GET /attendance/team/:id/schedules como admin: 200", async ({
+  test("[attendance.get.attendance-team-teamid-schedules#perfil-admin] GET /attendance/team/:id/schedules como admin: 404 para equipe inexistente (antes: 200 com lista vazia)", async ({
     request,
   }) => {
     const res = await send(request, "GET", "/attendance/team/{BAD}/schedules", admin);
-    expect([200]).toContain(res.status());
+    expect([404]).toContain(res.status());
   });
 
   test("[attendance.get.attendance-leader-teams#perfil-anonimo] GET /attendance/leader/teams como visitante: 401", async ({
