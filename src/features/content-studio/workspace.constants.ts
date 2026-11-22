@@ -71,6 +71,8 @@ export const FUN_IMAGES_TITLE = {
   FIXATION: "Últimas páginas do documento: folha de instruções e peças do versículo para imprimir (A4 paisagem)",
   GAME_BY_AGE: "Últimas páginas do documento: imagens compiladas, uma por faixa etária (A4 retrato)",
   GAME: "Última página do documento: imagem compilada (A4 retrato)",
+  GAME_KIT_BY_AGE: "Últimas páginas do documento: folha de instruções e peças do jogo para imprimir, por faixa etária (A4 paisagem)",
+  GAME_KIT: "Últimas páginas do documento: folha de instruções e peças do jogo para imprimir (A4 paisagem)",
 } as const;
 
 export const FUN_STAGE_TYPES: readonly ContentStageType[] = [ContentStageType.VERSE_FIXATION, ContentStageType.STANDARD_GAME];

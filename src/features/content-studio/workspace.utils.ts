@@ -1,8 +1,11 @@
 import { STAGE_CONTENT_TEMPLATES } from "./editor.constants";
-import { PACKAGE_CLOSED_FOR_REVIEW_STATUSES } from "./workspace.constants";
+import { FUN_IMAGES_TITLE, PACKAGE_CLOSED_FOR_REVIEW_STATUSES } from "./workspace.constants";
 import {
   AiGenerationCapability,
+  ContentAudience,
   ContentStageStatus,
+  ContentStageType,
+  VisualOrientation,
   type ContentPackageStatus,
   type ContentStageResponse,
   type ContentTrackResponse,
@@ -95,4 +98,22 @@ export function canSendAllToReview(tracks: readonly ContentTrackResponse[]): boo
     states.every((state) => [TrackReviewState.READY_TO_SUBMIT, TrackReviewState.IN_REVIEW, TrackReviewState.APPROVED].includes(state)) &&
     states.includes(TrackReviewState.READY_TO_SUBMIT)
   );
+}
+
+/**
+ * Bloco de imagens da fixação e da brincadeira: a fixação e a brincadeira com kit de peças saem em A4 paisagem
+ * (folha de instruções + peças); a brincadeira antiga, sem peças, continua com a imagem única em retrato.
+ */
+export function funImagesLayout(
+  stageType: ContentStageType,
+  audience: ContentAudience,
+  content: Record<string, unknown> | null | undefined,
+): { orientation: VisualOrientation; title: string } {
+  if (stageType === ContentStageType.VERSE_FIXATION)
+    return { orientation: VisualOrientation.LANDSCAPE, title: FUN_IMAGES_TITLE.FIXATION };
+  const byAge = audience === ContentAudience.CHILD;
+  const hasKit = Array.isArray(content?.pieces) && content.pieces.length > 0;
+  return hasKit
+    ? { orientation: VisualOrientation.LANDSCAPE, title: byAge ? FUN_IMAGES_TITLE.GAME_KIT_BY_AGE : FUN_IMAGES_TITLE.GAME_KIT }
+    : { orientation: VisualOrientation.PORTRAIT, title: byAge ? FUN_IMAGES_TITLE.GAME_BY_AGE : FUN_IMAGES_TITLE.GAME };
 }

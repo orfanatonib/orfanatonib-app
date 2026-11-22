@@ -129,6 +129,9 @@ export const STAGE_CONTENT_TEMPLATES: Record<
     biblicalConnection: "",
     visualSummary: "",
     imagePrompt: "",
+    pieceTheme: "",
+    pieces: [{ id: "peca-01", text: "", figure: "" }],
+    leaderTip: "",
   },
 };
 export const CONTENT_ARRAY_TEMPLATES: Record<string, unknown> = {

@@ -6,7 +6,7 @@ import { useStudioWorkspace } from "../hooks/useStudioWorkspace";
 import { ContentAudience, ContentStageStatus, ContentStageType, VisualOrientation } from "../types";
 import { VisualConfigWizard } from "../components/visuals/VisualConfigWizard";
 import { StageVisualsPanel } from "../components/visuals/StageVisualsPanel";
-import { CATEGORY_BUSY_MESSAGE, CATEGORY_IN_REVIEW_MESSAGE, FUN_IMAGES_TITLE, FUN_STAGE_TYPES, GENERATION_ALLOWED_STATUSES, IMAGE_ONLY_STAGE_TYPES, REVIEW_HELD_STAGE_STATUSES } from "../workspace.constants";
+import { CATEGORY_BUSY_MESSAGE, CATEGORY_IN_REVIEW_MESSAGE, FUN_STAGE_TYPES, GENERATION_ALLOWED_STATUSES, IMAGE_ONLY_STAGE_TYPES, REVIEW_HELD_STAGE_STATUSES } from "../workspace.constants";
 import { isCategoryBusy, isGenerationActive, isStageWorking } from "../generation.utils";
 import { ContentStageNavigation } from "../components/ContentStageNavigation";
 import { SendReviewDialog } from "../components/detail/SendReviewDialog";
@@ -22,7 +22,7 @@ import { MANUAL_EDIT_ALLOWED_STATUSES, PACKAGE_PRODUCTION_LOCKED_STATUSES, STAGE
 import { SEND_REVIEW_TEXTS, TRACK_REVIEW_STATE_COLORS, TRACK_REVIEW_STATE_LABELS } from "../review.constants";
 import { REVIEW_QUERY, reviewPackagePath } from "../review-workspace.constants";
 import { TrackReviewState, nextProductionStage, submittableTracks, trackReviewState } from "../workspace.utils";
-import { stageDraftValue } from "../workspace.utils";
+import { funImagesLayout, stageDraftValue } from "../workspace.utils";
 
 export function ContentPackageDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -365,14 +365,12 @@ export function ContentPackageDetailPage() {
                                     packageId={contentPackage.id}
                                     stageId={stage.id}
                                     versionKey={stage.currentVersionId}
-                                    orientation={
-                                      stage.stageType === ContentStageType.VERSE_FIXATION ? VisualOrientation.LANDSCAPE : VisualOrientation.PORTRAIT
-                                    }
+                                    orientation={funImagesLayout(stage.stageType, track.audience, stage.currentVersion?.structuredContent).orientation}
                                     job={workspace.generationJobs[stage.id] ?? null}
                                     disabled={locked || busy}
                                     fileBaseName=""
                                     showPdf={false}
-                                    title={FUN_IMAGES_TITLE[stage.stageType === ContentStageType.VERSE_FIXATION ? "FIXATION" : track.audience === ContentAudience.CHILD ? "GAME_BY_AGE" : "GAME"]}
+                                    title={funImagesLayout(stage.stageType, track.audience, stage.currentVersion?.structuredContent).title}
                                     onFingerprint={(fingerprint) =>
                                       setFunImageKeys((current) =>
                                         current[stage.id] === fingerprint
