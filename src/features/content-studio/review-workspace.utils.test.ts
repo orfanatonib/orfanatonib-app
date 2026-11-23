@@ -238,6 +238,8 @@ describe("observações", () => {
       message: "x",
       status,
       authorId: "u",
+      resolutionMessage: null,
+      resolvedAt: null,
       createdAt: "",
     });
     const withComments = {

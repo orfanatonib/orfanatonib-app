@@ -204,9 +204,11 @@ export async function requestStageChanges(
 export async function resolveReviewComment(
   packageId: string,
   commentId: string,
+  message: string,
 ): Promise<ContentPackageResponse> {
   const { data } = await api.post<ContentPackageResponse>(
     `/content-studio/packages/${packageId}/review-comments/${commentId}/resolve`,
+    { message },
   );
   return data;
 }

@@ -206,11 +206,11 @@ export function useReviewWorkspace(packageId: string | undefined) {
   /** "Aprovar tudo": todos os itens pendentes de todas as categorias e, se der, abre a publicação. */
   const approveAll = () => (approveAllBlocked ? Promise.resolve() : approveStages(approvable, true));
 
-  const resolveComment = async (commentId: string, stageId: string) => {
+  const resolveComment = async (commentId: string, stageId: string, message: string) => {
     if (!contentPackage) return;
     setBusyStageId(stageId);
     try {
-      await resolveReviewComment(contentPackage.id, commentId);
+      await resolveReviewComment(contentPackage.id, commentId, message);
       await reload();
     } catch {
       setFeedback({ severity: "error", message: REVIEW_FEEDBACK_TEXTS.resolveFailed });

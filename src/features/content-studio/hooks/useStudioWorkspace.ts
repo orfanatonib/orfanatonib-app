@@ -554,11 +554,11 @@ export function useStudioWorkspace(id: string | undefined) {
     }
   };
 
-  const resolveComment = async (commentId: string, stageId: string) => {
+  const resolveComment = async (commentId: string, stageId: string, message: string) => {
     if (!contentPackage) return;
     setBusyStageId(stageId);
     try {
-      await resolveReviewComment(contentPackage.id, commentId);
+      await resolveReviewComment(contentPackage.id, commentId, message);
       await reload();
     } catch {
       setFeedback({

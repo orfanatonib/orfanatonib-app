@@ -109,6 +109,8 @@ export interface ContentReviewCommentResponse {
   message: string;
   status: ContentReviewCommentStatus;
   authorId: string;
+  resolutionMessage: string | null;
+  resolvedAt: string | null;
   createdAt: string;
 }
 

@@ -381,15 +381,15 @@ test.describe.serial("Estúdio — matriz de cenários", () => {
   }
   test("[content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#feliz] resolve o comentário", async ({ request }) => {
     const { pkg, commentId } = await withComment(request);
-    expect([200, 201]).toContain((await call(request, "post", resolvePath(pkg.id, commentId))).status());
+    expect([200, 201]).toContain((await call(request, "post", resolvePath(pkg.id, commentId), { message: "Ajustado" })).status());
   });
   test("[content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#flag-desligada] flag desligada ⇒ 403", async ({ request }) => {
     const { pkg, commentId } = await withComment(request);
-    await withFlagOff(request, async () => expect((await call(request, "post", resolvePath(pkg.id, commentId))).status()).toBe(403));
+    await withFlagOff(request, async () => expect((await call(request, "post", resolvePath(pkg.id, commentId), { message: "Ajustado" })).status()).toBe(403));
   });
   test("[content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#nao-encontrado] comentário inexistente ⇒ 404", async ({ request }) => {
     const pkg = await newPackage(request);
-    expect((await call(request, "post", resolvePath(pkg.id, U))).status()).toBe(404);
+    expect((await call(request, "post", resolvePath(pkg.id, U), { message: "Ajustado" })).status()).toBe(404);
   });
   test("[content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#validacao] id que não é UUID ⇒ 400", async ({ request }) => {
     const pkg = await newPackage(request);
@@ -399,8 +399,8 @@ test.describe.serial("Estúdio — matriz de cenários", () => {
     request,
   }) => {
     const { pkg, commentId } = await withComment(request);
-    await call(request, "post", resolvePath(pkg.id, commentId));
-    const again = await call(request, "post", resolvePath(pkg.id, commentId));
+    await call(request, "post", resolvePath(pkg.id, commentId), { message: "Ajustado" });
+    const again = await call(request, "post", resolvePath(pkg.id, commentId), { message: "Ajustado" });
     expect([200, 201, 409]).toContain(again.status());
     const after = await getPkg(request, pkg.id);
     expect(after.tracks[0].stages.flatMap((s) => s.reviewComments).filter((c) => c.id === commentId)).toHaveLength(1);

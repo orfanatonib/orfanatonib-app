@@ -20,3 +20,13 @@ export function buildReviewTimeline(decisions: readonly ContentReviewDecisionRes
     return { id: decision.id, kind, versionNumber: decision.versionNumber, at: decision.decidedAt };
   });
 }
+
+/** Da mais recente para a mais antiga (o que a tela lista); `buildReviewTimeline` segue cronológica para rotular os envios. */
+export function buildReviewTimelineNewestFirst(decisions: readonly ContentReviewDecisionResponse[]): ReviewTimelineEntry[] {
+  return buildReviewTimeline(decisions).reverse();
+}
+
+/** Observações da mais recente para a mais antiga. */
+export function commentsNewestFirst<T extends { createdAt: string }>(comments: readonly T[]): T[] {
+  return [...comments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}

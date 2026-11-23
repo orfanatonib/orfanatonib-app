@@ -50,13 +50,13 @@ describe("api do Estúdio — rotas e corpos", () => {
     await api.submitPackageReview(P);
     await api.approveReviewStage(P, S, { note: "ok" } as never);
     await api.requestStageChanges(P, S, { message: "ajustar" } as never);
-    await api.resolveReviewComment(P, "c1");
+    await api.resolveReviewComment(P, "c1", "feito");
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/submit-review`, {});
     await api.submitPackageReview(P, [ContentAudience.TEEN]);
     expect(post).toHaveBeenLastCalledWith(`/content-studio/packages/${P}/submit-review`, { audiences: ["TEEN"] });
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/stages/${S}/approve`, { note: "ok" });
     expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/stages/${S}/request-changes`, { message: "ajustar" });
-    expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/review-comments/c1/resolve`);
+    expect(post).toHaveBeenCalledWith(`/content-studio/packages/${P}/review-comments/c1/resolve`, { message: "feito" });
   });
 
   it("arquivar e painel (com o signal repassado)", async () => {

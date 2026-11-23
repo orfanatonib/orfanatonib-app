@@ -170,12 +170,15 @@ test.describe.serial("Estúdio — revisão separada da produção e publicaçã
       (await callApi(request, admin, "post", `${CS}/packages/${pkg.id}/submit-review`, { audiences: ["BABY"] })).status(),
     );
 
-    // Histórico: enviado → ajuste solicitado → reenviado, nas duas telas, em ordem.
+    // Histórico: reenviado → ajuste solicitado → enviado (do mais recente para o mais antigo), nas duas telas.
     await page.goto(`/adm/estudio/revisao/${pkg.id}?audience=BABY&stage=${returned[0].stageType}`);
+    await page.getByRole("button", { name: /Histórico de revisão \(3\)/ }).click({ timeout: 20_000 });
     const timeline = page.getByTestId("content-studio-review-timeline");
     await expect(timeline).toBeVisible({ timeout: 20_000 });
-    await expect(timeline.getByRole("listitem")).toHaveText([/Enviado para revisão/, /Ajuste solicitado/, /Reenviado para revisão/]);
+    await expect(timeline.getByRole("listitem")).toHaveText([/Reenviado para revisão/, /Ajuste solicitado/, /Enviado para revisão/]);
     await page.goto(`/adm/estudio/pacotes/${pkg.id}?audience=BABY&stage=${returned[0].stageType}`);
+    // O histórico da produção fica recolhido (a tela não vira uma lista longa): abre antes de contar.
+    await page.getByRole("button", { name: /Histórico de revisão \(3\)/ }).click({ timeout: 20_000 });
     await expect(page.getByTestId(`content-studio-stage-review-history-${returned[0].id}`).getByRole("listitem")).toHaveCount(3, {
       timeout: 20_000,
     });

@@ -24,7 +24,11 @@ import { REVIEW_BLOCK_REASONS, REVIEW_NOTE_MAX_LENGTH, REVIEW_WORKSPACE_TEXTS } 
 import { ReviewBlockReason } from "../../review-workspace.types";
 import { ContentReviewCommentStatus, ContentStageStatus, type ContentStageResponse } from "../../types";
 import { formatContentStudioDateTime } from "../../utils";
-import { ReviewTimeline } from "../ReviewTimeline";
+import { ResolveCommentButton } from "../ResolveCommentButton";
+import { commentsNewestFirst } from "../../review-timeline.utils";
+import { ReviewCommentBody } from "../ReviewCommentBody";
+import { ReviewTimeline, reviewTimelineCount } from "../ReviewTimeline";
+import { REVIEW_TIMELINE_TITLE } from "../../review-timeline.constants";
 
 const BLOCK_TEXT: Record<ReviewBlockReason, string> = {
   [ReviewBlockReason.DISABLED]: REVIEW_BLOCK_REASONS.disabled,
@@ -50,7 +54,7 @@ interface ReviewDecisionCardProps {
   nextLabel: string | null;
   pendingCount: number;
   onNext: () => void;
-  onResolveComment: (commentId: string) => void;
+  onResolveComment: (commentId: string, message: string) => void;
   /** "Aprovar esta categoria": itens pendentes da categoria aberta e se já dá para aprovar em lote. */
   categoryPendingCount: number;
   categoryBlocked: boolean;
@@ -217,51 +221,63 @@ export function ReviewDecisionCard({
 interface ReviewHistoryProps {
   stage: ContentStageResponse;
   busy: boolean;
-  onResolveComment: (commentId: string) => void;
+  onResolveComment: (commentId: string, message: string) => void;
 }
 
-/** Observações abertas (com "resolver") e o histórico de decisões da etapa. */
+/** Observações abertas (com "resolver") à vista; as resolvidas e o histórico de decisões ficam recolhidos. */
 function ReviewHistory({ stage, busy, onResolveComment }: ReviewHistoryProps) {
   if (stage.reviewComments.length === 0 && stage.reviewDecisions.length === 0) return null;
+  const open = commentsNewestFirst(stage.reviewComments).filter((comment) => comment.status === ContentReviewCommentStatus.OPEN);
+  const resolved = commentsNewestFirst(stage.reviewComments).filter((comment) => comment.status !== ContentReviewCommentStatus.OPEN);
+  const events = reviewTimelineCount(stage.reviewDecisions);
   return (
     <Stack spacing={1} data-testid="content-studio-review-history">
       <Typography variant="subtitle2" component="h3" fontWeight={800}>
         {REVIEW_WORKSPACE_TEXTS.historyTitle}
       </Typography>
-      {stage.reviewComments.map((comment) => {
-        const opened = comment.status === ContentReviewCommentStatus.OPEN;
-        return (
-          <Alert
-            key={comment.id}
-            severity={opened ? "warning" : "success"}
-            data-testid={`content-studio-review-comment-${comment.id}`}
-            action={
-              opened ? (
-                <Button
-                  color="inherit"
-                  size="small"
-                  disabled={busy}
-                  data-testid={`content-studio-review-resolve-${comment.id}`}
-                  onClick={() => onResolveComment(comment.id)}
-                  sx={{ minHeight: 44, textTransform: "none" }}
-                >
-                  Resolver
-                </Button>
-              ) : (
-                <Chip size="small" color="success" variant="outlined" label="Resolvida" />
-              )
-            }
-          >
-            <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
-              {comment.message}
+      {open.map((comment) => (
+        <Alert key={comment.id} severity="warning" icon={false} data-testid={`content-studio-review-comment-${comment.id}`}>
+          <Stack spacing={1} alignItems="flex-start">
+            <ReviewCommentBody comment={comment} replyLabel="Resposta da produção" />
+            <ResolveCommentButton
+              commentId={comment.id}
+              disabled={busy}
+              testId={`content-studio-review-resolve-${comment.id}`}
+              onResolve={onResolveComment}
+            />
+          </Stack>
+        </Alert>
+      ))}
+      {resolved.length > 0 && (
+        <Accordion disableGutters variant="outlined" data-testid="content-studio-review-resolved">
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2" fontWeight={800}>
+              Observações resolvidas ({resolved.length})
             </Typography>
-            <Typography component="div" variant="caption" mt={0.5}>
-              {formatContentStudioDateTime(comment.createdAt)}
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={1.5} divider={<Box sx={{ borderTop: 1, borderColor: "divider" }} />}>
+              {resolved.map((comment) => (
+                <Box key={comment.id} data-testid={`content-studio-review-comment-${comment.id}`}>
+                  <ReviewCommentBody comment={comment} replyLabel="Resposta da produção" />
+                </Box>
+              ))}
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      )}
+      {events > 0 && (
+        <Accordion disableGutters variant="outlined">
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2" fontWeight={800}>
+              {REVIEW_TIMELINE_TITLE} ({events})
             </Typography>
-          </Alert>
-        );
-      })}
-      <ReviewTimeline decisions={stage.reviewDecisions} testId="content-studio-review-timeline" />
+          </AccordionSummary>
+          <AccordionDetails>
+            <ReviewTimeline hideTitle decisions={stage.reviewDecisions} testId="content-studio-review-timeline" />
+          </AccordionDetails>
+        </Accordion>
+      )}
       {stage.status === ContentStageStatus.CHANGES_REQUESTED && (
         <Typography variant="caption" color="text.secondary">
           A produção está ajustando esta etapa.

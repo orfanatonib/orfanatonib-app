@@ -146,7 +146,7 @@ export function ContentReviewPackagePage() {
             nextLabel={review.next ? review.next.stageType : null}
             pendingCount={review.pendingCount}
             onNext={() => review.next && review.selectStage(review.next.stageType)}
-            onResolveComment={(commentId) => void review.resolveComment(commentId, stage.id)}
+            onResolveComment={(commentId, message) => void review.resolveComment(commentId, stage.id, message)}
             categoryPendingCount={review.categoryPendingCount}
             categoryBlocked={review.categoryBlocked}
             onApproveCategory={() => setBulkScope(BulkApproveScope.CATEGORY)}
