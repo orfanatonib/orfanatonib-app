@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CompleteProfileListItem } from '../types';
-import { groupBirthdays, hasActiveProfileFilters, hasBirthdays, isRoleSelected, parseSortValue, sortValueOf } from './utils';
+import { birthdayMonths, groupBirthdays, hasBirthdays, mergeById } from './utils';
 
 const person = (id: string, birthDate?: string) => ({ id, personalData: birthDate ? { birthDate } : undefined }) as unknown as CompleteProfileListItem;
 
@@ -28,22 +28,16 @@ describe('utils do gerenciador de perfis', () => {
     expect(hasBirthdays(groupBirthdays([person('fora', '2000-09-01')]))).toBe(false);
   });
 
-  it('ordenação: parse e serialização são inversas', () => {
-    expect(parseSortValue('createdAt-DESC')).toEqual({ sortBy: 'createdAt', order: 'DESC' });
-    expect(sortValueOf({ sortBy: 'name', order: 'ASC' })).toBe('name-ASC');
+  it('meses do painel: só o atual, ou também o seguinte na última semana do mês (dezembro volta a janeiro)', () => {
+    expect(birthdayMonths(new Date(2026, 5, 15))).toEqual([6]);
+    expect(birthdayMonths(new Date(2026, 5, 23))).toEqual([6]);
+    expect(birthdayMonths(new Date(2026, 5, 24))).toEqual([6, 7]);
+    expect(birthdayMonths(new Date(2026, 11, 30))).toEqual([12, 1]);
+    expect(birthdayMonths(new Date(2026, 1, 22))).toEqual([2, 3]);
   });
 
-  it('detecta filtros ativos (paginação e ordenação não contam)', () => {
-    expect(hasActiveProfileFilters({ page: 2, limit: 12, sortBy: 'name', order: 'ASC' })).toBe(false);
-    expect(hasActiveProfileFilters({ q: 'a' })).toBe(true);
-    expect(hasActiveProfileFilters({ role: 'leader' })).toBe(true);
-    expect(hasActiveProfileFilters({ favoriteColor: 'azul' })).toBe(true);
-  });
-
-  it('papel selecionado: "all" só sem papel definido', () => {
-    expect(isRoleSelected({}, 'all')).toBe(true);
-    expect(isRoleSelected({ role: 'leader' }, 'all')).toBe(false);
-    expect(isRoleSelected({ role: 'leader' }, 'leader')).toBe(true);
-    expect(isRoleSelected({ role: 'leader' }, 'member')).toBe(false);
+  it('junta listas sem repetir a mesma pessoa', () => {
+    const merged = mergeById([[person('a'), person('b')], [person('b'), person('c')]]);
+    expect(merged.map((p) => p.id)).toEqual(['a', 'b', 'c']);
   });
 });

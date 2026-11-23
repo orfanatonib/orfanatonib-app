@@ -71,7 +71,7 @@ export const ADMIN_PEOPLE_SECTION: AdminNavigationSection = {
       path: "/adm/perfis",
       icon: Favorite,
       allowedRoles: ADMIN_AND_LEADER_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.USER_MANAGEMENT,
+      requiredFeatureFlag: FeatureFlagKeys.PROFILE_MANAGEMENT,
     },
   ],
 };

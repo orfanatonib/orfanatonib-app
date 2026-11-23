@@ -1,70 +1,96 @@
 import { useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  TextField,
-  useMediaQuery,
-  useTheme,
-  Tabs,
-  Tab,
-  InputAdornment,
-  Paper,
-  Container,
-  Typography,
-} from '@mui/material';
-import { Search as SearchIcon, FilterList } from '@mui/icons-material';
+import { Alert, Snackbar } from '@mui/material';
+import { Inventory2 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 import { AppDispatch } from '@/store/slices';
 import { setVisitMaterialData } from 'store/slices/visit-material/visitMaterialSlice';
 import { fetchRoutes } from '@/store/slices/route/routeSlice';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
+import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 
-import { useVisitMaterials } from './hooks';
+import { deleteVisitMaterial, fetchVisitMaterialsPage, setCurrentMaterial } from './api';
 import VisitMaterialDetailsModal from './components/VisitMaterialDetailsModal';
 import SetCurrentMaterialConfirmDialog from './components/SetCurrentMaterialConfirmDialog';
 import VisitMaterialCard from './components/VisitMaterialCard';
-import BackHeader from '@/components/common/header/BackHeader';
-import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 import {
-  VISIT_MATERIAL_TAB_LABELS,
-  VISIT_MATERIAL_TAB_MOBILE_LABELS,
+  VISIT_MATERIALS_DEFAULT_SORT,
+  VISIT_MATERIALS_LABELS,
+  VISIT_MATERIALS_TEST_ID_PREFIX,
+  VISIT_MATERIAL_ADMIN_SORT_OPTIONS,
+  VISIT_MATERIAL_CATEGORY_LABELS,
+  VISIT_MATERIAL_CURRENT_OPTIONS,
+  VISIT_MATERIAL_FILTER_KEYS,
+  VISIT_MATERIAL_MESSAGES,
+  VISIT_MATERIAL_PUBLIC_OPTIONS,
+  VISIT_MATERIAL_SECTION_CATEGORIES,
+  VISIT_MATERIAL_TESTAMENT_LABELS,
 } from './constants';
-import {
-  VisitMaterialListTab,
-  VisitMaterialMutation,
-  VisitMaterialPageResponseDto,
-} from './types';
-import { tabFromTestament, testamentFromTab } from './utils';
+import { visitMaterialErrorMessage } from './errors';
+import { TestamentType, VisitMaterialMutation, VisitMaterialPageResponseDto } from './types';
+
+const P = VISIT_MATERIALS_TEST_ID_PREFIX;
+const K = VISIT_MATERIAL_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.TESTAMENT,
+    label: VISIT_MATERIALS_LABELS.FILTER_TESTAMENT,
+    allLabel: VISIT_MATERIALS_LABELS.FILTER_TESTAMENT_ALL,
+    options: Object.values(TestamentType).map((value) => ({ value, label: VISIT_MATERIAL_TESTAMENT_LABELS[value] })),
+  },
+  {
+    kind: 'select',
+    key: K.CATEGORY,
+    label: VISIT_MATERIALS_LABELS.FILTER_CATEGORY,
+    allLabel: VISIT_MATERIALS_LABELS.FILTER_CATEGORY_ALL,
+    options: VISIT_MATERIAL_SECTION_CATEGORIES.map((value) => ({ value, label: VISIT_MATERIAL_CATEGORY_LABELS[value] })),
+  },
+  {
+    kind: 'select',
+    key: K.PUBLIC,
+    label: VISIT_MATERIALS_LABELS.FILTER_PUBLIC,
+    allLabel: VISIT_MATERIALS_LABELS.FILTER_PUBLIC_ALL,
+    options: VISIT_MATERIAL_PUBLIC_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  {
+    kind: 'select',
+    key: K.CURRENT_WEEK,
+    label: VISIT_MATERIALS_LABELS.FILTER_CURRENT,
+    allLabel: VISIT_MATERIALS_LABELS.FILTER_CURRENT_ALL,
+    options: VISIT_MATERIAL_CURRENT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: VISIT_MATERIALS_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: VISIT_MATERIALS_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: VISIT_MATERIALS_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: VISIT_MATERIAL_ADMIN_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: VISIT_MATERIALS_DEFAULT_SORT };
 
 export default function VisitMaterialManager() {
-  const { materials, search, setSearch, testament, setTestament, loading, isFiltering, error, setError, fetchAll, remove, markAsCurrent, pendingMutation } =
-    useVisitMaterials();
+  const list = useAdminList<VisitMaterialPageResponseDto>({
+    fetcher: fetchVisitMaterialsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: VISIT_MATERIAL_MESSAGES.LIST_ERROR,
+  });
 
-  const [materialToDelete, setMaterialToDelete] =
-    useState<VisitMaterialPageResponseDto | null>(null);
-  const [selectedMaterial, setSelectedMaterial] =
-    useState<VisitMaterialPageResponseDto | null>(null);
-  const [materialToSetAsCurrent, setMaterialToSetAsCurrent] =
-    useState<VisitMaterialPageResponseDto | null>(null);
+  const [materialToDelete, setMaterialToDelete] = useState<VisitMaterialPageResponseDto | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<VisitMaterialPageResponseDto | null>(null);
+  const [materialToSetAsCurrent, setMaterialToSetAsCurrent] = useState<VisitMaterialPageResponseDto | null>(null);
+  const [pendingMutation, setPendingMutation] = useState<VisitMaterialMutation | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const handleTabChange = (
-    _: React.SyntheticEvent,
-    newValue: VisitMaterialListTab,
-  ) => {
-    setTestament(testamentFromTab(newValue));
-  };
-
-  const activeTab = tabFromTestament(testament);
 
   const handleEdit = (material: VisitMaterialPageResponseDto) => {
     dispatch(setVisitMaterialData(material));
@@ -72,247 +98,104 @@ export default function VisitMaterialManager() {
   };
 
   const handleDelete = async () => {
-    if (!materialToDelete) return;
-    if (await remove(materialToDelete.id)) setMaterialToDelete(null);
+    if (!materialToDelete || pendingMutation) return;
+    setPendingMutation(VisitMaterialMutation.DELETE);
+    setActionError('');
+    try {
+      await deleteVisitMaterial({ id: materialToDelete.id });
+      setMaterialToDelete(null);
+      list.reload();
+    } catch (caught: unknown) {
+      setActionError(visitMaterialErrorMessage(caught, VISIT_MATERIAL_MESSAGES.DELETE_ERROR));
+      setMaterialToDelete(null);
+    } finally {
+      setPendingMutation(null);
+    }
   };
 
   const handleSetAsCurrentMaterial = async () => {
-    if (!materialToSetAsCurrent) return;
-    if (await markAsCurrent(materialToSetAsCurrent.id)) {
+    if (!materialToSetAsCurrent || pendingMutation) return;
+    setPendingMutation(VisitMaterialMutation.SET_CURRENT);
+    setActionError('');
+    try {
+      await setCurrentMaterial({ id: materialToSetAsCurrent.id });
       setMaterialToSetAsCurrent(null);
+      list.reload();
       await dispatch(fetchRoutes());
+    } catch (caught: unknown) {
+      setActionError(visitMaterialErrorMessage(caught, VISIT_MATERIAL_MESSAGES.SET_CURRENT_ERROR));
+      setMaterialToSetAsCurrent(null);
+    } finally {
+      setPendingMutation(null);
     }
   };
 
   return (
-    <Box
-      data-testid="visit-materials-manager"
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        pb: 6,
-      }}
-    >
-      <BackHeader title="Materiais de Visita" />
+    <AdminListScreen
+      testIdPrefix={P}
+      title={VISIT_MATERIALS_LABELS.TITLE}
+      searchLabel={VISIT_MATERIALS_LABELS.SEARCH}
+      searchPlaceholder={VISIT_MATERIALS_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={VISIT_MATERIALS_LABELS.EMPTY}
+      emptyIcon={<Inventory2 sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      overlays={
+        <>
+          <DeleteConfirmDialog
+            open={!!materialToDelete}
+            title={materialToDelete?.title}
+            onClose={() => setMaterialToDelete(null)}
+            onConfirm={handleDelete}
+            loading={pendingMutation === VisitMaterialMutation.DELETE}
+            testId="visit-material-delete-dialog"
+          />
 
-      <Container maxWidth={false} disableGutters data-testid="visit-material-manager-content" sx={{ pt: 4, width: { xs: '98%', md: '95%' } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Paper
-            data-testid="visit-materials-toolbar"
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
+          <VisitMaterialDetailsModal
+            material={selectedMaterial}
+            open={!!selectedMaterial}
+            onClose={() => setSelectedMaterial(null)}
+          />
+
+          <SetCurrentMaterialConfirmDialog
+            open={!!materialToSetAsCurrent}
+            materialTitle={materialToSetAsCurrent?.title || ''}
+            onClose={() => setMaterialToSetAsCurrent(null)}
+            onConfirm={handleSetAsCurrentMaterial}
+            loading={pendingMutation === VisitMaterialMutation.SET_CURRENT}
+          />
+
+          <Snackbar
+            open={!!actionError}
+            autoHideDuration={6000}
+            onClose={() => setActionError('')}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           >
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                inputProps={{ "data-testid": "visit-materials-search-input" }}
-                label="Buscar materiais"
-                fullWidth
-                placeholder="Buscar materiais por título, subtítulo ou descrição..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: 'text.secondary' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    },
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={{ position: 'relative' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  mb: 2,
-                }}
-              >
-                <FilterList sx={{ color: 'text.secondary' }} />
-                <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                  Filtrar por Testamento:
-                </Typography>
-              </Box>
-              <Tabs
-                data-testid="visit-material-manager-testament-tabs"
-                value={activeTab}
-                onChange={handleTabChange}
-                variant={isXs ? 'scrollable' : 'standard'}
-                scrollButtons="auto"
-                sx={{
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
-                  },
-                  '& .MuiTab-root': {
-                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    minHeight: { xs: 48, md: 56 },
-                    px: { xs: 1.5, sm: 2, md: 3 },
-                    '&.Mui-selected': {
-                      color: 'primary.main',
-                    },
-                  },
-                }}
-              >
-                {Object.values(VisitMaterialListTab).map((tabValue) => (
-                  <Tab
-                    key={tabValue}
-                    data-testid={`visit-material-manager-tab-${tabValue.toLowerCase().replaceAll('_', '-')}`}
-                    label={
-                      isXs
-                        ? VISIT_MATERIAL_TAB_MOBILE_LABELS[tabValue]
-                        : VISIT_MATERIAL_TAB_LABELS[tabValue]
-                    }
-                    value={tabValue}
-                  />
-                ))}
-              </Tabs>
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {loading && materials.length === 0 ? (
-          <Box
-            data-testid="visit-material-manager-loading"
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        ) : error ? (
-          <Box sx={{ mt: 4 }}>
             <Alert
-              data-testid="visit-material-manager-error"
+              data-testid={`${P}-action-error`}
               severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
+              variant="filled"
+              onClose={() => setActionError('')}
+              sx={{ borderRadius: 2 }}
             >
-              {error}
+              {actionError}
             </Alert>
-          </Box>
-        ) : materials.length === 0 ? (
-          <Paper
-            data-testid="visit-material-manager-empty"
-            elevation={1}
-            sx={{
-              p: 6,
-              textAlign: 'center',
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Typography variant="h5" color="text.secondary" gutterBottom>
-              📭 Nenhum material encontrado
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {search
-                ? 'Tente ajustar sua busca ou limpar os filtros.'
-                : activeTab !== 'ALL'
-                ? `Nenhum material do ${activeTab === VisitMaterialListTab.OLD_TESTAMENT ? 'Antigo' : 'Novo'} Testamento encontrado.`
-                : 'Ainda não há materiais cadastrados.'}
-            </Typography>
-          </Paper>
-        ) : (
-          <>
-            {(loading || isFiltering) && materials.length > 0 && (
-              <Box
-                data-testid="visit-material-manager-filtering"
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3}>
-              {materials.map((material, index) => (
-                <Grid
-                  item
-                  key={material.id}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                >
-                  <VisitMaterialCard
-                    material={material}
-                    onView={() => setSelectedMaterial(material)}
-                    onEdit={() => handleEdit(material)}
-                    onDelete={() => setMaterialToDelete(material)}
-                    onSetAsCurrent={() => setMaterialToSetAsCurrent(material)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-      </Container>
-
-      <DeleteConfirmDialog
-        open={!!materialToDelete}
-        title={materialToDelete?.title}
-        onClose={() => setMaterialToDelete(null)}
-        onConfirm={handleDelete}
-        loading={pendingMutation === VisitMaterialMutation.DELETE}
-        testId="visit-material-delete-dialog"
-      />
-
-      <VisitMaterialDetailsModal
-        material={selectedMaterial}
-        open={!!selectedMaterial}
-        onClose={() => setSelectedMaterial(null)}
-      />
-
-      <SetCurrentMaterialConfirmDialog
-        open={!!materialToSetAsCurrent}
-        materialTitle={materialToSetAsCurrent?.title || ''}
-        onClose={() => setMaterialToSetAsCurrent(null)}
-        onConfirm={handleSetAsCurrentMaterial}
-        loading={pendingMutation === VisitMaterialMutation.SET_CURRENT}
-      />
-    </Box>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((material) => (
+          <VisitMaterialCard
+            key={material.id}
+            material={material}
+            onView={() => setSelectedMaterial(material)}
+            onEdit={() => handleEdit(material)}
+            onDelete={() => setMaterialToDelete(material)}
+            onSetAsCurrent={() => setMaterialToSetAsCurrent(material)}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

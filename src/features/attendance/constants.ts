@@ -11,3 +11,6 @@ export const ATTENDANCE_PATHS = {
   pending: "/adm/presenca/pendencias",
   teams: "/adm/presenca/equipes",
 } as const;
+
+/** Prefixo dos `data-testid` da lista de "Lançar presença" (`-toolbar`, `-loading`, `-cards`, `-card-<id>`...). */
+export const ATTENDANCE_LIST_PREFIX = "attendance-register";

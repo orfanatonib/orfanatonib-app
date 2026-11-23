@@ -94,17 +94,39 @@ export const imageSectionKeys = {
   pendingCount: (userId: string | null) => ['image-sections', 'pending-count', userId] as const,
 };
 
+/** Prefixo dos `data-testid` da casca (`image-sections-manager`, `-toolbar`, `-cards`...). */
+export const IMAGE_SECTIONS_TEST_ID_PREFIX = 'image-sections';
+
 export const IMAGE_SECTION_TEST_IDS = {
   PENDING_BADGE: 'image-sections-pending-badge',
-  MANAGER: 'image-sections-manager',
-  SEARCH: 'image-sections-search',
-  SEARCH_CLEAR: 'image-sections-search-clear',
-  REFRESH: 'image-sections-refresh',
-  LOADING: 'image-sections-loading',
-  ERROR: 'image-sections-error',
-  EMPTY: 'image-sections-empty',
-  LIST: 'image-sections-list',
   DELETE_DIALOG: 'image-section-delete-dialog',
+} as const;
+
+export const IMAGE_SECTIONS_DEFAULT_SORT = 'createdAt:DESC';
+
+export const IMAGE_SECTION_FILTER_KEYS = {
+  REVIEW_STATUS: 'reviewStatus',
+  CREATED_FROM: 'createdFrom',
+  CREATED_TO: 'createdTo',
+  SORT: 'sort',
+} as const;
+
+export const IMAGE_SECTION_SORT_OPTIONS = [
+  { value: 'createdAt:DESC', label: 'Envio: mais recentes' },
+  { value: 'createdAt:ASC', label: 'Envio: mais antigas' },
+  { value: 'caption:ASC', label: 'Legenda: A a Z' },
+  { value: 'caption:DESC', label: 'Legenda: Z a A' },
+  { value: 'reviewedAt:DESC', label: 'Revisão: mais recentes' },
+] as const;
+
+export const IMAGE_SECTION_LABELS = {
+  SEARCH: 'Buscar publicações',
+  SEARCH_PLACEHOLDER: 'Buscar por legenda, descrição ou autor...',
+  FILTER_STATUS: 'Estado da revisão',
+  FILTER_STATUS_ALL: 'Todos os estados',
+  FILTER_CREATED_FROM: 'Enviado a partir de',
+  FILTER_CREATED_TO: 'Enviado até',
+  FILTER_SORT: 'Ordenar por',
 } as const;
 
 export const IMAGE_SECTIONS_MESSAGES = {

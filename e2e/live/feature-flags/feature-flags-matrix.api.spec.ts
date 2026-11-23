@@ -599,7 +599,7 @@ test.describe.serial("Feature flags — matriz full-stack (API → banco)", () =
   test("[feature-flags.post.feature-flags-seed#feliz] flag de fábrica apagada à força (SQL do cenário não é permitido): o seed repõe pelo catálogo — provado pela contagem protegida", async () => {
     // Somente leitura (a conexão do E2E é SELECT-only): prova que todo o catálogo está no banco e protegido.
     const missing = await queryAll<{ key: string }>(
-      "SELECT `key` FROM `feature_flags` WHERE `key` IN ('public_registration','pagelas','content_studio') AND `protected` = 0",
+      "SELECT `key` FROM `feature_flags` WHERE `key` IN ('public_registration','pagelas_management','content_studio') AND `protected` = 0",
     );
     expect(missing).toEqual([]);
   });

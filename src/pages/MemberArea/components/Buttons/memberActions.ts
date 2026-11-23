@@ -117,7 +117,7 @@ export const memberActionMap: Record<string, MemberActionConfig> = {
     icon: BadgeIcon,
     color: 'primary',
   },
-  shelteredrenArea: {
+  shelteredArea: {
     to: '/area-dos-acolhidos',
     featureKey: FeatureFlagKeys.SHELTERED_AREA,
     label: 'Área dos Acolhidos',
@@ -125,7 +125,7 @@ export const memberActionMap: Record<string, MemberActionConfig> = {
     color: 'primary',
   },
   integrations: {
-    featureKey: FeatureFlagKeys.INTEGRATION,
+    featureKey: FeatureFlagKeys.MINISTRY_FAIR_INTEGRATION,
     to: MEMBER_SUBPAGE_PATHS.integrations,
     label: 'Integrações FM',
     icon: GroupsIcon,

@@ -6,7 +6,6 @@ import {
   buildUpdatePayload,
   compactFilters,
   extractApiErrorMessage,
-  hasActiveFilters,
   isValidIsoDate,
   normalizeBackendMessage,
   normalizeIsoDateString,
@@ -105,8 +104,6 @@ describe("compactFilters", () => {
 
   it("returns an empty object when there is nothing to filter", () => {
     expect(compactFilters(undefined)).toEqual({});
-    expect(hasActiveFilters({ searchString: "  " })).toBe(false);
-    expect(hasActiveFilters({ gender: ShelteredGender.MALE })).toBe(true);
   });
 });
 

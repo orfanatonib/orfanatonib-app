@@ -1,10 +1,12 @@
 import api from "@/config/axiosConfig";
+import { fetchAdminPage } from "@/components/common/admin-shell/listQuery";
+import type { AdminListFetcher } from "@/components/common/admin-shell/types";
 import { CommentData } from "store/slices/comment/commentsSlice";
+import { COMMENTS_ENDPOINT } from "./constants";
 
-export async function apiGetComments() {
-  const { data } = await api.get<CommentData[]>("/comments");
-  return data;
-}
+/** Fila de moderação (admin) filtrada, ordenada e paginada no servidor. */
+export const fetchCommentsPage: AdminListFetcher<CommentData> = (params, signal) =>
+  fetchAdminPage<CommentData>(COMMENTS_ENDPOINT, params, signal);
 
 /** Depoimentos já publicados (rota pública, sem perfil). */
 export async function apiGetPublishedComments() {

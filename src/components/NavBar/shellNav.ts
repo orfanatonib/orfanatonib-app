@@ -31,7 +31,8 @@ export const SHELL_USER_MENU_ENTRIES: readonly ShellUserMenuEntry[] = [
     id: ShellUserMenuEntryId.SHELTERED_AREA,
     label: 'Área dos Acolhidos',
     path: '/area-dos-acolhidos',
-    roles: [UserRole.MEMBER, UserRole.LEADER],
+    // Papel e flag são regras separadas: o papel decide QUEM vê o item; a flag só liga/desliga.
+    roles: [UserRole.ADMIN, UserRole.LEADER, UserRole.MEMBER],
     flag: FeatureFlagKeys.SHELTERED_AREA,
   },
   { id: ShellUserMenuEntryId.ADMIN_AREA, label: 'Administração', path: '/adm', roles: [UserRole.ADMIN, UserRole.LEADER] },

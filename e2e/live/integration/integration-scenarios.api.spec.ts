@@ -114,9 +114,9 @@ test.describe.serial("Integração — cenários por handler", () => {
     expect((await get(request, admin, `/integrations/${BAD_ID}`)).status()).toBe(404);
   });
 
-  test("[integration.get.integrations-id#flag-desligada] [integration.get.integrations-simple#flag-desligada] com a flag integration desligada: 403 FEATURE_DISABLED", async ({ request }) => {
+  test("[integration.get.integrations-id#flag-desligada] [integration.get.integrations-simple#flag-desligada] com a flag ministry_fair_integration desligada: 403 FEATURE_DISABLED", async ({ request }) => {
     const item = await make(request, "get-flag");
-    await withFlagsOff(request, admin, ["integration"], async () => {
+    await withFlagsOff(request, admin, ["ministry_fair_integration"], async () => {
       await expectFeatureDisabled(await get(request, admin, `/integrations/${item.id}`));
       await expectFeatureDisabled(await get(request, admin, "/integrations/simple"));
     });

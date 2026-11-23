@@ -14,10 +14,26 @@ const MULTIPART = { 'Content-Type': 'multipart/form-data' };
 describe('api de publicações de fotos dos abrigos', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('lista a fila em GET /image-sections e devolve o corpo', async () => {
-    get.mockResolvedValue({ data: [{ id: 's1' }] });
-    await expect(api.listImageSections()).resolves.toEqual([{ id: 's1' }]);
-    expect(get).toHaveBeenCalledWith('/image-sections');
+  it('lista a fila em GET /image-sections com página, filtros e ordenação no servidor', async () => {
+    get.mockResolvedValue({
+      data: { data: [{ id: 's1' }], meta: { page: 1, limit: 12, totalItems: 1, totalPages: 1 } },
+    });
+    const controller = new AbortController();
+    await expect(
+      api.fetchImageSectionsPage(
+        {
+          page: 1,
+          limit: 12,
+          search: ' gincana ',
+          filters: { reviewStatus: 'pending', createdFrom: '', sort: 'caption:ASC' },
+        },
+        controller.signal,
+      ),
+    ).resolves.toEqual({ items: [{ id: 's1' }], total: 1, totalPages: 1 });
+    expect(get).toHaveBeenCalledWith('/image-sections', {
+      params: { page: 1, limit: 12, search: 'gincana', reviewStatus: 'pending', sortBy: 'caption', order: 'ASC' },
+      signal: controller.signal,
+    });
   });
 
   it('envia em POST /image-sections com multipart e timeout longo (vídeo)', async () => {
@@ -70,7 +86,9 @@ describe('api de publicações de fotos dos abrigos', () => {
 
   it('propaga o erro da API (nada é engolido)', async () => {
     get.mockRejectedValue(new Error('403'));
-    await expect(api.listImageSections()).rejects.toThrow('403');
+    await expect(
+      api.fetchImageSectionsPage({ page: 1, limit: 12, search: '', filters: {} }, new AbortController().signal),
+    ).rejects.toThrow('403');
     post.mockRejectedValue(new Error('400'));
     await expect(api.submitImageSection(new FormData())).rejects.toThrow('400');
     del.mockRejectedValue(new Error('404'));

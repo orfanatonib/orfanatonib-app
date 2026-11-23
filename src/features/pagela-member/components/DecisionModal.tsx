@@ -9,6 +9,7 @@ import type { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import { DECISION_TESTID_PREFIX as TID, MIN_TOUCH_TARGET_PX } from "../constants";
 
 interface Props {
   open: boolean;
@@ -75,6 +76,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
       onClose={loading ? undefined : handleClose} 
       fullWidth 
       maxWidth="sm"
+      data-testid={`${TID}-dialog`}
       PaperProps={{
         sx: {
           borderRadius: { xs: 2, sm: 3 },
@@ -83,6 +85,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
       }}
     >
       <DialogTitle 
+        data-testid={`${TID}-title`}
         sx={{ 
           fontSize: { xs: "1rem", sm: "1.2rem" },
           fontWeight: 800,
@@ -122,7 +125,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
             <Typography sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary", mb: 0.5 }}>
               Acolhido(a)
             </Typography>
-            <Typography sx={{ fontSize: { xs: "1rem", sm: "1.1rem" }, fontWeight: 700 }}>
+            <Typography data-testid={`${TID}-sheltered-name`} sx={{ fontSize: { xs: "1rem", sm: "1.1rem" }, fontWeight: 700 }}>
               {sheltered.name}
             </Typography>
           </Box>
@@ -130,6 +133,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
           {hasAccepted && (
             <Box sx={{ mb: 2 }}>
               <Chip
+                data-testid={`${TID}-already-accepted`}
                 label="✓ Já aceitou Cristo"
                 color="success"
                 size={isMobile ? "small" : "medium"}
@@ -160,11 +164,13 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
               label={hasAccepted ? "Sim, registrar reconciliação" : "Sim, aceitar Jesus"}
               checked={decision}
               onChange={setDecision}
+              testId={`${TID}-switch`}
             />
           </Box>
 
           <TextField
             label="Observações (opcional, máximo 500 caracteres)"
+            inputProps={{ "data-testid": `${TID}-notes` }}
             fullWidth
             multiline
             rows={isMobile ? 3 : 4}
@@ -177,6 +183,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
               }
             }}
             helperText={`${notes.length}/500 caracteres`}
+            FormHelperTextProps={{ "data-testid": `${TID}-notes-count` } as React.HTMLAttributes<HTMLParagraphElement>}
             InputProps={{
               sx: { fontSize: { xs: "0.85rem", sm: "0.95rem" } },
             }}
@@ -184,7 +191,7 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
           />
 
           {error && (
-            <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError("")}>
+            <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError("")} data-testid={`${TID}-error`}>
               {error}
             </Alert>
           )}
@@ -195,7 +202,8 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
         <Button 
           onClick={handleClose} 
           disabled={loading}
-          sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+          data-testid={`${TID}-cancel`}
+          sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, minHeight: MIN_TOUCH_TARGET_PX }}
         >
           Cancelar
         </Button>
@@ -203,11 +211,13 @@ export default function DecisionModal({ open, onClose, sheltered, onSuccess }: P
           onClick={handleSubmit}
           disabled={!canSubmit || loading}
           variant="contained"
+          data-testid={`${TID}-submit`}
           startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <FavoriteIcon />}
           sx={{ 
             fontSize: { xs: "0.85rem", sm: "0.95rem" },
             fontWeight: 700,
-            px: { xs: 2, sm: 3 }
+            px: { xs: 2, sm: 3 },
+            minHeight: MIN_TOUCH_TARGET_PX,
           }}
         >
           {loading ? "Salvando..." : "Salvar decisão"}
@@ -222,11 +232,13 @@ function RowSwitch({
   label,
   checked,
   onChange,
+  testId,
 }: {
   icon: React.ReactNode;
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  testId?: string;
 }) {
   return (
     <FormControlLabel
@@ -235,6 +247,7 @@ function RowSwitch({
           checked={checked} 
           onChange={(_, v) => onChange(v)}
           color="primary"
+          inputProps={{ "data-testid": testId } as React.InputHTMLAttributes<HTMLInputElement>}
         />
       }
       label={

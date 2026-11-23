@@ -13,23 +13,6 @@ export const normalizeAttendanceSearch = (text: string): string =>
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLocaleLowerCase("pt-BR");
-export const filterAttendanceTeams = (
-  shelters: SheltersTeamsMembersResponse,
-  search: string,
-): SheltersTeamsMembersResponse => {
-  const term = normalizeAttendanceSearch(search);
-  if (!term) return shelters;
-  return shelters
-    .map((shelter) => ({
-      ...shelter,
-      teams: shelter.teams.filter((team) =>
-        normalizeAttendanceSearch(
-          `${shelter.shelterName} Equipe ${team.teamNumber} ${team.description || ""} ${team.members.map((member) => member.name).join(" ")}`,
-        ).includes(term),
-      ),
-    }))
-    .filter((shelter) => shelter.teams.length > 0);
-};
 export const buildAttendanceRows = (
   members: TeamMemberDto[],
   records: AttendanceResponseDto[],

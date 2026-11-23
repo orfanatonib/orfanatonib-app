@@ -29,6 +29,12 @@ export const ForgotPassword = lazy(
 export const ResetPassword = lazy(
   () => import("@/pages/PasswordReset/ResetPassword"),
 );
+export const PublicMediaGalleryPage = lazy(
+  () => import("@/features/public-media/PublicMediaGalleryPage"),
+);
+export const PublicMediaDetailPage = lazy(
+  () => import("@/features/public-media/PublicMediaDetailPage"),
+);
 export const PageRenderer = lazy(
   () => import("@/components/PageRenderer/PageRenderer"),
 );
@@ -70,9 +76,6 @@ export const MemberContentPage = lazy(
 );
 export const IntegrationManager = lazy(
   () => import("@/features/integration/IntegrationManager"),
-);
-export const IntegrationShelteredPage = lazy(
-  () => import("@/features/integration/IntegrationShelteredPage"),
 );
 export const ShelteredBrowserPage = lazy(
   () => import("@/features/pagela-member/ShelteredBrowserPage"),

@@ -39,7 +39,7 @@ describe('áreas do painel de flags', () => {
 
   it('agrupa na ordem do painel, omite área vazia e preserva a ordem interna', () => {
     const groups = groupFlagsByArea([
-      { key: 'pagelas' },
+      { key: 'pagelas_management' },
       { key: 'public_registration' },
       { key: 'about_page' },
       { key: 'minha_flag' },
@@ -49,14 +49,14 @@ describe('áreas do painel de flags', () => {
   });
 
   it('conta por área', () => {
-    const counts = countFlagsByArea([{ key: 'pagelas' }, { key: 'user_management' }, { key: 'x' }]);
+    const counts = countFlagsByArea([{ key: 'pagelas_management' }, { key: 'user_management' }, { key: 'x' }]);
     expect(counts['people-admin']).toBe(2);
     expect(counts.custom).toBe(1);
     expect(counts.public).toBe(0);
   });
 
   it('selo "imposta na API": só as de catálogo com endpoint', () => {
-    expect(isEnforcedByApi(FeatureFlagKeys.PAGELAS)).toBe(true);
+    expect(isEnforcedByApi(FeatureFlagKeys.PAGELAS_MANAGEMENT)).toBe(true);
     for (const key of FRONT_ONLY_FEATURE_FLAGS) expect(isEnforcedByApi(key)).toBe(false);
     expect(isEnforcedByApi('email_delivery')).toBe(false);
     expect(isEnforcedByApi('flag_minha')).toBe(false);

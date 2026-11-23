@@ -92,3 +92,21 @@ export const mediaRows = (sectionId: string) =>
     "SELECT id, url, storageKey, targetType FROM media_items WHERE targetId = ? ORDER BY title, url",
     [sectionId],
   );
+
+/** Cria a ideia com descrição própria: `image` leva uma foto enviada; senão, um vídeo por link. */
+export async function createIdeaWithDescription(
+  request: APIRequestContext,
+  token: string,
+  input: { label: string; description: string; image: boolean },
+): Promise<SectionDto> {
+  const medias = input.image ? [uploadMedia("file_0", "Foto")] : [LINK_MEDIA];
+  const response = await request.post(`${API_URL}/ideas-sections`, {
+    headers: authHeaders(token),
+    multipart: {
+      sectionData: JSON.stringify({ title: input.label, description: input.description, public: true, medias }),
+      ...(input.image ? { file_0: png(`${input.label}.png`) } : {}),
+    },
+  });
+  expect(response.status(), await response.text()).toBe(201);
+  return (await response.json()) as SectionDto;
+}

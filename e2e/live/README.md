@@ -106,6 +106,57 @@ npx playwright test --config=playwright.live.config.ts --project=live-ui --debug
 A suíte roda com `workers: 1` e `describe.serial`: os cenários escrevem no mesmo
 banco e dependem uns dos outros na ordem declarada.
 
+## Regra de massa do E2E (obrigatória)
+
+1. **Cenário = CRUD completo.** Todo cenário cria, lê, edita e apaga o que a feature permite e prova o resultado
+   no banco **e no S3**: nenhum objeto órfão (sem linha) nem linha sem objeto (`expectNoOrphans`/`expectNoBrokenRefs`,
+   `mediaScenarios`). Apagar dentro do CRUD é teste, não limpeza.
+2. **Toda execução deixa massa.** Além do CRUD, cada feature recebe de **5 a 10** registros novos por rodada
+   (`massCount()` em `support/keep-data.ts`; `E2E_MASS_COUNT=7` fixa o valor, sempre limitado a 5..10), pela UI quando há
+   tela e pela API quando não há. A massa fica no banco e **acumula a cada execução**, seja ela qual for. Massa com
+   mídia mantém linha + objeto no S3 consistentes.
+3. **Nada de limpeza por padrão.** O que o cenário cria e não apaga no próprio CRUD também fica. `E2E_CLEANUP=1` liga a
+   limpeza (CI efêmero) por `cleanupData`/`Cleaner` (`support/keep-data.ts`, `support/factory.ts`). Restaurar flags e
+   fechar o banco continuam sempre (é estado, não massa).
+4. Todo dado leva o `RUN_TAG` da execução (nunca colide). Specs filtram pelo `RUN_TAG`/prefixo e conferem contra `SELECT`
+   com o mesmo critério: **não assumem banco vazio nem total global fixo**; asserção de "0 sobras" só vale sob
+   `E2E_CLEANUP=1`, e a verificação de S3 passa a ser a invariante global (sem órfão, sem referência quebrada), nunca
+   "o bucket voltou ao tamanho de antes".
+
+## Massa de dados (`@seed`)
+
+Specs `*.seed.ui.spec.ts` (tag `@seed`) criam dados **pela UI do admin** e **deixam no banco** para olhar,
+filtrar, ordenar e paginar à mão. Não são cenários: não apagam nada e **não rodam na suíte normal**
+(`live-ui`/`live-ui-mobile` têm `testIgnore` para eles e o projeto `live-seed` só existe com `E2E_SEED=1`).
+
+```bash
+npm run seed:acolhidos    # roda o projeto live-seed (todos os specs *.seed.ui.spec.ts, um worker)
+```
+
+| Spec | Cria |
+|---|---|
+| `sheltered/sheltered-admin.seed.ui.spec.ts` | 3 abrigos `MASSA E2E Abrigo ...` (API) + 24 acolhidos `MASSA E2E Acolhido NN ...` pelo formulário de `/adm/acolhidos`: gênero, idades de 2 a 16 anos, 6 cidades, com e sem responsável/telefone, datas de entrada variadas, distribuídos entre os 3 abrigos. Status inativo (1 a cada 5) e "aceitou Jesus" (1 a cada 3) são aplicados pela API real, porque a tela não os edita |
+| `sheltered-area/sheltered-area.seed.ui.spec.ts` | +12 acolhidos `MASSA E2E <RUN_TAG> acolhido NN` pelo formulário de `/area-dos-acolhidos` (líder cadastra a 1ª metade e registra decisões/desativa alguns; membro cadastra o resto), cada um com 4 semanas de pagela lançadas pelo membro (presença, meditação, versículo e observação vão no campo Observações, o único que a tela tem) e decisões por Cristo. Abrigo `MASSA E2E Abrigo Acolhidos` e as contas `massa.e2e.lider.acolhidos@orfanatonib.test` / `massa.e2e.membro.acolhidos@orfanatonib.test` (senha `Aa1!senhaforte`) são fixos e reaproveitados; o login, o abrigo e a URL são impressos no fim. Cada rodada ACRESCENTA acolhidos novos |
+
+Idempotente: confere pelo nome e só completa o que falta. Limite: `createdAt` é do servidor (a UI não tem campo
+para isso), então a data de cadastro é a do dia da rodada. Para limpar, apague pela própria tela ou pela API
+os registros com prefixo `MASSA E2E` (`npm run seed:acolhidos:clean` apaga, pela API, só a massa da Área dos Acolhidos: acolhidos, abrigo e as 2 contas fixas).
+
+A mesma massa (5 a 10 acolhidos, `massCount()`) é criada por `sheltered-area/sheltered-area.mass.ui.spec.ts`, que roda na suíte normal.
+
+### Como rodar a massa e limpar
+
+```bash
+npm run seed:acolhidos        # cria massa pela UI (admin + Área dos Acolhidos); uma rodada por vez, 1 worker
+npm run seed:acolhidos:clean  # apaga só o que tem o prefixo `MASSA E2E` (acolhidos, pagelas, abrigos/contas da massa)
+```
+
+- API (:3000) e app (:5173) precisam estar no ar; nada é mockado.
+- Cada rodada **acrescenta**: duas rodadas seguidas deram +12 acolhidos e +48 pagelas na Área dos Acolhidos e +20/+N no admin (mínimo de 20 acolhidos `MASSA E2E Acolhido` no total).
+- Ver: `/adm/acolhidos` (busca `MASSA`) com `e2e.admin@orfanatonib.test`; `/area-dos-acolhidos` com `massa.e2e.lider.acolhidos@orfanatonib.test` ou `massa.e2e.membro.acolhidos@orfanatonib.test` (senha `Aa1!senhaforte`).
+- Datas do formulário (`BRDatePicker`, grupo de spinbuttons) usam `fillDatePickerGroup`; datas das toolbars (`AdminDateField`) usam `fillDate` (`support/date-field.ts`).
+- O `sheltered-area.mass.ui.spec.ts` também deixa +5..10 acolhidos com pagelas a cada rodada da suíte normal.
+
 ## Dados
 
 Cada execução usa um sufixo único (`e2e-<timestamp>`) nos nomes e remove no

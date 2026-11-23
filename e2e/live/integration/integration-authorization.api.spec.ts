@@ -4,7 +4,7 @@ import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /** Autorização de `/integrations` (plano 25): sessão obrigatória e só admin/líder (membro 403, em TODOS os handlers); escrita inválida ou recusada não grava; flag desligada ⇒ 403 FEATURE_DISABLED. */
 const BAD = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
-const FLAGS = ["integration"] as const;
+const FLAGS = ["ministry_fair_integration"] as const;
 
 test.describe.serial("Integração — autorização", () => {
   let admin: string;

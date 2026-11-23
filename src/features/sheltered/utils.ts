@@ -127,9 +127,6 @@ export const compactFilters = (filters?: ShelteredFilters): ShelteredFilters => 
   return compacted;
 };
 
-export const hasActiveFilters = (filters: ShelteredFilters): boolean =>
-  Object.keys(compactFilters(filters)).length > 0;
-
 /** Builds the create payload with dates and masks already normalized. */
 export const buildCreatePayload = (form: CreateShelteredForm): CreateShelteredForm => ({
   ...form,

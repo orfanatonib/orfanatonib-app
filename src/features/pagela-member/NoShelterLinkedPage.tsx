@@ -34,7 +34,7 @@ export default function NoShelterLinkedPage({
   contacts?: SupportContact[];
 }) {
   return (
-    <Box sx={{ minHeight: "70vh", display: "flex", alignItems: "center", py: { xs: 2, sm: 3 } }}>
+    <Box data-testid="sheltered-area-no-shelter" sx={{ minHeight: "70vh", display: "flex", alignItems: "center", py: { xs: 2, sm: 3 } }}>
       <Container maxWidth="md">
         <Paper
           elevation={2}
@@ -63,6 +63,7 @@ export default function NoShelterLinkedPage({
             <Box>
               <Typography
                 variant="h5"
+                data-testid="sheltered-area-no-shelter-title"
                 fontWeight={900}
                 sx={{ mb: 0.5, fontSize: { xs: "1.15rem", sm: "1.5rem" } }}
               >
@@ -110,6 +111,7 @@ export default function NoShelterLinkedPage({
                         startIcon={<PhoneIcon />}
                         component="a"
                         href={telLink(c.phoneE164)}
+                        data-testid={`sheltered-area-no-shelter-call-${c.phoneE164}`}
                         sx={{ flex: 1, width: { xs: "100%", sm: "auto" } }}
                       >
                         Ligar
@@ -119,6 +121,7 @@ export default function NoShelterLinkedPage({
                         startIcon={<WhatsAppIcon />}
                         component="a"
                         href={waLink(c.phoneE164)}
+                        data-testid={`sheltered-area-no-shelter-whatsapp-${c.phoneE164}`}
                         target="_blank"
                         rel="noreferrer"
                         disabled={!c.whatsapp}

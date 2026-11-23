@@ -17,15 +17,21 @@ describe('api de usuários', () => {
     get.mockResolvedValue({ data: { items: [], meta: { total: 0 } } });
     await api.apiListUsers({ page: 1, limit: 10, q: '', role: 'all', active: 'all', completed: 'all' });
     expect(get).toHaveBeenCalledWith('/users', {
-      params: { page: 1, limit: 10, q: undefined, role: undefined, active: undefined, completed: undefined, sort: 'updatedAt', order: 'DESC' },
+      params: { page: 1, limit: 10, q: undefined, role: undefined, active: undefined, completed: undefined, createdFrom: undefined, createdTo: undefined, sort: 'updatedAt', order: 'DESC' },
+      signal: undefined,
     });
   });
 
   it('lista repassa filtros reais e a ordenação pedida', async () => {
     get.mockResolvedValue({ data: { items: [] } });
-    await api.apiListUsers({ page: 2, limit: 5, q: 'ana', role: 'leader', active: 'active', completed: 'incomplete', sort: 'name', order: 'ASC' });
+    const controller = new AbortController();
+    await api.apiListUsers(
+      { page: 2, limit: 5, q: 'ana', role: 'leader', active: 'active', completed: 'incomplete', createdFrom: '2026-01-01', createdTo: '2026-01-31', sort: 'name', order: 'ASC' },
+      controller.signal,
+    );
     expect(get).toHaveBeenCalledWith('/users', {
-      params: { page: 2, limit: 5, q: 'ana', role: 'leader', active: 'active', completed: 'incomplete', sort: 'name', order: 'ASC' },
+      params: { page: 2, limit: 5, q: 'ana', role: 'leader', active: 'active', completed: 'incomplete', createdFrom: '2026-01-01', createdTo: '2026-01-31', sort: 'name', order: 'ASC' },
+      signal: controller.signal,
     });
   });
 

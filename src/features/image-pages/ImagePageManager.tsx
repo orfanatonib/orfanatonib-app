@@ -1,36 +1,27 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Alert, Snackbar } from '@mui/material';
 import { PhotoLibrary } from '@mui/icons-material';
 import type { ImagePageData, ImagePageEditState } from './types';
 
-import { useImagePages } from './hooks';
-import { IMAGE_PAGES_MESSAGES } from './constants';
+import { useImagePagesList } from './hooks';
+import {
+  IMAGE_PAGES_FILTER_FIELDS,
+  IMAGE_PAGES_MESSAGES,
+  IMAGE_PAGES_TEST_ID_PREFIX,
+} from './constants';
 import ImagePageCard from './components/ImagePageCard';
 import ImagePageDetailsModal from './components/ImagePageDetailsModal';
-import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
-import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
-import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
-import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
-import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
+import AdminListScreen from '@/components/common/admin-shell/AdminListScreen';
 import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
-import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 
 export default function ImagePageManager() {
-  const {
-    filtered,
-    loading,
-    isFiltering,
-    error,
-    search,
-    setSearch,
-    setError,
-    fetchPages,
-    removePage,
-  } = useImagePages();
+  const { list, removePage } = useImagePagesList();
 
   const [pageToDelete, setPageToDelete] = React.useState<ImagePageData | null>(null);
   const [selectedPage, setSelectedPage] = React.useState<ImagePageData | null>(null);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -46,68 +37,70 @@ export default function ImagePageManager() {
     if (!pageToDelete) return;
     const id = pageToDelete.id;
     setPageToDelete(null);
+    setDeleteError(null);
     try {
       await removePage(id || '');
     } catch {
-      setError('Erro ao deletar página de imagens');
-      await fetchPages();
+      setDeleteError(IMAGE_PAGES_MESSAGES.DELETE_ERROR);
     }
-  }, [pageToDelete, removePage, setError, fetchPages]);
-
-  const isBusy = loading || isFiltering;
-  const showSkeleton = isBusy && filtered.length === 0;
+  }, [pageToDelete, removePage]);
 
   return (
-    <AdminPageShell testId="image-pages-manager" title={IMAGE_PAGES_MESSAGES.TITLE}>
-      <AdminSearchBar
-        testId="image-pages-search"
-        clearTestId="image-pages-search-clear"
-        refreshTestId="image-pages-refresh"
-        label="Buscar"
-        ariaLabel="Buscar páginas de imagens"
-        value={search}
-        onChange={setSearch}
-        onRefresh={fetchPages}
-        loading={isFiltering}
-      />
+    <AdminListScreen
+      testIdPrefix={IMAGE_PAGES_TEST_ID_PREFIX}
+      title={IMAGE_PAGES_MESSAGES.TITLE}
+      searchLabel={IMAGE_PAGES_MESSAGES.SEARCH_LABEL}
+      searchPlaceholder={IMAGE_PAGES_MESSAGES.SEARCH_PLACEHOLDER}
+      fields={IMAGE_PAGES_FILTER_FIELDS}
+      list={list}
+      emptyMessage={IMAGE_PAGES_MESSAGES.EMPTY}
+      emptyIcon={<PhotoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
+      overlays={
+        <>
+          <DeleteConfirmDialog
+            testId="image-page-delete-dialog"
+            open={!!pageToDelete}
+            title={pageToDelete?.title || 'Página de imagens'}
+            onClose={() => setPageToDelete(null)}
+            onConfirm={handleConfirmDelete}
+          />
 
-      {showSkeleton ? (
-        <AdminListSkeleton testId="image-pages-loading" />
-      ) : error ? (
-        <AdminErrorAlert testId="image-pages-error" message={error} onClose={() => setError('')} />
-      ) : filtered.length === 0 ? (
-        <AdminEmptyState
-          testId="image-pages-empty"
-          message={resolveEmptyMessage(Boolean(search), IMAGE_PAGES_MESSAGES.EMPTY)}
-          icon={<PhotoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
-        />
-      ) : (
-        <AdminCardGrid testId="image-pages-list">
-          {filtered.map((page) => (
-            <ImagePageCard
-              key={page.id}
-              page={page}
-              onDelete={setPageToDelete}
-              onEdit={handleEdit}
-              onViewDetails={setSelectedPage}
-            />
-          ))}
-        </AdminCardGrid>
-      )}
+          <ImagePageDetailsModal
+            page={selectedPage}
+            open={!!selectedPage}
+            onClose={() => setSelectedPage(null)}
+          />
 
-      <DeleteConfirmDialog
-        testId="image-page-delete-dialog"
-        open={!!pageToDelete}
-        title={pageToDelete?.title || pageToDelete?.title || 'Página de imagens'}
-        onClose={() => setPageToDelete(null)}
-        onConfirm={handleConfirmDelete}
-      />
-
-      <ImagePageDetailsModal
-        page={selectedPage}
-        open={!!selectedPage}
-        onClose={() => setSelectedPage(null)}
-      />
-    </AdminPageShell>
+          <Snackbar
+            open={Boolean(deleteError)}
+            autoHideDuration={6000}
+            onClose={() => setDeleteError(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          >
+            <Alert
+              data-testid="image-pages-delete-error"
+              severity="error"
+              variant="filled"
+              onClose={() => setDeleteError(null)}
+              sx={{ borderRadius: 2 }}
+            >
+              {deleteError}
+            </Alert>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId="image-pages-list">
+        {list.items.map((page) => (
+          <ImagePageCard
+            key={page.id}
+            page={page}
+            onDelete={setPageToDelete}
+            onEdit={handleEdit}
+            onViewDetails={setSelectedPage}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

@@ -5,7 +5,6 @@ import { IDEA_DRAFT_ISSUE_MESSAGES } from './constants';
 import { IdeaDraftIssue } from './types';
 import {
   buildEditSectionPath,
-  filterSections,
   formatFileSize,
   getMediaTypeIcon,
   getMediaTypeLabel,
@@ -129,21 +128,6 @@ describe('isDraftDirty', () => {
     const empty = { title: '', description: '', public: true, medias: [] };
     expect(isDraftDirty(empty, empty)).toBe(false);
     expect(isDraftDirty({ ...empty, title: 'x' }, empty)).toBe(true);
-  });
-});
-
-describe('filterSections', () => {
-  const list = [apiSection({ id: 'a', title: 'Gincana' }), apiSection({ id: 'b', title: 'Teatro', description: 'com GINCANA' })];
-
-  it('filtra por título ou descrição sem diferenciar maiúsculas', () => {
-    expect(filterSections(list, ' ginc ').map((s) => s.id)).toEqual(['a', 'b']);
-    expect(filterSections(list, 'teatro').map((s) => s.id)).toEqual(['b']);
-  });
-
-  it('termo vazio devolve cópia de tudo', () => {
-    const result = filterSections(list, '  ');
-    expect(result).toEqual(list);
-    expect(result).not.toBe(list);
   });
 });
 

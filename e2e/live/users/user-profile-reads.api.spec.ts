@@ -268,8 +268,8 @@ test.describe.serial("Usuários e perfis — leituras (GET)", () => {
     expect(((await admin.json()) as { items: Array<{ id: string }> }).items.map((i) => i.id)).toContain(cast.victim.id);
   });
 
-  test("[user-profile.get.profiles#flag-desligada] GET /profiles com a flag user_management e leader_management desligada: 403 FEATURE_DISABLED e nada muda", async ({ request }) => {
-    await expectFlagBlocks(flags, request, ["user_management", "leader_management"], "GET", "/profiles", "admin");
+  test("[user-profile.get.profiles#flag-desligada] GET /profiles com as flags user_management, profile_management e leader_management desligadas: 403 FEATURE_DISABLED e nada muda", async ({ request }) => {
+    await expectFlagBlocks(flags, request, ["user_management", "profile_management", "leader_management"], "GET", "/profiles", "admin");
   });
 
   test("[user-profile.get.profiles-id#flag-desligada] GET /profiles/:id com a flag user_management desligada: 403 FEATURE_DISABLED e nada muda", async ({ request }) => {

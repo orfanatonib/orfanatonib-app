@@ -1,4 +1,6 @@
 import axiosConfig from "../../config/axiosConfig";
+import { fetchAdminPage } from "@/components/common/admin-shell/listQuery";
+import type { AdminListFetcher } from "@/components/common/admin-shell/types";
 import { CreateVisitReportDto, UpdateVisitReportDto, VisitReport, VisitReportFilters } from "./types";
 
 export const getVisitReports = async (filters?: VisitReportFilters): Promise<VisitReport[]> => {
@@ -29,3 +31,7 @@ export const updateVisitReport = async (id: string, data: UpdateVisitReportDto):
 export const deleteVisitReport = async (id: string): Promise<void> => {
     await axiosConfig.delete(`/visit-reports/${id}`);
 };
+
+/** Página de relatórios filtrada, ordenada e paginada no servidor (a tela administrativa). */
+export const fetchVisitReportsPage: AdminListFetcher<VisitReport> = (params, signal) =>
+    fetchAdminPage<VisitReport>("/visit-reports", params, signal);

@@ -75,6 +75,22 @@ describe('api de perfil', () => {
     expect(get).toHaveBeenCalledWith('/profiles', { params: {} });
   });
 
+  it('lista paginada: busca, filtros e ordenação viram query string e o envelope vira itens e total', async () => {
+    get.mockResolvedValue({
+      data: { items: [{ id: 'p1' }], meta: { currentPage: 2, itemsPerPage: 12, totalItems: 13, totalPages: 2 } },
+    });
+    const signal = new AbortController().signal;
+    const page = await api.fetchProfilesPage(
+      { page: 2, limit: 12, search: ' ana ', filters: { role: 'leader', birthMonth: '6', gender: '', sort: 'birthDate:DESC' } },
+      signal,
+    );
+    expect(page).toEqual({ items: [{ id: 'p1' }], total: 13, totalPages: 2 });
+    expect(get).toHaveBeenCalledWith('/profiles', {
+      params: { page: 2, limit: 12, search: 'ana', role: 'leader', birthMonth: '6', sortBy: 'birthDate', order: 'DESC' },
+      signal,
+    });
+  });
+
   it('busca perfil de outro usuário em GET /profiles/:id', async () => {
     get.mockResolvedValue({ data: { id: 'x' } });
     await api.apiGetProfileById('x');

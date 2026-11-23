@@ -17,24 +17,21 @@ export type ListLeadersParams = {
   sort?: "name" | "updatedAt" | "createdAt";
   order?: "asc" | "desc";
   leaderSearchString?: string;
-  shelterSearchString?: string;
   hasShelter?: boolean;
-  teamId?: string;
+  /** Número da equipe (texto numérico, como o servidor espera). */
   teamName?: string;
-  hasTeam?: boolean;
-  q?: string;
-  active?: boolean;
-  hasShelters?: boolean;
-  shelterName?: string;
-  searchString?: string;
+  /** Líderes com equipe no abrigo (id exato). */
+  shelterId?: string;
+  createdFrom?: string;
+  createdTo?: string;
 };
 
 export type ApiMessage = { message?: string };
 
-export async function apiListLeaders(params: ListLeadersParams) {
+export async function apiListLeaders(params: ListLeadersParams, signal?: AbortSignal) {
   const { data } = await api.get<PageDto<LeaderProfile>>(
     "/leader-profiles",
-    { params }
+    { params, signal }
   );
   return data;
 }

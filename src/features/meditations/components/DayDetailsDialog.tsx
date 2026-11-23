@@ -12,6 +12,7 @@ interface Props {
 export default function DayDetailsDialog({ day, onClose }: Props) {
   return (
     <Dialog
+      data-testid="meditations-day-dialog"
       open={!!day}
       onClose={onClose}
       fullWidth
@@ -26,17 +27,17 @@ export default function DayDetailsDialog({ day, onClose }: Props) {
         <Stack spacing={2} mt={1}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary">Tema do Dia</Typography>
-            <Typography variant="body1" fontWeight="medium">{day?.topic}</Typography>
+            <Typography data-testid="meditations-day-dialog-topic" variant="body1" fontWeight="medium">{day?.topic}</Typography>
           </Box>
           <Box>
             <Typography variant="subtitle2" color="text.secondary">Versículo</Typography>
-            <Typography variant="body1" fontStyle="italic">{day?.verse}</Typography>
+            <Typography data-testid="meditations-day-dialog-verse" variant="body1" fontStyle="italic">{day?.verse}</Typography>
           </Box>
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-        <Button variant="outlined" onClick={onClose}>Fechar</Button>
+        <Button data-testid="meditations-day-dialog-close" variant="outlined" onClick={onClose}>Fechar</Button>
       </DialogActions>
     </Dialog>
   );

@@ -1,46 +1,69 @@
 import { useEffect, useState } from 'react';
+import { Box } from '@mui/material';
 import { Lightbulb } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import IdeasSectionCard from './components/IdeasSectionCard';
 import IdeasSectionDetailsModal from './components/IdeasSectionDetailsModal';
-import { deleteIdeasSection } from './api';
+import { deleteIdeasSection, fetchIdeasSectionsPage } from './api';
 import { ideasSectionErrorMessage } from './errors';
-import { IDEAS_SECTION_MESSAGES } from './constants';
-import { useIdeasSections } from './hooks';
+import {
+  IDEAS_SECTIONS_DEFAULT_SORT,
+  IDEAS_SECTIONS_TEST_ID_PREFIX,
+  IDEAS_SECTION_FILTER_KEYS,
+  IDEAS_SECTION_LABELS,
+  IDEAS_SECTION_MEDIA_FILTER_TYPES,
+  IDEAS_SECTION_SORT_OPTIONS,
+  IDEAS_SECTION_MESSAGES,
+  MEDIA_TYPE_LABELS,
+} from './constants';
 import { useRefreshPendingCounts } from '@/features/admin-pending-counts';
 import { IdeasSection as IdeasSectionType } from './types';
 import { buildEditSectionPath } from './utils';
-import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
-import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
-import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
-import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
-import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
-import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
-import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+
+const P = IDEAS_SECTIONS_TEST_ID_PREFIX;
+const K = IDEAS_SECTION_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.MEDIA_TYPE,
+    label: IDEAS_SECTION_LABELS.FILTER_MEDIA_TYPE,
+    allLabel: IDEAS_SECTION_LABELS.FILTER_MEDIA_TYPE_ALL,
+    options: IDEAS_SECTION_MEDIA_FILTER_TYPES.map((value) => ({ value, label: MEDIA_TYPE_LABELS[value] })),
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: IDEAS_SECTION_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: IDEAS_SECTION_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: IDEAS_SECTION_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: IDEAS_SECTION_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: IDEAS_SECTIONS_DEFAULT_SORT };
 
 export default function IdeasSectionManager() {
   const navigate = useNavigate();
   const refreshPending = useRefreshPendingCounts();
 
-  const {
-    filteredSections,
-    loading,
-    isFiltering,
-    error,
-    setError,
-    searchTerm,
-    setSearchTerm,
-    fetchSections,
-  } = useIdeasSections();
+  const list = useAdminList<IdeasSectionType>({
+    fetcher: fetchIdeasSectionsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: IDEAS_SECTION_MESSAGES.LOAD_FAILED,
+  });
 
   const [sectionToDelete, setSectionToDelete] = useState<IdeasSectionType | null>(null);
   const [selectedSection, setSelectedSection] = useState<IdeasSectionType | null>(null);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
-    fetchSections();
     void refreshPending();
-  }, [fetchSections, refreshPending]);
+  }, [refreshPending]);
 
   const handleEdit = (section: IdeasSectionType) => {
     navigate(buildEditSectionPath(section.id));
@@ -50,73 +73,67 @@ export default function IdeasSectionManager() {
     if (!sectionToDelete || !sectionToDelete.id) return;
     const id = sectionToDelete.id;
     setSectionToDelete(null);
+    setActionError('');
     try {
       await deleteIdeasSection(id);
-      await fetchSections();
+      list.reload();
       void refreshPending();
     } catch (error: unknown) {
-      setError(
-        ideasSectionErrorMessage(error, IDEAS_SECTION_MESSAGES.DELETE_FAILED),
-      );
+      setActionError(ideasSectionErrorMessage(error, IDEAS_SECTION_MESSAGES.DELETE_FAILED));
     }
   };
 
-  const isBusy = loading || isFiltering;
-  const hasQuery = Boolean(searchTerm);
-  const showSkeleton = isBusy && filteredSections.length === 0;
-
   return (
-    <AdminPageShell testId="ideas-sections-page" title={IDEAS_SECTION_MESSAGES.MANAGER_TITLE}>
-      <AdminSearchBar
-        testId="ideas-sections-search"
-        clearTestId="ideas-sections-search-clear"
-        refreshTestId="ideas-sections-refresh"
-        label="Buscar seções"
-        placeholder="Buscar por título ou descrição..."
-        ariaLabel="Buscar Ideias compartilhadas"
-        value={searchTerm}
-        onChange={setSearchTerm}
-        onRefresh={fetchSections}
-        loading={isFiltering}
-      />
-
-      {showSkeleton ? (
-        <AdminListSkeleton testId="ideas-sections-loading" />
-      ) : error ? (
-        <AdminErrorAlert testId="ideas-sections-error" message={error} onClose={() => setError('')} />
-      ) : filteredSections.length === 0 ? (
-        <AdminEmptyState
-          testId="ideas-sections-empty"
-          title={IDEAS_SECTION_MESSAGES.EMPTY_TITLE}
-          message={resolveEmptyMessage(hasQuery, IDEAS_SECTION_MESSAGES.EMPTY)}
-          icon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
-        />
-      ) : (
-        <AdminCardGrid testId="ideas-sections-list">
-          {filteredSections.map((section) => (
+    <AdminListScreen
+      testIdPrefix={P}
+      title={IDEAS_SECTION_MESSAGES.MANAGER_TITLE}
+      searchLabel={IDEAS_SECTION_LABELS.SEARCH}
+      searchPlaceholder={IDEAS_SECTION_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={IDEAS_SECTION_MESSAGES.EMPTY}
+      emptyIcon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      beforeToolbar={
+        actionError ? (
+          <Box
+            role="alert"
+            data-testid={`${P}-action-error`}
+            onClick={() => setActionError('')}
+            sx={{ mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'error.light', color: 'error.contrastText', cursor: 'pointer' }}
+          >
+            {actionError}
+          </Box>
+        ) : null
+      }
+      overlays={
+        <>
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!sectionToDelete}
+            title={sectionToDelete?.title || 'Seção'}
+            onClose={() => setSectionToDelete(null)}
+            onConfirm={handleDelete}
+          />
+          <IdeasSectionDetailsModal
+            section={selectedSection}
+            open={!!selectedSection}
+            onClose={() => setSelectedSection(null)}
+          />
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((section) => (
+          <Box key={section.id} data-testid={`${P}-card-${section.id}`} sx={{ display: 'flex', width: '100%', minWidth: 0 }}>
             <IdeasSectionCard
-              key={section.id}
               section={section}
-              onDelete={(target) => setSectionToDelete(target)}
+              onDelete={setSectionToDelete}
               onEdit={handleEdit}
-              onViewDetails={(target) => setSelectedSection(target)}
+              onViewDetails={setSelectedSection}
             />
-          ))}
-        </AdminCardGrid>
-      )}
-
-      <DeleteConfirmDialog
-        open={!!sectionToDelete}
-        title={sectionToDelete?.title || 'Seção'}
-        onClose={() => setSectionToDelete(null)}
-        onConfirm={handleDelete}
-      />
-
-      <IdeasSectionDetailsModal
-        section={selectedSection}
-        open={!!selectedSection}
-        onClose={() => setSelectedSection(null)}
-      />
-    </AdminPageShell>
+          </Box>
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

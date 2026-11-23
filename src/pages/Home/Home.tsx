@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { gradients } from '@/theme';
 import { HeroSection, FeaturesSection, TestimonialsSection, CTASection } from './components';
 import VisitMaterialsBanner from './VisitMaterialsBanner';
-import CardsSection from './CardsSection';
+import { MediaShowcaseSection } from '@/features/public-media';
 import SheltersSection from './components/SheltersSection';
 import { FEATURES } from './constants';
 import { useComments, useAuth } from './hooks';
@@ -31,8 +31,16 @@ const Home: React.FC = () => {
           <VisitMaterialsBanner />
         </FeatureGate>
       )}
-      <SheltersSection />
-      <CardsSection />
+      <FeatureGate
+        flag={
+          isAuthenticated
+            ? FeatureFlagKeys.HOME_SHELTERS_PRIVATE
+            : FeatureFlagKeys.HOME_SHELTERS_PUBLIC
+        }
+      >
+        <SheltersSection />
+      </FeatureGate>
+      <MediaShowcaseSection />
       <FeaturesSection features={FEATURES} />
       {homeCommentsEnabled && comments && comments.length > 0 && (
         <TestimonialsSection testimonials={comments.flatMap(({ id, comment, name, shelter, neighborhood }) =>

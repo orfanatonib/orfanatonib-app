@@ -268,6 +268,7 @@ export default function ShelterScheduleFormModal({
               Reunião
             </Typography>
             <Box display="flex" gap={1.5} flexDirection={{ xs: "column", sm: "row" }} mb={1.5}>
+              <Box data-testid="schedule-form-meeting-date" sx={{ flex: 1, minWidth: 0 }}>
               <DatePicker
                 label="Data"
                 value={meetingDate}
@@ -277,10 +278,11 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
-                    inputProps: { "data-testid": "schedule-form-meeting-date" },
                   },
                 }}
               />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
               <MobileTimePicker
                 label="Hora"
                 value={meetingTime}
@@ -294,12 +296,14 @@ export default function ShelterScheduleFormModal({
                   },
                 }}
               />
+              </Box>
             </Box>
 
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
               Visita
             </Typography>
             <Box display="flex" gap={1.5} flexDirection={{ xs: "column", sm: "row" }}>
+              <Box data-testid="schedule-form-visit-date" sx={{ flex: 1, minWidth: 0 }}>
               <DatePicker
                 label="Data"
                 value={visitDate}
@@ -309,10 +313,11 @@ export default function ShelterScheduleFormModal({
                   textField: {
                     fullWidth: true,
                     size: "medium",
-                    inputProps: { "data-testid": "schedule-form-visit-date" },
                   },
                 }}
               />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
               <MobileTimePicker
                 label="Hora"
                 value={visitTime}
@@ -326,6 +331,7 @@ export default function ShelterScheduleFormModal({
                   },
                 }}
               />
+              </Box>
             </Box>
           </LocalizationProvider>
 

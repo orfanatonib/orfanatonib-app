@@ -1,8 +1,12 @@
 import api from '@/config/axiosConfig';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import { FEED_COMMENT_ITEMS_ENDPOINT, FEED_SECTIONS_ENDPOINT } from './constants';
+import { toModerationQuery } from './utils';
 import type {
   CreateFeedCommentPayload,
+  FeedCommentCounts,
   FeedCommentPendingCount,
+  ModerationFeedComment,
   ModerationFeedCommentsPage,
   ModerationFeedCommentsQuery,
   OwnFeedComment,
@@ -47,6 +51,22 @@ export async function apiListModerationComments(
   );
   return data;
 }
+
+/**
+ * Fetcher da lista administrativa: filtros, ordenação e página no servidor. A fila também devolve
+ * a contagem por status (as abas); ela segue para `onCounts` sem alterar o contrato da lista.
+ */
+export const createModerationFetcher =
+  (onCounts: (counts: FeedCommentCounts) => void): AdminListFetcher<ModerationFeedComment> =>
+  async (params, signal) => {
+    const data = await apiListModerationComments(toModerationQuery(params), signal);
+    if (!signal.aborted) onCounts(data.counts);
+    return {
+      items: data.items,
+      total: data.total,
+      totalPages: Math.max(1, Math.ceil(data.total / params.limit)),
+    };
+  };
 
 export async function apiGetPendingFeedCommentsCount(
   signal?: AbortSignal,

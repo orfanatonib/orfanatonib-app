@@ -112,6 +112,8 @@ export type CompleteProfile = {
 
 export type CompleteProfileListItem = CompleteProfile & {
   role: string;
+  /** Data do cadastro (só na listagem do admin/líder). */
+  createdAt?: string;
 };
 
 export type CreatePersonalDataDto = {
@@ -158,6 +160,13 @@ export type QueryProfilesDto = {
   loveLanguages?: string;
   temperaments?: string;
   favoriteColor?: string;
+
+  gender?: string;
+  /** Mês de aniversário (1 a 12). */
+  birthMonth?: number;
+  /** `AAAA-MM-DD`, inclusivo. */
+  createdFrom?: string;
+  createdTo?: string;
 
   sortBy?: 'name' | 'email' | 'createdAt' | 'birthDate';
   order?: 'ASC' | 'DESC';

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { initials, resolveCardSort, roleAvatarColor, roleChipColor, roleLabel, toggleInSet, yesNo } from './utils';
+import { initials, roleAvatarColor, roleChipColor, roleLabel, yesNo } from './utils';
 
 vi.mock('@/store/slices/auth/authSlice', () => ({
   UserRole: { ADMIN: 'admin', LEADER: 'leader', MEMBER: 'member' },
@@ -32,20 +32,5 @@ describe('utils dos cartões de usuário', () => {
   it('sim/não', () => {
     expect(yesNo(true)).toBe('Sim');
     expect(yesNo(false)).toBe('Não');
-  });
-
-  it('ordenação: padrão updatedAt desc; respeita a atual', () => {
-    expect(resolveCardSort(undefined)).toEqual({ field: 'updatedAt', desc: true });
-    expect(resolveCardSort([])).toEqual({ field: 'updatedAt', desc: true });
-    expect(resolveCardSort([{ id: 'name', desc: false }])).toEqual({ field: 'name', desc: false });
-    expect(resolveCardSort([{ id: 'role', desc: true }])).toEqual({ field: 'role', desc: true });
-  });
-
-  it('toggleInSet não altera o original', () => {
-    const base = new Set(['a']);
-    const added = toggleInSet(base, 'b');
-    expect([...added].sort()).toEqual(['a', 'b']);
-    expect([...base]).toEqual(['a']);
-    expect([...toggleInSet(added, 'a')]).toEqual(['b']);
   });
 });

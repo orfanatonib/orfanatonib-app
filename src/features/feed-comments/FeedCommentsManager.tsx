@@ -1,62 +1,78 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Box, Button, Grid2, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { Box, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
-import { ListingLayout, ListingToolbar } from '@/components/common/listing';
+import { AdminCardGrid, AdminEntityCard, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { RootState } from '@/store/slices';
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 import {
+  FEED_COMMENT_FILTER_KEYS,
+  FEED_COMMENT_SORT_OPTIONS,
   FEED_COMMENT_STATUS_TAB_LABELS,
   FEED_COMMENT_TAB_ORDER,
   FEED_COMMENTS_ALL_STATUSES,
+  FEED_COMMENTS_DEFAULT_SORT,
   FEED_COMMENTS_DEFAULT_STATUS,
-  FEED_COMMENTS_INITIAL_PAGE,
   FEED_COMMENTS_MESSAGES,
-  FEED_COMMENTS_PAGE_SIZE,
-  FEED_COMMENTS_PAGE_SIZES,
+  FEED_COMMENTS_TEST_ID_PREFIX,
   FEED_COMMENTS_TEST_IDS,
   FEED_COMMENTS_TOUCH_TARGET_PX,
 } from './constants';
-import { useDecideFeedComment, useDeleteModerationComment, useModerationComments } from './hooks';
-import type { FeedCommentDecision, FeedCommentStatusFilter, ModerationFeedComment } from './types';
+import { createModerationFetcher } from './api';
+import { useDecideFeedComment, useDeleteModerationComment } from './hooks';
+import type { FeedCommentCounts, FeedCommentDecision, ModerationFeedComment } from './types';
 import { FeedCommentStatus } from './types';
-import { buildModerationQuery, formatFeedCommentDate, getCoverPreviewUrl, isVideoCover, toStatusFilter } from './utils';
+import { formatFeedCommentDate, getCoverPreviewUrl, isVideoCover, toStatusFilter } from './utils';
 import { FeedCommentReviewDialog } from './components/FeedCommentReviewDialog';
 import { FeedCommentStatusChip } from './components/FeedCommentStatusChip';
 
 const TAB_ALL = 'all';
 
-/** Painel do admin: fila de comentários do feed por status, com busca, aprovação, reprovação e exclusão. */
+const P = FEED_COMMENTS_TEST_ID_PREFIX;
+const K = FEED_COMMENT_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  { kind: 'date', key: K.CREATED_FROM, label: FEED_COMMENTS_MESSAGES.filterCreatedFrom },
+  { kind: 'date', key: K.CREATED_TO, label: FEED_COMMENTS_MESSAGES.filterCreatedTo },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: FEED_COMMENTS_MESSAGES.filterSort,
+    allLabel: null,
+    options: FEED_COMMENT_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+/** A aba de pendentes é o ponto de partida: não conta como "filtro ativo". */
+const DEFAULT_FILTERS = { [K.STATUS]: FEED_COMMENTS_DEFAULT_STATUS, [K.SORT]: FEED_COMMENTS_DEFAULT_SORT };
+const NEUTRAL_FILTERS = { [K.STATUS]: FEED_COMMENTS_DEFAULT_STATUS };
+
+/** Painel do admin: fila de comentários do feed por status, com busca, datas, ordenação e paginação no servidor. */
 export function FeedCommentsManager() {
-  const userId = useSelector((state: RootState) => state.auth.user?.id ?? null);
-  const [page, setPage] = useState(FEED_COMMENTS_INITIAL_PAGE);
-  const [limit, setLimit] = useState(FEED_COMMENTS_PAGE_SIZE);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<FeedCommentStatusFilter>(FEED_COMMENTS_DEFAULT_STATUS);
+  const [counts, setCounts] = useState<FeedCommentCounts | undefined>(undefined);
+  const fetcher = useMemo(() => createModerationFetcher(setCounts), []);
+  const list = useAdminList<ModerationFeedComment>({
+    fetcher,
+    defaultFilters: DEFAULT_FILTERS,
+    neutralFilters: NEUTRAL_FILTERS,
+    errorMessage: FEED_COMMENTS_MESSAGES.loadError,
+  });
+  const status = toStatusFilter(list.filters[K.STATUS] ?? '');
   const [reviewing, setReviewing] = useState<ModerationFeedComment | null>(null);
   const [deleting, setDeleting] = useState<ModerationFeedComment | null>(null);
-  const debouncedSearch = useDebouncedValue(search);
-  const params = buildModerationQuery(page, limit, debouncedSearch, status);
-  const query = useModerationComments(userId, params);
   const decide = useDecideFeedComment();
   const remove = useDeleteModerationComment();
-  const counts = query.data?.counts;
-  const error = query.error ? getApiErrorMessage(query.error, FEED_COMMENTS_MESSAGES.loadError) : undefined;
 
-  const changeStatus = (next: FeedCommentStatusFilter) => {
-    setStatus(next);
-    setPage(FEED_COMMENTS_INITIAL_PAGE);
-  };
+  const changeStatus = (next: string) => list.setFilter(K.STATUS, toStatusFilter(next));
 
   const handleDecide = async (comment: ModerationFeedComment, decision: FeedCommentDecision): Promise<boolean> => {
     try {
       await decide.mutateAsync({ id: comment.id, decision });
       setReviewing(null);
+      list.reload();
       return true;
     } catch {
-      void query.refetch();
+      list.reload();
       return false;
     }
   };
@@ -67,6 +83,7 @@ export function FeedCommentsManager() {
       await remove.mutateAsync(deleting.id);
       setDeleting(null);
       setReviewing(null);
+      list.reload();
     } catch {
       setDeleting(null);
     }
@@ -108,44 +125,17 @@ export function FeedCommentsManager() {
   );
 
   return (
-    <ListingLayout
-      data-testid={FEED_COMMENTS_TEST_IDS.MANAGER}
+    <AdminListScreen
+      testIdPrefix={P}
       title={FEED_COMMENTS_MESSAGES.managerTitle}
-      summary={FEED_COMMENTS_MESSAGES.managerSummary}
-      loading={query.isPending}
-      error={error}
-      itemCount={query.data?.items.length ?? 0}
-      emptyTitle={FEED_COMMENTS_MESSAGES.emptyTitle}
-      emptySubtitle={
+      searchLabel={FEED_COMMENTS_MESSAGES.searchLabel}
+      searchPlaceholder={FEED_COMMENTS_MESSAGES.searchPlaceholder}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={
         status === FeedCommentStatus.PENDING ? FEED_COMMENTS_MESSAGES.emptyPending : FEED_COMMENTS_MESSAGES.emptyOther
       }
-      toolbar={
-        <>
-          {tabs}
-          <ListingToolbar
-            searchValue={search}
-            searchPlaceholder={FEED_COMMENTS_MESSAGES.searchPlaceholder}
-            onSearchChange={(value) => {
-              setSearch(value);
-              setPage(FEED_COMMENTS_INITIAL_PAGE);
-            }}
-            onRefresh={() => {
-              void query.refetch();
-            }}
-          />
-        </>
-      }
-      pagination={{
-        page,
-        pageSize: limit,
-        total: query.data?.total ?? 0,
-        onPageChange: setPage,
-        onPageSizeChange: (value) => {
-          setLimit(value);
-          setPage(FEED_COMMENTS_INITIAL_PAGE);
-        },
-      }}
-      pageSizeOptions={FEED_COMMENTS_PAGE_SIZES}
+      beforeToolbar={tabs}
       overlays={
         <>
           <FeedCommentReviewDialog
@@ -177,87 +167,64 @@ export function FeedCommentsManager() {
         </>
       }
     >
-      {query.data?.items.map((comment) => {
+      <AdminCardGrid testId={`${P}-cards`}>
+      {list.items.map((comment) => {
         const coverUrl = getCoverPreviewUrl(comment.post?.cover ?? null);
+        const cover = coverUrl ? (
+          <Box
+            component="img"
+            src={coverUrl}
+            alt={comment.post?.caption ?? FEED_COMMENTS_MESSAGES.noPost}
+            loading="lazy"
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : isVideoCover(comment.post?.cover ?? null) ? (
+          <VideocamOutlinedIcon fontSize="large" color="action" />
+        ) : (
+          <Typography variant="caption" color="text.secondary">
+            {FEED_COMMENTS_MESSAGES.noPhoto}
+          </Typography>
+        );
         return (
-          <Grid2 key={comment.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-            <Paper
-              data-testid={`${FEED_COMMENTS_TEST_IDS.CARD_PREFIX}-${comment.id}`}
-              variant="outlined"
-              sx={{ borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-            >
-              {coverUrl ? (
-                <Box
-                  component="img"
-                  src={coverUrl}
-                  alt={comment.post?.caption ?? FEED_COMMENTS_MESSAGES.noPost}
-                  loading="lazy"
-                  sx={{ height: 140, width: '100%', objectFit: 'cover', bgcolor: 'grey.100' }}
-                />
-              ) : (
-                <Stack
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ height: 140, bgcolor: 'grey.100', color: 'text.secondary' }}
-                >
-                  {isVideoCover(comment.post?.cover ?? null) ? (
-                    <VideocamOutlinedIcon fontSize="large" />
-                  ) : (
-                    <Typography variant="caption">{FEED_COMMENTS_MESSAGES.noPhoto}</Typography>
-                  )}
-                </Stack>
-              )}
-              <Box sx={{ p: 2, flex: 1, minWidth: 0 }}>
-                <Box sx={{ mb: 1.5 }}>
+          <AdminEntityCard
+            key={comment.id}
+            testId={`${FEED_COMMENTS_TEST_IDS.CARD_PREFIX}-${comment.id}`}
+            title={comment.author?.displayName ?? FEED_COMMENTS_MESSAGES.unknownAuthor}
+            titleTestId={`${FEED_COMMENTS_TEST_IDS.CARD_PREFIX}-title-${comment.id}`}
+            subtitle={formatFeedCommentDate(comment.createdAt)}
+            description={comment.content}
+            descriptionTestId={`${FEED_COMMENTS_TEST_IDS.CARD_PREFIX}-content-${comment.id}`}
+            cover={cover}
+            meta={
+              <Stack spacing={1}>
+                <Box>
                   <FeedCommentStatusChip
                     status={comment.status}
                     data-testid={`${FEED_COMMENTS_TEST_IDS.CARD_STATUS_PREFIX}-${comment.id}`}
                   />
                 </Box>
-                <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>
-                  {comment.author?.displayName ?? FEED_COMMENTS_MESSAGES.unknownAuthor}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {formatFeedCommentDate(comment.createdAt)}
-                </Typography>
-                <Typography
-                  sx={{
-                    my: 1.5,
-                    whiteSpace: 'pre-wrap',
-                    overflowWrap: 'anywhere',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 4,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {comment.content}
-                </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
                   {FEED_COMMENTS_MESSAGES.postLabel}: {comment.post?.caption ?? FEED_COMMENTS_MESSAGES.noPost}
                 </Typography>
-              </Box>
-              <Stack direction="row" sx={{ p: 2, pt: 0 }}>
-                <Button
-                  data-testid={`${FEED_COMMENTS_TEST_IDS.REVIEW_PREFIX}-${comment.id}`}
-                  type="button"
-                  fullWidth
-                  variant="outlined"
-                  disabled={decide.isPending}
-                  onClick={() => {
-                    decide.reset();
-                    remove.reset();
-                    setReviewing(comment);
-                  }}
-                  sx={{ minHeight: FEED_COMMENTS_TOUCH_TARGET_PX, textTransform: 'none' }}
-                >
-                  {FEED_COMMENTS_MESSAGES.review}
-                </Button>
               </Stack>
-            </Paper>
-          </Grid2>
+            }
+            actions={[
+              {
+                key: 'review',
+                label: FEED_COMMENTS_MESSAGES.review,
+                variant: 'outlined',
+                testId: `${FEED_COMMENTS_TEST_IDS.REVIEW_PREFIX}-${comment.id}`,
+                onClick: () => {
+                  decide.reset();
+                  remove.reset();
+                  setReviewing(comment);
+                },
+              },
+            ]}
+          />
         );
       })}
-    </ListingLayout>
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

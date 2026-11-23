@@ -40,7 +40,7 @@ export default function VisitReportDetailsModal({
     if (!report) return null;
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
+        <Dialog data-testid="visit-reports-details-dialog" open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">Detalhes do Relatório</Typography>
                 <Chip
@@ -160,7 +160,7 @@ export default function VisitReportDetailsModal({
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} variant="contained" color="primary">
+                <Button data-testid="visit-reports-details-close" onClick={onClose} variant="contained" color="primary">
                     Fechar
                 </Button>
             </DialogActions>

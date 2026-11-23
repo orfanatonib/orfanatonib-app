@@ -8,4 +8,10 @@ export type Contact = {
   createdAt?: string;
 };
 
-export type SnackbarKind = "success" | "error";
+export type SnackbarKind = 'success' | 'error';
+
+/** Valores do filtro de situação, na forma que a API recebe em `read`. */
+export enum ContactReadFilter {
+  READ = 'true',
+  UNREAD = 'false',
+}

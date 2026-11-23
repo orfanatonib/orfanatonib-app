@@ -92,6 +92,8 @@ export type ShelteredListParams = {
   limit: number;
   filters?: ShelteredFilters;
   sort?: ShelteredSort | null;
+  /** Cancela a requisição quando a tela troca de filtro ou de página. */
+  signal?: AbortSignal;
 };
 
 export type ShelteredSimpleParams = {

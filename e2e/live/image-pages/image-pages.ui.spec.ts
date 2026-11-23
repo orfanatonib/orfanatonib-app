@@ -1,6 +1,7 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
+import { cleanupData } from "../support/keep-data";
 import { closeDb, queryOne } from "../support/db";
 import { s3Config } from "../support/env";
 import { expectCardActionsAligned } from "../support/card-layout";
@@ -56,7 +57,7 @@ test.describe.serial("Galerias de imagens — UI ao vivo", () => {
   const openManager = async (page: Page, search: string): Promise<void> => {
     await page.goto("/adm/paginas-fotos");
     await expect(page.getByTestId("image-pages-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByTestId("image-pages-search").fill(search);
+    await page.getByTestId("image-pages-toolbar-search").fill(search);
   };
 
   const card = (page: Page, id: string) => page.getByTestId(`image-page-card-${id}`);
@@ -105,11 +106,13 @@ test.describe.serial("Galerias de imagens — UI ao vivo", () => {
   });
 
   test.afterAll(async ({ request }) => {
-    for (const id of created) await deletePageApi(request, admin.accessToken, id);
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
-    await expectNoOrphans();
-    await expectNoBrokenRefs();
+    await cleanupData(async () => {
+      for (const id of created) await deletePageApi(request, admin.accessToken, id);
+      expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
+      expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
+      await expectNoOrphans();
+      await expectNoBrokenRefs();
+    });
     await closeDb();
   });
 

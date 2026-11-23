@@ -1,43 +1,12 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const listIdeasSections = vi.fn();
 const listIdeasPages = vi.fn();
 const getIdeasSection = vi.fn();
 
-vi.mock('./api', () => ({ listIdeasSections, listIdeasPages, getIdeasSection }));
+vi.mock('./api', () => ({ listIdeasPages, getIdeasSection }));
 
-const { useIdeasPages, useIdeasSectionToEdit, useIdeasSections } = await import('./hooks');
-
-describe('useIdeasSections', () => {
-  beforeEach(() => vi.resetAllMocks());
-
-  it('carrega a fila e expõe o erro quando a API recusa', async () => {
-    listIdeasSections.mockResolvedValueOnce([{ id: 's1', title: 'A', description: 'x' }]);
-    const { result } = renderHook(() => useIdeasSections());
-
-    await act(() => result.current.fetchSections());
-    expect(result.current.sections).toHaveLength(1);
-    expect(result.current.error).toBe('');
-
-    listIdeasSections.mockRejectedValueOnce(new Error('403'));
-    await act(() => result.current.fetchSections());
-    expect(result.current.error).toBe('403');
-    expect(result.current.loading).toBe(false);
-  });
-
-  it('a busca filtra depois do debounce', async () => {
-    listIdeasSections.mockResolvedValue([
-      { id: 's1', title: 'Gincana', description: '' },
-      { id: 's2', title: 'Outra', description: '' },
-    ]);
-    const { result } = renderHook(() => useIdeasSections());
-    await act(() => result.current.fetchSections());
-
-    act(() => result.current.setSearchTerm('ginc'));
-    await waitFor(() => expect(result.current.filteredSections.map((s) => s.id)).toEqual(['s1']));
-  });
-});
+const { useIdeasPages, useIdeasSectionToEdit } = await import('./hooks');
 
 describe('useIdeasPages', () => {
   beforeEach(() => vi.resetAllMocks());

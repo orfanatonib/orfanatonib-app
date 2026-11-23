@@ -115,7 +115,7 @@ test.describe.serial("Comentários — UI ao vivo", () => {
     await expect(page.getByTestId("comments-manager")).toBeVisible({
       timeout: 20_000,
     });
-    await page.getByTestId("comments-search").locator("input").fill(RUN_TAG);
+    await page.getByTestId("comments-toolbar-search").fill(RUN_TAG);
     const card = page.getByTestId(`comments-card-${createdId}`);
     await expect(card).toBeVisible({ timeout: 20_000 });
 
@@ -175,7 +175,7 @@ test.describe.serial("Comentários — UI ao vivo", () => {
 
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/comentarios");
-    await page.getByTestId("comments-search").locator("input").fill(RUN_TAG);
+    await page.getByTestId("comments-toolbar-search").fill(RUN_TAG);
     await expect(page.getByTestId(`comments-card-${createdId}`)).toBeVisible({
       timeout: 20_000,
     });

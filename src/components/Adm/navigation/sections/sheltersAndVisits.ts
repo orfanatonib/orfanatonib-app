@@ -44,7 +44,7 @@ export const ADMIN_SHELTERS_AND_VISITS_SECTION: AdminNavigationSection = {
       activePathPrefixes: ["/adm/presenca/pendencias"],
       icon: EventAvailable,
       allowedRoles: ADMIN_AND_LEADER_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.ATTENDANCE,
+      requiredFeatureFlag: FeatureFlagKeys.ATTENDANCE_CONTROL,
     },
     {
       id: AdminNavigationItemId.PAGELAS,
@@ -53,7 +53,7 @@ export const ADMIN_SHELTERS_AND_VISITS_SECTION: AdminNavigationSection = {
       path: "/adm/pagelas",
       icon: Description,
       allowedRoles: ADMIN_AND_LEADER_ROLES,
-      requiredFeatureFlag: FeatureFlagKeys.PAGELAS,
+      requiredFeatureFlag: FeatureFlagKeys.PAGELAS_MANAGEMENT,
     },
     {
       id: AdminNavigationItemId.VISIT_REPORTS,

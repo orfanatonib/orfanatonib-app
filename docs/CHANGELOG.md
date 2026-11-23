@@ -1,5 +1,45 @@
 # Changelog do app (orfanatonib-app)
 
+## 2026-11-23 — Verificação final das 24 telas administrativas
+
+### Corrigido
+- Alvo de toque do switch de status do card de acolhido (Área dos Acolhidos) passou a 44 px no mobile, sem mudar o visual.
+- testid da opção "Não aceitou" do filtro da Área dos Acolhidos: `not_accepted` -> `not-accepted` (kebab-case exigido por `check:test-ids`).
+- E2E: lista de flags de diretório usa as chaves renomeadas (`pagelas_management`, `attendance_control`) e `profile_management`; resumo "de N" comparado por regex (não casa mais "de 14" com "de 1400"); espera da resposta filtrada na busca com debounce; desempate por id na ordenação por data de entrada; tag própria na fila de moderação e no spec de materiais para a massa acumulada não entrar nas contagens; timeout proporcional na massa de meditações; carga a frio da tela com 45 s.
+- `check:routes` passou a reconhecer telas declaradas como `{ path: "/adm/..." }` nos specs de lista.
+
+## 2026-11-22 — Massa de acolhidos pela UI e correção do laço de boot
+
+### Adicionado
+- Seeds `@seed` (`npm run seed:acolhidos`, `seed:acolhidos:clean`) que deixam acolhidos `MASSA E2E` e pagelas no banco pela UI de `/adm/acolhidos` e `/area-dos-acolhidos`; passos em `e2e/live/README.md`.
+
+### Corrigido
+- Refetch do usuário (`fetchCurrentUser`) em tela de membro/líder sem abrigo recolocava `loadingUser` e `App`/`ProtectedRoute` voltavam à tela de boot, desmontando a página e disparando o refetch em laço infinito (centenas de requisições, "Não foi possível verificar sua sessão"). Agora só a carga inicial (sem usuário) mostra o boot.
+- E2E: seleção de data do `BRDatePicker` (spinbuttons), opção do abrigo ("Abrigo : Cidade"), paginação pt-BR ("Ir para a página N"), rota de flag desligada que redireciona e corrida do diálogo de status.
+
+## 2026-11-22 — Área dos Acolhidos: e2e completo, testids e erro ao salvar pagela
+
+### Adicionado
+- `data-testid` em toda a Área dos Acolhidos (`features/pagela-member/constants.ts`): lista (`sheltered-area-*`, cartões por id), página de pagelas (`sheltered-pagelas-*`), formulário e histórico (`pagela-*`), modal de decisão (`sheltered-decision-*`) e `NoShelterLinkedPage`. Alvos de toque de 44px no coração de decisão, no editar, no switch de status, no editar/excluir da pagela, nos botões do modal e do formulário.
+- E2E real em `e2e/live/sheltered-area/` (acesso, lista, cadastro/edição/status/decisão, pagelas, massa): desktop 1440 e mobile 375, provando cada efeito por SELECT. Massa por `sheltered-area.mass.ui.spec.ts` (suíte normal, 5 a 10 acolhidos por execução) e `sheltered-area.seed.ui.spec.ts` (`npm run seed:acolhidos`, +12 acolhidos com pagelas e decisões; `npm run seed:acolhidos:clean` apaga só o prefixo `MASSA E2E`). Veja `e2e/live/README.md`.
+
+### Corrigido
+- Lançar pagela de uma semana que já existe numa página do histórico que não está carregada (409 da API) não dava nenhum retorno (rejeição solta); agora aparece o aviso de erro e a lista é recarregada.
+- O texto "Nenhum acolhido cadastrado." e o botão de cadastrar apareciam também quando os filtros (aceitou Jesus/status) zeravam a lista; agora vale a mensagem de filtros aplicados.
+
+## 2026-11-22 — Flag da Integração Feira de Ministério mais descritiva e atalho dos Acolhidos
+
+### Alterado
+- Flag `integration` virou `ministry_fair_integration` (`FeatureFlagKeys.MINISTRY_FAIR_INTEGRATION`) no enum, no mapa padrão, nas regras por papel, na área de flags, no atalho da Área do Membro, no botão do cartão e nas rotas. A API copia o estado da chave antiga na subida (`FEATURE_FLAG_RENAMES`). Os e2e de `/integrations` usam a chave nova.
+- O líder agora abre `/adm/perfis`: a flag da tela passa a ser a própria `profile_management` (interruptor da tela) em vez de `user_management` (interruptor de `/adm/usuarios`, que segue só admin). O papel continua sendo regra da rota e da API (`/adm` = admin e líder; líder só vê a própria equipe), nunca da flag.
+- Flags de uma palavra renomeadas (regra: no mínimo duas palavras): `attendance` → `attendance_control` e `pagelas` → `pagelas_management` (enum, mapa padrão, regras por papel, áreas, menu e rotas do `/adm`, e2e).
+
+### Removido
+- Integração Feira de Ministério não é coisa de acolhido: saíram o botão "Integração Feira de Ministérios" do cartão da Área dos Acolhidos, a página `/integracao` (registro de um acolhido na integração) e o componente `IntegrationButton`. Ficam o gerenciador de integrações (`/area-do-membro/integracoes`) e o atalho "Integrações FM". A descrição da flag `ministry_fair_integration` deixou de citar os acolhidos. E2E: `/integracao` agora mostra a 404.
+
+### Corrigido
+- O atalho "Área dos Acolhidos" não aparecia na Home da Área do Membro (a chave `shelteredrenArea` nunca entrava na lista da Home; agora `shelteredArea`) e o item do menu do usuário excluía o admin pela lista de papéis: agora a regra de papel lista admin, líder e membro, e a flag `sheltered_area` só liga/desliga. E2E em `member-area/member-area-sheltered-shortcut.ui.spec.ts`.
+
 ## 2026-11-21 — Catálogo do menu do /adm dividido e Integração Feira de Ministério
 
 ### Alterado

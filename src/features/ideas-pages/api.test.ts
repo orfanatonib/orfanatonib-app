@@ -7,18 +7,36 @@ const del = vi.fn();
 
 vi.mock('@/config/axiosConfig', () => ({ default: { get, post, patch, delete: del } }));
 
-const { apiDeleteIdeasPage, apiGetIdeasPage, apiListIdeasPages, apiSaveIdeasPage } = await import('./api');
+const { apiDeleteIdeasPage, apiGetIdeasPage, apiSaveIdeasPage, fetchIdeasPagesPage } = await import('./api');
 
 const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 
 describe('api de páginas de ideias', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('lista e busca por id devolvendo só o corpo', async () => {
-    get.mockResolvedValueOnce({ data: [{ id: 'p1' }] });
-    await expect(apiListIdeasPages()).resolves.toEqual([{ id: 'p1' }]);
-    expect(get).toHaveBeenLastCalledWith('/ideas-pages');
+  it('lista no servidor: página, busca, datas e ordenação vão na query e o envelope vira {items,total,totalPages}', async () => {
+    const signal = new AbortController().signal;
+    get.mockResolvedValueOnce({
+      data: { data: [{ id: 'p1' }], meta: { page: 2, limit: 12, totalItems: 13, totalPages: 2 } },
+    });
+    await expect(
+      fetchIdeasPagesPage(
+        {
+          page: 2,
+          limit: 12,
+          search: ' gincana ',
+          filters: { sort: 'title:ASC', createdFrom: '2026-01-01', createdTo: '' },
+        },
+        signal,
+      ),
+    ).resolves.toEqual({ items: [{ id: 'p1' }], total: 13, totalPages: 2 });
+    expect(get).toHaveBeenLastCalledWith('/ideas-pages', {
+      params: { page: 2, limit: 12, search: 'gincana', sortBy: 'title', order: 'ASC', createdFrom: '2026-01-01' },
+      signal,
+    });
+  });
 
+  it('busca por id devolvendo só o corpo', async () => {
     get.mockResolvedValueOnce({ data: { id: 'p1' } });
     await expect(apiGetIdeasPage('p1')).resolves.toEqual({ id: 'p1' });
     expect(get).toHaveBeenLastCalledWith('/ideas-pages/p1');
@@ -45,6 +63,8 @@ describe('api de páginas de ideias', () => {
 
   it('propaga o erro da API sem engolir', async () => {
     get.mockRejectedValue(new Error('403'));
-    await expect(apiListIdeasPages()).rejects.toThrow('403');
+    await expect(
+      fetchIdeasPagesPage({ page: 1, limit: 12, search: '', filters: {} }, new AbortController().signal),
+    ).rejects.toThrow('403');
   });
 });

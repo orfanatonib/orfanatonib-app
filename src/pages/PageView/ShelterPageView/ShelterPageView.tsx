@@ -1,13 +1,14 @@
-import React from 'react';
-import { Alert, Box, CircularProgress, Container, Grid } from '@mui/material';
-import { PersonOutline, SchoolOutlined } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { Alert, Box, CircularProgress, Container } from '@mui/material';
 import './../styles/ShelterPageView.css';
 import { useShelterPage } from './useShelterPage';
 import ShelterHero from './ShelterHero';
-import ShelterLocationCard from './ShelterLocationCard';
-import ShelterTeamsSummaryCard from './ShelterTeamsSummaryCard';
-import ShelterPeopleCarouselCard from './ShelterPeopleCarouselCard';
-import ShelterInfoCard from './ShelterInfoCard';
+import ShelterStatsStrip from './ShelterStatsStrip';
+import ShelterAboutCard from './ShelterAboutCard';
+import ShelterPeopleSection from './ShelterPeopleSection';
+import ShelterTeamsSection from './ShelterTeamsSection';
+import ShelterPhotoDialog, { type ShelterPhoto } from './ShelterPhotoDialog';
+import { SHELTER_PAGE_WIDTH } from './constants';
 import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
 
 interface ShelterPageViewProps {
@@ -30,6 +31,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
     getMemberTeams,
   } = useShelterPage(idToFetch);
 
+  const [photo, setPhoto] = useState<ShelterPhoto | null>(null);
   const isAddressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
   const handleBack = () => window.history.back();
@@ -76,7 +78,7 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
   const heroImageSrc = shelter.mediaItem?.url?.trim() ? shelter.mediaItem!.url : FALLBACK_SHELTER_IMAGE;
 
   return (
-    <Box className="shelterPage">
+    <Box data-testid="shelter-page" className="shelterPage">
       <ShelterHero
         name={shelter.name}
         description={shelter.description}
@@ -84,72 +86,34 @@ export default function ShelterPageView({ idToFetch }: ShelterPageViewProps) {
         onBack={handleBack}
       />
 
-      <Container maxWidth="lg" className="shelterPage__main">
-        <Grid container spacing={2.5}>
-          {isAddressEnabled && address ? (
-            <>
-              <Grid item xs={12} md={8}>
-                <ShelterLocationCard address={address} />
-                <ShelterTeamsSummaryCard teamsQuantity={shelter.teamsQuantity || 0} />
-              </Grid>
+      <Container
+        data-testid="shelter-page-body"
+        maxWidth={false}
+        disableGutters
+        sx={{ width: SHELTER_PAGE_WIDTH, display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2.5 }, pb: 2 }}
+      >
+        <ShelterStatsStrip
+          teams={shelter.teams?.length || shelter.teamsQuantity || 0}
+          leaders={uniqueLeaders.length}
+          members={uniqueMembers.length}
+        />
 
-              <Grid item xs={12} md={4}>
-                <ShelterPeopleCarouselCard
-                  title="Líderes"
-                  count={uniqueLeaders.length}
-                  theme="blue"
-                  icon={<PersonOutline className="shelterPage__sectionIcon" />}
-                  people={uniqueLeaders}
-                  getTeams={getLeaderTeams}
-                />
+        {isAddressEnabled && address && (
+          <ShelterAboutCard address={address} updatedAt={shelter.updatedAt} />
+        )}
 
-                <ShelterPeopleCarouselCard
-                  title="Membros"
-                  count={uniqueMembers.length}
-                  theme="purple"
-                  icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
-                  people={uniqueMembers}
-                  getTeams={getMemberTeams}
-                />
+        <ShelterTeamsSection teams={shelter.teams ?? []} onOpenPhoto={setPhoto} />
 
-                <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
-              </Grid>
-            </>
-          ) : (
-            <>
-              <Grid item xs={12}>
-                <ShelterTeamsSummaryCard teamsQuantity={shelter.teamsQuantity || 0} />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShelterPeopleCarouselCard
-                  title="Líderes"
-                  count={uniqueLeaders.length}
-                  theme="blue"
-                  icon={<PersonOutline className="shelterPage__sectionIcon" />}
-                  people={uniqueLeaders}
-                  getTeams={getLeaderTeams}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShelterPeopleCarouselCard
-                  title="Membros"
-                  count={uniqueMembers.length}
-                  theme="purple"
-                  icon={<SchoolOutlined className="shelterPage__sectionIcon" />}
-                  people={uniqueMembers}
-                  getTeams={getMemberTeams}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <ShelterInfoCard createdAt={shelter.createdAt} updatedAt={shelter.updatedAt} />
-              </Grid>
-            </>
-          )}
-        </Grid>
+        <ShelterPeopleSection
+          leaders={uniqueLeaders}
+          members={uniqueMembers}
+          getLeaderTeams={getLeaderTeams}
+          getMemberTeams={getMemberTeams}
+          onOpenPhoto={setPhoto}
+        />
       </Container>
+
+      <ShelterPhotoDialog photo={photo} onClose={() => setPhoto(null)} />
     </Box>
   );
 }

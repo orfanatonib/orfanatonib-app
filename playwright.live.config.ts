@@ -11,6 +11,24 @@ import { defineConfig, devices } from "@playwright/test";
 export const API_URL = process.env.E2E_API_URL ?? "http://localhost:3000";
 export const APP_URL = process.env.E2E_APP_URL ?? "http://localhost:5173";
 
+/**
+ * Massa de dados (`*.seed.ui.spec.ts`, tag `@seed`): cria dados pela UI e DEIXA no banco. Fora da suíte
+ * normal: o projeto `live-seed` só existe com `E2E_SEED=1` (scripts `seed:*` do package.json).
+ */
+const SEED_SPECS = "**/*.seed.ui.spec.ts";
+const seedProjects =
+  process.env.E2E_SEED === "1"
+    ? [
+        {
+          name: "live-seed",
+          dependencies: ["setup"],
+          testMatch: SEED_SPECS,
+          timeout: 900_000,
+          use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+        },
+      ]
+    : [];
+
 export default defineConfig({
   testDir: "./e2e/live",
   outputDir: "./e2e/.output-live",
@@ -24,6 +42,9 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: APP_URL,
+    // Sem limite, uma ação num elemento que não existe espera o tempo do teste inteiro (travava por 15 min).
+    actionTimeout: 20_000,
+    navigationTimeout: 30_000,
     // Só tem efeito em --headed: desacelera cada ação para dar para acompanhar.
     launchOptions: { slowMo: Number(process.env.E2E_SLOWMO ?? 0) },
     trace: "on-first-retry",
@@ -49,6 +70,7 @@ export default defineConfig({
       name: "live-ui",
       dependencies: ["setup"],
       testMatch: "**/*.ui.spec.ts",
+      testIgnore: SEED_SPECS,
       grepInvert: /@mobile/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
@@ -57,8 +79,10 @@ export default defineConfig({
       name: "live-ui-mobile",
       dependencies: ["setup"],
       testMatch: "**/*.ui.spec.ts",
+      testIgnore: SEED_SPECS,
       grep: /@mobile/,
       use: { ...devices["Pixel 5"], viewport: { width: 375, height: 812 } },
     },
+    ...seedProjects,
   ],
 });

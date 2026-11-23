@@ -1,55 +1,28 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiDeleteImagePage, apiListImagePages } from './api';
+import { useCallback } from 'react';
+import { useAdminList } from '@/components/common/admin-shell/useAdminList';
 import { ImagePageData } from '@/features/image-pages/types';
+import { apiDeleteImagePage, fetchImagePagesPage } from './api';
+import { IMAGE_PAGES_DEFAULT_SORT, IMAGE_PAGES_MESSAGES } from './constants';
 
-export function useImagePages() {
-  const [pages, setPages] = useState<ImagePageData[]>([]);
-  const [filtered, setFiltered] = useState<ImagePageData[]>([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState('');
+const DEFAULT_FILTERS = { sort: IMAGE_PAGES_DEFAULT_SORT };
 
-  const fetchPages = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await apiListImagePages();
-      setPages(data);
-      setFiltered(data);
-    } catch (e) {
-      setError('Erro ao buscar páginas de imagens');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+/** Listagem paginada no servidor (busca, visibilidade, datas, ordenação) + exclusão com recarga. */
+export function useImagePagesList() {
+  const list = useAdminList<ImagePageData>({
+    fetcher: fetchImagePagesPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: IMAGE_PAGES_MESSAGES.LOAD_ERROR,
+  });
+  const { reload } = list;
 
-  useEffect(() => { fetchPages(); }, [fetchPages]);
-
-  useEffect(() => {
-    setIsFiltering(true);
-    const t = setTimeout(() => {
-      const term = search.trim().toLowerCase();
-      if (!term) {
-        setFiltered(pages);
-      } else {
-        setFiltered(
-          pages.filter((p) => (p.title ?? '').toLowerCase().includes(term)),
-        );
-      }
-      setIsFiltering(false);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [search, pages]);
-
+  /** Exclui e recarrega a lista; em falha recarrega também (a página pode já ter sumido) e propaga o erro. */
   const removePage = useCallback(async (id: string) => {
-    await apiDeleteImagePage(id);
-    await fetchPages();
-  }, [fetchPages]);
+    try {
+      await apiDeleteImagePage(id);
+    } finally {
+      reload();
+    }
+  }, [reload]);
 
-  const state = useMemo(() => ({
-    pages, filtered, loading, isFiltering, error,
-  }), [pages, filtered, loading, isFiltering, error]);
-
-  return { ...state, search, setSearch, setError, fetchPages, removePage };
+  return { list, removePage };
 }

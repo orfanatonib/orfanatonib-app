@@ -51,19 +51,25 @@ export default function MemberEditDialog({
     }
   }, [open]);
 
+  // Abrir o diálogo (ou trocar de membro) zera a seleção. Isto NÃO depende da lista de abrigos:
+  // quando ela termina de carregar, a escolha que o usuário já fez não pode ser apagada.
   useEffect(() => {
-    if (open && member?.shelter) {
-      const currentShelter = shelters.find((s) => s.id === member.shelter?.id);
-      if (currentShelter) {
-        setSelectedShelter(currentShelter);
-        loadTeamsQuantity(currentShelter.id);
-      }
-    } else if (open) {
-      setSelectedShelter(null);
-      setTeamsQuantity(null);
-      setNumberTeam(1);
+    if (!open) return;
+    setSelectedShelter(null);
+    setTeamsQuantity(null);
+    setNumberTeam(1);
+  }, [open, member?.id]);
+
+  // Membro já vinculado: pré-seleciona o abrigo atual assim que a lista chega (só se nada foi escolhido).
+  useEffect(() => {
+    if (!open || !member?.shelter || selectedShelter) return;
+    const currentShelter = shelters.find((s) => s.id === member.shelter?.id);
+    if (currentShelter) {
+      setSelectedShelter(currentShelter);
+      loadTeamsQuantity(currentShelter.id);
     }
-  }, [open, member, shelters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, member?.shelter?.id, shelters, selectedShelter]);
 
   const loadShelters = async () => {
     setLoadingShelters(true);

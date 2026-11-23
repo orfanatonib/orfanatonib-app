@@ -1,4 +1,6 @@
 import api from "@/config/axiosConfig";
+import { fetchAdminPage } from "@/components/common/admin-shell/listQuery";
+import type { AdminListPage, AdminListParams } from "@/components/common/admin-shell/types";
 import {
   ShelterScheduleResponseDto,
   CreateShelterScheduleDto,
@@ -34,4 +36,12 @@ export async function apiDeleteShelterSchedule(id: string): Promise<void> {
 export async function apiListMyTeams(): Promise<MyTeamResponseDto[]> {
   const { data } = await api.get<MyTeamResponseDto[]>("/teams/my-teams");
   return data;
+}
+
+/** Página de agendamentos filtrada, ordenada e recortada no servidor (`GET /shelter-schedules?page=`). */
+export function apiListShelterSchedulesPage(
+  params: AdminListParams,
+  signal: AbortSignal,
+): Promise<AdminListPage<ShelterScheduleResponseDto>> {
+  return fetchAdminPage<ShelterScheduleResponseDto>("/shelter-schedules", params, signal);
 }

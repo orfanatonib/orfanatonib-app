@@ -165,9 +165,9 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ pt: 1 }}>
+    <Box component="form" data-testid="documents-form" onSubmit={handleSubmit} sx={{ pt: 1 }}>
       {errorMsg && (
-        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setErrorMsg(null)}>
+        <Alert data-testid="documents-form-error" severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setErrorMsg(null)}>
           {errorMsg}
         </Alert>
       )}
@@ -183,6 +183,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
+            inputProps={{ 'data-testid': 'documents-form-name' }}
             label="Nome do Documento *"
             placeholder="Ex: Regulamento Interno 2026"
             value={name}
@@ -195,6 +196,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
+            inputProps={{ 'data-testid': 'documents-form-description' }}
             label="Descrição do Documento"
             placeholder="Breve resumo sobre o conteúdo do documento..."
             value={description}
@@ -240,11 +242,11 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
                     },
                   }}
                 >
-                  <ToggleButton value={MediaUploadType.UPLOAD}>
+                  <ToggleButton data-testid="documents-form-type-upload" value={MediaUploadType.UPLOAD}>
                     <CloudUploadIcon fontSize="small" sx={{ mr: 1 }} />
                     Upload de Arquivo
                   </ToggleButton>
-                  <ToggleButton value={MediaUploadType.LINK}>
+                  <ToggleButton data-testid="documents-form-type-link" value={MediaUploadType.LINK}>
                     <InsertLinkIcon fontSize="small" sx={{ mr: 1 }} />
                     Link Externo
                   </ToggleButton>
@@ -296,7 +298,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
                         </Box>
                         <Button component="label" size="small" variant="outlined" startIcon={<CloudUploadIcon />}>
                           Substituir
-                          <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                          <input data-testid="documents-form-file" type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
                         </Button>
                       </Stack>
                     ) : (
@@ -317,6 +319,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
                         >
                           Selecionar Arquivo
                           <input
+                            data-testid="documents-form-file"
                             type="file"
                             hidden
                             accept=".pdf,.doc,.docx"
@@ -332,6 +335,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
                   <Grid item xs={12} sm={8}>
                     <TextField
                       fullWidth
+                      inputProps={{ 'data-testid': 'documents-form-url' }}
                       label="URL do Documento (Link) *"
                       placeholder="https://drive.google.com/file/d/..."
                       value={url}
@@ -364,6 +368,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
         <Grid item xs={12} display="flex" justifyContent="flex-end" gap={1.5} pt={2}>
           {onCancel && (
             <Button
+              data-testid="documents-form-cancel"
               variant="outlined"
               color="inherit"
               onClick={onCancel}
@@ -375,6 +380,7 @@ const DocumentForm: React.FC<Props> = ({ isEditing, onSuccess, onCancel }) => {
             </Button>
           )}
           <Button
+            data-testid="documents-form-submit"
             type="submit"
             variant="contained"
             disabled={loading}

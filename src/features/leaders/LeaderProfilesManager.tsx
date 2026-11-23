@@ -1,251 +1,70 @@
 import React from "react";
-import {
-  Box,
-  Alert,
-  CircularProgress,
-  useMediaQuery,
-  useTheme,
-  Snackbar,
-  Container,
-  Paper,
-  Typography,
-} from "@mui/material";
-import MuiAlert from "@mui/material/Alert";
-import { motion } from "framer-motion";
-import SearchIcon from "@mui/icons-material/Search";
-import type { SortingState } from "@tanstack/react-table";
-import LeaderToolbar from "./components/LeaderToolbar";
-import LeaderTable from "./components/LeaderTable";
-import LeaderCards from "./components/LeaderCards";
+import { SearchOff } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/slices";
+import { AdminTableListScreen, useAdminList } from "@/components/common/admin-shell";
+import LeaderCard from "./components/LeaderCard";
+import { buildLeaderColumns } from "./components/leaderColumns";
 import LeaderViewDialog from "./components/LeaderViewDialog";
 import LeaderMultiEditDialog from "./components/LeaderMultiEditDialog";
+import { useLeaderFilterOptions } from "./hooks";
+import type { LeaderProfile } from "./types";
 import {
-  useLeaderMutations,
-  useLeaderProfiles,
-  useSheltersIndex,
-} from "./hooks";
-import type { LeaderFilters, LeaderProfile } from "./types";
-import BackHeader from "@/components/common/header/BackHeader";
+  LEADERS_DEFAULT_SORT,
+  LEADERS_FILTER_KEYS,
+  LEADERS_LABELS,
+  LEADERS_TEST_ID_PREFIX,
+} from "./constants";
+import { buildLeaderFilterFields, fetchLeadersPage } from "./utils";
 
 export default function LeaderProfilesManager() {
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-  const [pageSize, setPageSize] = React.useState<number>(12);
-  const [pageIndex, setPageIndex] = React.useState<number>(0);
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "updatedAt", desc: true },
-  ]);
+  const loggedName = useSelector((state: RootState) => state.auth.user?.name);
 
-  const [filters, setFilters] = React.useState<LeaderFilters>({
-    leaderSearchString: "",
-    shelterSearchString: "",
-    hasShelter: undefined,
+  const list = useAdminList<LeaderProfile>({
+    fetcher: fetchLeadersPage,
+    defaultFilters: { [LEADERS_FILTER_KEYS.SORT]: LEADERS_DEFAULT_SORT },
+    errorMessage: LEADERS_LABELS.LOAD_ERROR,
   });
-
-  const { rows, total, loading, error, setError, fetchPage, refreshOne } =
-    useLeaderProfiles(pageIndex, pageSize, sorting, filters);
-
-  const doRefresh = React.useCallback(() => {
-    fetchPage();
-  }, [fetchPage]);
-
-  const {
-    byId: _shelterById,
-    loading: sheltersLoading,
-    error: sheltersError,
-    refresh: refreshShelters,
-  } = useSheltersIndex();
-
-  const [snack, setSnack] = React.useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error" | "info" | "warning";
-  }>({ open: false, message: "", severity: "success" });
-
-  const _showSnack = React.useCallback(
-    (message: string, severity: typeof snack.severity = "success") => {
-      setSnack({ open: true, message, severity });
-    },
-    [snack.severity]
-  );
-
-  const closeSnack = (_?: unknown, reason?: string) => {
-    if (reason === "clickaway") return;
-    setSnack((s) => ({ ...s, open: false }));
-  };
+  const options = useLeaderFilterOptions();
+  const fields = React.useMemo(() => buildLeaderFilterFields(options), [options]);
 
   const [viewing, setViewing] = React.useState<LeaderProfile | null>(null);
-  const [editingTeam, setEditingTeam] = React.useState<LeaderProfile | null>(null);
+  const [editing, setEditing] = React.useState<LeaderProfile | null>(null);
 
-  const {
-    setDialogError,
-  } = useLeaderMutations(fetchPage, refreshOne);
-
-  const handleEditTeam = React.useCallback((leader: LeaderProfile) => {
-    setEditingTeam(leader);
-  }, []);
-
-  React.useEffect(() => {
-    refreshShelters();
-  }, [refreshShelters]);
+  const columns = React.useMemo(
+    () => buildLeaderColumns({ loggedName, onView: setViewing, onEdit: setEditing }),
+    [loggedName],
+  );
 
   return (
-    <Box
-      data-testid="leader-profiles-manager"
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        pb: 4,
-      }}
-    >
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <BackHeader title="Gerenciar Líderes" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <LeaderToolbar
-            filters={filters}
-            onChange={(updater) => {
-              setFilters(updater);
-              setPageIndex(0);
+    <AdminTableListScreen
+      testIdPrefix={LEADERS_TEST_ID_PREFIX}
+      title={LEADERS_LABELS.TITLE}
+      searchLabel={LEADERS_LABELS.SEARCH}
+      searchPlaceholder={LEADERS_LABELS.SEARCH_PLACEHOLDER}
+      fields={fields}
+      list={list}
+      emptyMessage={LEADERS_LABELS.EMPTY}
+      emptyIcon={<SearchOff sx={{ fontSize: 56, color: "text.disabled" }} />}
+      columns={columns}
+      rowKey={(leader) => leader.id}
+      renderCard={(leader) => (
+        <LeaderCard leader={leader} loggedName={loggedName} onView={setViewing} onEdit={setEditing} />
+      )}
+      overlays={
+        <>
+          <LeaderViewDialog open={!!viewing} leader={viewing} onClose={() => setViewing(null)} />
+          <LeaderMultiEditDialog
+            open={!!editing}
+            leader={editing}
+            onClose={() => setEditing(null)}
+            onSuccess={() => {
+              list.reload();
+              setEditing(null);
             }}
-            onRefresh={doRefresh}
-            isXs={isXs}
           />
-        </motion.div>
-
-        {(loading && !rows.length) || sheltersLoading ? (
-          <Box
-            data-testid="leader-profiles-loading"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              py: 8,
-            }}
-          >
-            <CircularProgress size={48} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando líderes...
-            </Typography>
-          </Box>
-        ) : null}
-
-        {(error || sheltersError) && !(loading || sheltersLoading) && (
-          <Alert
-            severity="error"
-            data-testid="leader-profiles-error"
-            sx={{ mb: 2, borderRadius: 2 }}
-            onClose={() => {
-              setError("");
-              setDialogError("");
-            }}
-          >
-            {error || sheltersError}
-          </Alert>
-        )}
-
-        {!loading && !error && !sheltersLoading && !sheltersError && rows.length === 0 && (
-          <Paper
-            data-testid="leader-profiles-empty"
-            sx={{
-              p: 6,
-              textAlign: "center",
-              borderRadius: 2,
-              bgcolor: "background.paper",
-            }}
-          >
-            <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum líder encontrado
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tente ajustar os filtros de busca.
-            </Typography>
-          </Paper>
-        )}
-
-        {!loading && !sheltersLoading && rows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            {isXs ? (
-              <LeaderCards
-                rows={rows}
-                total={total}
-                pageIndex={pageIndex}
-                pageSize={pageSize}
-                setPageIndex={setPageIndex}
-                setPageSize={setPageSize}
-                sorting={sorting}
-                setSorting={setSorting}
-                onView={(c) => setViewing(c)}
-                onEdit={handleEditTeam}
-              />
-            ) : (
-              <LeaderTable
-                rows={rows}
-                total={total}
-                pageIndex={pageIndex}
-                pageSize={pageSize}
-                setPageIndex={setPageIndex}
-                setPageSize={setPageSize}
-                sorting={sorting}
-                setSorting={setSorting}
-                onView={(c) => setViewing(c)}
-                onEdit={handleEditTeam}
-              />
-            )}
-          </motion.div>
-        )}
-
-        <LeaderViewDialog
-          open={!!viewing}
-          leader={viewing}
-          onClose={() => setViewing(null)}
-        />
-
-        <LeaderMultiEditDialog
-          open={!!editingTeam}
-          leader={editingTeam}
-          onClose={() => setEditingTeam(null)}
-          onSuccess={async () => {
-            await fetchPage();
-            if (editingTeam) {
-              await refreshOne(editingTeam.id);
-            }
-            setEditingTeam(null);
-          }}
-        />
-
-        <Snackbar
-          open={snack.open}
-          autoHideDuration={5000}
-          onClose={closeSnack}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <MuiAlert
-            elevation={6}
-            variant="filled"
-            severity={snack.severity}
-            onClose={closeSnack}
-          >
-            {snack.message}
-          </MuiAlert>
-        </Snackbar>
-      </Container>
-    </Box>
+        </>
+      }
+    />
   );
 }

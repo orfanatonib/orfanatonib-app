@@ -31,10 +31,11 @@ describe('shellNav — menu do usuário por papel × flag', () => {
     ]);
   });
 
-  it('líder vê tudo; admin não vê a área dos acolhidos', () => {
+  it('líder e admin veem tudo: a lista de papéis inclui os dois e a flag só liga/desliga', () => {
     expect(ids(UserRole.LEADER, allOn)).toHaveLength(SHELL_USER_MENU_ENTRIES.length);
     expect(ids(UserRole.ADMIN, allOn)).toEqual([
       ShellUserMenuEntryId.MEMBER_AREA,
+      ShellUserMenuEntryId.SHELTERED_AREA,
       ShellUserMenuEntryId.ADMIN_AREA,
       ShellUserMenuEntryId.PROFILE,
     ]);

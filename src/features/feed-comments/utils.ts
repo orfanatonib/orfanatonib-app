@@ -1,7 +1,10 @@
 import { MediaType } from '@/store/slices/types';
 import type { MediaItem } from '@/store/slices/types';
 import { getMediaPreviewUrl } from '@/utils/getMediaPreviewUrl';
-import { FEED_COMMENTS_MAX_LENGTH, FEED_COMMENT_STATUS_LABELS } from './constants';
+import { ADMIN_SORT_FILTER_KEY } from '@/components/common/admin-shell/constants';
+import { splitSort } from '@/components/common/admin-shell/listQuery';
+import type { AdminListParams } from '@/components/common/admin-shell/types';
+import { FEED_COMMENTS_MAX_LENGTH, FEED_COMMENT_FILTER_KEYS, FEED_COMMENT_STATUS_LABELS } from './constants';
 import { FeedCommentStatus } from './types';
 import type {
   FeedCommentCover,
@@ -17,18 +20,21 @@ export function toStatusFilter(value: string): FeedCommentStatusFilter {
   return isFeedCommentStatus(value) ? value : '';
 }
 
-export function buildModerationQuery(
-  page: number,
-  limit: number,
-  search: string,
-  status: FeedCommentStatusFilter,
-): ModerationFeedCommentsQuery {
-  const term = search.trim();
+/** Parâmetros da lista administrativa → query da fila de moderação (só o que foi preenchido). */
+export function toModerationQuery(params: AdminListParams): ModerationFeedCommentsQuery {
+  const term = params.search.trim();
+  const status = toStatusFilter(params.filters[FEED_COMMENT_FILTER_KEYS.STATUS] ?? '');
+  const createdFrom = params.filters[FEED_COMMENT_FILTER_KEYS.CREATED_FROM];
+  const createdTo = params.filters[FEED_COMMENT_FILTER_KEYS.CREATED_TO];
+  const { sortBy, order } = splitSort(params.filters[ADMIN_SORT_FILTER_KEY]);
   return {
-    page,
-    limit,
+    page: params.page,
+    limit: params.limit,
     ...(term ? { search: term } : {}),
     ...(status ? { status } : {}),
+    ...(createdFrom ? { createdFrom } : {}),
+    ...(createdTo ? { createdTo } : {}),
+    ...(sortBy && order ? { sortBy, order } : {}),
   };
 }
 

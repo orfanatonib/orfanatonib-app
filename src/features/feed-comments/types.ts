@@ -71,6 +71,10 @@ export interface ModerationFeedCommentsQuery {
   limit: number;
   status?: FeedCommentStatus;
   search?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  sortBy?: string;
+  order?: 'ASC' | 'DESC';
 }
 
 export interface RejectFeedCommentPayload {

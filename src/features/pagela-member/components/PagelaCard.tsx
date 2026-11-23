@@ -17,6 +17,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import type { Pagela } from "../types";
 import { toLabelVisit } from "../utils";
 import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
+import { MIN_TOUCH_TARGET_PX, PAGELA_TESTID_PREFIX as TID } from "../constants";
 
 function formatPtBrDate(iso: string | null | undefined) {
   if (!iso) return "—";
@@ -78,6 +79,7 @@ export default function PagelaCard({
             color={row.present ? "success" : "default"}
             icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
             label={row.present ? "Presente" : "Ausente"}
+            data-testid={`${TID}-card-present-${row.id}`}
             sx={chipMobileSx}
           />
         </Tooltip>
@@ -89,6 +91,7 @@ export default function PagelaCard({
           color={row.present ? "success" : "default"}
           icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
           label={row.present ? "Presente" : "Ausente"}
+          data-testid={`${TID}-card-present-${row.id}`}
           sx={{ fontWeight: 700 }}
         />
       </Stack>
@@ -100,6 +103,7 @@ export default function PagelaCard({
     <>
       <Card
         variant="outlined"
+        data-testid={`${TID}-card-${row.id}`}
         sx={{
           borderRadius: 4,
           height: "100%",
@@ -127,6 +131,7 @@ export default function PagelaCard({
                   overflow: "hidden",
                 }}
                 title={visitTitle}
+                data-testid={`${TID}-card-title-${row.id}`}
               >
                 {visitTitle}
               </Typography>
@@ -137,6 +142,8 @@ export default function PagelaCard({
                     size="small"
                     onClick={() => onEdit(row)}
                     aria-label="Editar pagela"
+                    data-testid={`${TID}-card-edit-${row.id}`}
+                    sx={{ width: MIN_TOUCH_TARGET_PX, height: MIN_TOUCH_TARGET_PX }}
                   >
                     <Edit fontSize="inherit" />
                   </IconButton>
@@ -146,6 +153,8 @@ export default function PagelaCard({
                     size="small"
                     onClick={() => setConfirmOpen(true)}
                     aria-label="Excluir pagela"
+                    data-testid={`${TID}-card-delete-${row.id}`}
+                    sx={{ width: MIN_TOUCH_TARGET_PX, height: MIN_TOUCH_TARGET_PX }}
                   >
                     <Delete fontSize="inherit" />
                   </IconButton>
@@ -160,7 +169,7 @@ export default function PagelaCard({
               sx={{ color: "text.secondary" }}
             >
               <EventNote fontSize="small" />
-              <Typography variant="caption">
+              <Typography variant="caption" data-testid={`${TID}-card-date-${row.id}`}>
                 Registro: {formatPtBrDate(row.referenceDate)}
               </Typography>
             </Stack>
@@ -170,7 +179,7 @@ export default function PagelaCard({
             <Chips />
 
             {row.notes && (
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
+              <Typography variant="body2" sx={{ mt: 0.5 }} data-testid={`${TID}-card-notes-${row.id}`}>
                 {row.notes}
               </Typography>
             )}
@@ -180,6 +189,7 @@ export default function PagelaCard({
 
       <DeleteConfirmDialog
         open={confirmOpen}
+        testId={`${TID}-delete-dialog-${row.id}`}
         title={visitTitle}
         onClose={() => (busy ? null : setConfirmOpen(false))}
         onConfirm={async () => {

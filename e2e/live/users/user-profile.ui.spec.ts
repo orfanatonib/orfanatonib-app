@@ -89,7 +89,7 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/usuarios");
     await expect(page.getByTestId("users-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByTestId("users-search-input").fill(cast.victim.email);
+    await page.getByTestId("users-toolbar-search").fill(cast.victim.email);
     await expect(page.getByText(cast.victim.email).first()).toBeVisible({ timeout: 15_000 });
     expect((await userState(cast.victim.id))?.email).toBe(cast.victim.email);
   });
@@ -98,7 +98,7 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/usuarios");
     await expect(page.getByTestId("users-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByTestId("users-search-input").fill("nao-existe-mesmo-zzzz");
+    await page.getByTestId("users-toolbar-search").fill("nao-existe-mesmo-zzzz");
     await expect(page.getByText(cast.victim.email)).toHaveCount(0, { timeout: 15_000 });
     await expect(page.getByRole("alert")).toHaveCount(0);
   });
@@ -107,10 +107,11 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/perfis");
     await expect(page.getByTestId("profiles-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByPlaceholder("Buscar por nome ou email...").fill(cast.victim.email);
+    await page.getByTestId("profiles-toolbar-search").fill(cast.victim.email);
     // A busca tem debounce: só clica quando a lista já veio filtrada (1 card).
-    await expect(page.getByTestId("profile-card")).toHaveCount(1, { timeout: 15_000 });
-    await page.getByTestId("profile-card").click();
+    await expect(page.getByTestId(`profiles-card-open-${cast.victim.id}`)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.getByTestId(/^profiles-card-open-/)).toHaveCount(1);
+    await page.getByTestId(`profiles-card-open-${cast.victim.id}`).click();
     await expect(page.getByTestId("profile-detail-modal")).toBeVisible();
     await expect(page.getByTestId("profile-detail-name")).toHaveText(String((await userState(cast.victim.id))?.name));
     await expect(page.getByTestId("profile-detail-ga")).toContainText(String((await personalRows(cast.victim.id))[0].gaLeaderName));
@@ -121,7 +122,7 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/perfis");
     await expect(page.getByTestId("profiles-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByPlaceholder("Buscar por nome ou email...").fill("nao-existe-mesmo-zzzz");
+    await page.getByTestId("profiles-toolbar-search").fill("nao-existe-mesmo-zzzz");
     await expect(page.getByTestId("profiles-empty")).toBeVisible({ timeout: 15_000 });
   });
 
@@ -152,12 +153,12 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/usuarios");
     await expect(page.getByTestId("users-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByTestId("users-search-input").fill(cast.victim.email);
+    await page.getByTestId("users-toolbar-search").fill(cast.victim.email);
     await expect(page.getByTestId("users-cards")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("users-table")).toHaveCount(0);
-    await expect(page.getByTestId("user-card").first()).toBeVisible();
+    await expect(page.getByTestId(`users-card-${cast.victim.id}`)).toBeVisible();
     await expectNoHorizontalScroll(page);
-    for (const id of ["user-card-view", "user-card-edit", "user-card-delete", "user-card-toggle"]) {
+    for (const id of ["view", "edit", "delete"].map((key) => `users-card-${key}-${cast.victim.id}`)) {
       const box = await page.getByTestId(id).first().boundingBox();
       expect(box?.height ?? 0, `${id} abaixo de 44px`).toBeGreaterThanOrEqual(44);
       expect(box?.width ?? 0, `${id} abaixo de 44px`).toBeGreaterThanOrEqual(44);
@@ -168,14 +169,15 @@ test.describe.serial("Usuários e perfis — telas", () => {
     await seedBrowserSession(page, session(cast.admin));
     await page.goto("/adm/perfis");
     await expect(page.getByTestId("profiles-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByPlaceholder("Buscar por nome ou email...").fill(cast.victim.email);
-    await expect(page.getByTestId("profile-card")).toHaveCount(1, { timeout: 15_000 });
+    await page.getByTestId("profiles-toolbar-search").fill(cast.victim.email);
+    await expect(page.getByTestId(`profiles-card-open-${cast.victim.id}`)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.getByTestId(/^profiles-card-open-/)).toHaveCount(1);
     await expectNoHorizontalScroll(page);
-    for (const id of ["profiles-filters-toggle", "profiles-refresh"]) {
+    for (const id of ["profiles-toolbar-toggle-filters", "profiles-toolbar-refresh"]) {
       const box = await page.getByTestId(id).boundingBox();
       expect(box?.height ?? 0, `${id} abaixo de 44px`).toBeGreaterThanOrEqual(44);
     }
-    await page.getByTestId("profile-card").click();
+    await page.getByTestId(`profiles-card-open-${cast.victim.id}`).click();
     await expect(page.getByTestId("profile-detail-modal")).toBeVisible();
     const modal = await page.getByTestId("profile-detail-modal").locator(".MuiDialog-paper").boundingBox();
     expect(modal?.width ?? 0).toBeLessThanOrEqual(375);

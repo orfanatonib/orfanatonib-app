@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MediaPlatform, MediaType, MediaUploadType } from '@/store/slices/types';
 import { FeedCommentStatus } from './types';
 import {
-  buildModerationQuery,
+  toModerationQuery,
   clampBadgeCount,
   getCoverPreviewUrl,
   isAwaitingOrRejected,
@@ -13,12 +13,22 @@ import {
 
 describe('feed-comments utils', () => {
   it('monta a consulta da fila só com o que foi preenchido', () => {
-    expect(buildModerationQuery(2, 10, '  ', '')).toEqual({ page: 2, limit: 10 });
-    expect(buildModerationQuery(1, 20, ' maria ', FeedCommentStatus.PENDING)).toEqual({
+    expect(toModerationQuery({ page: 2, limit: 10, search: '  ', filters: { status: '' } })).toEqual({ page: 2, limit: 10 });
+    expect(
+      toModerationQuery({
+        page: 1,
+        limit: 20,
+        search: ' maria ',
+        filters: { status: 'pending', createdFrom: '2026-01-01', createdTo: '', sort: 'reviewedAt:ASC' },
+      }),
+    ).toEqual({
       page: 1,
       limit: 20,
       search: 'maria',
       status: FeedCommentStatus.PENDING,
+      createdFrom: '2026-01-01',
+      sortBy: 'reviewedAt',
+      order: 'ASC',
     });
   });
 

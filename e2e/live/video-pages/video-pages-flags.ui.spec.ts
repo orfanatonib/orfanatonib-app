@@ -1,5 +1,6 @@
 import type { APIRequestContext } from "@playwright/test";
 
+import { cleanupData } from "../support/keep-data";
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, queryOne } from "../support/db";
 import { RUN_TAG, tagged } from "../support/factory";
@@ -52,8 +53,10 @@ test.describe.serial("Páginas de vídeos — flags", () => {
 
   test.afterAll(async ({ request }) => {
     await restore(request);
-    await deletePageApi(request, admin.accessToken, source.id);
-    expect(await pagesWithTag(RUN_TAG)).toBe(0);
+    await cleanupData(async () => {
+      await deletePageApi(request, admin.accessToken, source.id);
+      expect(await pagesWithTag(RUN_TAG)).toBe(0);
+    });
     await closeDb();
   });
 

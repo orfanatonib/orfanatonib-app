@@ -1,91 +1,88 @@
 import React from 'react';
+import { Alert, Snackbar } from '@mui/material';
 import { Lightbulb } from '@mui/icons-material';
 
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import AdminListScreen from '@/components/common/admin-shell/AdminListScreen';
+import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
 import { IdeasPageData } from 'store/slices/ideas/ideasSlice';
 import IdeasPageCard from './components/IdeasPageCard';
 import IdeasPageDetailsModal from './components/IdeasPageDetailsModal';
-import { useIdeasMutations, useIdeasPages, useIdeasSearch } from './hooks';
-import { IDEAS_PAGES_MESSAGES } from './constants';
-import AdminPageShell from '@/components/common/admin-shell/AdminPageShell';
-import AdminSearchBar from '@/components/common/admin-shell/AdminSearchBar';
-import AdminListSkeleton from '@/components/common/admin-shell/AdminListSkeleton';
-import AdminEmptyState from '@/components/common/admin-shell/AdminEmptyState';
-import AdminErrorAlert from '@/components/common/admin-shell/AdminErrorAlert';
-import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
-import { resolveEmptyMessage } from '@/components/common/admin-shell/utils';
+import { useIdeasPagesList } from './hooks';
+import {
+  IDEAS_PAGES_FILTER_FIELDS,
+  IDEAS_PAGES_MESSAGES,
+  IDEAS_PAGES_TEST_ID_PREFIX,
+} from './constants';
 
 export default function IdeasManager() {
-  const { pages, loading, error, setError, fetchPages } = useIdeasPages();
-  const { filtered, searchTerm, setSearchTerm, isFiltering } = useIdeasSearch(pages);
-  const { mutError, setMutError, deletePage } = useIdeasMutations(fetchPages);
+  const { list, mutError, setMutError, deletePage } = useIdeasPagesList();
 
   const [pageToDelete, setPageToDelete] = React.useState<IdeasPageData | null>(null);
   const [selectedPage, setSelectedPage] = React.useState<IdeasPageData | null>(null);
+
   const handleDeleteConfirm = async () => {
     if (!pageToDelete) return;
-    const deleted = await deletePage(pageToDelete.id || '');
-    if (deleted) {
-      setError(null);
-      setMutError(null);
-    }
+    const id = pageToDelete.id || '';
     setPageToDelete(null);
+    await deletePage(id);
   };
 
-  const anyError = error || mutError;
-  const showSkeleton = loading && filtered.length === 0;
-
   return (
-    <AdminPageShell testId="ideas-pages-manager" title={IDEAS_PAGES_MESSAGES.TITLE}>
-      <AdminSearchBar
-        rootTestId="ideas-toolbar"
-        testId="ideas-toolbar-search"
-        clearTestId="ideas-toolbar-clear"
-        refreshTestId="ideas-toolbar-refresh"
-        label="Buscar páginas"
-        ariaLabel="Buscar por título"
-        value={searchTerm}
-        onChange={setSearchTerm}
-        onRefresh={fetchPages}
-        loading={isFiltering}
-      />
+    <AdminListScreen
+      testIdPrefix={IDEAS_PAGES_TEST_ID_PREFIX}
+      title={IDEAS_PAGES_MESSAGES.TITLE}
+      searchLabel={IDEAS_PAGES_MESSAGES.SEARCH_LABEL}
+      searchPlaceholder={IDEAS_PAGES_MESSAGES.SEARCH_PLACEHOLDER}
+      fields={IDEAS_PAGES_FILTER_FIELDS}
+      list={list}
+      emptyMessage={IDEAS_PAGES_MESSAGES.EMPTY}
+      emptyIcon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
+      overlays={
+        <>
+          <IdeasPageDetailsModal
+            page={selectedPage}
+            open={!!selectedPage}
+            onClose={() => setSelectedPage(null)}
+          />
 
-      {showSkeleton ? (
-        <AdminListSkeleton testId="ideas-pages-loading" withCover={false} />
-      ) : anyError ? (
-        <AdminErrorAlert testId="ideas-pages-error" message={anyError} onRetry={fetchPages} />
-      ) : filtered.length === 0 ? (
-        <AdminEmptyState
-          testId="ideas-pages-empty"
-          message={resolveEmptyMessage(Boolean(searchTerm), IDEAS_PAGES_MESSAGES.EMPTY)}
-          icon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
-        />
-      ) : (
-        <AdminCardGrid testId="ideas-pages-list">
-          {filtered.map((page) => (
-            <IdeasPageCard
-              key={page.id}
-              page={page}
-              onView={() => setSelectedPage(page)}
-              onDelete={() => setPageToDelete(page)}
-            />
-          ))}
-        </AdminCardGrid>
-      )}
+          <DeleteConfirmDialog
+            open={!!pageToDelete}
+            testId="ideas-pages-delete-dialog"
+            title={pageToDelete?.title}
+            onClose={() => setPageToDelete(null)}
+            onConfirm={handleDeleteConfirm}
+          />
 
-      <IdeasPageDetailsModal
-        page={selectedPage}
-        open={!!selectedPage}
-        onClose={() => setSelectedPage(null)}
-      />
-
-      <DeleteConfirmDialog
-        open={!!pageToDelete}
-        testId="ideas-pages-delete-dialog"
-        title={pageToDelete?.title}
-        onClose={() => setPageToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-      />
-    </AdminPageShell>
+          <Snackbar
+            open={Boolean(mutError)}
+            autoHideDuration={6000}
+            onClose={() => setMutError(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          >
+            <Alert
+              data-testid="ideas-pages-delete-error"
+              severity="error"
+              variant="filled"
+              onClose={() => setMutError(null)}
+              sx={{ borderRadius: 2 }}
+            >
+              {mutError}
+            </Alert>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId="ideas-pages-list">
+        {list.items.map((page) => (
+          <IdeasPageCard
+            key={page.id}
+            page={page}
+            onView={() => setSelectedPage(page)}
+            onDelete={() => setPageToDelete(page)}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

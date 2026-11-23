@@ -114,7 +114,7 @@ export function renderMemberRoutes() {
             <Route
               path={MEMBER_SUBPAGE_PATHS.integrations}
               element={flaggedElement(
-                FeatureFlagKeys.INTEGRATION,
+                FeatureFlagKeys.MINISTRY_FAIR_INTEGRATION,
                 <Pages.IntegrationManager />,
               )}
             />
@@ -139,16 +139,6 @@ export function renderMemberRoutes() {
           path="/presenca"
           element={lazyElement(<Pages.AttendanceIndexRedirect />)}
         />
-        {/* A API é admin/líder (403 para membro): a rota também. */}
-        <Route element={<ProtectedRoute requiredRole={ADMIN_OR_LEADER} />}>
-          <Route
-            path="/integracao"
-            element={flaggedElement(
-              FeatureFlagKeys.INTEGRATION,
-              <Pages.IntegrationShelteredPage />,
-            )}
-          />
-        </Route>
       </Route>
 
       {/* Endereços antigos da Área do Membro (e Integrações FM, que saiu do /adm) redirecionam. */}

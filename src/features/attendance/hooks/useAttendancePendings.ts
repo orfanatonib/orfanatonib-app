@@ -23,7 +23,7 @@ export function useAttendancePendings(): UseAttendancePendingsResult {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   // Pendências de presença e de relatório dependem das flags dos próprios recursos.
-  const attendanceEnabled = useIsFeatureEnabled(FeatureFlagKeys.ATTENDANCE);
+  const attendanceEnabled = useIsFeatureEnabled(FeatureFlagKeys.ATTENDANCE_CONTROL);
   const visitReportsEnabled = useIsFeatureEnabled(FeatureFlagKeys.VISIT_REPORTS);
 
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;

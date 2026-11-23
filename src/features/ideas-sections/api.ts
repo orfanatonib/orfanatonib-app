@@ -1,13 +1,13 @@
 import api from '@/config/axiosConfig';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import { IdeasPage, IdeasSection } from './types';
 
 const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 
-/** Ideias ainda não publicadas em nenhuma página. */
-export async function listIdeasSections(): Promise<IdeasSection[]> {
-  const { data } = await api.get<IdeasSection[]>('/ideas-sections');
-  return data;
-}
+/** Ideias ainda não publicadas em nenhuma página, filtradas, ordenadas e paginadas no servidor. */
+export const fetchIdeasSectionsPage: AdminListFetcher<IdeasSection> = (params, signal) =>
+  fetchAdminPage<IdeasSection>('/ideas-sections', params, signal);
 
 export async function getIdeasSection(id: string): Promise<IdeasSection> {
   const { data } = await api.get<IdeasSection>(`/ideas-sections/${id}`);

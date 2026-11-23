@@ -23,7 +23,7 @@ export function renderAdminRoutes() {
         <Route
           path="presenca"
           element={flaggedElement(
-            FeatureFlagKeys.ATTENDANCE,
+            FeatureFlagKeys.ATTENDANCE_CONTROL,
             <Pages.AttendanceLayout />,
           )}
         >
@@ -111,12 +111,14 @@ export function renderAdminRoutes() {
         <Route
           path={FEED_COMMENTS_ADMIN_PATH}
           element={
-            <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_FEED}>
-              {flaggedElement(
-                FeatureFlagKeys.SHELTER_FEED_COMMENTS,
-                <Pages.FeedCommentsManager />,
-              )}
-            </FeatureFlagRoute>
+            <RequireAdmin>
+              <FeatureFlagRoute featureKey={FeatureFlagKeys.SHELTER_FEED}>
+                {flaggedElement(
+                  FeatureFlagKeys.SHELTER_FEED_COMMENTS,
+                  <Pages.FeedCommentsManager />,
+                )}
+              </FeatureFlagRoute>
+            </RequireAdmin>
           }
         />
         <Route
@@ -227,7 +229,7 @@ export function renderAdminRoutes() {
         <Route
           path="perfis"
           element={flaggedElement(
-            FeatureFlagKeys.USER_MANAGEMENT,
+            FeatureFlagKeys.PROFILE_MANAGEMENT,
             <Pages.ProfilesManager />,
           )}
         />
@@ -276,7 +278,7 @@ export function renderAdminRoutes() {
         <Route
           path="pagelas"
           element={flaggedElement(
-            FeatureFlagKeys.PAGELAS,
+            FeatureFlagKeys.PAGELAS_MANAGEMENT,
             <Pages.PagelaSheltersManager />,
           )}
         />

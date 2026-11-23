@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { copyToClipboard, formatDateTime, selectThumbnails, truncate } from './utils';
+import { copyToClipboard, countPhotos, formatDateTime, selectThumbnails, truncate } from './utils';
 
 describe('truncate', () => {
   it('mantém textos curtos e corta os longos com reticências', () => {
@@ -57,5 +57,13 @@ describe('copyToClipboard', () => {
     await expect(copyToClipboard('x')).resolves.toBe(true);
     expect(exec).toHaveBeenCalledWith('copy');
     expect(document.querySelector('textarea')).toBeNull();
+  });
+});
+
+describe('countPhotos', () => {
+  it('soma as fotos de todas as seções', () => {
+    const page = { public: true, description: '', sections: [{ mediaItems: [{}, {}] }, { mediaItems: [{}] }, {}] };
+    expect(countPhotos(page as never)).toBe(3);
+    expect(countPhotos({ ...page, sections: [] } as never)).toBe(0);
   });
 });

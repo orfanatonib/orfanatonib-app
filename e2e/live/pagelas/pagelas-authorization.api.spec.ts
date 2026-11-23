@@ -8,7 +8,7 @@ import { authHeaders, expect, loginAs, test } from "../support/live";
  * recusada não altera o banco. Com `pagelas` e `sheltered_area` desligadas ⇒ 403 FEATURE_DISABLED.
  */
 const BAD = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
-const FLAGS = ["pagelas", "sheltered_area"] as const;
+const FLAGS = ["pagelas_management", "sheltered_area"] as const;
 
 test.describe.serial("Pagelas — autorização", () => {
   let admin: string;

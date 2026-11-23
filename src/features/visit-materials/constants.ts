@@ -129,3 +129,62 @@ export const VISIT_MATERIAL_FIELD_SCOPE: Readonly<
   [VisitMaterialCategory.TEEN]: 'teen_',
   [VisitMaterialCategory.ADULT]: 'adult_',
 };
+
+/* ───────── Tela administrativa (casca única, filtros no servidor) ───────── */
+
+export const VISIT_MATERIALS_TEST_ID_PREFIX = 'visit-materials';
+export const VISIT_MATERIALS_DEFAULT_SORT = 'createdAt:DESC';
+
+export const VISIT_MATERIAL_FILTER_KEYS = {
+  TESTAMENT: 'testament',
+  CATEGORY: 'category',
+  PUBLIC: 'public',
+  CURRENT_WEEK: 'currentWeek',
+  CREATED_FROM: 'createdFrom',
+  CREATED_TO: 'createdTo',
+  SORT: 'sort',
+} as const;
+
+export const VISIT_MATERIAL_ADMIN_SORT_OPTIONS = [
+  { value: 'createdAt:DESC', label: 'Criação: mais recentes' },
+  { value: 'createdAt:ASC', label: 'Criação: mais antigas' },
+  { value: 'title:ASC', label: 'Título: A a Z' },
+  { value: 'title:DESC', label: 'Título: Z a A' },
+  { value: 'testament:ASC', label: 'Testamento: Antigo primeiro' },
+  { value: 'testament:DESC', label: 'Testamento: Novo primeiro' },
+] as const;
+
+export const VISIT_MATERIAL_PUBLIC_OPTIONS = [
+  { value: 'true', label: 'Públicas' },
+  { value: 'false', label: 'Privadas' },
+] as const;
+
+export const VISIT_MATERIAL_CURRENT_OPTIONS = [
+  { value: 'true', label: 'Só o material atual' },
+  { value: 'false', label: 'Exceto o atual' },
+] as const;
+
+export const VISIT_MATERIALS_LABELS = {
+  TITLE: 'Materiais de Visita',
+  SEARCH: 'Buscar materiais',
+  SEARCH_PLACEHOLDER: 'Buscar materiais por título, subtítulo ou descrição...',
+  EMPTY: 'Ainda não há materiais cadastrados.',
+  FILTER_TESTAMENT: 'Testamento',
+  FILTER_TESTAMENT_ALL: 'Todos os testamentos',
+  FILTER_CATEGORY: 'Categoria',
+  FILTER_CATEGORY_ALL: 'Todas as faixas',
+  FILTER_PUBLIC: 'Visibilidade',
+  FILTER_PUBLIC_ALL: 'Públicas e privadas',
+  FILTER_CURRENT: 'Material atual',
+  FILTER_CURRENT_ALL: 'Atual e demais',
+  FILTER_CREATED_FROM: 'Criado a partir de',
+  FILTER_CREATED_TO: 'Criado até',
+  FILTER_SORT: 'Ordenar por',
+  VIEW: 'Ver',
+  EDIT: 'Editar',
+  DELETE: 'Excluir material',
+  SET_CURRENT: 'Tornar material atual',
+  CURRENT_CHIP: 'Material Atual',
+  PUBLIC: 'Público',
+  PRIVATE: 'Privado',
+} as const;

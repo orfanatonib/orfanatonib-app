@@ -6,12 +6,12 @@ import { expect, loginAs, seedBrowserSession, test } from "../support/live";
  * lado da gaveta no desktop e 98% da tela no celular, sem rolagem horizontal.
  */
 const SCREENS = [
-  { name: "abrigos", path: "/adm/abrigos", content: "shelters-content" },
-  { name: "agendamentos", path: "/adm/agendamentos", content: "shelter-schedule-manager" },
+  { name: "abrigos", path: "/adm/abrigos", content: "shelters-manager-frame" },
+  { name: "agendamentos", path: "/adm/agendamentos", content: "shelter-schedule-manager-frame" },
   { name: "presença · lançar", path: "/adm/presenca/lancar", content: "attendance-content" },
   { name: "presença · consultar", path: "/adm/presenca/consultar", content: "attendance-content" },
   { name: "presença · pendências", path: "/adm/presenca/pendencias", content: "attendance-content" },
-  { name: "relatórios das visitas", path: "/adm/relatorios-visita", content: "visit-reports-manager" },
+  { name: "relatórios das visitas", path: "/adm/relatorios-visita", content: "visit-reports-manager-frame" },
   { name: "relatórios · pendências", path: "/adm/relatorios/pendencias", content: "visit-reports-pendings-page" },
 ] as const;
 

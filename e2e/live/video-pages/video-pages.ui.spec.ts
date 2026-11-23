@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { cleanupData } from "../support/keep-data";
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb } from "../support/db";
 import { RUN_TAG, tagged } from "../support/factory";
@@ -11,6 +12,9 @@ import { BAD_ID, createPage, deletePageApi, mediaRows, pageRow, pagesWithTag, ro
  * Telas de `/video-pages` (plano 34) de ponta a ponta: UI -> API -> MySQL. Os dados nascem pela API
  * (prefixo RUN_TAG) e a prova de cada efeito é um SELECT; recusas provam banco inalterado.
  */
+/** Cartão da lista: `video-page-card-<uuid>` (os filhos têm sufixo próprio e não casam). */
+const CARD_RE = /^video-page-card-[0-9a-f-]{36}$/;
+
 test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
   let admin: LoginResult;
   let leader: LoginResult;
@@ -35,7 +39,7 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
   const openManager = async (page: Page, search: string): Promise<void> => {
     await page.goto("/adm/paginas-videos");
     await expect(page.getByTestId("video-pages-manager")).toBeVisible({ timeout: 20_000 });
-    await page.getByTestId("video-pages-search").fill(search);
+    await page.getByTestId("video-pages-toolbar-search").fill(search);
   };
 
   const fillBasics = async (page: Page, title: string, description: string): Promise<void> => {
@@ -61,8 +65,10 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
   });
 
   test.afterAll(async ({ request }) => {
-    for (const id of created) await deletePageApi(request, admin.accessToken, id);
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
+    await cleanupData(async () => {
+      for (const id of created) await deletePageApi(request, admin.accessToken, id);
+      expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
+    });
     await closeDb();
   });
 
@@ -75,10 +81,10 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     await seedBrowserSession(page, admin);
     await openManager(page, tagged("ui-lista"));
 
-    const cards = page.getByTestId("video-page-card");
+    const cards = page.getByTestId(CARD_RE);
     await expect(cards).toHaveCount(await pagesWithTag(tagged("ui-lista")));
-    await expect(cards.filter({ hasText: tagged("ui-lista-a") }).getByTestId("video-page-card-visibility")).toHaveText("Pública");
-    await expect(cards.filter({ hasText: tagged("ui-lista-b") }).getByTestId("video-page-card-visibility")).toHaveText("Privada");
+    await expect(cards.filter({ hasText: tagged("ui-lista-a") }).getByTestId(/^video-page-card-visibility-/)).toHaveText("Pública");
+    await expect(cards.filter({ hasText: tagged("ui-lista-b") }).getByTestId(/^video-page-card-visibility-/)).toHaveText("Privada");
     expect((await pageRow(pub.id))?.public).toBe(1);
     expect((await pageRow(priv.id))?.public).toBe(0);
   });
@@ -152,7 +158,7 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     const source = await make(request, "ui-editar");
     await seedBrowserSession(page, admin);
     await openManager(page, tagged("ui-editar"));
-    await page.getByTestId("video-page-card").filter({ hasText: tagged("ui-editar") }).getByTestId("video-page-card-edit").click();
+    await page.getByTestId(CARD_RE).filter({ hasText: tagged("ui-editar") }).getByTestId(/^video-page-card-edit-/).click();
 
     await expect(page).toHaveURL(new RegExp(`/adm/editar-pagina-videos\\?id=${source.id}`));
     const titleInput = page.getByTestId("video-page-creator-title").locator("input");
@@ -182,7 +188,7 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     const source = await make(request, "ui-excluir", { videos: 2 });
     await seedBrowserSession(page, admin);
     await openManager(page, tagged("ui-excluir"));
-    await page.getByTestId("video-page-card").filter({ hasText: tagged("ui-excluir") }).getByTestId("video-page-card-delete").click();
+    await page.getByTestId(CARD_RE).filter({ hasText: tagged("ui-excluir") }).getByTestId(/^video-page-card-delete-/).click();
 
     const deleted = page.waitForResponse((r) => r.url().endsWith(`/video-pages/${source.id}`) && r.request().method() === "DELETE");
     await page.getByTestId("video-pages-delete-modal-confirm").click();
@@ -200,7 +206,7 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     await page.goto("/adm/paginas-videos");
     await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("video-pages-manager")).toHaveCount(0);
-    await expect(page.getByTestId("video-page-card")).toHaveCount(0);
+    await expect(page.getByTestId(CARD_RE)).toHaveCount(0);
     expect(await snapshotDb()).toEqual(before);
     expect(await pageRow(source.id)).not.toBeNull();
   });
@@ -276,6 +282,8 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     await seedBrowserSession(page, member);
     await page.goto("/area-do-membro/videos");
     await expect(page.getByTestId("member-videos-page")).toBeVisible({ timeout: 20_000 });
+    // A massa acumula: a galeria é paginada, então filtra pelo título desta execução antes de procurar o cartão.
+    await page.getByTestId("member-videos-search").fill(tagged("ui-membro-lista"));
     await expect(page.getByTestId(`member-videos-card-${route.id}`)).toBeVisible();
     await page.getByTestId(`member-videos-card-${route.id}`).click();
     await expect(page).toHaveURL(new RegExp(`/area-do-membro/videos/${source.id}$`));
@@ -287,10 +295,10 @@ test.describe.serial("Páginas de vídeos — UI ao vivo", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await seedBrowserSession(page, admin);
     await openManager(page, tagged("ui-mobile-lista"));
-    const card = page.getByTestId("video-page-card").filter({ hasText: tagged("ui-mobile-lista") });
+    const card = page.getByTestId(CARD_RE).filter({ hasText: tagged("ui-mobile-lista") });
     await expect(card).toBeVisible();
-    const view = card.getByTestId("video-page-card-view");
-    const edit = card.getByTestId("video-page-card-edit");
+    const view = card.getByTestId(/^video-page-card-view-/);
+    const edit = card.getByTestId(/^video-page-card-edit-/);
     const [a, b] = [await view.boundingBox(), await edit.boundingBox()];
     expect(a && b).toBeTruthy();
     expect(Math.abs(a!.x - b!.x), "Ver/Editar com x desalinhado").toBeLessThanOrEqual(1);

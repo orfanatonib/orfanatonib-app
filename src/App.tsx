@@ -53,7 +53,9 @@ function App() {
     setBootAttempt((attempt) => attempt + 1);
   };
 
-  if (!initialized || loadingUser) {
+  // Refetch do usuário já carregado (ex.: `fetchCurrentUser` em telas) não pode voltar à tela de boot:
+  // isso desmontaria a tela que disparou o refetch e criaria um laço de montagem.
+  if (!initialized || (loadingUser && !user)) {
     return (
       <AppBootScreen
         timedOut={bootTimedOut}

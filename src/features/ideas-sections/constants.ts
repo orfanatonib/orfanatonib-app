@@ -26,6 +26,38 @@ export const MEDIA_TYPE_ICONS: Readonly<Record<string, string>> = {
   document: '📄',
 };
 
+/** Prefixo dos `data-testid` da casca (`ideas-sections-manager`, `-toolbar`, `-cards`...). */
+export const IDEAS_SECTIONS_TEST_ID_PREFIX = 'ideas-sections';
+
+export const IDEAS_SECTIONS_DEFAULT_SORT = 'createdAt:DESC';
+
+export const IDEAS_SECTION_FILTER_KEYS = {
+  MEDIA_TYPE: 'mediaType',
+  CREATED_FROM: 'createdFrom',
+  CREATED_TO: 'createdTo',
+  SORT: 'sort',
+} as const;
+
+export const IDEAS_SECTION_SORT_OPTIONS = [
+  { value: 'createdAt:DESC', label: 'Envio: mais recentes' },
+  { value: 'createdAt:ASC', label: 'Envio: mais antigas' },
+  { value: 'title:ASC', label: 'Título: A a Z' },
+  { value: 'title:DESC', label: 'Título: Z a A' },
+] as const;
+
+export const IDEAS_SECTION_LABELS = {
+  SEARCH: 'Buscar ideias',
+  SEARCH_PLACEHOLDER: 'Buscar por título, descrição ou autor...',
+  FILTER_MEDIA_TYPE: 'Tipo de mídia',
+  FILTER_MEDIA_TYPE_ALL: 'Todos os tipos',
+  FILTER_CREATED_FROM: 'Enviada a partir de',
+  FILTER_CREATED_TO: 'Enviada até',
+  FILTER_SORT: 'Ordenar por',
+} as const;
+
+/** Tipos de mídia aceitos no filtro (o servidor confere em `media_items`). */
+export const IDEAS_SECTION_MEDIA_FILTER_TYPES = ['image', 'video', 'document'] as const;
+
 export const IDEAS_SECTION_ADMIN_EDIT_PATH = '/adm/editar-ideias-compartilhadas';
 
 export const IDEAS_SECTION_MESSAGES = {

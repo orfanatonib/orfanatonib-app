@@ -116,6 +116,7 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
 
   return (
     <Dialog
+      data-testid="user-view-dialog"
       open={open}
       onClose={onClose}
       fullWidth
@@ -319,13 +320,14 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
               startIcon={<WhatsApp />}
               {...anchorProps(waLink)}
               disabled={!waLink}
+              data-testid="user-view-whatsapp"
             >
               Conversar no WhatsApp
             </Button>
           </span>
         </Tooltip>
 
-        <Button fullWidth={isXs} onClick={onClose}>
+        <Button fullWidth={isXs} onClick={onClose} data-testid="user-view-close">
           Fechar
         </Button>
       </DialogActions>

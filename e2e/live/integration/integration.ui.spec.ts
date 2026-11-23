@@ -37,16 +37,13 @@ test.describe.serial("Gerenciamento de Integração — Teste E2E Full-Stack", (
     await expect(page.getByTestId("integration-manager")).toHaveCount(0);
   });
 
-  test("2. Navegação para página de integração de acolhidos na Área do Membro (/integracao)", async ({
+  test("2. A rota /integracao (registro de acolhido na integração) não existe mais: mostra a página 404", async ({
     page,
     request,
   }) => {
-    const loginResult = await loginAs(request, "admin");
-    await seedBrowserSession(page, loginResult);
+    await seedBrowserSession(page, await loginAs(request, "admin"));
 
     await page.goto("/integracao");
-    await page.waitForLoadState("networkidle");
-
-    await expect(page.locator("body")).toBeVisible();
+    await expect(page.getByTestId("not-found-page")).toBeVisible({ timeout: 20_000 });
   });
 });

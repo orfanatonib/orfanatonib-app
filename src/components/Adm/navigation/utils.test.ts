@@ -127,7 +127,7 @@ describe("admin navigation", () => {
       role: AdminNavigationRole.ADMIN,
       featureFlags: {
         [FeatureFlagKeys.SHELTERED_MANAGEMENT]: false,
-        [FeatureFlagKeys.PAGELAS]: false,
+        [FeatureFlagKeys.PAGELAS_MANAGEMENT]: false,
         [FeatureFlagKeys.CONTENT_STUDIO]: true,
         [FeatureFlagKeys.CONTENT_STUDIO_REVIEW]: false,
         [FeatureFlagKeys.CONTENT_STUDIO_PROVIDER_ADMIN]: false,

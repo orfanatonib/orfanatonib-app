@@ -12,11 +12,20 @@ const api = await import("./api");
 describe("api de avaliações do site", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("lista: resposta que não é array vira lista vazia", async () => {
-    get.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: [{ id: "f1" }] });
-    await expect(api.apiListFeedbacks()).resolves.toEqual([]);
-    await expect(api.apiListFeedbacks()).resolves.toEqual([{ id: "f1" }]);
-    expect(get).toHaveBeenCalledWith("/site-feedbacks");
+  it("lista paginada: filtros e ordenação viram query string e o envelope vira itens e total", async () => {
+    get.mockResolvedValue({
+      data: { data: [{ id: "f1" }], meta: { page: 2, limit: 12, totalItems: 13, totalPages: 2 } },
+    });
+    const signal = new AbortController().signal;
+    const page = await api.fetchFeedbacksPage(
+      { page: 2, limit: 12, search: " ótimo ", filters: { read: "false", rating: "4", category: "", sort: "rating:DESC" } },
+      signal,
+    );
+    expect(page).toEqual({ items: [{ id: "f1" }], total: 13, totalPages: 2 });
+    expect(get).toHaveBeenCalledWith("/site-feedbacks", {
+      params: { page: 2, limit: 12, search: "ótimo", read: "false", rating: "4", sortBy: "rating", order: "DESC" },
+      signal,
+    });
   });
 
   it("envia a avaliação por POST e devolve a criada", async () => {

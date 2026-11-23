@@ -36,6 +36,7 @@ const FeedbackDetailsModal: React.FC<Props> = ({ feedback, onClose, onMarkAsRead
 
   return (
     <Dialog
+      data-testid="feedback-view-dialog"
       open={!!feedback}
       onClose={onClose}
       maxWidth="sm"
@@ -49,7 +50,7 @@ const FeedbackDetailsModal: React.FC<Props> = ({ feedback, onClose, onMarkAsRead
           <MarkEmailReadIcon color="primary" />
           Detalhes do Feedback
         </DialogTitle>
-        <IconButton onClick={onClose} aria-label="Fechar">
+        <IconButton data-testid="feedback-view-close-icon" onClick={onClose} aria-label="Fechar" sx={{ width: 44, height: 44 }}>
           <CloseIcon />
         </IconButton>
       </Box>
@@ -57,32 +58,33 @@ const FeedbackDetailsModal: React.FC<Props> = ({ feedback, onClose, onMarkAsRead
       <DialogContent sx={{ mt: 2, px: isMobile ? 2 : 3 }}>
         <Box display="flex" alignItems="center" mb={1}>
           <CommentIcon sx={{ mr: 1 }} />
-          <Typography><strong>Nome:</strong> {feedback.name}</Typography>
+          <Typography data-testid="feedback-view-name"><strong>Nome:</strong> {feedback.name}</Typography>
         </Box>
 
         <Box display="flex" alignItems="center" mb={1}>
           <EmailIcon sx={{ mr: 1 }} />
-          <Typography><strong>Email:</strong> {feedback.email || "Não informado"}</Typography>
+          <Typography data-testid="feedback-view-email"><strong>Email:</strong> {feedback.email || "Não informado"}</Typography>
         </Box>
 
         <Box display="flex" alignItems="center" mb={1}>
           <StarIcon sx={{ mr: 1 }} />
-          <Typography><strong>Nota:</strong> {feedback.rating}/5</Typography>
+          <Typography data-testid="feedback-view-rating"><strong>Nota:</strong> {feedback.rating}/5</Typography>
         </Box>
 
         <Box display="flex" alignItems="center" mb={1}>
           <CategoryIcon sx={{ mr: 1 }} />
-          <Typography><strong>Categoria:</strong> {categoryLabel}</Typography>
+          <Typography data-testid="feedback-view-category"><strong>Categoria:</strong> {categoryLabel}</Typography>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" gutterBottom><strong>Comentário:</strong></Typography>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>
+        <Typography data-testid="feedback-view-comment" variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>
           {feedback.comment}
         </Typography>
 
         <Chip
+          data-testid="feedback-view-status"
           label={feedback.read ? "Lido" : "Não lido"}
           color={feedback.read ? "success" : "warning"}
           size="small"
@@ -90,28 +92,30 @@ const FeedbackDetailsModal: React.FC<Props> = ({ feedback, onClose, onMarkAsRead
       </DialogContent>
 
       <DialogActions sx={{ p: 2, flexDirection: isMobile ? "column" : "row", gap: 1 }}>
-        <Button onClick={onClose} fullWidth={isMobile} size={isMobile ? "small" : "medium"}>
+        <Button data-testid="feedback-view-close" onClick={onClose} fullWidth={isMobile} sx={{ minHeight: 44 }}>
           Fechar
         </Button>
 
         {!feedback.read ? (
           <Button
+            data-testid="feedback-view-mark-read"
             onClick={handleMarkAsRead}
             variant="contained"
             color="primary"
             fullWidth={isMobile}
-            size={isMobile ? "small" : "medium"}
+            sx={{ minHeight: 44 }}
           >
             Marcar como lido
           </Button>
         ) : (
           <Button
+            data-testid="feedback-view-delete"
             onClick={onDelete}
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
             fullWidth={isMobile}
-            size={isMobile ? "small" : "medium"}
+            sx={{ minHeight: 44 }}
           >
             Excluir
           </Button>

@@ -22,7 +22,7 @@ interface PagelaBody {
   notes?: string | null;
 }
 
-const PAGELA_FLAGS = ["pagelas", "sheltered_area"] as const;
+const PAGELA_FLAGS = ["pagelas_management", "sheltered_area"] as const;
 
 test.describe.serial("Pagelas — cenários por handler", () => {
   let admin: string;

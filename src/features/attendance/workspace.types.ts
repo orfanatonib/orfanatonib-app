@@ -35,8 +35,6 @@ export interface AttendanceMemberRowProps {
 }
 export interface AttendanceTeamSelectionProps {
   data: SheltersTeamsMembersResponse;
-  loading?: boolean;
-  searchTerm?: string;
   onTeamSelect: (
     shelter: ShelterWithTeamsDto,
     team: TeamWithMembersDto,

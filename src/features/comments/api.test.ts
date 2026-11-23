@@ -14,11 +14,19 @@ const comment = { id: "c1", name: "Ana", comment: "ótimo", shelter: "A", neighb
 describe("api de comentários", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("lê a fila (admin) e os publicados (público) em rotas diferentes", async () => {
+  it("lê a fila (admin) paginada e filtrada no servidor e os publicados (público) em rota própria", async () => {
+    get.mockResolvedValue({ data: { data: [], meta: { page: 1, limit: 12, totalItems: 0, totalPages: 1 } } });
+    const controller = new AbortController();
+    await api.fetchCommentsPage(
+      { page: 1, limit: 12, search: "ana", filters: { published: "false", shelter: "Sol", sort: "name:ASC" } },
+      controller.signal,
+    );
     get.mockResolvedValue({ data: [] });
-    await api.apiGetComments();
     await api.apiGetPublishedComments();
-    expect(get).toHaveBeenNthCalledWith(1, "/comments");
+    expect(get).toHaveBeenNthCalledWith(1, "/comments", {
+      params: { page: 1, limit: 12, search: "ana", published: "false", shelter: "Sol", sortBy: "name", order: "ASC" },
+      signal: controller.signal,
+    });
     expect(get).toHaveBeenNthCalledWith(2, "/comments/published");
   });
 

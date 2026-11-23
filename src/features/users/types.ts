@@ -38,20 +38,11 @@ export type UpadateUserForm = {
 
 export type UsersPage = {
   items: UserRow[];
-  meta?: { total?: number };
+  meta?: { total?: number; totalPages?: number };
 };
 
 export type ActiveFilter = "all" | "active" | "inactive";
 export type CompletedFilter = "all" | "completed" | "incomplete";
-
-export type UserFilters = {
-  q: string;
-  role: "all" | UserRole | string;
-  activeFilter: ActiveFilter;
-  completedFilter: CompletedFilter;
-};
-
-export type SortParam = { id: string; desc: boolean } | null;
 
 export const TZ = "America/Manaus";
 export const SENSITIVE_KEYS = new Set(["password", "refreshToken"]);

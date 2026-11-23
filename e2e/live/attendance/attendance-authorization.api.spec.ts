@@ -4,7 +4,7 @@ import { authHeaders, expect, loginAs, test } from "../support/live";
 
 /** Autorização de `/attendance` (plano 22): sessão obrigatória; painéis de líder só admin/líder (membro 403); equipe fora do escopo do líder é 403; registro recusado/inválido não grava; `attendance` desligada ⇒ 403 FEATURE_DISABLED. */
 const BAD = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
-const FLAGS = ["attendance"] as const;
+const FLAGS = ["attendance_control"] as const;
 
 test.describe.serial("Presença — autorização", () => {
   let admin: string;

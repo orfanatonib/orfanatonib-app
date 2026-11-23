@@ -2,6 +2,11 @@ import { Route } from "react-router-dom";
 import { FeatureFlagKeys } from "@/features/feature-flags";
 import { LegacyFeedRedirect } from "@/features/shelter-feed/LegacyFeedRedirect";
 import { SHELTER_FEED_PATH } from "@/features/shelter-feed/routes";
+import {
+  PUBLIC_MEDIA_BASE_PATH,
+  PUBLIC_MEDIA_KIND_PATH,
+  PublicMediaKind,
+} from "@/features/public-media";
 import Home from "@/pages/Home/Home";
 import { flaggedElement } from "./flaggedElement";
 import { lazyElement } from "./lazyElement";
@@ -25,6 +30,22 @@ export function renderPublicRoutes() {
         element={flaggedElement(
           FeatureFlagKeys.EVENTS_SECTION,
           <Pages.EventosPage />,
+        )}
+      />
+      <Route
+        path={PUBLIC_MEDIA_BASE_PATH}
+        element={lazyElement(<Pages.PublicMediaGalleryPage />)}
+      />
+      <Route
+        path={`${PUBLIC_MEDIA_KIND_PATH[PublicMediaKind.Photos]}/:id`}
+        element={lazyElement(
+          <Pages.PublicMediaDetailPage kind={PublicMediaKind.Photos} />,
+        )}
+      />
+      <Route
+        path={`${PUBLIC_MEDIA_KIND_PATH[PublicMediaKind.Videos]}/:id`}
+        element={lazyElement(
+          <Pages.PublicMediaDetailPage kind={PublicMediaKind.Videos} />,
         )}
       />
       <Route path="/feed-abrigos" element={<LegacyFeedRedirect />} />

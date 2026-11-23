@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ADMIN_HEADING_COLOR,
   ADMIN_LABELS,
-  ADMIN_SHELL_MAX_WIDTH,
+  ADMIN_SHELL_FRAME_WIDTH,
   ADMIN_SHELL_MAX_WIDTH_NARROW,
   ADMIN_SHELL_TEST_ID_SUFFIX,
   ADMIN_TOUCH_TARGET_PX,
@@ -30,8 +30,20 @@ export default function AdminPageShell({
       sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 1.5, md: 4 } }}
     >
       <Container
-        maxWidth={fluid ? ADMIN_SHELL_MAX_WIDTH : ADMIN_SHELL_MAX_WIDTH_NARROW}
-        sx={{ px: { xs: 1.5, sm: 2, md: 3 } }}
+        data-testid={buildAdminTestId(testId, ADMIN_SHELL_TEST_ID_SUFFIX.FRAME)}
+        maxWidth={fluid ? false : ADMIN_SHELL_MAX_WIDTH_NARROW}
+        sx={
+          fluid
+            ? {
+                width: ADMIN_SHELL_FRAME_WIDTH,
+                px: 0,
+                // Centraliza mesmo quando o frame é mais largo que o pai (padding do <main>).
+                position: 'relative',
+                left: '50%',
+                transform: 'translateX(-50%)',
+              }
+            : { px: { xs: 1.5, sm: 2, md: 3 } }
+        }
       >
         <Box
           sx={{

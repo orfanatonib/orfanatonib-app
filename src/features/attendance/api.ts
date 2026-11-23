@@ -1,11 +1,14 @@
 import { ATTENDANCE_RECORDS_PAGE_SIZE } from "./constants";
 import api from "@/config/axiosConfig";
+import { fetchAdminPage } from "@/components/common/admin-shell/listQuery";
+import type { AdminListPage, AdminListParams } from "@/components/common/admin-shell/types";
 
 import type {
   AllPendingsResponseDto,
   AttendanceFiltersQuery,
   AttendanceResponseDto,
   HierarchicalSheetsResponse,
+  LeaderTeamDto,
   PaginatedResponseDto,
   PeriodQuery,
   RegisterAttendanceDto,
@@ -81,6 +84,23 @@ export async function getSheltersTeamsMembers(): Promise<SheltersTeamsMembersRes
   const response = await api.get<SheltersTeamsMembersResponse>(
     "/attendance/leader/teams/members",
   );
+  return response.data;
+}
+
+/**
+ * Abrigos (com equipes e membros) da tela "Lançar presença": busca, abrigo, ordenação e página no
+ * servidor (`GET /attendance/leader/teams/members?page=`). O total conta abrigos.
+ */
+export function getSheltersTeamsMembersPage(
+  params: AdminListParams,
+  signal: AbortSignal,
+): Promise<AdminListPage<SheltersTeamsMembersResponse[number]>> {
+  return fetchAdminPage("/attendance/leader/teams/members", params, signal);
+}
+
+/** Equipes que o ator lidera (lista plana): origem das opções do filtro de abrigo. */
+export async function getLeaderTeams(): Promise<LeaderTeamDto[]> {
+  const response = await api.get<LeaderTeamDto[]>("/attendance/leader/teams");
   return response.data;
 }
 

@@ -13,6 +13,9 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { AtendenteResponseDto, AtendentePdf } from "../types";
+import { ATENDENTES_TEST_ID_PREFIX } from "../constants";
+
+const P = ATENDENTES_TEST_ID_PREFIX;
 
 interface AtendenteViewDialogProps {
   open: boolean;
@@ -34,6 +37,7 @@ function PdfRow({
   if (!pdf?.url) return null;
   return (
     <Box
+      data-testid={`${P}-view-pdf-${label}`}
       sx={{
         display: "flex",
         alignItems: "center",
@@ -43,6 +47,7 @@ function PdfRow({
       }}
     >
       <Link
+        data-testid={`${P}-view-pdf-${label}-link`}
         href={pdf.url}
         target="_blank"
         rel="noopener noreferrer"
@@ -53,9 +58,10 @@ function PdfRow({
       {onPreviewPdf && (
         <Tooltip title="Visualizar PDF">
           <IconButton
-            size="small"
+            data-testid={`${P}-view-pdf-${label}-preview`}
             onClick={() => onPreviewPdf(pdf, label)}
             aria-label="Visualizar PDF"
+            sx={{ width: 44, height: 44 }}
           >
             <VisibilityIcon fontSize="small" />
           </IconButton>
@@ -81,7 +87,7 @@ export default function AtendenteViewDialog({
         : null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog data-testid={`${P}-view-dialog`} open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Typography fontWeight="bold">Antecedente Criminal</Typography>
       </DialogTitle>
@@ -91,7 +97,7 @@ export default function AtendenteViewDialog({
             <Typography variant="subtitle2" color="text.secondary">
               Nome
             </Typography>
-            <Typography>{atendente.name}</Typography>
+            <Typography data-testid={`${P}-view-name`}>{atendente.name}</Typography>
           </Box>
         )}
         {linkLabel && (
@@ -99,7 +105,7 @@ export default function AtendenteViewDialog({
             <Typography variant="subtitle2" color="text.secondary">
               Vínculo
             </Typography>
-            <Typography>
+            <Typography data-testid={`${P}-view-link`}>
               {linkLabel}: {atendente.attendableDisplayName ?? atendente.attendableId}
             </Typography>
           </Box>
@@ -131,7 +137,7 @@ export default function AtendenteViewDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Fechar</Button>
+        <Button data-testid={`${P}-view-close`} onClick={onClose} sx={{ minHeight: 44 }}>Fechar</Button>
       </DialogActions>
     </Dialog>
   );

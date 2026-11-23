@@ -5,14 +5,12 @@ import {
   apiCreateSheltered,
   apiDeleteSheltered,
   apiFetchSheltered,
-  apiFetchShelteredList,
   apiUpdateSheltered,
 } from "./api";
 import { SHELTERED_MESSAGES } from "./constants";
 import {
   buildCreatePayload,
   buildUpdatePayload,
-  compactFilters,
   extractApiErrorMessage,
   findShelterOfMember,
   resolveLeaderShelter,
@@ -24,66 +22,9 @@ import type {
   AuthUser,
   CreateShelteredForm,
   EditShelteredForm,
-  ShelteredFilters,
-  ShelteredListParams,
   ShelteredResponseDto,
-  ShelteredSort,
   ShelterOption,
 } from "./types";
-
-export type UseShelteredResult = {
-  rows: ShelteredResponseDto[];
-  total: number;
-  loading: boolean;
-  error: string;
-  setError: (message: string) => void;
-  fetchPage: () => Promise<void>;
-};
-
-/** Owns the paginated list state. The server is the single source of truth. */
-export function useSheltered(
-  pageIndex: number,
-  pageSize: number,
-  sorting: ShelteredSort | null,
-  filters: ShelteredFilters,
-): UseShelteredResult {
-  const [rows, setRows] = useState<ShelteredResponseDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Key the request on the filter/sort *content*, not on object identity, so a
-  // caller passing an inline object does not retrigger the effect every render.
-  const filtersKey = JSON.stringify(compactFilters(filters));
-  const sortKey = sorting ? `${sorting.id}|${String(sorting.desc)}` : "";
-
-  const params = useMemo<ShelteredListParams>(
-    () => ({ page: pageIndex + 1, limit: pageSize, filters, sort: sorting }),
-    [pageIndex, pageSize, filtersKey, sortKey],
-  );
-
-  const fetchPage = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data, meta } = await apiFetchShelteredList(params);
-      setRows(data);
-      setTotal(meta.totalItems);
-    } catch (caught) {
-      setRows([]);
-      setTotal(0);
-      setError(extractApiErrorMessage(caught, SHELTERED_MESSAGES.LIST_ERROR));
-    } finally {
-      setLoading(false);
-    }
-  }, [params]);
-
-  useEffect(() => {
-    void fetchPage();
-  }, [fetchPage]);
-
-  return { rows, total, loading, error, setError, fetchPage };
-}
 
 export type UseShelteredDetailsResult = {
   viewing: ShelteredResponseDto | null;

@@ -1,54 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { IdeasSection, IdeasPage } from './types';
+import { IdeasPage } from './types';
 import type { IdeasSection as DraftSection } from '@/store/slices/ideas/ideasSlice';
-import { filterSections, toDraftSection } from './utils';
-import { getIdeasSection, listIdeasSections, listIdeasPages } from './api';
+import { toDraftSection } from './utils';
+import { getIdeasSection, listIdeasPages } from './api';
 import { ideasSectionErrorMessage } from './errors';
 import { IDEAS_SECTION_MESSAGES } from './constants';
-
-export function useIdeasSections() {
-  const [sections, setSections] = useState<IdeasSection[]>([]);
-  const [filteredSections, setFilteredSections] = useState<IdeasSection[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState('');
-
-  const fetchSections = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await listIdeasSections();
-      setSections(data);
-      setFilteredSections(data);
-    } catch (e) {
-      setError(ideasSectionErrorMessage(e, IDEAS_SECTION_MESSAGES.LOAD_FAILED));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setIsFiltering(true);
-    const t = setTimeout(() => {
-      setFilteredSections(filterSections(sections, searchTerm));
-      setIsFiltering(false);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [searchTerm, sections]);
-
-  return {
-    sections,
-    filteredSections,
-    searchTerm,
-    setSearchTerm,
-    loading,
-    isFiltering,
-    error,
-    setError,
-    fetchSections,
-  };
-}
 
 export function useIdeasPages() {
   const [pages, setPages] = useState<IdeasPage[]>([]);

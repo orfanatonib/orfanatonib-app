@@ -1,68 +1,30 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAdminList } from '@/components/common/admin-shell/useAdminList';
 import { VideoPageData } from './types';
-import { apiDeleteVideoPage, apiGetVideoPage, apiListVideoPages } from './api';
-import { filterVideoPagesByTitle } from './utils';
+import { apiDeleteVideoPage, apiGetVideoPage, fetchVideoPagesPage } from './api';
+import { VIDEO_PAGES_DEFAULT_SORT, VIDEO_PAGES_MESSAGES } from './constants';
 
-function useDebounced<T>(value: T, delay = 300) {
-  const [debounced, setDebounced] = useState(value);
-  const timer = useRef<number | null>(null);
+const DEFAULT_FILTERS = { sort: VIDEO_PAGES_DEFAULT_SORT };
 
-  useEffect(() => {
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setDebounced(value), delay) as unknown as number;
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, [value, delay]);
+/** Listagem paginada no servidor (busca, visibilidade, datas, ordenação) + exclusão com recarga. */
+export function useVideoPagesList() {
+  const list = useAdminList<VideoPageData>({
+    fetcher: fetchVideoPagesPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: VIDEO_PAGES_MESSAGES.LOAD_ERROR,
+  });
+  const { reload } = list;
 
-  return debounced;
-}
-
-export function useVideoPages() {
-  const [pages, setPages] = useState<VideoPageData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounced(search, 300);
-
-  const fetchPages = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const list = await apiListVideoPages();
-      setPages(list);
-    } catch {
-      setError('Erro ao buscar páginas de vídeos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPages();
-  }, [fetchPages]);
-
-  const filtered = useMemo(
-    () => filterVideoPagesByTitle(pages, debouncedSearch),
-    [pages, debouncedSearch],
-  );
-
+  /** Exclui e recarrega a lista; em falha recarrega também (a página pode já ter sumido) e propaga o erro. */
   const removePage = useCallback(async (id: string) => {
-    await apiDeleteVideoPage(id);
-    await fetchPages();
-  }, [fetchPages]);
+    try {
+      await apiDeleteVideoPage(id);
+    } finally {
+      reload();
+    }
+  }, [reload]);
 
-  return {
-    pages,
-    filtered,
-    loading,
-    error,
-    search,
-    setSearch,
-    fetchPages,
-    removePage,
-    setError,
-  };
+  return { list, removePage };
 }
 
 export const VIDEO_PAGE_LOAD_ERROR = 'Erro ao carregar a página de vídeos. Tente novamente mais tarde.';

@@ -162,13 +162,13 @@ test.describe.serial("App shell — UI", () => {
     await expect(page).toHaveURL(/\/adm$/);
   });
 
-  test("[app-shell.get.menu-usuario#admin] admin vê Área do Membro e Administração, sem Área dos Acolhidos", async ({ page }) => {
+  test("[app-shell.get.menu-usuario#admin] admin vê Área do Membro, Área dos Acolhidos e Administração", async ({ page }) => {
     await loginPage(page, "admin");
     await page.goto("/");
     await openUserMenu(page);
     await expect(page.getByTestId(userMenuTestId("member-area"))).toBeVisible();
     await expect(page.getByTestId(userMenuTestId("admin-area"))).toBeVisible();
-    await expect(page.getByTestId(userMenuTestId("sheltered-area"))).toHaveCount(0);
+    await expect(page.getByTestId(userMenuTestId("sheltered-area"))).toBeVisible();
   });
 
   test("[app-shell.get.menu-usuario#flag-desligada] com member_area e sheltered_area desligadas as entradas somem do menu", async ({
@@ -234,9 +234,9 @@ test.describe.serial("App shell — UI", () => {
     await page.goto("/adm");
     await expect(page.getByTestId("admin-sidebar-item-pagelas")).toHaveCount(1, { timeout: 20_000 });
 
-    await flag(request, "pagelas", false);
+    await flag(request, "pagelas_management", false);
     await flag(request, "sheltered_area", false);
-    expect((await readFlagFromDb("pagelas")).enabled).toBe(false);
+    expect((await readFlagFromDb("pagelas_management")).enabled).toBe(false);
     await page.goto("/adm");
     await expect(page.getByTestId("admin-layout")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("admin-sidebar-item-pagelas")).toHaveCount(0);
@@ -244,7 +244,7 @@ test.describe.serial("App shell — UI", () => {
     const res = await request.get(`${API_URL}/pagelas`, { headers: authHeaders(adminToken) });
     expect(res.status()).toBe(403);
     expect(JSON.stringify(await res.json())).toContain("FEATURE_DISABLED");
-    expect((await readFlagFromDb("pagelas")).enabled).toBe(false);
+    expect((await readFlagFromDb("pagelas_management")).enabled).toBe(false);
   });
 
   test("[app-shell.get.menu-admin#selo-pendencias] o item Fotos dos Abrigos (selo de pendências) continua no menu do painel", async ({ page }) => {

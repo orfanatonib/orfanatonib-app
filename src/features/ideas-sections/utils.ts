@@ -109,14 +109,3 @@ export const isDraftDirty = (
     !sameMedias
   );
 };
-
-/** Filtra as ideias por título ou descrição, sem diferenciar maiúsculas; termo vazio devolve tudo. */
-export const filterSections = (sections: readonly IdeasSection[], term: string): IdeasSection[] => {
-  const needle = term.trim().toLowerCase();
-  if (!needle) return [...sections];
-  return sections.filter(
-    (section) =>
-      (section.title ?? '').toLowerCase().includes(needle) ||
-      (section.description ?? '').toLowerCase().includes(needle),
-  );
-};

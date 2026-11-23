@@ -1,84 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   apiCreateUser,
   apiDeleteUser,
-  apiListUsers,
   apiUpdateUser,
 } from "./api";
 import {
   CreateUserForm,
-  SortParam,
-  UserFilters,
   UserRow,
   UpadateUserForm,
 } from "./types";
 import { digitsOnly } from "@/utils/masks";
 import { getApiErrorMessage } from '@/utils/apiErrorMessage';
-
-export function useUsers(
-  pageIndex: number,
-  pageSize: number,
-  sorting: SortParam,
-  filters: UserFilters
-) {
-  const [rows, setRows] = useState<UserRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const fetchPage = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const sort = sorting?.id ?? "updatedAt";
-      const order = sorting?.desc ? "DESC" : "ASC";
-
-      const page = await apiListUsers({
-        page: pageIndex + 1,
-        limit: pageSize,
-        q: filters.q || undefined,
-        role: filters.role,
-        active: filters.activeFilter,
-        completed: filters.completedFilter,
-        sort,
-        order,
-      });
-
-      setRows(Array.isArray(page?.items) ? page.items : []);
-      setTotal(Number(page?.meta?.total ?? 0));
-    } catch (err: unknown) {
-      setError(
-        getApiErrorMessage(err, "Erro ao buscar usuários")
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    filters.activeFilter,
-    filters.completedFilter,
-    filters.q,
-    filters.role,
-    pageIndex,
-    pageSize,
-    sorting,
-  ]);
-
-  useEffect(() => {
-    fetchPage();
-  }, [fetchPage]);
-
-  return {
-    rows,
-    total,
-    loading,
-    error,
-    setError,
-    fetchPage,
-    setRows,
-    setTotal,
-  };
-}
 
 export function useUserMutations(refreshPage: () => Promise<void> | void) {
   const [dialogLoading, setDialogLoading] = useState(false);

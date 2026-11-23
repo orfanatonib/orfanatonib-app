@@ -109,7 +109,7 @@ describe('getMemberHomeQuickActionKeys', () => {
   });
 
   it('os atalhos de todos continuam para o membro comum', () => {
-    expect(getMemberHomeQuickActionKeys(false)).toEqual(expect.arrayContaining(['materials', 'photos', 'rate']));
+    expect(getMemberHomeQuickActionKeys(false)).toEqual(expect.arrayContaining(['materials', 'photos', 'shelteredArea', 'rate']));
   });
 });
 

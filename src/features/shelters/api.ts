@@ -2,7 +2,6 @@ import api from "@/config/axiosConfig";
 import {
   ShelterResponseDto, CreateShelterForm, EditShelterForm,
   LeaderMiniDto, MemberOption, UserPublicDto,
-  ShelterFilters, ShelterSort,
   LeaderOption, SimpleShelterResponseDto, ShelterListResponseDto, ShelterSimpleResponseDto
 } from "./types";
 import { LeaderProfile } from "../leaders/types";
@@ -17,67 +16,30 @@ export type PaginatedResponse<T> = {
   pageCount: number;
 };
 
-export async function apiFetchShelters(args: {
+/** Parâmetros da lista paginada de `/shelters` (tudo é aplicado no banco). */
+export type SheltersPageQuery = {
   page: number;
   limit: number;
-  filters?: ShelterFilters;
-  sort?: ShelterSort;
-}) {
-  const { page, limit, filters, sort } = args;
-  const {
-    shelterName,
-    staffFilters,
-    addressFilter,
-    teamId,
-    teamName,
-    leaderId,
-    searchString,
-    nameSearchString,
-  } = filters || {};
+  search?: string;
+  sort?: string;
+  order?: "ASC" | "DESC";
+  city?: string;
+  state?: string;
+  createdFrom?: string;
+  createdTo?: string;
+};
 
-  const sortField = sort?.id ?? "name";
-  const order = sort?.desc ? "DESC" : "ASC";
+export async function apiFetchSheltersPage(query: SheltersPageQuery, signal?: AbortSignal) {
+  const params: Record<string, string | number> = { page: query.page, limit: query.limit };
+  if (query.search?.trim()) params.searchString = query.search.trim();
+  if (query.sort) params.sort = query.sort;
+  if (query.order) params.order = query.order;
+  if (query.city?.trim()) params.city = query.city.trim();
+  if (query.state?.trim()) params.state = query.state.trim();
+  if (query.createdFrom) params.createdFrom = query.createdFrom;
+  if (query.createdTo) params.createdTo = query.createdTo;
 
-  const params: Record<string, string | number> = {
-    page,
-    limit,
-    sort: sortField,
-    order,
-  };
-
-  if (shelterName) {
-    params.shelterName = shelterName;
-  } else if (nameSearchString) {
-    params.shelterName = nameSearchString;
-  }
-
-  if (staffFilters) {
-    params.staffFilters = staffFilters;
-  }
-
-  if (addressFilter) {
-    params.addressFilter = addressFilter;
-  }
-
-  if (teamId) {
-    params.teamId = teamId;
-  }
-
-  if (teamName) {
-    params.teamName = teamName;
-  }
-
-  if (leaderId) {
-    params.leaderId = leaderId;
-  }
-
-  if (searchString && !shelterName && !nameSearchString) {
-    params.searchString = searchString;
-  }
-
-  const { data } = await api.get<PaginatedResponse<ShelterResponseDto>>("/shelters", {
-    params,
-  });
+  const { data } = await api.get<PaginatedResponse<ShelterResponseDto>>("/shelters", { params, signal });
   return data;
 }
 

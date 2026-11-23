@@ -1,26 +1,68 @@
 import React from "react";
-import { Box, Container } from "@mui/material";
-import { motion } from "framer-motion";
+import { Comment as CommentIcon } from "@mui/icons-material";
 
 import { CommentData } from "store/slices/comment/commentsSlice";
 import { useRefreshPendingCounts } from "@/features/admin-pending-counts";
-import { useCommentActions, useCommentsData, useCommentsFilter } from "./hooks";
-import CommentsToolbar from "./components/CommentsToolbar";
-import CommentsGrid from "./components/CommentsGrid";
+import { AdminCardGrid, AdminListScreen, useAdminList } from "@/components/common/admin-shell";
+import type { AdminFilterField } from "@/components/common/admin-shell";
+import { fetchCommentsPage } from "./api";
+import {
+  COMMENTS_DEFAULT_SORT,
+  COMMENTS_LABELS,
+  COMMENTS_TEST_ID_PREFIX,
+  COMMENT_FILTER_KEYS,
+  COMMENT_PUBLISHED_OPTIONS,
+  COMMENT_SORT_OPTIONS,
+} from "./constants";
+import { useCommentActions } from "./hooks";
+import CommentCard from "./components/CommentCard";
 import EditCommentDialog, { EditState } from "./components/EditCommentDialog";
 import CommentDetailsModal from "./components/CommentDetailsModal";
 import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
-import BackHeader from "@/components/common/header/BackHeader";
 import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 
+const P = COMMENTS_TEST_ID_PREFIX;
+const K = COMMENT_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: "select",
+    key: K.PUBLISHED,
+    label: COMMENTS_LABELS.FILTER_PUBLISHED,
+    allLabel: COMMENTS_LABELS.FILTER_PUBLISHED_ALL,
+    options: COMMENT_PUBLISHED_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  {
+    kind: "text",
+    key: K.SHELTER,
+    label: COMMENTS_LABELS.FILTER_SHELTER,
+    placeholder: COMMENTS_LABELS.FILTER_SHELTER_PLACEHOLDER,
+  },
+  { kind: "date", key: K.CREATED_FROM, label: COMMENTS_LABELS.FILTER_CREATED_FROM },
+  { kind: "date", key: K.CREATED_TO, label: COMMENTS_LABELS.FILTER_CREATED_TO },
+  {
+    kind: "select",
+    key: K.SORT,
+    label: COMMENTS_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: COMMENT_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: COMMENTS_DEFAULT_SORT };
+
 export default function CommentsManager() {
-  const { comments, loading, error, setError, fetchComments } = useCommentsData();
-  const { filtered, search, onSearchChange, status, setStatus, isFiltering } = useCommentsFilter(comments);
+  const list = useAdminList<CommentData>({
+    fetcher: fetchCommentsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: COMMENTS_LABELS.LOAD_ERROR,
+  });
   const refreshPending = useRefreshPendingCounts();
+  const { reload } = list;
   const refetchAll = React.useCallback(async () => {
-    await fetchComments();
+    reload();
     void refreshPending();
-  }, [fetchComments, refreshPending]);
+  }, [reload, refreshPending]);
   const { actionLoading, actionError, setActionError, publish, remove, update } = useCommentActions(refetchAll);
 
   React.useEffect(() => {
@@ -60,43 +102,17 @@ export default function CommentsManager() {
   };
 
   return (
-    <Box
-      data-testid="comments-manager"
-      sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}
-    >
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="💬 Gerenciar Comentários" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <CommentsToolbar
-            search={search}
-            onSearchChange={onSearchChange}
-            status={status}
-            setStatus={setStatus}
-            isFiltering={isFiltering}
-          />
-        </motion.div>
-
-        <CommentsGrid
-          comments={filtered}
-          loading={loading}
-          error={error}
-          onView={(c) => setSelected(c)}
-          onEdit={openEdit}
-          onAskPublish={(c) => setToPublish(c)}
-          onAskDelete={(c) => setToDelete(c)}
-        />
-
+    <AdminListScreen
+      testIdPrefix={P}
+      title={COMMENTS_LABELS.TITLE}
+      searchLabel={COMMENTS_LABELS.SEARCH}
+      searchPlaceholder={COMMENTS_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={COMMENTS_LABELS.EMPTY}
+      emptyIcon={<CommentIcon sx={{ fontSize: 64, color: "text.secondary" }} />}
+      overlays={
+        <>
       <DeleteConfirmDialog
         open={!!toDelete}
         testId="comments-delete-dialog"
@@ -141,7 +157,21 @@ export default function CommentsManager() {
         open={!!selected}
         onClose={() => setSelected(null)}
       />
-      </Container>
-    </Box>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((comment) => (
+          <CommentCard
+            key={comment.id || `${comment.createdAt}-${comment.name}`}
+            comment={comment}
+            onView={(c) => setSelected(c)}
+            onEdit={openEdit}
+            onAskPublish={(c) => setToPublish(c)}
+            onAskDelete={(c) => setToDelete(c)}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

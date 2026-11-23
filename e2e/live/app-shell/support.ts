@@ -5,7 +5,7 @@ import { queryOne } from "../support/db";
 import { authHeaders, expect } from "../support/live";
 
 /** Flags que a casca lê (menu público, menu do usuário e painel). */
-export const SHELL_FLAGS = ["about_page", "events_section", "member_area", "sheltered_area", "pagelas"] as const;
+export const SHELL_FLAGS = ["about_page", "events_section", "member_area", "sheltered_area", "pagelas_management"] as const;
 export type ShellFlag = (typeof SHELL_FLAGS)[number];
 
 export interface FlagSnapshot {

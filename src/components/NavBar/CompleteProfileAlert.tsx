@@ -10,6 +10,18 @@ import { ALERT_TEXTS, LEADER_PENDINGS_ROUTE, NOTIFICATION_COLOR, VISIT_REPORT_PE
 import type { CompleteProfileAlertProps } from './completeProfileAlert/types';
 import { useAttendancePendingForm } from './completeProfileAlert/useAttendancePendingForm';
 import { isMemberRole, resolvePendingCounts, totalPendingCount } from './completeProfileAlert/utils';
+import {
+  InboxSection,
+  NOTIFICATIONS_BADGE_MAX,
+  bellCount,
+  notificationRoute,
+  useInboxAccess,
+  useInboxList,
+  useInboxMutations,
+  useInboxSummary,
+  type InboxNotificationDto,
+} from '@/features/notifications';
+import { NOTIFICATION_FAINT_COLOR, NOTIFICATION_MUTED_COLOR } from './completeProfileAlert/constants';
 
 export type {
   AttendancePendingsProps,
@@ -28,7 +40,13 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, att
   const memberPendings = attendancePendings?.memberPendings || [];
   const counts = resolvePendingCounts(attendancePendings);
   const pendingCount = totalPendingCount(counts, isMember);
-  const badgeCount = alerts.length + pendingCount;
+  const inboxAccess = useInboxAccess();
+  const summary = useInboxSummary(inboxAccess.userId, inboxAccess.enabled);
+  const inboxList = useInboxList(inboxAccess.userId, inboxAccess.enabled, Boolean(anchorEl), summary.data);
+  const { markRead, markAllRead } = useInboxMutations(inboxAccess.userId);
+  const unreadCount = summary.data?.unreadCount ?? 0;
+  const inboxTotal = summary.data?.total ?? 0;
+  const badgeCount = bellCount(unreadCount, alerts.length + pendingCount);
   const form = useAttendancePendingForm(memberPendings, attendancePendings);
 
   const closeMenu = () => setAnchorEl(null);
@@ -37,7 +55,17 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, att
     navigate(route);
   };
 
-  if ((!alerts || alerts.length === 0) && pendingCount === 0) return null;
+  const hasInbox = inboxAccess.enabled && inboxTotal > 0;
+  const openNotice = (notice: InboxNotificationDto) => {
+    if (notice.readAt === null) markRead.mutate(notice.id);
+    const route = notificationRoute(notice.type, notice.target);
+    if (route) {
+      closeMenu();
+      navigate(route);
+    }
+  };
+
+  if ((!alerts || alerts.length === 0) && pendingCount === 0 && !hasInbox) return null;
 
   return (
     <>
@@ -49,7 +77,7 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, att
           data-testid="notifications-button"
           aria-label={ALERT_TEXTS.menuTitle}
         >
-          <Badge color="error" overlap="circular" badgeContent={badgeCount}>
+          <Badge color="error" overlap="circular" badgeContent={badgeCount} max={NOTIFICATIONS_BADGE_MAX} data-testid="notifications-count">
             <NotificationsActiveIcon sx={{ fontSize: 26, color: NOTIFICATION_COLOR }} />
           </Badge>
         </IconButton>
@@ -73,6 +101,24 @@ const CompleteProfileAlert: React.FC<CompleteProfileAlertProps> = ({ alerts, att
         }}
         onOpenLeaderPendings={() => goTo(LEADER_PENDINGS_ROUTE)}
         onOpenVisitReports={() => goTo(VISIT_REPORT_PENDINGS_ROUTE)}
+        inbox={
+          hasInbox ? (
+            <InboxSection
+              data={inboxList.data}
+              unreadCount={unreadCount}
+              loading={inboxList.isPending}
+              failed={inboxList.isError}
+              hasMore={Boolean(inboxList.hasNextPage)}
+              loadingMore={inboxList.isFetchingNextPage}
+              busy={markAllRead.isPending}
+              colors={{ text: NOTIFICATION_COLOR, muted: NOTIFICATION_MUTED_COLOR, faint: NOTIFICATION_FAINT_COLOR }}
+              onOpen={openNotice}
+              onMarkAll={() => markAllRead.mutate()}
+              onLoadMore={() => void inboxList.fetchNextPage()}
+              onRetry={() => void inboxList.refetch()}
+            />
+          ) : null
+        }
       />
 
       {isMember && (

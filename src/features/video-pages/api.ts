@@ -1,13 +1,14 @@
 import api from '@/config/axiosConfig';
-import { SavedVideoPage, VideoPageResponse } from './types';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
+import { VIDEO_PAGES_ENDPOINT } from './constants';
+import { SavedVideoPage, VideoPageData, VideoPageResponse } from './types';
 
-const VIDEO_PAGES_ENDPOINT = '/video-pages';
 const MULTIPART_HEADERS = { 'Content-Type': 'multipart/form-data' };
 
-export async function apiListVideoPages(): Promise<VideoPageResponse[]> {
-  const { data } = await api.get<VideoPageResponse[]>(VIDEO_PAGES_ENDPOINT);
-  return data ?? [];
-}
+/** Uma página da listagem administrativa; busca, visibilidade, datas e ordenação são aplicadas no servidor. */
+export const fetchVideoPagesPage: AdminListFetcher<VideoPageData> = (params, signal) =>
+  fetchAdminPage<VideoPageData>(VIDEO_PAGES_ENDPOINT, params, signal);
 
 export async function apiGetVideoPage(id: string): Promise<VideoPageResponse> {
   const { data } = await api.get<VideoPageResponse>(`${VIDEO_PAGES_ENDPOINT}/${id}`);

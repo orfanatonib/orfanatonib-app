@@ -23,6 +23,8 @@
     "test:e2e:headed": "E2E_SLOWMO=400 playwright test --project=live-ui --headed --workers=1",
     "test:e2e:report": "playwright show-report e2e/.report",
     "test:e2e:live": "playwright test",
+    "seed:acolhidos": "E2E_SEED=1 playwright test --config=playwright.live.config.ts --workers=1 --project=live-seed",
+    "seed:acolhidos:clean": "node e2e/live/sheltered-area/clean-mass.mjs",
     "test:e2e:live:api": "playwright test --project=live-api",
     "test:e2e:live:ui": "playwright test --project=live-ui",
     "test:e2e:live:headed": "E2E_SLOWMO=400 playwright test --project=live-ui --headed",

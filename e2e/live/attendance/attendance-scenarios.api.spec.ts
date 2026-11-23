@@ -21,7 +21,7 @@ interface RecordBody {
   scheduleId: string;
 }
 
-const ATTENDANCE_FLAG = ["attendance"] as const;
+const ATTENDANCE_FLAG = ["attendance_control"] as const;
 
 test.describe.serial("Frequência — cenários por handler", () => {
   let admin: string;

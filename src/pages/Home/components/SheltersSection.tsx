@@ -96,6 +96,7 @@ const SheltersSection: React.FC = () => {
 
   return (
     <Box
+      data-testid="home-shelters-section"
       className="sheltersSection"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -170,6 +171,16 @@ const SheltersSection: React.FC = () => {
                     {currentCard.description ||
                       'Conheça mais sobre este abrigo e descubra como fazemos a diferença na vida das crianças.'}
                   </Typography>
+
+                  {isAuthenticated ? (
+                    <Typography
+                      data-testid="shelters-section-open-detail"
+                      sx={{ mt: 1.5, display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 800, color: '#fff' }}
+                    >
+                      Ver líderes, membros e equipes
+                      <ChevronRightIcon sx={{ fontSize: 20 }} />
+                    </Typography>
+                  ) : null}
                 </div>
               </div>
             </motion.div>

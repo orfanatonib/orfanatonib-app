@@ -24,6 +24,7 @@ import { UserRole, fetchCurrentUser } from "@/store/slices/auth/authSlice";
 import type { CreatePagelaPayload, Pagela, UpdatePagelaPayload } from "../types";
 import { todayISO } from "../utils";
 import { logger } from '@/utils/logger';
+import { MIN_TOUCH_TARGET_PX, PAGELA_TESTID_PREFIX as TID } from "../constants";
 
 type Props = {
   initial?: Pagela | null;
@@ -221,6 +222,8 @@ export default function PagelaQuickForm({
   return (
     <Card
       variant="outlined"
+      data-testid={`${TID}-form`}
+      data-mode={editing ? "edit" : "create"}
       sx={{
         borderRadius: { xs: "24px 24px 0 0", sm: 4 },
         overflow: "hidden",
@@ -270,12 +273,12 @@ export default function PagelaQuickForm({
         >
           <Stack spacing={0}>
             <Typography variant="subtitle2" sx={{ color: "text.primary", opacity: 0.9, fontWeight: 800 }}>
-              {headerTitle} para {article} <strong>{shelteredName || "—"}</strong>
+              <span data-testid={`${TID}-form-title`}>{headerTitle}</span> para {article} <strong>{shelteredName || "—"}</strong>
             </Typography>
 
             <Stack direction="row" spacing={0.75} alignItems="center">
               <CalendarMonthIcon fontSize="small" sx={{ opacity: 0.9 }} />
-              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              <Typography variant="caption" sx={{ fontWeight: 700 }} data-testid={`${TID}-form-label`}>
                 {yearWeekLabel}
               </Typography>
             </Stack>
@@ -286,7 +289,8 @@ export default function PagelaQuickForm({
               size="small"
               onClick={onClose}
               aria-label="Fechar"
-              sx={{ bgcolor: "rgba(255,255,255,.85)", "&:hover": { bgcolor: "rgba(255,255,255,.95)" } }}
+              data-testid={`${TID}-form-close`}
+              sx={{ width: MIN_TOUCH_TARGET_PX, height: MIN_TOUCH_TARGET_PX, bgcolor: "rgba(255,255,255,.85)", "&:hover": { bgcolor: "rgba(255,255,255,.95)" } }}
             >
               <Close fontSize="small" />
             </IconButton>
@@ -304,7 +308,7 @@ export default function PagelaQuickForm({
               value={yearText}
               onChange={(e) => setYearText(e.target.value.replace(/\D+/g, "").slice(0, 4))}
               sx={{ width: 120 }}
-              inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 4 }}
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 4, "data-testid": `${TID}-form-year` }}
             />
             <TextField
               label="Semana"
@@ -313,11 +317,11 @@ export default function PagelaQuickForm({
               value={visitText}
               onChange={(e) => setVisitText(e.target.value.replace(/\D+/g, "").slice(0, 2))}
               sx={{ width: 140 }}
-              inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 2 }}
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 2, "data-testid": `${TID}-form-week` }}
             />
           </Stack>
 
-          <RowSwitch icon={<CheckCircleIcon />} label="Presença" checked={present} onChange={setPresent} />
+          <RowSwitch icon={<CheckCircleIcon />} label="Presença" checked={present} onChange={setPresent} testId={`${TID}-form-present`} />
 
           <Divider sx={{ my: 0.5 }} />
 
@@ -328,6 +332,7 @@ export default function PagelaQuickForm({
             onChange={(e) => setNotes(e.target.value)}
             multiline
             minRows={2}
+            inputProps={{ "data-testid": `${TID}-form-notes` }}
             fullWidth
           />
 
@@ -337,7 +342,8 @@ export default function PagelaQuickForm({
               disabled={!canSave}
               variant="contained"
               startIcon={<Save />}
-              sx={{ borderRadius: 999, px: 2.25, py: 0.75, fontWeight: 800, width: { xs: "100%", sm: "auto" } }}
+              data-testid={`${TID}-form-save`}
+              sx={{ minHeight: MIN_TOUCH_TARGET_PX, borderRadius: 999, px: 2.25, py: 0.75, fontWeight: 800, width: { xs: "100%", sm: "auto" } }}
             >
               Salvar
             </Button>
@@ -350,7 +356,7 @@ export default function PagelaQuickForm({
             justifyContent="center"
             sx={{ color: "text.secondary", mt: 0.25 }}
           >
-            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700 }} data-testid={`${TID}-form-hint`}>
               {footerMsg}
             </Typography>
             <FavoriteIcon fontSize="inherit" sx={{ opacity: 0.6 }} />
@@ -366,15 +372,17 @@ function RowSwitch({
   label,
   checked,
   onChange,
+  testId,
 }: {
   icon: React.ReactNode;
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  testId?: string;
 }) {
   return (
     <FormControlLabel
-      control={<Switch checked={checked} onChange={(_, v) => onChange(v)} />}
+      control={<Switch checked={checked} onChange={(_, v) => onChange(v)} inputProps={{ "data-testid": testId } as React.InputHTMLAttributes<HTMLInputElement>} />}
       label={
         <Stack direction="row" spacing={0.75} alignItems="center">
           <Box sx={{ "& svg": { fontSize: 18, opacity: 0.75 } }}>{icon}</Box>

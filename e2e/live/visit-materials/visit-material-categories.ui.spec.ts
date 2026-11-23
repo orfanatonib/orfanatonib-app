@@ -137,7 +137,7 @@ test.describe.serial("Material de visita por categoria — ao vivo", () => {
     expect(await browser.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   });
 
-  test("o painel de materiais de visita só filtra por testamento (Todos/Antigo/Novo) e usa 95% (desktop) / 98% (celular) da largura", async ({
+  test("o painel de materiais de visita filtra por testamento e categoria no servidor e usa 95% (desktop) / 98% (celular) da largura", async ({
     page: browser,
     request,
   }) => {
@@ -148,12 +148,14 @@ test.describe.serial("Material de visita por categoria — ao vivo", () => {
     ] as const) {
       await browser.setViewportSize({ width, height: 900 });
       await browser.goto("/adm/paginas-materiais-visita");
-      await expect(browser.getByTestId("visit-material-manager-testament-tabs")).toBeVisible({ timeout: 60_000 });
-      await expect(browser.getByTestId("visit-material-manager-category-filter")).toHaveCount(0);
-      await expect(browser.getByRole("tab")).toHaveCount(3);
-      const box = await browser.getByTestId("visit-material-manager-content").boundingBox();
-      expect(box!.width / width).toBeGreaterThan(ratio - 0.01);
-      expect(box!.width / width).toBeLessThan(ratio + 0.01);
+      await expect(browser.getByTestId("visit-materials-toolbar")).toBeVisible({ timeout: 60_000 });
+      if (width < 600) await browser.getByTestId("visit-materials-toolbar-toggle-filters").click();
+      await expect(browser.getByTestId("visit-materials-filter-testament")).toHaveCount(1);
+      await expect(browser.getByTestId("visit-materials-filter-category")).toHaveCount(1);
+      const frame = await browser.getByTestId("visit-materials-manager-frame").boundingBox();
+      const main = await browser.getByTestId("admin-main").boundingBox();
+      expect(frame!.width / main!.width).toBeGreaterThan(ratio - 0.01);
+      expect(frame!.width / main!.width).toBeLessThan(ratio + 0.01);
       expect(await browser.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(
         0,
       );

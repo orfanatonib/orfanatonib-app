@@ -17,8 +17,11 @@ export default function AdminEntityCard({
   title,
   titleTestId,
   subtitle,
+  subtitleTestId,
   description,
+  descriptionTestId,
   cover,
+  avatar,
   visibility,
   meta,
   onDelete,
@@ -108,6 +111,9 @@ export default function AdminEntityCard({
       ) : null}
 
       <CardContent sx={{ flexGrow: 1, p: 2, pb: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0, mb: avatar ? 1 : 0 }}>
+          {avatar ? <Box sx={{ flexShrink: 0, display: 'flex' }}>{avatar}</Box> : null}
+          <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           data-testid={titleTestId}
           variant="subtitle1"
@@ -119,12 +125,14 @@ export default function AdminEntityCard({
           {shownTitle}
         </Typography>
         {subtitle ? (
-          <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ ...CLAMP_SX(1), mb: 0.5 }}>
+          <Typography data-testid={subtitleTestId} variant="body2" color="text.secondary" fontWeight={500} sx={{ ...CLAMP_SX(1), mb: 0.5 }}>
             {subtitle}
           </Typography>
         ) : null}
+          </Box>
+        </Box>
         {description ? (
-          <Typography variant="body2" color="text.secondary" title={description} sx={CLAMP_SX(3)}>
+          <Typography data-testid={descriptionTestId} variant="body2" color="text.secondary" title={description} sx={CLAMP_SX(3)}>
             {description}
           </Typography>
         ) : null}
@@ -133,7 +141,9 @@ export default function AdminEntityCard({
 
       {actions.length > 0 ? (
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
+          direction="row"
+          useFlexGap
+          flexWrap="wrap"
           spacing={1}
           sx={{ p: 2, pt: 0, width: '100%', '& .MuiButton-root': { minHeight: ADMIN_TOUCH_TARGET_PX } }}
         >
@@ -145,8 +155,7 @@ export default function AdminEntityCard({
               variant={action.variant ?? 'contained'}
               startIcon={action.icon}
               onClick={action.onClick}
-              fullWidth
-              sx={{ flex: 1, ml: 0 }}
+              sx={{ flex: '1 1 140px', ml: 0, minWidth: 0 }}
             >
               {action.label}
             </Button>

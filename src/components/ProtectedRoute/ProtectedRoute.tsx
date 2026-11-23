@@ -26,7 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     dispatch(logout());
   };
 
-  if (!initialized || loadingUser || (accessToken && !user)) {
+  if (!initialized || (loadingUser && !user) || (accessToken && !user)) {
     return (
       <Box
         data-testid="protected-route-loading"

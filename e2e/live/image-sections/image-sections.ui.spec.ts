@@ -62,7 +62,7 @@ test.describe.serial("Fotos dos abrigos — telas (front → API → banco)", ()
   };
 
   const searchFor = async (page: Page, text: string): Promise<void> => {
-    await page.getByTestId("image-sections-search").fill(text);
+    await page.getByTestId("image-sections-toolbar-search").fill(text);
   };
 
   const noHorizontalScroll = async (page: Page): Promise<void> => {
@@ -170,7 +170,7 @@ test.describe.serial("Fotos dos abrigos — telas (front → API → banco)", ()
     await searchFor(page, `${tag}-nada-com-este-texto`);
     await expect(page.getByTestId("image-sections-empty")).toBeVisible();
     await expect(page.getByTestId("image-section-card")).toHaveCount(0);
-    await page.getByTestId("image-sections-search-clear").click();
+    await page.getByTestId("image-sections-toolbar-clear").click();
     await expect(page.getByTestId("image-sections-empty")).toHaveCount(0);
     await searchFor(page, caption);
     await expect(card(page, caption)).toHaveCount(1);

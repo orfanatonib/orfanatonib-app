@@ -22,9 +22,8 @@ vi.mock("@/config/axiosConfig", () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 
-const { useSheltered, useShelteredMutations } = await import("./hooks");
+const { useShelteredMutations } = await import("./hooks");
 const { ShelteredGender } = await import("./enums");
-const { SHELTERED_SORT_DEFAULT } = await import("./constants");
 
 const row = {
   id: "sheltered-id",
@@ -39,60 +38,6 @@ const row = {
   updatedAt: "2026-02-20T08:00:00.000Z",
 };
 
-const page = { data: [row], meta: { page: 1, limit: 12, totalItems: 41, totalPages: 4 } };
-
-describe("useSheltered", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    apiFetchShelteredList.mockResolvedValue(page);
-  });
-
-  it("loads the first page and exposes the server total", async () => {
-    const { result } = renderHook(() =>
-      useSheltered(0, 12, SHELTERED_SORT_DEFAULT, {}),
-    );
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(apiFetchShelteredList).toHaveBeenCalledWith({
-      page: 1,
-      limit: 12,
-      filters: {},
-      sort: SHELTERED_SORT_DEFAULT,
-    });
-    expect(result.current.rows).toHaveLength(1);
-    expect(result.current.total).toBe(41);
-    expect(result.current.error).toBe("");
-  });
-
-  it("translates a page index into the 1-based API page", async () => {
-    const { result } = renderHook(() =>
-      useSheltered(2, 12, SHELTERED_SORT_DEFAULT, {}),
-    );
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(apiFetchShelteredList).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 3 }),
-    );
-  });
-
-  it("surfaces the API message and clears the rows on failure", async () => {
-    apiFetchShelteredList.mockRejectedValue({
-      response: { data: { message: "Validation failed" } },
-    });
-
-    const { result } = renderHook(() =>
-      useSheltered(0, 12, SHELTERED_SORT_DEFAULT, {}),
-    );
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.error).toBe("Validation failed");
-    expect(result.current.rows).toEqual([]);
-    expect(result.current.total).toBe(0);
-  });
-});
 
 describe("useShelteredMutations", () => {
   const refetch = vi.fn().mockResolvedValue(undefined);

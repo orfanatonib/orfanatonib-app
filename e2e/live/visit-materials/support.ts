@@ -156,3 +156,39 @@ export async function snapshotDb(): Promise<{ pages: number; media: number; rout
 }
 
 export const label = (name: string): string => tagged(name);
+
+/** Página com testamento e seções por categoria (todos por link, sem upload). */
+export interface MaterialInput {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  testament?: "OLD_TESTAMENT" | "NEW_TESTAMENT";
+  categories?: Array<"BABY" | "CHILD" | "TEEN" | "ADULT">;
+}
+
+export async function createMaterial(request: APIRequestContext, token: string, input: MaterialInput): Promise<PageBody> {
+  const response = await request.post(`${API_URL}/visit-material-pages`, {
+    headers: authHeaders(token),
+    multipart: {
+      [PAYLOAD_FIELD]: JSON.stringify({
+        pageTitle: input.title,
+        pageSubtitle: input.subtitle ?? "Subtítulo do E2E",
+        pageDescription: input.description ?? "Descrição do E2E",
+        testament: input.testament ?? "OLD_TESTAMENT",
+        ...(input.categories
+          ? {
+              sections: input.categories.map((category) => ({
+                category,
+                title: `Seção ${category}`,
+                documents: [
+                  { title: `Doc ${category}`, description: "d", uploadType: "link", mediaType: "document", isLocalFile: false, url: "https://example.test/d.pdf", platformType: "googledrive" },
+                ],
+              })),
+            }
+          : {}),
+      }),
+    },
+  });
+  expect(response.status(), await response.text()).toBe(201);
+  return (await response.json()) as PageBody;
+}

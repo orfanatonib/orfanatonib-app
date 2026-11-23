@@ -103,10 +103,10 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
 
     await page.goto("/adm/ideias-compartilhadas");
 
-    await expect(page.getByTestId("ideas-sections-page")).toBeVisible({
+    await expect(page.getByTestId("ideas-sections-manager")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByTestId("ideas-sections-list")).toBeVisible({
+    await expect(page.getByTestId("ideas-sections-cards")).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.getByTestId("ideas-sections-loading")).toHaveCount(0);
@@ -124,15 +124,15 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
   }) => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-list")).toBeVisible({
+    await expect(page.getByTestId("ideas-sections-cards")).toBeVisible({
       timeout: 20_000,
     });
 
-    await page.getByTestId("ideas-sections-search").fill(`${RUN_TAG}-outra`);
+    await page.getByTestId("ideas-sections-toolbar-search").fill(`${RUN_TAG}-outra`);
     await expect(page.getByTestId(`ideas-section-card-${created[1]}`)).toBeVisible();
     await expect(page.getByTestId(`ideas-section-card-${created[0]}`)).toHaveCount(0);
 
-    await page.getByTestId("ideas-sections-search").fill("zzz-nao-existe-zzz");
+    await page.getByTestId("ideas-sections-toolbar-search").fill("zzz-nao-existe-zzz");
     await expect(page.getByTestId("ideas-sections-empty")).toBeVisible();
   });
 
@@ -142,7 +142,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
   }) => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-list")).toBeVisible({
+    await expect(page.getByTestId("ideas-sections-cards")).toBeVisible({
       timeout: 20_000,
     });
 
@@ -245,7 +245,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
 
     await page.goto("/adm/ideias-compartilhadas");
 
-    await expect(page.getByTestId("ideas-sections-page")).toHaveCount(0);
+    await expect(page.getByTestId("ideas-sections-manager")).toHaveCount(0);
   });
   test("[ideas-section.get.ideas-sections-id#feliz] [ideas-section.patch.ideas-sections-id-attach-pageid#feliz] editar e publicar pela tela: carrega a ideia da API pelo id da URL e grava o vínculo no banco", async ({
     page,
@@ -279,7 +279,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
 
     // Recarregar mostra o que o banco tem: a ideia saiu da fila.
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-list").or(page.getByTestId("ideas-sections-empty"))).toBeVisible({
+    await expect(page.getByTestId("ideas-sections-cards").or(page.getByTestId("ideas-sections-empty"))).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.getByTestId(`ideas-section-card-${target.id}`)).toHaveCount(0);
@@ -342,12 +342,12 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
   test("UI: líder não alcança a tela administrativa", async ({ page, request }) => {
     await seedBrowserSession(page, await loginAs(request, "leader"));
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-page")).toHaveCount(0);
+    await expect(page.getByTestId("ideas-sections-manager")).toHaveCount(0);
   });
 
   test("UI: visitante sem sessão não vê a tela administrativa nem o formulário de envio", async ({ page }) => {
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-page")).toHaveCount(0);
+    await expect(page.getByTestId("ideas-sections-manager")).toHaveCount(0);
     await page.goto("/area-do-membro/compartilhar-ideia");
     await expect(page.getByTestId("idea-share-page")).toHaveCount(0);
   });
@@ -367,7 +367,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
       const rows = await countSections();
       await seedBrowserSession(page, await loginAs(request, "admin"));
       await page.goto("/adm/ideias-compartilhadas");
-      await expect(page.getByTestId("ideas-sections-page")).toHaveCount(0);
+      await expect(page.getByTestId("ideas-sections-manager")).toHaveCount(0);
       await page.goto("/area-do-membro/compartilhar-ideia");
       await expect(page.getByTestId("idea-share-page")).toHaveCount(0);
 
@@ -455,7 +455,7 @@ test.describe.serial("Ideias compartilhadas — UI ao vivo", () => {
   }) => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/ideias-compartilhadas");
-    await expect(page.getByTestId("ideas-sections-list")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("ideas-sections-cards")).toBeVisible({ timeout: 20_000 });
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);

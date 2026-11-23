@@ -1,4 +1,5 @@
 import { API_URL } from "../../../playwright.live.config";
+import { cleanupData } from "../support/keep-data";
 import {
   authHeaders,
   expect,
@@ -72,7 +73,7 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await expect(page.getByTestId("attendance-page")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByTestId("attendance-shelters")).toBeVisible({
+    await expect(page.getByTestId("attendance-register-cards")).toBeVisible({
       timeout: 20_000,
     });
   };
@@ -85,7 +86,7 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     page: import("@playwright/test").Page,
   ): Promise<void> => {
     await openRegisterMode(page);
-    await page.getByTestId("attendance-search").fill(RUN_TAG);
+    await page.getByTestId("attendance-register-toolbar-search").fill(RUN_TAG);
 
     const teamCard = page.getByTestId(`attendance-team-${teamId}`);
     await expect(teamCard).toBeVisible({ timeout: 10_000 });
@@ -169,8 +170,10 @@ test.describe.serial("Frequência — UI ao vivo", () => {
   test.afterAll(async ({ request }) => {
     if (!shelterId) return;
     // Cascateia equipe e agendamento; o vínculo do membro volta a ser nulo.
-    await request.delete(`${API_URL}/shelters/${shelterId}`, {
-      headers: authHeaders(token),
+    await cleanupData(async () => {
+      await request.delete(`${API_URL}/shelters/${shelterId}`, {
+        headers: authHeaders(token),
+      });
     });
   });
 
@@ -199,10 +202,12 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await expect(page.getByTestId("attendance-page")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByTestId("attendance-shelters")).toBeVisible({
+    await expect(page.getByTestId("attendance-register-cards")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByTestId("attendance-loading")).toHaveCount(0);
+    await expect(page.getByTestId("attendance-register-loading")).toHaveCount(0);
+    // A lista é paginada no servidor: o abrigo da suíte é achado pela busca, não pela 1ª página.
+    await page.getByTestId("attendance-register-toolbar-search").fill(RUN_TAG);
     await expect(
       page.getByText(RUN_TAG, { exact: false }).first(),
     ).toBeVisible();
@@ -215,13 +220,13 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await openRegisterMode(page);
 
-    await page.getByTestId("attendance-search").fill(RUN_TAG);
+    await page.getByTestId("attendance-register-toolbar-search").fill(RUN_TAG);
     await expect(
       page.getByText(RUN_TAG, { exact: false }).first(),
     ).toBeVisible();
 
-    await page.getByTestId("attendance-search").fill("zzz-nao-existe-zzz");
-    await expect(page.getByTestId("attendance-empty")).toBeVisible();
+    await page.getByTestId("attendance-register-toolbar-search").fill("zzz-nao-existe-zzz");
+    await expect(page.getByTestId("attendance-register-empty")).toBeVisible();
   });
 
   test("o cabeçalho do abrigo abre e fecha a lista de equipes", async ({
@@ -230,7 +235,7 @@ test.describe.serial("Frequência — UI ao vivo", () => {
   }) => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await openRegisterMode(page);
-    await page.getByTestId("attendance-search").fill(RUN_TAG);
+    await page.getByTestId("attendance-register-toolbar-search").fill(RUN_TAG);
 
     const teamCard = page.getByTestId(`attendance-team-${teamId}`);
     // Um único abrigo no filtro: a tela já o mostra aberto.
@@ -251,7 +256,7 @@ test.describe.serial("Frequência — UI ao vivo", () => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await openTeam(page);
 
-    await expect(page.getByTestId("attendance-shelters")).toHaveCount(0);
+    await expect(page.getByTestId("attendance-register-cards")).toHaveCount(0);
     await expect(
       page.getByTestId(`team-attendance-member-${memberUserId}`),
     ).toBeVisible();

@@ -1,6 +1,8 @@
+import { CLEANUP_ENABLED } from "./keep-data";
+
 /**
- * Dados do cenário: criados **pela API** e apagados pelo próprio cenário.
- * Cada execução tem um `RUN_TAG` único para nenhum dado colidir nem sobrar.
+ * Dados do cenário: criados **pela API** e, por padrão, MANTIDOS (a massa acumula a cada execução;
+ * `E2E_CLEANUP=1` apaga, ver `keep-data.ts`). Cada execução tem um `RUN_TAG` único para nada colidir.
  */
 export const RUN_TAG = `e2e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -14,8 +16,12 @@ export class Cleaner {
     this.stack.push({ label, run });
   }
 
-  /** Executa tudo; falhas não interrompem a limpeza, mas são reportadas no fim. */
+  /** Executa tudo; falhas não interrompem a limpeza, mas são reportadas no fim. Sem `E2E_CLEANUP=1` não apaga nada. */
   async run(): Promise<void> {
+    if (!CLEANUP_ENABLED) {
+      this.stack.length = 0;
+      return;
+    }
     const errors: string[] = [];
     for (const item of this.stack.splice(0).reverse()) {
       try {

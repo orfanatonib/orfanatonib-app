@@ -49,6 +49,8 @@ const visited = new Set();
 for (const f of walk(join(root, "e2e/live"))) {
   const text = readFileSync(f, "utf8");
   for (const m of text.matchAll(/goto\(\s*[`"'](\/[^`"'?]*)/g)) visited.add(m[1].replace(/\$\{[^}]*\}/g, ":p"));
+  // Specs de lista declaram a tela como `{ path: "/adm/x" }` e navegam por helper (`goto(SCREEN.path)`).
+  for (const m of text.matchAll(/\bpath:\s*["'](\/(?:adm|area)[^"'?]*)["']/g)) visited.add(m[1]);
 }
 const norm = (r) => r.replace(/:[A-Za-z]+/g, ":p");
 const visitedNorm = new Set([...visited].map(norm));

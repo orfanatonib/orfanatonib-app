@@ -172,7 +172,7 @@ export default function VisitReportFormModal({
         caretakersDecisions !== "";
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
+        <Dialog data-testid="visit-reports-form-dialog" open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
             <form onSubmit={handleSubmit}>
                 <DialogTitle>
                     {isEditing ? "Editar Relatório de Visita" : "Novo Relatório de Visita"}
@@ -267,6 +267,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Membros da Equipe Presentes"
+                                inputProps={{ "data-testid": "visit-reports-form-team-members" }}
                                 value={teamMembersPresent}
                                 onChange={(e) => setTeamMembersPresent(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -277,6 +278,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Acolhidos Ouviram"
+                                inputProps={{ "data-testid": "visit-reports-form-sheltered-heard" }}
                                 value={shelteredHeardMessage}
                                 onChange={(e) => setShelteredHeardMessage(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -287,6 +289,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Cuidadores Ouviram"
+                                inputProps={{ "data-testid": "visit-reports-form-caretakers-heard" }}
                                 value={caretakersHeardMessage}
                                 onChange={(e) => setCaretakersHeardMessage(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -297,6 +300,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Decisões de Acolhidos"
+                                inputProps={{ "data-testid": "visit-reports-form-sheltered-decisions" }}
                                 value={shelteredDecisions}
                                 onChange={(e) => setShelteredDecisions(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -307,6 +311,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Decisões de Cuidadores"
+                                inputProps={{ "data-testid": "visit-reports-form-caretakers-decisions" }}
                                 value={caretakersDecisions}
                                 onChange={(e) => setCaretakersDecisions(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -319,6 +324,7 @@ export default function VisitReportFormModal({
                                 minRows={3}
                                 maxRows={8}
                                 label="Observações sobre a visita"
+                                inputProps={{ "data-testid": "visit-reports-form-observation" }}
                                 value={observation}
                                 onChange={(e) => setObservation(e.target.value)}
                                 placeholder="Descreva como foi a visita, recepção, etc."
@@ -332,10 +338,11 @@ export default function VisitReportFormModal({
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose} color="inherit">
+                    <Button data-testid="visit-reports-form-cancel" onClick={onClose} color="inherit">
                         Cancelar
                     </Button>
                     <Button
+                        data-testid="visit-reports-form-submit"
                         type="submit"
                         variant="contained"
                         color="primary"

@@ -22,6 +22,24 @@ export const FEED_COMMENTS_PENDING_BADGE_MAX = 99;
 /** Aba aberta ao entrar no painel: o que precisa de decisão. */
 export const FEED_COMMENTS_DEFAULT_STATUS = FeedCommentStatus.PENDING;
 
+/** Prefixo dos `data-testid` da casca (`feed-comments-manager`, `-toolbar`, `-cards`...). */
+export const FEED_COMMENTS_TEST_ID_PREFIX = 'feed-comments';
+export const FEED_COMMENTS_DEFAULT_SORT = 'createdAt:DESC';
+
+export const FEED_COMMENT_FILTER_KEYS = {
+  STATUS: 'status',
+  CREATED_FROM: 'createdFrom',
+  CREATED_TO: 'createdTo',
+  SORT: 'sort',
+} as const;
+
+export const FEED_COMMENT_SORT_OPTIONS = [
+  { value: 'createdAt:DESC', label: 'Envio: mais recentes' },
+  { value: 'createdAt:ASC', label: 'Envio: mais antigos' },
+  { value: 'reviewedAt:DESC', label: 'Revisão: mais recentes' },
+  { value: 'reviewedAt:ASC', label: 'Revisão: mais antigas' },
+] as const;
+
 export const FEED_COMMENT_STATUS_LABELS: Record<FeedCommentStatus, string> = {
   [FeedCommentStatus.PENDING]: 'Aguardando aprovação',
   [FeedCommentStatus.APPROVED]: 'Publicado',
@@ -69,6 +87,10 @@ export const FEED_COMMENTS_MESSAGES = {
   managerSummary: 'Revise cada comentário antes de ele aparecer para todos no feed dos abrigos.',
   searchPlaceholder: 'Buscar por autor, comentário ou publicação...',
   statusFilterLabel: 'Status',
+  searchLabel: 'Buscar comentários',
+  filterCreatedFrom: 'Enviado a partir de',
+  filterCreatedTo: 'Enviado até',
+  filterSort: 'Ordenar por',
   allStatuses: 'Todos',
   emptyTitle: 'Nenhum comentário encontrado',
   emptyPending: 'Não há comentários aguardando aprovação.',

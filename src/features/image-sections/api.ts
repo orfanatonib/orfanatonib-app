@@ -1,4 +1,6 @@
 import api from '@/config/axiosConfig';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import { SectionData } from '@/store/slices/image-section/imageSectionSlice';
 import type { ImageSectionPendingCount, MyImageSection } from './types';
 import {
@@ -7,10 +9,9 @@ import {
   SHELTER_UPLOAD_TIMEOUT_MS,
 } from './constants';
 
-export async function listImageSections(): Promise<SectionData[]> {
-  const { data } = await api.get<SectionData[]>(IMAGE_SECTIONS_ENDPOINT);
-  return data;
-}
+/** Fila de moderação filtrada, ordenada e paginada no servidor. */
+export const fetchImageSectionsPage: AdminListFetcher<SectionData> = (params, signal) =>
+  fetchAdminPage<SectionData>(IMAGE_SECTIONS_ENDPOINT, params, signal);
 
 export async function deleteImageSection(id: string): Promise<void> {
   await api.delete(`${IMAGE_SECTIONS_ENDPOINT}/${id}`);

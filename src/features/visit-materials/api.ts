@@ -1,4 +1,6 @@
 import api from '@/config/axiosConfig';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import {
   ListVisitMaterialsQueryDto,
   VisitMaterialIdParamsDto,
@@ -70,3 +72,7 @@ export async function getVisitMaterialById(
   );
   return data;
 }
+
+/** Página de materiais filtrada, ordenada e paginada no servidor (a tela administrativa). */
+export const fetchVisitMaterialsPage: AdminListFetcher<VisitMaterialPageResponseDto> = (params, signal) =>
+  fetchAdminPage<VisitMaterialPageResponseDto>(VISIT_MATERIAL_ENDPOINT, params, signal);

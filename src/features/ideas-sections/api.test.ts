@@ -13,7 +13,7 @@ const {
   deleteIdeasSection,
   getIdeasSection,
   listIdeasPages,
-  listIdeasSections,
+  fetchIdeasSectionsPage,
   updateIdeasSection,
 } = await import('./api');
 
@@ -22,10 +22,21 @@ const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 describe('api de ideias compartilhadas', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('lista a fila e devolve só o corpo', async () => {
-    get.mockResolvedValue({ data: [{ id: 's1' }] });
-    await expect(listIdeasSections()).resolves.toEqual([{ id: 's1' }]);
-    expect(get).toHaveBeenCalledWith('/ideas-sections');
+  it('lista a fila com página, filtros e ordenação no servidor', async () => {
+    get.mockResolvedValue({
+      data: { data: [{ id: 's1' }], meta: { page: 2, limit: 12, totalItems: 13, totalPages: 2 } },
+    });
+    const controller = new AbortController();
+    await expect(
+      fetchIdeasSectionsPage(
+        { page: 2, limit: 12, search: 'ideia', filters: { mediaType: 'video', createdTo: '2026-01-31', sort: 'title:DESC' } },
+        controller.signal,
+      ),
+    ).resolves.toEqual({ items: [{ id: 's1' }], total: 13, totalPages: 2 });
+    expect(get).toHaveBeenCalledWith('/ideas-sections', {
+      params: { page: 2, limit: 12, search: 'ideia', mediaType: 'video', createdTo: '2026-01-31', sortBy: 'title', order: 'DESC' },
+      signal: controller.signal,
+    });
   });
 
   it('busca uma ideia pelo id', async () => {
@@ -62,6 +73,8 @@ describe('api de ideias compartilhadas', () => {
 
   it('propaga o erro da API sem engolir', async () => {
     get.mockRejectedValue(new Error('403'));
-    await expect(listIdeasSections()).rejects.toThrow('403');
+    await expect(
+      fetchIdeasSectionsPage({ page: 1, limit: 12, search: '', filters: {} }, new AbortController().signal),
+    ).rejects.toThrow('403');
   });
 });

@@ -25,6 +25,7 @@ export async function apiFetchShelteredList({
   limit,
   filters,
   sort,
+  signal,
 }: ShelteredListParams): Promise<Paginated<ShelteredResponseDto>> {
   const params: ShelteredListQuery = {
     page,
@@ -35,6 +36,7 @@ export async function apiFetchShelteredList({
 
   const { data } = await api.get<Paginated<ShelteredResponseDto>>(SHELTERED_ENDPOINT, {
     params,
+    signal,
   });
   return data;
 }

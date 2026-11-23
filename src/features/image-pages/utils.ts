@@ -1,7 +1,12 @@
 import { INITIAL_THUMBNAILS } from './constants';
+import type { ImagePageData } from './types';
 
 export const truncate = (text: string = '', max = 100) =>
   text.length > max ? `${text.slice(0, max)}...` : text;
+
+/** Total de fotos de todas as seções da galeria. */
+export const countPhotos = (page: ImagePageData): number =>
+  (page.sections ?? []).reduce((total, section) => total + (section.mediaItems?.length ?? 0), 0);
 
 export async function copyToClipboard(text: string) {
   try {

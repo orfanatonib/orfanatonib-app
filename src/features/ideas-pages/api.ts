@@ -1,13 +1,14 @@
 import api from '@/config/axiosConfig';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import { IdeasPageData } from 'store/slices/ideas/ideasSlice';
+import { IDEAS_PAGES_PATH } from './constants';
 
-const IDEAS_PAGES_PATH = '/ideas-pages';
 const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 
-export async function apiListIdeasPages() {
-  const { data } = await api.get<IdeasPageData[]>(IDEAS_PAGES_PATH);
-  return data;
-}
+/** Uma página da listagem administrativa; busca, datas e ordenação são aplicadas no servidor. */
+export const fetchIdeasPagesPage: AdminListFetcher<IdeasPageData> = (params, signal) =>
+  fetchAdminPage<IdeasPageData>(IDEAS_PAGES_PATH, params, signal);
 
 export async function apiGetIdeasPage(id: string) {
   const { data } = await api.get<IdeasPageData>(`${IDEAS_PAGES_PATH}/${id}`);

@@ -4,19 +4,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const listImageSections = vi.fn();
 const listMyImageSections = vi.fn();
 const getImageSectionsPendingCount = vi.fn();
 
-vi.mock('./api', () => ({ listImageSections, listMyImageSections, getImageSectionsPendingCount }));
+vi.mock('./api', () => ({ listMyImageSections, getImageSectionsPendingCount }));
 
-const { useImageSections, useMyImageSections, usePendingImageSectionsCount, useRefreshImageSectionsPending } =
+const { useMyImageSections, usePendingImageSectionsCount, useRefreshImageSectionsPending } =
   await import('./hooks');
-
-const sections = [
-  { id: '1', caption: 'Gincana', description: 'brincadeiras', public: false, mediaItems: [] },
-  { id: '2', caption: 'Teatro', description: 'peça de Páscoa', public: false, mediaItems: [] },
-];
 
 const wrapper = () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -24,49 +18,6 @@ const wrapper = () => {
     createElement(QueryClientProvider, { client }, children);
   return { client, Wrapper };
 };
-
-describe('useImageSections', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  });
-
-  it('carrega a fila e termina o loading', async () => {
-    listImageSections.mockResolvedValue(sections);
-    const { result } = renderHook(() => useImageSections());
-    await act(async () => {
-      await result.current.fetchSections();
-    });
-    expect(result.current.loading).toBe(false);
-    expect(result.current.sections).toHaveLength(2);
-    expect(result.current.error).toBe('');
-  });
-
-  it('falha da API vira mensagem de erro (e é registrada), sem lista', async () => {
-    listImageSections.mockRejectedValue(new Error('boom'));
-    const { result } = renderHook(() => useImageSections());
-    await act(async () => {
-      await result.current.fetchSections();
-    });
-    expect(result.current.error).toBe('Erro ao buscar seções de imagens');
-    expect(result.current.sections).toEqual([]);
-    expect(console.error).toHaveBeenCalled();
-  });
-
-  it('filtra por legenda ou descrição, sem diferenciar maiúsculas', async () => {
-    listImageSections.mockResolvedValue(sections);
-    const { result } = renderHook(() => useImageSections());
-    await act(async () => {
-      await result.current.fetchSections();
-    });
-    act(() => result.current.setSearchTerm('  gIN '));
-    await waitFor(() => expect(result.current.filteredSections.map((s) => s.id)).toEqual(['1']));
-    act(() => result.current.setSearchTerm('páscoa'));
-    await waitFor(() => expect(result.current.filteredSections.map((s) => s.id)).toEqual(['2']));
-    act(() => result.current.setSearchTerm(''));
-    await waitFor(() => expect(result.current.filteredSections).toHaveLength(2));
-  });
-});
 
 describe('useMyImageSections', () => {
   beforeEach(() => {

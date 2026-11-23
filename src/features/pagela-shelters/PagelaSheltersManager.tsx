@@ -1,703 +1,268 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Box,
-  Stack,
-  Card,
-  CardContent,
-  Typography,
   Breadcrumbs,
-  Link as MuiLink,
-  IconButton,
-  Grid,
-  Container,
-  Paper,
-  Select,
-  MenuItem,
+  CircularProgress,
   FormControl,
   InputLabel,
-  CircularProgress,
-} from "@mui/material";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/slices";
-import { UserRole } from "@/store/slices/auth/authSlice";
-import { apiGetMyShelters } from "@/features/leaders/api";
+  Link as MuiLink,
+  MenuItem,
+  Paper,
+  Select,
+  Typography,
+} from '@mui/material';
+import { Bookmarks, ChevronRight, ChildCare, Home } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/slices';
+import { UserRole } from '@/store/slices/auth/authSlice';
+import { apiGetMyShelters } from '@/features/leaders/api';
+import { AdminEmptyState, AdminPageShell } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 
-import { SectionHeader } from "./components/SectionHeader";
-import { SheltersPanel } from "./components/SheltersPanel";
-import { PagelasPanel } from "./components/PagelasPanel";
-import { ShelteredPanel } from "./components/ShelteredPanel";
-import { usePagelaSheltersManager, usePagelaSheltersManagerForLeader } from "./hooks";
+import PagelaLevelList from './components/PagelaLevelList';
+import { PagelaRecordCard, ShelteredLevelCard, ShelterLevelCard } from './components/PagelaLevelCards';
+import { fetchPagelasLevel, fetchShelteredLevel, fetchSheltersLevel } from './api';
+import {
+  GENDER_OPTIONS,
+  PAGELAS_DEFAULT_SORT,
+  PAGELAS_LABELS,
+  PAGELAS_TEST_ID_PREFIX,
+  PAGELAS_TITLE,
+  PAGELA_FILTER_KEYS,
+  PAGELA_SORT_OPTIONS,
+  PRESENT_OPTIONS,
+  SHELTERED_DEFAULT_SORT,
+  SHELTERED_SORT_OPTIONS,
+  SHELTERS_DEFAULT_SORT,
+  SHELTER_SORT_OPTIONS,
+  type PagelaLevel,
+} from './constants';
+import type { PagelaDto, ShelteredDto, ShelterDto } from './types';
 
-import type { ShelterDto } from "./types";
-import BackHeader from "@/components/common/header/BackHeader";
+const P = PAGELAS_TEST_ID_PREFIX;
+const K = PAGELA_FILTER_KEYS;
 
-type MobileStep = "shelters" | "sheltered" | "pagelas";
+const sortField = (options: ReadonlyArray<{ value: string; label: string }>): AdminFilterField => ({
+  kind: 'select',
+  key: K.SORT,
+  label: PAGELAS_LABELS.FILTER_SORT,
+  allLabel: null,
+  options: options.map((option) => ({ value: option.value, label: option.label })),
+});
 
+const SHELTER_FIELDS: AdminFilterField[] = [
+  { kind: 'text', key: K.CITY, label: PAGELAS_LABELS.FILTER_CITY },
+  { kind: 'text', key: K.STATE, label: PAGELAS_LABELS.FILTER_STATE },
+  { kind: 'date', key: K.CREATED_FROM, label: PAGELAS_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: PAGELAS_LABELS.FILTER_CREATED_TO },
+  sortField(SHELTER_SORT_OPTIONS),
+];
+
+const SHELTERED_FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.GENDER,
+    label: PAGELAS_LABELS.FILTER_GENDER,
+    allLabel: PAGELAS_LABELS.FILTER_GENDER_ALL,
+    options: GENDER_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  { kind: 'date', key: K.JOINED_FROM, label: PAGELAS_LABELS.FILTER_JOINED_FROM },
+  { kind: 'date', key: K.JOINED_TO, label: PAGELAS_LABELS.FILTER_JOINED_TO },
+  sortField(SHELTERED_SORT_OPTIONS),
+];
+
+const PAGELA_FIELDS: AdminFilterField[] = [
+  { kind: 'text', key: K.YEAR, label: PAGELAS_LABELS.FILTER_YEAR },
+  {
+    kind: 'select',
+    key: K.PRESENT,
+    label: PAGELAS_LABELS.FILTER_PRESENT,
+    allLabel: PAGELAS_LABELS.FILTER_PRESENT_ALL,
+    options: PRESENT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  { kind: 'date', key: K.REFERENCE_FROM, label: PAGELAS_LABELS.FILTER_REFERENCE_FROM },
+  { kind: 'date', key: K.REFERENCE_TO, label: PAGELAS_LABELS.FILTER_REFERENCE_TO },
+  sortField(PAGELA_SORT_OPTIONS),
+];
+
+interface Pick {
+  id: string;
+  name: string;
+}
+
+/**
+ * Pagelas: fluxo em três níveis (abrigos → acolhidos do abrigo → pagelas do acolhido), cada nível uma lista do servidor.
+ * O líder começa no nível dos acolhidos, nos abrigos que lidera. O fluxo e a trilha (breadcrumbs) são só desta tela;
+ * a casca em volta (título, largura 95%/98%, toolbar, conteúdo estável e paginação) é a mesma das demais telas.
+ */
 export default function PagelaSheltersManager() {
   const user = useSelector((state: RootState) => state.auth.user);
-  const isLeader = user?.role === UserRole.LEADER && user?.leaderProfile;
-  
-  if (isLeader) {
-    return <PagelaSheltersManagerForLeader />;
+  const isLeader = user?.role === UserRole.LEADER && Boolean(user?.leaderProfile);
+
+  const [leaderShelters, setLeaderShelters] = useState<Pick[]>([]);
+  const [loadingShelters, setLoadingShelters] = useState(isLeader);
+  const [shelter, setShelter] = useState<Pick | null>(null);
+  const [sheltered, setSheltered] = useState<Pick | null>(null);
+
+  useEffect(() => {
+    if (!isLeader) return undefined;
+    let canceled = false;
+    (async () => {
+      try {
+        const mine = await apiGetMyShelters();
+        if (canceled) return;
+        const options = mine.map((item) => ({ id: item.id, name: item.name }));
+        setLeaderShelters(options);
+        setShelter(options[0] ?? null);
+      } catch {
+        if (!canceled) setLeaderShelters([]);
+      } finally {
+        if (!canceled) setLoadingShelters(false);
+      }
+    })();
+    return () => {
+      canceled = true;
+    };
+  }, [isLeader]);
+
+  const level: PagelaLevel = !shelter ? 'shelters' : !sheltered ? 'sheltered' : 'pagelas';
+
+  const fetchSheltered = useMemo(() => (shelter ? fetchShelteredLevel(shelter.id) : null), [shelter]);
+  const fetchPagelas = useMemo(() => (sheltered ? fetchPagelasLevel(sheltered.id) : null), [sheltered]);
+
+  const handleBack = () => {
+    if (level === 'pagelas') setSheltered(null);
+    else if (level === 'sheltered' && !isLeader) setShelter(null);
+    else window.history.back();
+  };
+
+  const goToShelters = () => {
+    if (isLeader) return;
+    setShelter(null);
+    setSheltered(null);
+  };
+
+  const handleLeaderShelterChange = (id: string) => {
+    setShelter(leaderShelters.find((item) => item.id === id) ?? null);
+    setSheltered(null);
+  };
+
+  const crumbSx = (active: boolean) => ({
+    color: active ? 'text.primary' : 'primary.main',
+    fontWeight: active ? 400 : 600,
+    textDecoration: 'none',
+    '&:hover': { textDecoration: 'underline' },
+  });
+
+  const breadcrumb = (
+    <Paper
+      data-testid={`${P}-breadcrumb`}
+      elevation={2}
+      sx={{ mb: { xs: 2, md: 3 }, borderRadius: 3, px: { xs: 2, md: 3 }, py: 1.5, minHeight: 56, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}
+    >
+      <Breadcrumbs separator={<ChevronRight fontSize="small" />} sx={{ flex: 1, minWidth: 0 }}>
+        {!isLeader && (
+          <MuiLink data-testid={`${P}-crumb-shelters`} component="button" onClick={goToShelters} sx={crumbSx(level === 'shelters')}>
+            {PAGELAS_LABELS.LEVEL_SHELTERS}
+          </MuiLink>
+        )}
+        {shelter && (
+          <MuiLink data-testid={`${P}-crumb-shelter`} component="button" onClick={() => setSheltered(null)} sx={crumbSx(level === 'sheltered')}>
+            {shelter.name}
+          </MuiLink>
+        )}
+        {sheltered && (
+          <Typography data-testid={`${P}-crumb-sheltered`} color="text.primary" fontWeight={600}>
+            {sheltered.name}
+          </Typography>
+        )}
+      </Breadcrumbs>
+      {isLeader && leaderShelters.length > 1 && (
+        <FormControl size="small" sx={{ minWidth: 240 }}>
+          <InputLabel id="pagelas-shelter-select-label">{PAGELAS_LABELS.SELECT_SHELTER}</InputLabel>
+          <Select
+            labelId="pagelas-shelter-select-label"
+            data-testid={`${P}-shelter-select`}
+            value={shelter?.id ?? ''}
+            label={PAGELAS_LABELS.SELECT_SHELTER}
+            onChange={(event) => handleLeaderShelterChange(event.target.value)}
+          >
+            {leaderShelters.map((item) => (
+              <MenuItem key={item.id} value={item.id} data-testid={`${P}-shelter-option-${item.id}`}>
+                {item.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+    </Paper>
+  );
+
+  let body;
+  if (isLeader && loadingShelters) {
+    body = (
+      <div data-testid={`${P}-loading-shelters`} style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+        <CircularProgress />
+      </div>
+    );
+  } else if (isLeader && !shelter) {
+    body = <AdminEmptyState testId={`${P}-empty`} message={PAGELAS_LABELS.NO_LEADER_SHELTERS} />;
+  } else if (level === 'shelters') {
+    body = (
+      <PagelaLevelList<ShelterDto>
+        key="shelters"
+        level="shelters"
+        fetcher={fetchSheltersLevel}
+        defaultSort={SHELTERS_DEFAULT_SORT}
+        fields={SHELTER_FIELDS}
+        searchLabel={PAGELAS_LABELS.SEARCH_SHELTERS}
+        searchPlaceholder={PAGELAS_LABELS.PLACEHOLDER_SHELTERS}
+        emptyMessage={PAGELAS_LABELS.EMPTY_SHELTERS}
+        errorMessage={PAGELAS_LABELS.LOAD_ERROR_SHELTERS}
+        emptyIcon={<Home sx={{ fontSize: 64, color: 'text.secondary' }} />}
+        rowKey={(item) => item.id}
+        renderItem={(item) => <ShelterLevelCard shelter={item} onOpen={(next) => setShelter({ id: next.id, name: next.name })} />}
+      />
+    );
+  } else if (level === 'sheltered' && fetchSheltered && shelter) {
+    body = (
+      <PagelaLevelList<ShelteredDto>
+        key={`sheltered:${shelter.id}`}
+        level="sheltered"
+        fetcher={fetchSheltered}
+        defaultSort={SHELTERED_DEFAULT_SORT}
+        fields={SHELTERED_FIELDS}
+        searchLabel={PAGELAS_LABELS.SEARCH_SHELTERED}
+        searchPlaceholder={PAGELAS_LABELS.PLACEHOLDER_SHELTERED}
+        emptyMessage={PAGELAS_LABELS.EMPTY_SHELTERED}
+        errorMessage={PAGELAS_LABELS.LOAD_ERROR_SHELTERED}
+        emptyIcon={<ChildCare sx={{ fontSize: 64, color: 'text.secondary' }} />}
+        rowKey={(item) => item.id}
+        renderItem={(item) => <ShelteredLevelCard sheltered={item} onOpen={(next) => setSheltered({ id: next.id, name: next.name })} />}
+      />
+    );
+  } else if (fetchPagelas && sheltered) {
+    body = (
+      <PagelaLevelList<PagelaDto>
+        key={`pagelas:${sheltered.id}`}
+        level="pagelas"
+        fetcher={fetchPagelas}
+        defaultSort={PAGELAS_DEFAULT_SORT}
+        fields={PAGELA_FIELDS}
+        searchLabel={PAGELAS_LABELS.SEARCH_PAGELAS}
+        searchPlaceholder={PAGELAS_LABELS.PLACEHOLDER_PAGELAS}
+        emptyMessage={PAGELAS_LABELS.EMPTY_PAGELAS}
+        errorMessage={PAGELAS_LABELS.LOAD_ERROR_PAGELAS}
+        emptyIcon={<Bookmarks sx={{ fontSize: 64, color: 'text.secondary' }} />}
+        rowKey={(item) => item.id}
+        renderItem={(item) => <PagelaRecordCard pagela={item} />}
+      />
+    );
   }
 
-  return <PagelaSheltersManagerForAdmin />;
-}
-
-function PagelaSheltersManagerForLeader() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
-  const user = useSelector((state: RootState) => state.auth.user);
-  
-  const [mobileStep, setMobileStep] = useState<MobileStep>("sheltered");
-  const [leaderShelters, setLeaderShelters] = useState<ShelterDto[]>([]);
-  const [loadingShelters, setLoadingShelters] = useState(true);
-  const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const fetchLeaderShelters = async () => {
-      try {
-        setLoadingShelters(true);
-        const sheltersData = await apiGetMyShelters();
-        setLeaderShelters(sheltersData.map(s => ({
-          ...s,
-          address: s.address ?? {
-            id: '',
-            street: '',
-            number: '',
-            district: '',
-            city: '',
-            state: '',
-            postalCode: '',
-            createdAt: '',
-            updatedAt: '',
-          },
-          leaders: s.teams?.flatMap(t => t.leaders || []).map(l => ({
-            id: l.id,
-            active: true,
-            user: { id: l.id, name: l.name, email: l.email, phone: '', active: true, completed: true, commonUser: false },
-          })) || [],
-          members: s.teams?.flatMap(t => t.members || []).map(m => ({
-            id: m.id,
-            active: m.active ?? true,
-            user: { id: m.user?.id || m.id, name: m.user?.name || '', email: m.user?.email || '', phone: '', active: true, completed: true, commonUser: false },
-          })) || [],
-        } as ShelterDto)));
-        
-        if (sheltersData.length > 0) {
-          setSelectedShelterId(sheltersData[0].id);
-        }
-      } catch {
-      } finally {
-        setLoadingShelters(false);
-      }
-    };
-    
-    fetchLeaderShelters();
-  }, []);
-
-  const selectedShelter = useMemo(() => {
-    return leaderShelters.find(s => s.id === selectedShelterId) || null;
-  }, [leaderShelters, selectedShelterId]);
-
-  const {
-    selectedSheltered,
-    sheltered,
-    pagelas,
-    handleShelteredSelect,
-    handleShelteredSearchChange,
-    handlePagelasSearchChange,
-  } = usePagelaSheltersManagerForLeader(selectedShelterId);
-
-  useEffect(() => {
-    if (!isMobile) return;
-    if (!selectedShelter) return;
-    if (!selectedSheltered) {
-      setMobileStep("sheltered");
-    } else {
-      setMobileStep("pagelas");
-    }
-  }, [isMobile, selectedShelter, selectedSheltered]);
-
-  const handleMobileBack = () => {
-    if (!isMobile) return;
-    if (mobileStep === "pagelas") {
-      handleShelteredSelect(null as any);
-      setMobileStep("sheltered");
-    }
-  };
-
-  const renderMobileContent = () => {
-    if (!selectedShelter) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-          {loadingShelters ? (
-            <CircularProgress />
-          ) : (
-            <Typography color="text.secondary">Nenhum abrigo encontrado</Typography>
-          )}
-        </Box>
-      );
-    }
-
-    switch (mobileStep) {
-      case "sheltered":
-        return (
-          <ShelteredPanel
-            sheltered={sheltered.data?.data || []}
-            loading={sheltered.loading}
-            error={sheltered.error}
-            onShelteredSelect={handleShelteredSelect}
-            selectedSheltered={selectedSheltered}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={sheltered.currentPage}
-            totalPages={sheltered.totalPages}
-            onPageChange={sheltered.handlePageChange}
-            onSearchChange={handleShelteredSearchChange}
-          />
-        );
-      case "pagelas":
-        return (
-          <PagelasPanel
-            pagelas={pagelas.data?.items || []}
-            loading={pagelas.loading}
-            error={pagelas.error}
-            shelteredName={selectedSheltered?.name || ""}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={pagelas.currentPage}
-            totalPages={pagelas.totalPages}
-            onPageChange={pagelas.handlePageChange}
-            onSearchChange={handlePagelasSearchChange}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const renderDesktopContent = () => {
-    if (!selectedShelter) {
-      return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-          {loadingShelters ? (
-            <CircularProgress />
-          ) : (
-            <Typography color="text.secondary">Nenhum abrigo encontrado</Typography>
-          )}
-        </Box>
-      );
-    }
-
-    return (
-      <Grid container spacing={2} alignItems="stretch">
-        <Grid item xs={12} md={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <ShelteredPanel
-              sheltered={sheltered.data?.data || []}
-              loading={sheltered.loading}
-              error={sheltered.error}
-              onShelteredSelect={handleShelteredSelect}
-              selectedSheltered={selectedSheltered}
-              shelterName={selectedShelter?.name || ""}
-              currentPage={sheltered.currentPage}
-              totalPages={sheltered.totalPages}
-              onPageChange={sheltered.handlePageChange}
-              onSearchChange={handleShelteredSearchChange}
-            />
-          </motion.div>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <PagelasPanel
-              pagelas={pagelas.data?.items || []}
-              loading={pagelas.loading}
-              error={pagelas.error}
-              shelteredName={selectedSheltered?.name || ""}
-              shelterName={selectedShelter?.name || ""}
-              currentPage={pagelas.currentPage}
-              totalPages={pagelas.totalPages}
-              onPageChange={pagelas.handlePageChange}
-              onSearchChange={handlePagelasSearchChange}
-            />
-          </motion.div>
-        </Grid>
-      </Grid>
-    );
-  };
-
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        pb: 4,
-        bgcolor: "background.default",
-        py: { xs: 2, md: 4 },
-      }}
-    >
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="📋 Gerenciar Pagelas" />
-        </motion.div>
-
-        {leaderShelters.length > 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Paper
-              elevation={2}
-              sx={{
-                mb: { xs: 2, md: 3 },
-                borderRadius: 3,
-                bgcolor: "background.paper",
-              }}
-            >
-              <CardContent sx={{ py: { xs: 1.5, md: 2 }, px: { xs: 2, md: 3 } }}>
-                <FormControl fullWidth>
-                  <InputLabel id="shelter-select-label">Selecione o Abrigo</InputLabel>
-                  <Select
-                    labelId="shelter-select-label"
-                    value={selectedShelterId || ""}
-                    label="Selecione o Abrigo"
-                    onChange={(e) => setSelectedShelterId(e.target.value)}
-                    sx={{
-                      fontSize: { xs: '0.9rem', md: '1rem' },
-                    }}
-                  >
-                    {leaderShelters.map((shelter) => (
-                      <MenuItem key={shelter.id} value={shelter.id}>
-                        {shelter.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </CardContent>
-            </Paper>
-          </motion.div>
-        )}
-
-        <Box sx={{ mt: { xs: 2, md: 3 } }}>
-        {isMobile ? (
-          <Box>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Paper
-                elevation={2}
-                sx={{
-                  mb: 2,
-                  borderRadius: 3,
-                  bgcolor: "background.paper",
-                }}
-              >
-                <CardContent sx={{ py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 3 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {mobileStep === "pagelas" && (
-                      <IconButton
-                        onClick={handleMobileBack}
-                        size="small"
-                        sx={{
-                          "&:hover": {
-                            bgcolor: "action.hover",
-                          },
-                        }}
-                      >
-                        <ArrowBackIcon />
-                      </IconButton>
-                    )}
-                    {mobileStep === "sheltered" && <Box sx={{ width: 40 }} />}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight="bold"
-                        sx={{
-                          fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {mobileStep === "sheltered" && "Acolhidos"}
-                        {mobileStep === "pagelas" && "Pagelas"}
-                      </Typography>
-                      {selectedShelter && leaderShelters.length === 1 && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            display: "block",
-                            mt: 0.25,
-                          }}
-                        >
-                          {selectedShelter.name}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Paper>
-            </motion.div>
-
-            {renderMobileContent()}
-          </Box>
-        ) : (
-          <Box>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Paper
-                elevation={2}
-                sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                  bgcolor: "background.paper",
-                }}
-              >
-                <CardContent sx={{ py: 2 }}>
-                  <Breadcrumbs separator={<ChevronRightIcon fontSize="small" />}>
-                    {selectedShelter && (
-                      <MuiLink
-                        component="button"
-                        onClick={() => handleShelteredSelect(null as any)}
-                        sx={{
-                          color: selectedSheltered ? "primary.main" : "text.primary",
-                          fontWeight: selectedSheltered ? 600 : 400,
-                          textDecoration: "none",
-                          "&:hover": { textDecoration: "underline" },
-                        }}
-                      >
-                        {selectedShelter.name}
-                      </MuiLink>
-                    )}
-                    {selectedSheltered && (
-                      <Typography color="text.primary" fontWeight={600}>
-                        {selectedSheltered.name}
-                      </Typography>
-                    )}
-                  </Breadcrumbs>
-                </CardContent>
-              </Paper>
-            </motion.div>
-
-            {renderDesktopContent()}
-          </Box>
-        )}
-      </Box>
-      </Container>
-    </Box>
-  );
-}
-
-function PagelaSheltersManagerForAdmin() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
-
-  const [mobileStep, setMobileStep] = useState<MobileStep>("shelters");
-
-  const {
-    selectedShelter,
-    selectedSheltered,
-    shelters,
-    sheltered,
-    pagelas,
-    handleShelterSelect,
-    handleShelteredSelect,
-    handleBack,
-    handleSheltersSearchChange,
-    handleShelteredSearchChange,
-    handlePagelasSearchChange,
-  } = usePagelaSheltersManager();
-
-  useEffect(() => {
-    if (!isMobile) return;
-    if (!selectedShelter) setMobileStep("shelters");
-    else if (!selectedSheltered) setMobileStep("sheltered");
-    else setMobileStep("pagelas");
-  }, [isMobile, selectedShelter, selectedSheltered]);
-
-  const handleMobileBack = () => {
-    if (!isMobile) return;
-    if (mobileStep === "pagelas") {
-      handleShelteredSelect(null);
-      setMobileStep("sheltered");
-    } else if (mobileStep === "sheltered") {
-      handleShelterSelect(null);
-      setMobileStep("shelters");
-    }
-  };
-
-  const renderMobileContent = () => {
-    switch (mobileStep) {
-      case "shelters":
-        return (
-          <SheltersPanel
-            shelters={shelters.data?.items || []}
-            loading={shelters.loading}
-            error={shelters.error}
-            onShelterSelect={handleShelterSelect}
-            selectedShelter={selectedShelter}
-            currentPage={shelters.currentPage}
-            totalPages={shelters.totalPages}
-            onPageChange={shelters.handlePageChange}
-            onSearchChange={handleSheltersSearchChange}
-          />
-        );
-      case "sheltered":
-        return (
-          <ShelteredPanel
-            sheltered={sheltered.data?.data || []}
-            loading={sheltered.loading}
-            error={sheltered.error}
-            onShelteredSelect={handleShelteredSelect}
-            selectedSheltered={selectedSheltered}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={sheltered.currentPage}
-            totalPages={sheltered.totalPages}
-            onPageChange={sheltered.handlePageChange}
-            onSearchChange={handleShelteredSearchChange}
-          />
-        );
-      case "pagelas":
-        return (
-          <PagelasPanel
-            pagelas={pagelas.data?.items || []}
-            loading={pagelas.loading}
-            error={pagelas.error}
-            shelteredName={selectedSheltered?.name || ""}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={pagelas.currentPage}
-            totalPages={pagelas.totalPages}
-            onPageChange={pagelas.handlePageChange}
-            onSearchChange={handlePagelasSearchChange}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const renderDesktopContent = () => (
-    <Grid container spacing={2} alignItems="stretch">
-      <Grid item xs={12} md={4}>
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <SheltersPanel
-            shelters={shelters.data?.items || []}
-            loading={shelters.loading}
-            error={shelters.error}
-            onShelterSelect={handleShelterSelect}
-            selectedShelter={selectedShelter}
-            currentPage={shelters.currentPage}
-            totalPages={shelters.totalPages}
-            onPageChange={shelters.handlePageChange}
-            onSearchChange={handleSheltersSearchChange}
-          />
-        </motion.div>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <ShelteredPanel
-            sheltered={sheltered.data?.data || []}
-            loading={sheltered.loading}
-            error={sheltered.error}
-            onShelteredSelect={handleShelteredSelect}
-            selectedSheltered={selectedSheltered}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={sheltered.currentPage}
-            totalPages={sheltered.totalPages}
-            onPageChange={sheltered.handlePageChange}
-            onSearchChange={handleShelteredSearchChange}
-          />
-        </motion.div>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <PagelasPanel
-            pagelas={pagelas.data?.items || []}
-            loading={pagelas.loading}
-            error={pagelas.error}
-            shelteredName={selectedSheltered?.name || ""}
-            shelterName={selectedShelter?.name || ""}
-            currentPage={pagelas.currentPage}
-            totalPages={pagelas.totalPages}
-            onPageChange={pagelas.handlePageChange}
-            onSearchChange={handlePagelasSearchChange}
-          />
-        </motion.div>
-      </Grid>
-    </Grid>
-  );
-
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        pb: 4,
-        bgcolor: "background.default",
-        py: { xs: 2, md: 4 },
-      }}
-    >
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="📋 Gerenciar Pagelas" />
-        </motion.div>
-
-        <Box sx={{ mt: { xs: 2, md: 3 } }}>
-        {isMobile ? (
-          <Box>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Paper
-                elevation={2}
-                sx={{
-                  mb: 2,
-                  borderRadius: 3,
-                  bgcolor: "background.paper",
-                }}
-              >
-                <CardContent sx={{ py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 3 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {mobileStep !== "shelters" && (
-                      <IconButton
-                        onClick={handleMobileBack}
-                        size="small"
-                        sx={{
-                          "&:hover": {
-                            bgcolor: "action.hover",
-                          },
-                        }}
-                      >
-                        <ArrowBackIcon />
-                      </IconButton>
-                    )}
-                    {mobileStep === "shelters" && <Box sx={{ width: 40 }} />}
-                    <Typography
-                      variant="h6"
-                      fontWeight="bold"
-                      sx={{
-                        fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        flex: 1,
-                      }}
-                    >
-                      {mobileStep === "shelters" && "Abrigos"}
-                      {mobileStep === "sheltered" && "Acolhidos"}
-                      {mobileStep === "pagelas" && "Pagelas"}
-                    </Typography>
-                  </Stack>
-                </CardContent>
-              </Paper>
-            </motion.div>
-
-            {renderMobileContent()}
-          </Box>
-        ) : (
-          <Box>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Paper
-                elevation={2}
-                sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                  bgcolor: "background.paper",
-                }}
-              >
-                <CardContent sx={{ py: 2 }}>
-                  <Breadcrumbs separator={<ChevronRightIcon fontSize="small" />}>
-                    <MuiLink
-                      component="button"
-                      onClick={() => {
-                        handleShelterSelect(null);
-                        handleShelteredSelect(null);
-                      }}
-                      sx={{
-                        color: "primary.main",
-                        fontWeight: 600,
-                        textDecoration: "none",
-                        "&:hover": { textDecoration: "underline" },
-                      }}
-                    >
-                      Abrigos
-                    </MuiLink>
-                    {selectedShelter && (
-                      <MuiLink
-                        component="button"
-                        onClick={() => handleShelteredSelect(null)}
-                        sx={{
-                          color: selectedSheltered ? "primary.main" : "text.primary",
-                          fontWeight: selectedSheltered ? 600 : 400,
-                          textDecoration: "none",
-                          "&:hover": { textDecoration: "underline" },
-                        }}
-                      >
-                        {selectedShelter.name}
-                      </MuiLink>
-                    )}
-                    {selectedSheltered && (
-                      <Typography color="text.primary" fontWeight={600}>
-                        {selectedSheltered.name}
-                      </Typography>
-                    )}
-                  </Breadcrumbs>
-                </CardContent>
-              </Paper>
-            </motion.div>
-
-            {renderDesktopContent()}
-          </Box>
-        )}
-      </Box>
-      </Container>
-    </Box>
+    <AdminPageShell testId={`${P}-manager`} title={PAGELAS_TITLE} onBack={level === 'shelters' || (isLeader && level === 'sheltered') ? undefined : handleBack}>
+      {breadcrumb}
+      {body}
+    </AdminPageShell>
   );
 }

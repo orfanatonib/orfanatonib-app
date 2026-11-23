@@ -1,3 +1,4 @@
+import { cleanupData } from "../support/keep-data";
 import { API_URL } from "../../../playwright.live.config";
 import { expectCardActionsAligned } from "../support/card-layout";
 import { closeDb, countRows, queryOne } from "../support/db";
@@ -81,8 +82,10 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
   });
 
   test.afterAll(async ({ request }) => {
-    for (const id of created) await deletePageApi(request, admin, id);
-    expect(await pagesWithTag(RUN_TAG)).toBe(0);
+    await cleanupData(async () => {
+      for (const id of created) await deletePageApi(request, admin, id);
+      expect(await pagesWithTag(RUN_TAG)).toBe(0);
+    });
     await closeDb();
   });
 
@@ -118,7 +121,7 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
     expect(await routeRows(body.id)).toHaveLength(1);
 
     await page.goto("/adm/paginas-ideias");
-    await page.getByTestId("ideas-toolbar-search").fill(title);
+    await page.getByTestId("ideas-pages-toolbar-search").fill(title);
     await expect(page.getByTestId(`ideas-page-card-title-${body.id}`)).toHaveText(title);
   });
 
@@ -152,7 +155,7 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
     const seeded = await seedPage(request, "ui-excluir");
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/paginas-ideias");
-    await page.getByTestId("ideas-toolbar-search").fill(seeded.title);
+    await page.getByTestId("ideas-pages-toolbar-search").fill(seeded.title);
     await page.getByTestId(`ideas-page-card-delete-${seeded.id}`).click();
     const deleted = page.waitForResponse((r) => r.url().endsWith(`/ideas-pages/${seeded.id}`) && r.request().method() === "DELETE");
     await page.getByTestId("ideas-pages-delete-dialog-confirm").click();
@@ -167,7 +170,7 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
   test("lista vazia: busca sem resultado mostra o estado vazio", async ({ page, request }) => {
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/paginas-ideias");
-    await page.getByTestId("ideas-toolbar-search").fill(tagged("nao-existe"));
+    await page.getByTestId("ideas-pages-toolbar-search").fill(tagged("nao-existe"));
     await expect(page.getByTestId("ideas-pages-empty")).toBeVisible();
     expect(await countRows("ideas_pages", { title: tagged("nao-existe") })).toBe(0);
   });
@@ -176,13 +179,13 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
     const seeded = await seedPage(request, "ui-erro");
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/paginas-ideias");
-    await page.getByTestId("ideas-toolbar-search").fill(seeded.title);
+    await page.getByTestId("ideas-pages-toolbar-search").fill(seeded.title);
     await expect(page.getByTestId(`ideas-page-card-${seeded.id}`)).toBeVisible();
     await deletePageApi(request, admin, seeded.id);
     const before = await snapshotDb();
     await page.getByTestId(`ideas-page-card-delete-${seeded.id}`).click();
     await page.getByTestId("ideas-pages-delete-dialog-confirm").click();
-    await expect(page.getByTestId("ideas-pages-error")).toBeVisible();
+    await expect(page.getByTestId("ideas-pages-delete-error")).toBeVisible();
     expect(await snapshotDb()).toEqual(before);
   });
 
@@ -221,7 +224,7 @@ test.describe.serial("Páginas de ideias — telas do painel", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await seedBrowserSession(page, await loginAs(request, "admin"));
     await page.goto("/adm/paginas-ideias");
-    await page.getByTestId("ideas-toolbar-search").fill(seeded.title);
+    await page.getByTestId("ideas-pages-toolbar-search").fill(seeded.title);
     const view = page.getByTestId(`ideas-page-card-view-${seeded.id}`);
     await expect(view).toBeVisible();
     const box = await view.boundingBox();

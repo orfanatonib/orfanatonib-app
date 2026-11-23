@@ -1,11 +1,12 @@
 import api from '@/config/axiosConfig';
+import { fetchAdminPage } from '@/components/common/admin-shell/listQuery';
+import type { AdminListFetcher } from '@/components/common/admin-shell/types';
 import { IMAGE_PAGES_ENDPOINT, MULTIPART_HEADERS } from './constants';
 import type { ImagePageData } from './types';
 
-export async function apiListImagePages(): Promise<ImagePageData[]> {
-  const { data } = await api.get<ImagePageData[]>(IMAGE_PAGES_ENDPOINT);
-  return data;
-}
+/** Uma página da listagem administrativa; busca, visibilidade, datas e ordenação são aplicadas no servidor. */
+export const fetchImagePagesPage: AdminListFetcher<ImagePageData> = (params, signal) =>
+  fetchAdminPage<ImagePageData>(IMAGE_PAGES_ENDPOINT, params, signal);
 
 export async function apiCreateImagePage(
   formData: FormData,

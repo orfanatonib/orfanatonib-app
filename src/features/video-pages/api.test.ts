@@ -8,17 +8,26 @@ const http = vi.hoisted(() => ({
 }));
 vi.mock("@/config/axiosConfig", () => ({ default: http }));
 
-import { apiDeleteVideoPage, apiGetVideoPage, apiListVideoPages, apiSaveVideoPage } from "./api";
+import { apiDeleteVideoPage, apiGetVideoPage, fetchVideoPagesPage, apiSaveVideoPage } from "./api";
 
 beforeEach(() => vi.clearAllMocks());
 
 describe("features/video-pages/api", () => {
-  it("lista: GET /video-pages e devolve [] quando a resposta vem vazia", async () => {
-    http.get.mockResolvedValueOnce({ data: [{ id: "1" }] });
-    expect(await apiListVideoPages()).toEqual([{ id: "1" }]);
-    expect(http.get).toHaveBeenCalledWith("/video-pages");
-    http.get.mockResolvedValueOnce({ data: null });
-    expect(await apiListVideoPages()).toEqual([]);
+  it("lista no servidor: filtros vão na query e o envelope vira {items,total,totalPages}", async () => {
+    const signal = new AbortController().signal;
+    http.get.mockResolvedValueOnce({
+      data: { data: [{ id: "1" }], meta: { page: 3, limit: 12, totalItems: 25, totalPages: 3 } },
+    });
+    expect(
+      await fetchVideoPagesPage(
+        { page: 3, limit: 12, search: "culto", filters: { public: "true", sort: "title:DESC", createdFrom: "2026-01-01" } },
+        signal,
+      ),
+    ).toEqual({ items: [{ id: "1" }], total: 25, totalPages: 3 });
+    expect(http.get).toHaveBeenCalledWith("/video-pages", {
+      params: { page: 3, limit: 12, search: "culto", public: "true", sortBy: "title", order: "DESC", createdFrom: "2026-01-01" },
+      signal,
+    });
   });
 
   it("busca por id: GET /video-pages/:id", async () => {

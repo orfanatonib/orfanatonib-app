@@ -16,9 +16,11 @@ export async function apiListUsers(params: {
   role?: string;
   active?: ActiveFilter;
   completed?: CompletedFilter;
+  createdFrom?: string;
+  createdTo?: string;
   sort?: string;
   order?: "ASC" | "DESC";
-}): Promise<UsersPage> {
+}, signal?: AbortSignal): Promise<UsersPage> {
   const {
     page,
     limit,
@@ -26,6 +28,8 @@ export async function apiListUsers(params: {
     role,
     active,
     completed,
+    createdFrom,
+    createdTo,
     sort = "updatedAt",
     order = "DESC",
   } = params;
@@ -38,9 +42,12 @@ export async function apiListUsers(params: {
       role: role && role !== "all" ? role : undefined,
       active: active && active !== "all" ? active : undefined,
       completed: completed && completed !== "all" ? completed : undefined,
+      createdFrom: createdFrom || undefined,
+      createdTo: createdTo || undefined,
       sort,
       order,
     },
+    signal,
   });
 
   return data;

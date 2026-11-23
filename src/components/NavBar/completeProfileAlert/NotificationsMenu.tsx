@@ -27,6 +27,8 @@ interface Props {
   onOpenMemberPendings: () => void;
   onOpenLeaderPendings: () => void;
   onOpenVisitReports: () => void;
+  /** Avisos da caixa de entrada (Estúdios etc.), acima das pendências; `null` quando não se aplica. */
+  inbox?: React.ReactNode;
 }
 
 interface PendingItemProps {
@@ -72,6 +74,7 @@ const NotificationsMenu: React.FC<Props> = ({
   onOpenMemberPendings,
   onOpenLeaderPendings,
   onOpenVisitReports,
+  inbox = null,
 }) => (
   <Menu
     anchorEl={anchorEl}
@@ -90,6 +93,12 @@ const NotificationsMenu: React.FC<Props> = ({
     </Box>
 
     <Box sx={{ maxHeight: 'calc(75vh - 60px)', overflowY: 'auto', overflowX: 'hidden', ...NOTIFICATION_SCROLLBAR_SX }}>
+      {inbox}
+
+      {inbox && (alerts.length > 0 || pendingCount > 0) && (
+        <Divider sx={{ borderColor: 'rgba(255, 255, 0, 0.2)', my: 0.5 }} />
+      )}
+
       {alerts.map((alert) => (
         <MenuItem key={alert.id} onClick={() => onAlert(alert.to)} data-testid="notifications-alert-item" sx={{ ...NOTIFICATION_ITEM_SX, width: '100%', overflow: 'hidden' } as SxProps<Theme>}>
           <ListItemText
@@ -142,7 +151,7 @@ const NotificationsMenu: React.FC<Props> = ({
         />
       )}
 
-      {alerts.length === 0 && pendingCount === 0 && (
+      {!inbox && alerts.length === 0 && pendingCount === 0 && (
         <Box sx={{ px: 2, py: 3, textAlign: 'center' }} data-testid="notifications-empty">
           <Typography variant="body2" sx={{ color: NOTIFICATION_FAINT_COLOR, fontSize: '0.875rem' }}>
             {ALERT_TEXTS.empty}

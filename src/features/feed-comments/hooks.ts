@@ -5,7 +5,6 @@ import {
   apiCreateOwnFeedComment,
   apiDeleteModerationComment,
   apiGetPendingFeedCommentsCount,
-  apiListModerationComments,
   apiListMyFeedComments,
   apiRejectFeedComment,
 } from './api';
@@ -19,7 +18,6 @@ import {
 import { FeedCommentStatus } from './types';
 import type {
   DecideFeedCommentVariables,
-  ModerationFeedCommentsQuery,
   OwnFeedComment,
   OwnFeedCommentsPage,
 } from './types';
@@ -51,16 +49,6 @@ export function useSubmitFeedComment(sectionId: string, viewerId: string) {
     mutationFn: (payload) => apiCreateOwnFeedComment(sectionId, payload),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: sectionCommentsKey(viewerId, sectionId) }),
-  });
-}
-
-/** Fila do admin (com contagem por status nas abas). */
-export function useModerationComments(userId: string | null, query: ModerationFeedCommentsQuery) {
-  return useQuery({
-    queryKey: feedCommentKeys.moderation(userId, query),
-    queryFn: ({ signal }) => apiListModerationComments(query, signal),
-    staleTime: FEED_COMMENTS_STALE_TIME_MS,
-    retry: false,
   });
 }
 

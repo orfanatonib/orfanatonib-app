@@ -30,6 +30,7 @@ export interface ShelterInput {
   name: string;
   teamsQuantity?: number;
   city?: string;
+  state?: string;
   file?: TestFile;
   linkUrl?: string;
 }
@@ -41,7 +42,7 @@ export function buildShelterMultipart(input: ShelterInput): Record<string, strin
     name: input.name,
     description: "Criado pela suíte de cenários",
     teamsQuantity: input.teamsQuantity ?? 1,
-    address: { ...address, city: input.city ?? address.city },
+    address: { ...address, city: input.city ?? address.city, state: input.state ?? address.state },
   };
   if (input.file) {
     multipart[FOTO_FIELD] = input.file;
@@ -151,13 +152,14 @@ export const DIRECTORY_FLAGS = [
   "shelter_management",
   "sheltered_management",
   "sheltered_area",
-  "pagelas",
-  "attendance",
+  "pagelas_management",
+  "attendance_control",
   "shelter_schedule",
   "visit_reports",
   "member_management",
   "leader_management",
   "user_management",
+  "profile_management",
   "criminal_records",
   "shelter_feed",
   "shelter_photo_upload",

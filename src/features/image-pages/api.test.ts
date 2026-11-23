@@ -12,10 +12,21 @@ const api = await import('./api');
 describe('api de galerias de imagens', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('lista em GET /image-pages e devolve o corpo', async () => {
-    get.mockResolvedValue({ data: [{ id: 'g1' }] });
-    await expect(api.apiListImagePages()).resolves.toEqual([{ id: 'g1' }]);
-    expect(get).toHaveBeenCalledWith('/image-pages');
+  it('lista no servidor: filtros vão na query e o envelope vira {items,total,totalPages}', async () => {
+    const signal = new AbortController().signal;
+    get.mockResolvedValue({
+      data: { data: [{ id: 'g1' }], meta: { page: 1, limit: 12, totalItems: 1, totalPages: 1 } },
+    });
+    await expect(
+      api.fetchImagePagesPage(
+        { page: 1, limit: 12, search: 'x', filters: { public: 'false', sort: 'createdAt:ASC', createdTo: '' } },
+        signal,
+      ),
+    ).resolves.toEqual({ items: [{ id: 'g1' }], total: 1, totalPages: 1 });
+    expect(get).toHaveBeenCalledWith('/image-pages', {
+      params: { page: 1, limit: 12, search: 'x', public: 'false', sortBy: 'createdAt', order: 'ASC' },
+      signal,
+    });
   });
 
   it('cria em POST /image-pages com o FormData em multipart', async () => {
@@ -44,7 +55,9 @@ describe('api de galerias de imagens', () => {
 
   it('propaga o erro da API (nada é engolido)', async () => {
     get.mockRejectedValue(new Error('403'));
-    await expect(api.apiListImagePages()).rejects.toThrow('403');
+    await expect(
+      api.fetchImagePagesPage({ page: 1, limit: 12, search: '', filters: {} }, new AbortController().signal),
+    ).rejects.toThrow('403');
     post.mockRejectedValue(new Error('400'));
     await expect(api.apiCreateImagePage(new FormData())).rejects.toThrow('400');
   });
