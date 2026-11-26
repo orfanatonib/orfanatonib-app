@@ -12,6 +12,11 @@ import {
   isNetworkError,
 } from "@/utils/errorHandler";
 import { createApiCircuitBreaker } from "@/utils/CircuitBreakerManager";
+import {
+  AUTO_RETRY_MAX,
+  AUTO_RETRY_METHODS,
+  NON_RETRYABLE_SERVER_STATUSES,
+} from "./axiosConfig.constants";
 
 const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -126,46 +131,55 @@ apiAxios.interceptors.response.use(
       }
     }
 
+    // Reenvio feito pelo próprio cliente: quem o disparou decide o que fazer com a falha. Sem isto, cada
+    // tentativa abria um novo ciclo de tentativas, sem fim.
+    if (originalRequest?._manualRetry) {
+      return Promise.reject(error);
+    }
+
     const skipGlobalErrorHandling =
       originalRequest?._skipGlobalErrorHandling || originalRequest?.skipGlobalError;
     const skipCircuitBreaker = originalRequest?._skipCircuitBreaker;
+    const isServerError = Boolean(status && status >= 500);
 
-    if (
-      !skipCircuitBreaker &&
-      !isAuthEndpoint(url) &&
-      status &&
-      status >= 500
-    ) {
-      const circuitBreaker = createApiCircuitBreaker(endpoint);
-
-      try {
-        return await circuitBreaker.execute(async () => {
-          return apiAxios(originalRequest);
-        });
-      } catch (circuitError) {
-        if (!skipGlobalErrorHandling) {
-          handleError(circuitError, `${url} - Circuit breaker protection`);
-        }
-        return Promise.reject(circuitError);
-      }
-    }
-
+    // POST/PUT/PATCH/DELETE nunca são reenviados: o servidor pode já ter gravado antes de a resposta se perder.
     const shouldRetry =
       !originalRequest?._retry &&
+      AUTO_RETRY_METHODS.has(method) &&
+      !isAuthEndpoint(url) &&
       (isNetworkError(error) ||
-        (status && status >= 500 && status !== 501 && status !== 505));
+        (isServerError && !NON_RETRYABLE_SERVER_STATUSES.has(status as number)));
 
-    if (shouldRetry && !originalRequest?._manualRetry) {
+    if (shouldRetry) {
+      // Guarda a falha mais recente: é ela que chega a quem chamou, mesmo com o circuito aberto.
+      let lastError: unknown = error;
+      const resend = () =>
+        retryOperation(
+          async () => {
+            try {
+              return await apiAxios({
+                ...originalRequest,
+                _manualRetry: true,
+              } as CustomAxiosRequestConfig);
+            } catch (attemptError) {
+              lastError = attemptError;
+              throw attemptError;
+            }
+          },
+          // `retryOperation` conta o primeiro reenvio como execução, não como repetição.
+          { maxRetries: AUTO_RETRY_MAX - 1, context: `${method} ${url} - Auto retry` },
+        );
+
       try {
-        return await retryOperation(() => apiAxios(originalRequest), {
-          maxRetries: 2,
-          context: `${method} ${url} - Auto retry`,
-        });
-      } catch (retryError) {
+        // O circuito aberto (falhas seguidas no endpoint) faz o cliente parar de insistir.
+        return isServerError && !skipCircuitBreaker
+          ? await createApiCircuitBreaker(endpoint).execute(resend)
+          : await resend();
+      } catch {
         if (!skipGlobalErrorHandling) {
-          handleError(retryError, `${url} - After retries`);
+          handleError(lastError, `${url} - After retries`);
         }
-        return Promise.reject(retryError);
+        return Promise.reject(lastError);
       }
     }
 
