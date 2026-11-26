@@ -15,7 +15,8 @@ import {
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setFeedbacks } from '@/store/slices/feedback/feedbackSlice';
-import api from '@/config/axiosConfig';
+import { apiSubmitFeedback } from '@/features/feedback/api';
+import { buildSiteFeedbackPayload } from '@/features/feedback/payload';
 import { FeedbackCategory, FeedbackCategoryLabels } from '@/store/slices/types';
 
 export interface FeedbackData {
@@ -63,20 +64,12 @@ const SiteFeedbackForm: React.FC = () => {
             return;
         }
 
-        const newFeedback: FeedbackData = {
-            name,
-            email: email || undefined,
-            rating: rating!,
-            comment,
-            category,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            published: false,
-        };
+        // Só os campos que a API aceita: ela recusa (400) `createdAt`, `updatedAt`, `published` etc.
+        const newFeedback = buildSiteFeedbackPayload({ name, email, rating: rating!, comment, category });
 
         try {
-            const response = await api.post('/site-feedbacks', newFeedback);
-            dispatch(setFeedbacks([response.data]));
+            const created = await apiSubmitFeedback(newFeedback);
+            dispatch(setFeedbacks([created]));
             setSubmitted(true);
             resetForm();
             setTimeout(() => {
@@ -104,21 +97,17 @@ const SiteFeedbackForm: React.FC = () => {
 
     return (
         <Box
+            data-testid="site-feedback-form"
             sx={{
-                maxWidth: 500,
-                mx: 'auto',
-                mt: 10,
-                p: 3,
-                boxShadow: 3,
-                borderRadius: 2,
-                backgroundColor: 'background.paper',
+                maxWidth: 720,
+                p: { xs: 2, md: 3 },
+                borderRadius: 3,
+                border: '1px solid #dbe4f0',
+                backgroundColor: '#ffffff',
             }}
             role="form"
-            aria-labelledby="feedback-title"
+            aria-label="Formulário de avaliação do site"
         >
-            <Typography id="feedback-title" variant="h5" mb={2} textAlign="center">
-                Avalie nosso site
-            </Typography>
 
             <TextField
                 label="Seu nome"
@@ -130,7 +119,7 @@ const SiteFeedbackForm: React.FC = () => {
                 error={errors.name}
                 helperText={errors.name ? 'Nome é obrigatório' : ''}
                 required
-                inputProps={{ 'aria-label': 'Seu nome' }}
+                inputProps={{ 'aria-label': 'Seu nome', 'data-testid': 'site-feedback-name' }}
             />
 
             <TextField
@@ -150,6 +139,7 @@ const SiteFeedbackForm: React.FC = () => {
             </Typography>
             <Rating
                 name="site-rating"
+                data-testid="site-feedback-rating"
                 value={rating}
                 onChange={(_, newValue) => setRating(newValue)}
                 sx={{ mb: 2 }}
@@ -164,6 +154,7 @@ const SiteFeedbackForm: React.FC = () => {
             <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel id="category-label">Sobre o que é seu feedback?</InputLabel>
                 <Select
+                    data-testid="site-feedback-category"
                     labelId="category-label"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
@@ -191,7 +182,7 @@ const SiteFeedbackForm: React.FC = () => {
                 error={errors.comment}
                 helperText={errors.comment ? 'Comentário é obrigatório' : ''}
                 required
-                inputProps={{ 'aria-label': 'Comentário' }}
+                inputProps={{ 'aria-label': 'Comentário', 'data-testid': 'site-feedback-comment' }}
             />
 
             {errorMessage && (
@@ -202,6 +193,7 @@ const SiteFeedbackForm: React.FC = () => {
 
             <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
+                    data-testid="site-feedback-submit"
                     onClick={handleSubmit}
                     variant="contained"
                     color="primary"
@@ -227,7 +219,7 @@ const SiteFeedbackForm: React.FC = () => {
                 onClose={() => setSubmitted(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert severity="success" variant="filled" onClose={() => setSubmitted(false)}>
+                <Alert data-testid="site-feedback-success" severity="success" variant="filled" onClose={() => setSubmitted(false)}>
                     Obrigado pela sua avaliação!
                 </Alert>
             </Snackbar>

@@ -1,5 +1,8 @@
-export function justDigits(phone?: string | number | null) {
-  return phone ? String(phone).replace(/\D/g, "") : "";
+import { digitsOnly } from "./masks";
+
+/** Telefone só com dígitos; vazio/zero vira "" (diferente de `digitsOnly(0)`, que devolve "0"). Renomeado de `justDigits` (plano 03). */
+export function phoneDigits(phone?: string | number | null): string {
+  return phone ? digitsOnly(phone) : "";
 }
 
 export const SUPPORT_CONTACTS = {
@@ -40,14 +43,14 @@ function buildTeamLinkingMessage() {
 }
 
 export function buildWhatsappLink(userName?: string, adminName?: string, phone?: string) {
-  const digits = justDigits(phone);
+  const digits = phoneDigits(phone);
   if (!digits) return null;
   const text = encodeURIComponent(buildWaMessage(userName, adminName));
   return `https://wa.me/${digits}?text=${text}`;
 }
 
 export function buildIdeasWhatsappLink(userName?: string, ideaTitle?: string, phone?: string) {
-  const digits = justDigits(phone);
+  const digits = phoneDigits(phone);
   if (!digits) return null;
   const text = encodeURIComponent(buildIdeasWaMessage(userName, ideaTitle));
   return `https://wa.me/${digits}?text=${text}`;

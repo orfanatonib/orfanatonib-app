@@ -1,41 +1,51 @@
-import React, { useState, useMemo } from "react";
-import { Box, CircularProgress, Alert, Button, Fab, useTheme, useMediaQuery, TextField, InputAdornment } from "@mui/material";
-import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, Button, Fab, useMediaQuery, useTheme } from "@mui/material";
+import { Add as AddIcon, EventNote as EventNoteIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import {
+  AdminCardGrid,
+  AdminListScreen,
+  useAdminList,
+  type AdminFilterField,
+} from "@/components/common/admin-shell";
 
-import { useShelterSchedules, useMyTeams } from "./hooks";
-import { ShelterScheduleResponseDto } from "./types";
+import { useMyTeams } from "./hooks";
+import {
+  apiCreateShelterSchedule,
+  apiDeleteShelterSchedule,
+  apiListShelterSchedulesPage,
+  apiUpdateShelterSchedule,
+} from "./api";
+import { CreateShelterScheduleDto, ShelterScheduleResponseDto, UpdateShelterScheduleDto } from "./types";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 import ShelterScheduleFormModal from "./components/ShelterScheduleFormModal";
 import ShelterScheduleDeleteDialog from "./components/ShelterScheduleDeleteDialog";
 import LeaderInfoBanner from "./components/LeaderInfoBanner";
-import ScheduleHeader from "./components/ScheduleHeader";
-import EmptyState from "./components/EmptyState";
-import ShelterCard from "./components/ShelterCard";
+import VisitCard from "./components/VisitCard";
 import ScheduleDetailsModal from "./components/ScheduleDetailsModal";
-import BackHeader from "@/components/common/header/BackHeader";
-import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import NoTeamLinked from "@/components/common/NoTeamLinked";
 
-interface TeamGroup {
-  teamId: string;
-  teamNumber: number;
-  schedules: ShelterScheduleResponseDto[];
-}
+export const SCHEDULE_TEST_ID_PREFIX = "shelter-schedule";
+const DEFAULT_SORT = "shelterName:ASC";
+const ERROR_MESSAGE = "Erro ao carregar agendamentos";
 
-interface ShelterGroup {
-  shelterId: string;
-  shelterName: string;
-  shelterDescription: string;
-  address: {
-    city: string;
-    state: string;
-    street: string;
-    number: string;
-  };
-  teams: TeamGroup[];
-  totalSchedules: number;
-}
+const SORT_OPTIONS = [
+  { value: "shelterName:ASC", label: "Abrigo (A–Z)" },
+  { value: "shelterName:DESC", label: "Abrigo (Z–A)" },
+  { value: "eventDate:ASC", label: "Data do evento (mais antiga)" },
+  { value: "eventDate:DESC", label: "Data do evento (mais recente)" },
+  { value: "visitNumber:ASC", label: "Número da visita (menor)" },
+  { value: "visitNumber:DESC", label: "Número da visita (maior)" },
+  { value: "createdAt:DESC", label: "Criados recentemente" },
+  { value: "createdAt:ASC", label: "Criados há mais tempo" },
+];
+
+const KIND_OPTIONS = [
+  { value: "visit", label: "Visita" },
+  { value: "meeting", label: "Reunião" },
+];
 
 export default function ShelterScheduleManager() {
   const theme = useTheme();
@@ -44,15 +54,12 @@ export default function ShelterScheduleManager() {
   const isAdmin = user?.role === UserRole.ADMIN;
   const isLeader = user?.role === UserRole.LEADER;
 
-  const {
-    schedules,
-    loading,
-    error,
-    refetch,
-    createSchedule,
-    updateSchedule,
-    deleteSchedule,
-  } = useShelterSchedules();
+  const list = useAdminList<ShelterScheduleResponseDto>({
+    fetcher: apiListShelterSchedulesPage,
+    defaultFilters: { sort: DEFAULT_SORT },
+    errorMessage: ERROR_MESSAGE,
+  });
+  const { reload } = list;
 
   const { teams, loading: teamsLoading, error: teamsError } = useMyTeams();
 
@@ -61,80 +68,43 @@ export default function ShelterScheduleManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingSchedule, setDeletingSchedule] = useState<ShelterScheduleResponseDto | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [expandedShelterId, setExpandedShelterId] = useState<string | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<ShelterScheduleResponseDto | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const groupedData = useMemo((): ShelterGroup[] => {
-    const shelterMap = new Map<string, ShelterGroup>();
+  const shelterOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+    teams.forEach((team) => byId.set(team.shelter.id, team.shelter.name));
+    return [...byId.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [teams]);
 
-    schedules.forEach((schedule) => {
-      const shelter = schedule.shelter;
-      const team = shelter.team;
+  const fields: AdminFilterField[] = useMemo(
+    () => [
+      { kind: "select", key: "shelterId", label: "Abrigo", options: shelterOptions, allLabel: "Todos os abrigos" },
+      { kind: "select", key: "kind", label: "Tipo de evento", options: KIND_OPTIONS, allLabel: "Visitas e reuniões" },
+      { kind: "date", key: "eventFrom", label: "Evento a partir de" },
+      { kind: "date", key: "eventTo", label: "Evento até" },
+      { kind: "select", key: "sort", label: "Ordenar por", options: SORT_OPTIONS, allLabel: null },
+    ],
+    [shelterOptions],
+  );
 
-      if (!shelterMap.has(shelter.id)) {
-        shelterMap.set(shelter.id, {
-          shelterId: shelter.id,
-          shelterName: shelter.name,
-          shelterDescription: shelter.description || "",
-          address: {
-            city: shelter.address?.city || "",
-            state: shelter.address?.state || "",
-            street: shelter.address?.street || "",
-            number: shelter.address?.number || "",
-          },
-          teams: [],
-          totalSchedules: 0,
-        });
-      }
-
-      const shelterGroup = shelterMap.get(shelter.id)!;
-      shelterGroup.totalSchedules++;
-
-      let teamGroup = shelterGroup.teams.find((t) => t.teamId === team.id);
-      if (!teamGroup) {
-        teamGroup = {
-          teamId: team.id,
-          teamNumber: team.numberTeam,
-          schedules: [],
-        };
-        shelterGroup.teams.push(teamGroup);
-      }
-
-      teamGroup.schedules.push(schedule);
-    });
-
-    shelterMap.forEach((shelter) => {
-      shelter.teams.sort((a, b) => a.teamNumber - b.teamNumber);
-      shelter.teams.forEach((team) => {
-        team.schedules.sort((a, b) => a.visitNumber - b.visitNumber);
-      });
-    });
-
-    return Array.from(shelterMap.values()).sort((a, b) =>
-      a.shelterName.localeCompare(b.shelterName)
-    );
-  }, [schedules]);
-
-  const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return groupedData;
-
-    const term = searchTerm.toLowerCase();
-    return groupedData.filter(shelter =>
-      shelter.shelterName.toLowerCase().includes(term)
-    );
-  }, [groupedData, searchTerm]);
-
-  React.useEffect(() => {
-    if (groupedData.length > 0 && expandedShelterId === null && isLeader && !isAdmin) {
-      setExpandedShelterId(groupedData[0].shelterId);
-    }
-  }, [groupedData, isLeader, isAdmin]);
-
-  const toggleShelter = (shelterId: string) => {
-    setExpandedShelterId((prev) => (prev === shelterId ? null : shelterId));
-  };
+  const getVisitColor = useCallback(
+    (visitNumber: number) => {
+      const colors = [
+        theme.palette.primary.main,
+        theme.palette.secondary.main,
+        theme.palette.success.main,
+        theme.palette.warning.main,
+        theme.palette.info.main,
+        theme.palette.error.main,
+      ];
+      return colors[(visitNumber - 1) % colors.length];
+    },
+    [theme],
+  );
 
   const handleOpenCreate = () => {
     setEditingSchedule(null);
@@ -166,17 +136,16 @@ export default function ShelterScheduleManager() {
     setDetailsModalOpen(true);
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CreateShelterScheduleDto | UpdateShelterScheduleDto) => {
     setSubmitting(true);
     try {
       if (editingSchedule) {
-        await updateSchedule(editingSchedule.id, data);
+        await apiUpdateShelterSchedule(editingSchedule.id, data as UpdateShelterScheduleDto);
       } else {
-        await createSchedule(data);
+        await apiCreateShelterSchedule(data as CreateShelterScheduleDto);
       }
       handleCloseForm();
-    } catch (err: any) {
-      throw err;
+      reload();
     } finally {
       setSubmitting(false);
     }
@@ -186,166 +155,117 @@ export default function ShelterScheduleManager() {
     if (!deletingSchedule) return;
     setSubmitting(true);
     try {
-      await deleteSchedule(deletingSchedule.id);
+      await apiDeleteShelterSchedule(deletingSchedule.id);
       handleCloseDelete();
-      if (selectedSchedule?.id === deletingSchedule.id) {
-        setSelectedSchedule(null);
-      }
-    } catch {
+      if (selectedSchedule?.id === deletingSchedule.id) setSelectedSchedule(null);
+      reload();
+    } catch (err: unknown) {
+      handleCloseDelete();
+      setActionError(getApiErrorMessage(err, "Não foi possível excluir o agendamento."));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getVisitColor = (visitNumber: number) => {
-    const colors = [
-      theme.palette.primary.main,
-      theme.palette.secondary.main,
-      theme.palette.success.main,
-      theme.palette.warning.main,
-      theme.palette.info.main,
-      theme.palette.error.main,
-    ];
-    return colors[(visitNumber - 1) % colors.length];
-  };
-
-  if (loading || (teamsLoading && schedules.length === 0)) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress size={48} />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error" action={<Button onClick={refetch}>Tentar novamente</Button>}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
-
-  // Check if leader has no teams - show only NoTeamLinked
-  if (!isAdmin && teams.length === 0) {
+  if (!teamsLoading && !isAdmin && teams.length === 0) {
     return <NoTeamLinked showBackButton={false} />;
   }
 
+  const p = SCHEDULE_TEST_ID_PREFIX;
+
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", boxSizing: "border-box", width: "100%" }}>
-      {isLeader && !isAdmin && <LeaderInfoBanner />}
-
-      <BackHeader title="Agendamentos de Visitas" />
-
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+    <AdminListScreen
+      testIdPrefix={p}
+      title="Agendamentos de Visitas"
+      searchLabel="Buscar agendamento"
+      searchPlaceholder="Buscar por abrigo, lição, observação ou sala..."
+      fields={fields}
+      list={list}
+      emptyMessage="Nenhum agendamento cadastrado ainda."
+      emptyIcon={<EventNoteIcon fontSize="large" />}
+      skeletonWithCover={false}
+      primaryAction={
         <Button
           variant="contained"
           startIcon={<AddIcon />}
+          data-testid="schedule-new"
           onClick={handleOpenCreate}
-          sx={{ borderRadius: 2 }}
+          fullWidth
+          sx={{ borderRadius: 2, minHeight: 44, whiteSpace: "nowrap" }}
         >
           Novo Agendamento
         </Button>
-      </Box>
-
-
-      {schedules.length === 0 && <EmptyState onCreateClick={handleOpenCreate} />}
-
-
-      {schedules.length > 0 && (
+      }
+      beforeToolbar={
         <>
-          {isAdmin && (
-            <TextField
-              fullWidth
-              placeholder="Buscar por nome do abrigo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
+          {isLeader && !isAdmin && <LeaderInfoBanner />}
+          {actionError && (
+            <Alert
+              severity="error"
+              data-testid="shelter-schedule-action-error"
+              onClose={() => setActionError(null)}
+              sx={{ mb: 2 }}
+            >
+              {actionError}
+            </Alert>
+          )}
+        </>
+      }
+      overlays={
+        <>
+          {isMobile && (
+            <Fab
+              color="primary"
+              aria-label="Novo Agendamento"
+              data-testid="schedule-new-fab"
+              onClick={handleOpenCreate}
+              sx={{ position: "fixed", bottom: 80, right: 16, zIndex: 10 }}
+            >
+              <AddIcon />
+            </Fab>
           )}
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                md: "repeat(2, 1fr)",
-              },
-              gap: { xs: 2, md: 3 },
-            }}
-          >
-            {filteredData.length === 0 ? (
-              <Box sx={{ gridColumn: "1 / -1", textAlign: "center", py: 8 }}>
-                <Alert severity="info">
-                  Nenhum abrigo encontrado com o termo "{searchTerm}"
-                </Alert>
-              </Box>
-            ) : (
-              filteredData.map((shelter) => (
-                <ShelterCard
-                  key={shelter.shelterId}
-                  shelter={shelter}
-                  isExpanded={expandedShelterId === shelter.shelterId}
-                  selectedScheduleId={selectedSchedule?.id || null}
-                  getVisitColor={getVisitColor}
-                  onToggleExpand={toggleShelter}
-                  onViewDetails={handleViewDetails}
-                  onEdit={handleOpenEdit}
-                  onDelete={handleOpenDelete}
-                />
-              ))
-            )}
-          </Box>
+          <ShelterScheduleFormModal
+            open={formOpen}
+            onClose={handleCloseForm}
+            onSubmit={handleSubmit}
+            initialData={editingSchedule}
+            loading={submitting}
+            hideInfoBanner={isAdmin}
+            teams={teams}
+            teamsLoading={teamsLoading}
+            teamsError={teamsError}
+          />
+
+          <ShelterScheduleDeleteDialog
+            open={deleteDialogOpen}
+            onClose={handleCloseDelete}
+            onConfirm={handleConfirmDelete}
+            schedule={deletingSchedule}
+            loading={submitting}
+          />
+
+          <ScheduleDetailsModal
+            open={detailsModalOpen}
+            schedule={selectedSchedule}
+            getVisitColor={getVisitColor}
+            onClose={() => setDetailsModalOpen(false)}
+            onEdit={handleOpenEdit}
+          />
         </>
-      )}
-
-      {isMobile && (
-        <Fab
-          color="primary"
-          aria-label="Novo Agendamento"
-          onClick={handleOpenCreate}
-          sx={{ position: "fixed", bottom: 80, right: 16, zIndex: 10 }}
-        >
-          <AddIcon />
-        </Fab>
-      )}
-
-      <ShelterScheduleFormModal
-        open={formOpen}
-        onClose={handleCloseForm}
-        onSubmit={handleSubmit}
-        initialData={editingSchedule}
-        loading={submitting}
-        hideInfoBanner={isAdmin}
-        teams={teams}
-        teamsLoading={teamsLoading}
-        teamsError={teamsError}
-      />
-
-      <ShelterScheduleDeleteDialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDelete}
-        onConfirm={handleConfirmDelete}
-        schedule={deletingSchedule}
-        loading={submitting}
-      />
-
-      <ScheduleDetailsModal
-        open={detailsModalOpen}
-        schedule={selectedSchedule}
-        getVisitColor={getVisitColor}
-        onClose={() => setDetailsModalOpen(false)}
-        onEdit={handleOpenEdit}
-      />
-    </Box>
+      }
+    >
+      <AdminCardGrid testId={`${p}-cards`}>
+        {list.items.map((schedule) => (
+          <VisitCard
+            key={schedule.id}
+            schedule={schedule}
+            onViewDetails={handleViewDetails}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

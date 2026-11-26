@@ -4,6 +4,21 @@ export type ErrorSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 export type ErrorRecoverability = 'RECOVERABLE' | 'NON_RECOVERABLE' | 'REQUIRES_USER_ACTION';
 
+export interface ApiErrorDetails {
+  fields?: Record<string, string[]>;
+  retryAfter?: number | string;
+  code?: string;
+  [key: string]: unknown;
+}
+
+export interface AppErrorMetadata {
+  requestId?: string;
+  path?: string;
+  details?: ApiErrorDetails;
+  apiCategory?: string;
+  [key: string]: unknown;
+}
+
 export interface ApiErrorResponse {
   statusCode: number;
   message: string | string[];
@@ -13,7 +28,7 @@ export interface ApiErrorResponse {
   path: string;
   requestId: string;
   correlationId: string;
-  details?: Record<string, any>;
+  details?: ApiErrorDetails;
 }
 
 export interface AppError {
@@ -32,7 +47,7 @@ export interface AppError {
   retryable?: boolean;
   retryCount?: number;
   maxRetries?: number;
-  metadata?: Record<string, any>;
+  metadata?: AppErrorMetadata;
 }
 
 export interface RetryConfig {
@@ -47,7 +62,7 @@ export interface ErrorHandlingOptions {
   logError?: boolean;
   retry?: boolean;
   context?: string;
-  fallback?: any;
+  fallback?: unknown;
 }
 
 export interface ErrorState {

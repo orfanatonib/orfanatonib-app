@@ -16,14 +16,15 @@ import {
   Paper,
 } from "@mui/material";
 import { Edit as EditIcon, Person as PersonIcon, Home as HomeIcon, Groups as GroupsIcon, SupervisorAccount as SupervisorIcon } from "@mui/icons-material";
-import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
+import ImagePreviewDialog from "@/components/common/ImagePreviewDialog";
 import { MemberProfile } from "../types";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 
 type Props = {
   open: boolean;
@@ -36,6 +37,7 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const shelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   // const [teamManagementOpen, setTeamManagementOpen] = React.useState(false); // No longer needed
 
@@ -49,10 +51,18 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          "data-testid": "member-view-dialog",
+        } as React.HTMLAttributes<HTMLDivElement>}
+      >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold">Detalhes do Membro</Typography>
-          {shelterId && user?.role === UserRole.ADMIN && (
+          {shelterId && user?.role === UserRole.ADMIN && shelterManagementEnabled && (
             <Button
               startIcon={<EditIcon />}
               size="small"
@@ -158,7 +168,16 @@ export default function MemberViewDialog({ open, member, onClose }: Props) {
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={onClose} size="large" fullWidth variant="contained" sx={{ borderRadius: 2 }}>Fechar</Button>
+          <Button
+            data-testid="close-member-view-dialog-button"
+            onClick={onClose}
+            size="large"
+            fullWidth
+            variant="contained"
+            sx={{ borderRadius: 2 }}
+          >
+            Fechar
+          </Button>
         </DialogActions>
 
         {/* TeamManagementDialog removed as we redirect to edit page */}

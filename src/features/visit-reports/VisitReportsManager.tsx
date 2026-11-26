@@ -1,197 +1,116 @@
-import React, { useState, useMemo, useEffect } from "react";
-import {
-    Box,
-    Button,
-    Typography,
-    Paper,
-    CircularProgress,
-    Alert,
-    ToggleButton,
-    ToggleButtonGroup,
-    useMediaQuery,
-    useTheme,
-    TextField,
-    InputAdornment,
-} from "@mui/material";
-import {
-    Add as AddIcon,
-    GridView as GridViewIcon,
-    ViewList as ListViewIcon,
-    Search as SearchIcon,
-} from "@mui/icons-material";
+import { useState } from "react";
+import { Alert, Button } from "@mui/material";
+import { Add as AddIcon, Assignment as ReportIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { AdminCardGrid, AdminListScreen, useAdminList } from "@/components/common/admin-shell";
+import type { AdminFilterField } from "@/components/common/admin-shell";
 
-import { useVisitReports } from "./hooks";
-import { VisitReport } from "./types";
+import { createVisitReport, deleteVisitReport, fetchVisitReportsPage, updateVisitReport } from "./api";
+import { CreateVisitReportDto, UpdateVisitReportDto, VisitReport } from "./types";
+import {
+    VISIT_REPORTS_DEFAULT_SORT,
+    VISIT_REPORTS_LABELS,
+    VISIT_REPORTS_TEST_ID_PREFIX,
+    VISIT_REPORT_FILTER_KEYS,
+    VISIT_REPORT_SORT_OPTIONS,
+} from "./constants";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 import VisitReportFormModal from "./components/VisitReportFormModal";
 import VisitReportDetailsModal from "./components/VisitReportDetailsModal";
-import ReportGridView from "./components/ReportGridView";
-import ReportTableView from "./components/ReportTableView";
-import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
-import BackHeader from "@/components/common/header/BackHeader";
-import NoTeamLinked from "@/components/Common/NoTeamLinked";
+import VisitReportCard from "./components/VisitReportCard";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import NoTeamLinked from "@/components/common/NoTeamLinked";
+import { logger } from '@/utils/logger';
 
-interface TeamGroup {
-    id: string;
-    name: string;
-    description?: string;
-    reports: VisitReport[];
-}
+const P = VISIT_REPORTS_TEST_ID_PREFIX;
+const K = VISIT_REPORT_FILTER_KEYS;
 
-interface ShelterGroup {
-    id: string;
-    title: string;
-    teams: TeamGroup[];
-}
+const FIELDS: AdminFilterField[] = [
+    { kind: "date", key: K.VISIT_FROM, label: VISIT_REPORTS_LABELS.FILTER_VISIT_FROM },
+    { kind: "date", key: K.VISIT_TO, label: VISIT_REPORTS_LABELS.FILTER_VISIT_TO },
+    { kind: "date", key: K.CREATED_FROM, label: VISIT_REPORTS_LABELS.FILTER_CREATED_FROM },
+    { kind: "date", key: K.CREATED_TO, label: VISIT_REPORTS_LABELS.FILTER_CREATED_TO },
+    {
+        kind: "select",
+        key: K.SORT,
+        label: VISIT_REPORTS_LABELS.FILTER_SORT,
+        allLabel: null,
+        options: VISIT_REPORT_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+    },
+];
 
-type ViewMode = 'grid' | 'table';
+const DEFAULT_FILTERS = { [K.SORT]: VISIT_REPORTS_DEFAULT_SORT };
 
 export default function VisitReportsManager() {
     const { user } = useSelector((state: RootState) => state.auth);
-    const { reports, loading, error, createReport, updateReport, deleteReport } = useVisitReports();
-    const theme = useTheme();
-
-    const isAdmin = user?.role === UserRole.ADMIN;
     const isLeader = user?.role === UserRole.LEADER;
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'grid' : (isAdmin ? 'table' : 'grid'));
+    const list = useAdminList<VisitReport>({
+        fetcher: fetchVisitReportsPage,
+        defaultFilters: DEFAULT_FILTERS,
+        errorMessage: VISIT_REPORTS_LABELS.LOAD_ERROR,
+    });
 
-    useEffect(() => {
-        if (isMobile) {
-            setViewMode('grid');
-        }
-    }, [isMobile]);
     const [formOpen, setFormOpen] = useState(false);
     const [detailsOpen, setDetailsOpen] = useState(false);
-
-    const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
-
     const [editingReport, setEditingReport] = useState<VisitReport | null>(null);
     const [viewingReport, setViewingReport] = useState<VisitReport | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [actionError, setActionError] = useState<string | null>(null);
 
-    const groupedReports = useMemo<ShelterGroup[]>(() => {
-        if (!user || !reports) return [];
-
-        const shelterMap = new Map<string, { title: string, teamMap: Map<string, TeamGroup> }>();
-
-        reports.forEach((report) => {
-            if (!report || !report.team || !report.shelter) return;
-
-            const shelterId = report.shelter.id;
-            const shelterName = report.shelter.name || "Abrigo Desconhecido";
-            const teamId = report.team.id;
-            const teamName = `Equipe ${report.team.numberTeam}`;
-
-            if (!shelterMap.has(shelterId)) {
-                shelterMap.set(shelterId, {
-                    title: shelterName,
-                    teamMap: new Map(),
-                });
-            }
-
-            const shelterNode = shelterMap.get(shelterId)!;
-
-            if (!shelterNode.teamMap.has(teamId)) {
-                shelterNode.teamMap.set(teamId, {
-                    id: teamId,
-                    name: teamName,
-                    description: report.team.description,
-                    reports: [],
-                });
-            }
-
-            shelterNode.teamMap.get(teamId)!.reports.push(report);
-        });
-
-        return Array.from(shelterMap.entries())
-            .map(([id, data]) => ({
-                id,
-                title: data.title,
-                teams: Array.from(data.teamMap.values())
-                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
-            }))
-            .sort((a, b) => a.title.localeCompare(b.title));
-
-    }, [reports, user]);
-
-    const filteredReports = useMemo(() => {
-        if (!searchTerm.trim()) return groupedReports;
-
-        const term = searchTerm.toLowerCase();
-        return groupedReports
-            .map(shelter => ({
-                ...shelter,
-                teams: shelter.teams
-                    .map(team => ({
-                        ...team,
-                        reports: team.reports.filter(report =>
-                            shelter.title.toLowerCase().includes(term) ||
-                            team.name.toLowerCase().includes(term) ||
-                            report.observation?.toLowerCase().includes(term) ||
-                            report.schedule?.lessonContent?.toLowerCase().includes(term) ||
-                            report.schedule?.visitNumber?.toString().includes(term)
-                        )
-                    }))
-                    .filter(team => team.reports.length > 0)
-            }))
-            .filter(shelter => shelter.teams.length > 0);
-    }, [groupedReports, searchTerm]);
-
-    const handleCreate = async (data: any) => {
+    const handleCreate = async (data: CreateVisitReportDto | UpdateVisitReportDto) => {
         setSubmitting(true);
+        setActionError(null);
         try {
-            await createReport(data);
+            await createVisitReport(data as CreateVisitReportDto);
             setFormOpen(false);
+            list.reload();
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
+            setActionError(getApiErrorMessage(e, VISIT_REPORTS_LABELS.SAVE_ERROR));
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleUpdate = async (data: any) => {
+    const handleUpdate = async (data: CreateVisitReportDto | UpdateVisitReportDto) => {
         if (!editingReport) return;
         setSubmitting(true);
+        setActionError(null);
         try {
-            await updateReport(editingReport.id, data);
+            await updateVisitReport(editingReport.id, data as UpdateVisitReportDto);
             setFormOpen(false);
             setEditingReport(null);
+            list.reload();
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
+            setActionError(getApiErrorMessage(e, VISIT_REPORTS_LABELS.SAVE_ERROR));
         } finally {
             setSubmitting(false);
         }
-    };
-
-    const handleDeleteClick = (id: string, e?: React.MouseEvent) => {
-        if (e) e.stopPropagation();
-        setDeleteId(id);
-        setDeleteOpen(true);
     };
 
     const confirmDelete = async () => {
         if (!deleteId) return;
         setDeleting(true);
         try {
-            await deleteReport(deleteId);
-            setDeleteOpen(false);
+            await deleteVisitReport(deleteId);
             setDeleteId(null);
+            list.reload();
         } catch (e) {
-            console.error(e);
+            logger.error('Falha inesperada na operação', undefined, e);
+            setActionError(getApiErrorMessage(e, VISIT_REPORTS_LABELS.SAVE_ERROR));
+            setDeleteId(null);
         } finally {
             setDeleting(false);
         }
     };
 
-    const openEdit = (report: VisitReport, e?: React.MouseEvent) => {
-        if (e) e.stopPropagation();
+    const openEdit = (report: VisitReport) => {
         setEditingReport(report);
         setFormOpen(true);
     };
@@ -206,149 +125,85 @@ export default function VisitReportsManager() {
         setDetailsOpen(true);
     };
 
-    const handleViewChange = (event: React.MouseEvent<HTMLElement>, nextView: ViewMode | null) => {
-        if (nextView !== null) {
-            setViewMode(nextView);
-        }
-    };
-
-    if (loading && reports.length === 0) {
-        return (
-            <Box display="flex" justifyContent="center" p={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    // Check if leader has no teams - show only NoTeamLinked
     if (isLeader && (!user?.leaderProfile?.teams || user.leaderProfile.teams.length === 0)) {
         return <NoTeamLinked showBackButton={false} />;
     }
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
-            <BackHeader title="Relatórios das Visitas" />
-
-            <Box display="flex" justifyContent={{ xs: "center", md: "flex-end" }} alignItems="center" mb={3} flexWrap="wrap" gap={2}>
-                <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={handleViewChange}
-                    aria-label="modo de visualização"
-                    size="small"
-                    sx={{ display: { xs: 'none', md: 'flex' } }}
-                >
-                    <ToggleButton value="grid" aria-label="visualização em grade">
-                        <GridViewIcon fontSize="small" />
-                    </ToggleButton>
-                    <ToggleButton value="table" aria-label="visualização em lista">
-                        <ListViewIcon fontSize="small" />
-                    </ToggleButton>
-                </ToggleButtonGroup>
-
+        <AdminListScreen
+            testIdPrefix={P}
+            title={VISIT_REPORTS_LABELS.TITLE}
+            searchLabel={VISIT_REPORTS_LABELS.SEARCH}
+            searchPlaceholder={VISIT_REPORTS_LABELS.SEARCH_PLACEHOLDER}
+            fields={FIELDS}
+            list={list}
+            emptyMessage={VISIT_REPORTS_LABELS.EMPTY}
+            emptyIcon={<ReportIcon sx={{ fontSize: 64, color: "text.secondary" }} />}
+            primaryAction={
                 <Button
+                    data-testid={`${P}-create`}
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={openCreate}
-                    sx={{ borderRadius: 2 }}
-                >
-                    Novo Relatório
-                </Button>
-            </Box>
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {isAdmin && groupedReports.length > 0 && (
-                <TextField
                     fullWidth
-                    placeholder="Buscar por abrigo, equipe, conteúdo do relatório..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    size="small"
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            )}
-
-            {
-                groupedReports.length === 0 && !loading && (
-                    <Paper sx={{ p: 6, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
-                        <Typography variant="h6" color="textSecondary">
-                            Nenhum relatório encontrado.
-                        </Typography>
-                        <Button variant="outlined" sx={{ mt: 2 }} onClick={openCreate}>
-                            Criar Primeiro Relatório
-                        </Button>
-                    </Paper>
-                )
+                    sx={{ minHeight: 44, textTransform: "none", fontWeight: 600, whiteSpace: "nowrap" }}
+                >
+                    {VISIT_REPORTS_LABELS.CREATE}
+                </Button>
             }
-            {
-                groupedReports.length > 0 && (
-                    <>
-                        {filteredReports.length === 0 ? (
-                            <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#f8f9fa", borderRadius: 2 }}>
-                                <Typography variant="body1" color="textSecondary">
-                                    Nenhum resultado encontrado para "{searchTerm}"
-                                </Typography>
-                            </Paper>
-                        ) : viewMode === 'grid' ? (
-                            <ReportGridView
-                                shelterGroups={filteredReports}
-                                onView={openDetails}
-                                onEdit={openEdit}
-                                onDelete={handleDeleteClick}
-                            />
-                        ) : (
-                            <ReportTableView
-                                shelterGroups={filteredReports}
-                                onView={openDetails}
-                                onEdit={openEdit}
-                                onDelete={handleDeleteClick}
-                            />
-                        )}
-                    </>
-                )
-            }
+            overlays={
+                <>
+                    {actionError && (
+                        <Alert
+                            severity="error"
+                            data-testid={`${P}-action-error`}
+                            onClose={() => setActionError(null)}
+                            sx={{ mt: 2 }}
+                        >
+                            {actionError}
+                        </Alert>
+                    )}
 
-            {
-                formOpen && (
-                    <VisitReportFormModal
-                        open={formOpen}
-                        onClose={() => setFormOpen(false)}
-                        onSubmit={editingReport ? handleUpdate : handleCreate}
-                        initialData={editingReport}
-                        loading={submitting}
+                    {formOpen && (
+                        <VisitReportFormModal
+                            open={formOpen}
+                            onClose={() => setFormOpen(false)}
+                            onSubmit={editingReport ? handleUpdate : handleCreate}
+                            initialData={editingReport}
+                            loading={submitting}
+                        />
+                    )}
+
+                    {detailsOpen && (
+                        <VisitReportDetailsModal
+                            open={detailsOpen}
+                            onClose={() => setDetailsOpen(false)}
+                            report={viewingReport}
+                        />
+                    )}
+
+                    <DeleteConfirmationModal
+                        testId={`${P}-delete-dialog`}
+                        open={deleteId !== null}
+                        onClose={() => setDeleteId(null)}
+                        onConfirm={confirmDelete}
+                        loading={deleting}
+                        description={VISIT_REPORTS_LABELS.DELETE_DESCRIPTION}
                     />
-                )
+                </>
             }
-
-            {
-                detailsOpen && (
-                    <VisitReportDetailsModal
-                        open={detailsOpen}
-                        onClose={() => setDetailsOpen(false)}
-                        report={viewingReport}
+        >
+            <AdminCardGrid testId={`${P}-cards`}>
+                {list.items.map((report) => (
+                    <VisitReportCard
+                        key={report.id}
+                        report={report}
+                        onView={openDetails}
+                        onEdit={openEdit}
+                        onDelete={(item) => setDeleteId(item.id)}
                     />
-                )
-            }
-
-            <DeleteConfirmationModal
-                open={deleteOpen}
-                onClose={() => setDeleteOpen(false)}
-                onConfirm={confirmDelete}
-                loading={deleting}
-                description="Tem certeza que deseja excluir este relatório de visita? Esta ação não pode ser desfeita."
-            />
-        </Box>
+                ))}
+            </AdminCardGrid>
+        </AdminListScreen>
     );
 }

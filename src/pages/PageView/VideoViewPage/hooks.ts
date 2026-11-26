@@ -1,64 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/slices";
-import { setVideoData } from "@/store/slices/video/videoSlice";
+import { useCallback, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/slices";
 import { fetchRoutes } from "@/store/slices/route/routeSlice";
-import { videoPageApi, toVideoPageData } from "./api";
+import { useVideoPageById } from "@/features/video-pages/hooks";
+import { videoPageApi, toVideoPageData, GetVideoPageResponse } from "./api";
+
+export const DELETE_ERROR_MESSAGE = "Erro ao excluir a página. Tente novamente mais tarde.";
 
 export const useVideoPage = (idToFetch: string) => {
     const dispatch = useDispatch<AppDispatch>();
-    const videoData = useSelector((s: RootState) => s.video.videoData);
-
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { page, loading, error: loadError, reload } = useVideoPageById(idToFetch);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const load = useCallback(async () => {
-        if (!idToFetch) {
-            setError("ID da página de vídeos não fornecido.");
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError(null);
-            const dto = await videoPageApi.getById(idToFetch);
-            const data = toVideoPageData(dto);
-            dispatch(setVideoData(data));
-        } catch {
-            setError("Erro ao carregar a página de vídeos. Tente novamente mais tarde.");
-        } finally {
-            setLoading(false);
-        }
-    }, [dispatch, idToFetch]);
-
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                await load();
-            } finally {
-                if (!mounted) return;
-            }
-        })();
-        return () => {
-            mounted = false;
-        };
-    }, [load]);
+    const videoData = useMemo(
+        () => (page ? toVideoPageData(page as GetVideoPageResponse) : null),
+        [page],
+    );
 
     const deletePage = useCallback(
         async (onSuccess?: () => void, onError?: (msg: string) => void) => {
+            if (!videoData?.id) return;
             try {
-                if (!videoData?.id) return;
                 setIsDeleting(true);
+                setDeleteError(null);
                 await videoPageApi.deleteById(videoData.id);
                 await dispatch(fetchRoutes());
                 onSuccess?.();
             } catch {
-                const msg = "Erro ao excluir a página. Tente novamente mais tarde.";
-                setError(msg);
-                onError?.(msg);
+                setDeleteError(DELETE_ERROR_MESSAGE);
+                onError?.(DELETE_ERROR_MESSAGE);
             } finally {
                 setIsDeleting(false);
             }
@@ -66,5 +37,12 @@ export const useVideoPage = (idToFetch: string) => {
         [dispatch, videoData?.id]
     );
 
-    return { videoData, loading, error, isDeleting, reload: load, deletePage } as const;
+    return {
+        videoData,
+        loading,
+        error: deleteError ?? loadError,
+        isDeleting,
+        reload,
+        deletePage,
+    } as const;
 };

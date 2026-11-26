@@ -18,18 +18,20 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { UserRole } from "@/store/slices/auth/authSlice";
 
-import { CreateVisitReportDto, VisitReport } from "../types";
+import { CreateVisitReportDto, UpdateVisitReportDto, VisitReport } from "../types";
 import { apiFetchSheltersList } from "../../shelters/api";
 import { apiGetTeamsByShelter } from "../../teams/api";
 import { apiListShelterSchedules, apiListMyTeams } from "../../shelter-schedule/api";
 import { SimpleShelterResponseDto } from "../../shelters/types";
 import { TeamResponseDto } from "../../teams/types";
 import { ShelterScheduleResponseDto, MyTeamResponseDto } from "../../shelter-schedule/types";
+import { formatDayBR } from 'utils/dateUtils';
+import { logger } from '@/utils/logger';
 
 interface VisitReportFormModalProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateVisitReportDto | any) => Promise<void>;
+    onSubmit: (data: CreateVisitReportDto | UpdateVisitReportDto) => Promise<void>;
     initialData?: VisitReport | null;
     loading?: boolean;
 }
@@ -103,13 +105,13 @@ export default function VisitReportFormModal({
                 setLoadingShelters(true);
                 apiFetchSheltersList()
                     .then(setShelters)
-                    .catch(console.error)
+                    .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                     .finally(() => setLoadingShelters(false));
             } else if (isLeader) {
                 setLoadingTeams(true);
                 apiListMyTeams()
                     .then(setMyTeams)
-                    .catch(console.error)
+                    .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                     .finally(() => setLoadingTeams(false));
             }
         }
@@ -124,7 +126,7 @@ export default function VisitReportFormModal({
                     setSelectedTeamId("");
                     setSchedules([]);
                 })
-                .catch(console.error)
+                .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                 .finally(() => setLoadingTeams(false));
         }
     }, [selectedShelterId, initialData, isAdmin]);
@@ -134,14 +136,18 @@ export default function VisitReportFormModal({
             setLoadingSchedules(true);
             apiListShelterSchedules(selectedTeamId)
                 .then(setSchedules)
-                .catch(console.error)
+                .catch((error: unknown) => logger.error('Falha ao carregar os dados da tela', undefined, error))
                 .finally(() => setLoadingSchedules(false));
         }
     }, [selectedTeamId, initialData]);
 
+    const teamOptions = isAdmin
+        ? teams.map((t) => ({ id: t.id, label: `Equipe ${t.numberTeam} ${t.description ? `- ${t.description}` : ""}` }))
+        : myTeams.map((t) => ({ id: t.id, label: `Equipe ${t.numberTeam} - ${t.shelter.name}` }));
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const payload: any = {
+        const payload: UpdateVisitReportDto & { scheduleId?: string } = {
             teamMembersPresent: Number(teamMembersPresent),
             shelteredHeardMessage: Number(shelteredHeardMessage),
             caretakersHeardMessage: Number(caretakersHeardMessage),
@@ -154,7 +160,7 @@ export default function VisitReportFormModal({
             payload.scheduleId = scheduleId;
         }
 
-        onSubmit(payload);
+        onSubmit(payload as CreateVisitReportDto | UpdateVisitReportDto);
     };
 
     const isFormValid =
@@ -166,7 +172,7 @@ export default function VisitReportFormModal({
         caretakersDecisions !== "";
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
+        <Dialog data-testid="visit-reports-form-dialog" open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
             <form onSubmit={handleSubmit}>
                 <DialogTitle>
                     {isEditing ? "Editar Relatório de Visita" : "Novo Relatório de Visita"}
@@ -189,7 +195,6 @@ export default function VisitReportFormModal({
                                                 <MenuItem disabled><CircularProgress size={20} /></MenuItem>
                                             ) : (
                                                 shelters.map((s) => {
-                                                    console.log('Rendering shelter option:', s);
                                                     return (
                                                         <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
                                                             {s.name || "Abrigo sem nome"}
@@ -212,20 +217,14 @@ export default function VisitReportFormModal({
                                     >
                                         {loadingTeams ? (
                                             <MenuItem disabled><CircularProgress size={20} /></MenuItem>
-                                        ) : (isAdmin ? teams : myTeams).length === 0 ? (
+                                        ) : teamOptions.length === 0 ? (
                                             <MenuItem disabled>Nenhuma equipe encontrada</MenuItem>
                                         ) : (
-                                            (isAdmin ? teams : myTeams).map((t: any) => {
-                                                const label = isAdmin
-                                                    ? `Equipe ${t.numberTeam} ${t.description ? `- ${t.description}` : ""}`
-                                                    : `Equipe ${t.numberTeam} - ${t.shelter.name}`;
-
-                                                return (
-                                                    <MenuItem key={t.id} value={t.id} sx={{ color: 'text.primary' }}>
-                                                        {label}
-                                                    </MenuItem>
-                                                );
-                                            })
+                                            teamOptions.map((option) => (
+                                                <MenuItem key={option.id} value={option.id} sx={{ color: 'text.primary' }}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))
                                         )}
                                     </TextField>
                                 </Grid>
@@ -247,7 +246,7 @@ export default function VisitReportFormModal({
                                         ) : (
                                             schedules.map((s) => (
                                                 <MenuItem key={s.id} value={s.id} sx={{ color: 'text.primary' }}>
-                                                    {s.visitNumber}ª Visita - {s.visitDate ? new Date(s.visitDate).toLocaleDateString('pt-BR') : "Data indefinida"}
+                                                    {s.visitNumber}ª Visita - {formatDayBR(s.visitDate, "Data indefinida")}
                                                 </MenuItem>
                                             ))
                                         )}
@@ -268,6 +267,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Membros da Equipe Presentes"
+                                inputProps={{ "data-testid": "visit-reports-form-team-members" }}
                                 value={teamMembersPresent}
                                 onChange={(e) => setTeamMembersPresent(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -278,6 +278,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Acolhidos Ouviram"
+                                inputProps={{ "data-testid": "visit-reports-form-sheltered-heard" }}
                                 value={shelteredHeardMessage}
                                 onChange={(e) => setShelteredHeardMessage(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -288,6 +289,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Cuidadores Ouviram"
+                                inputProps={{ "data-testid": "visit-reports-form-caretakers-heard" }}
                                 value={caretakersHeardMessage}
                                 onChange={(e) => setCaretakersHeardMessage(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -298,6 +300,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Decisões de Acolhidos"
+                                inputProps={{ "data-testid": "visit-reports-form-sheltered-decisions" }}
                                 value={shelteredDecisions}
                                 onChange={(e) => setShelteredDecisions(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -308,6 +311,7 @@ export default function VisitReportFormModal({
                                 fullWidth
                                 type="number"
                                 label="Decisões de Cuidadores"
+                                inputProps={{ "data-testid": "visit-reports-form-caretakers-decisions" }}
                                 value={caretakersDecisions}
                                 onChange={(e) => setCaretakersDecisions(e.target.value === "" ? "" : Number(e.target.value))}
                                 required
@@ -320,6 +324,7 @@ export default function VisitReportFormModal({
                                 minRows={3}
                                 maxRows={8}
                                 label="Observações sobre a visita"
+                                inputProps={{ "data-testid": "visit-reports-form-observation" }}
                                 value={observation}
                                 onChange={(e) => setObservation(e.target.value)}
                                 placeholder="Descreva como foi a visita, recepção, etc."
@@ -333,10 +338,11 @@ export default function VisitReportFormModal({
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose} color="inherit">
+                    <Button data-testid="visit-reports-form-cancel" onClick={onClose} color="inherit">
                         Cancelar
                     </Button>
                     <Button
+                        data-testid="visit-reports-form-submit"
                         type="submit"
                         variant="contained"
                         color="primary"

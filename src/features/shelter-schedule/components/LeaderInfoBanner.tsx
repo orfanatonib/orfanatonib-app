@@ -12,7 +12,7 @@ export default function LeaderInfoBanner() {
         mb: 4,
         p: { xs: 2.5, sm: 3, md: 4 },
         borderRadius: 4,
-        background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 50%, ${(theme.palette as any).orange?.main || "#ff6d00"} 100%)`,
+        background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 50%, ${"#ff6d00"} 100%)`,
         position: "relative",
         overflow: "hidden",
         "&::before": {

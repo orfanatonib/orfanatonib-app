@@ -197,18 +197,6 @@ export interface AttendanceStatsDto {
   pendingCount: number;
 }
 
-export interface TeamAttendanceOverviewDto {
-  teamId: string;
-  teamNumber: number;
-  shelterName: string;
-  recentEvents: Array<{
-    scheduleId: string;
-    eventType: 'visit' | 'meeting';
-    eventDate: string;
-    attendanceStats: AttendanceStatsDto;
-  }>;
-}
-
 export interface TeamScheduleDto extends ScheduleDates {
   id: string;
   category: EventCategory;
@@ -278,16 +266,39 @@ export interface PaginatedResponseDto<T> {
   meta: PaginationMeta;
 }
 
-export interface AttendanceFiltersDto {
-  page?: number;
-  limit?: number;
+/** Recorte por período, aceito pelas folhas e pelos encontros. */
+export interface PeriodQuery {
   startDate?: string;
   endDate?: string;
-  type?: AttendanceType;
+}
+
+export type AttendanceSortField = 'createdAt' | 'visitDate' | 'meetingDate';
+export type AttendanceSortOrder = 'asc' | 'desc';
+
+/**
+ * Ordenação aceita apenas pela listagem de lançamentos. Os encontros de uma
+ * equipe já vêm ordenados por data e o endpoint rejeita qualquer campo fora do
+ * período — mandar `sortBy` ali devolvia 400.
+ */
+export interface SortQuery {
+  sortBy?: AttendanceSortField;
+  sortOrder?: AttendanceSortOrder;
+}
+
+/**
+ * Filtros da listagem de lançamentos. O tipo anterior não declarava
+ * `category`, `scheduleId` nem `memberName` — campos que a API aceita e que a
+ * tela já enviava, fora do tipo.
+ */
+export interface AttendanceFiltersQuery extends PeriodQuery, SortQuery {
+  page?: number;
+  limit?: number;
+  scheduleId?: string;
   teamId?: string;
   memberId?: string;
-  sortOrder?: 'asc' | 'desc';
-  sortBy?: 'createdAt' | 'visitDate' | 'meetingDate';
+  memberName?: string;
+  type?: AttendanceType;
+  category?: EventCategory;
 }
 
 export type ScheduleType = 'visit' | 'meeting';

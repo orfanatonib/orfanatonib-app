@@ -1,6 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { gradients } from "@/theme";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -13,6 +14,9 @@ import {
   ToggleButtonGroup,
   Typography,
   CircularProgress,
+  TextField,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 
 import EventIcon from "@mui/icons-material/Event";
@@ -20,6 +24,8 @@ import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 
 import { motion } from "framer-motion";
 
@@ -32,6 +38,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
 import { setEvents } from "@/store/slices/events/eventsSlice";
 import { UserRole } from "@/store/slices/auth/authSlice";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 
 import EventDetailsModal from "./EventDetailsModal";
 import EventFormModal from "./EventFormModal";
@@ -75,6 +82,7 @@ export default function EventosPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
 
   const [eventos, setEventosState] = useState<AppEvent[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [eventoSelecionado, setEventoSelecionado] = useState<AppEvent | null>(null);
@@ -86,22 +94,31 @@ export default function EventosPage() {
   const [dialogDeleteOpen, setDialogDeleteOpen] = useState(false);
   const [deleteTargetEvent, setDeleteTargetEvent] = useState<AppEvent | null>(null);
 
-  const fetchEventos = useCallback(async () => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fetchEventos = useCallback(async (querySearch?: string) => {
     setLoading(true);
+    setErrorMessage(null);
     try {
-      const res = await api.get("/events");
+      const res = await api.get("/events", {
+        params: querySearch?.trim() ? { search: querySearch.trim() } : undefined,
+      });
       const mapped = mapEventsWithFallbackDate(res.data || []);
       dispatch(setEvents(mapped));
       setEventosState(mapped);
-    } catch {
+    } catch (error: unknown) {
+      setErrorMessage(getApiErrorMessage(error, "Não foi possível carregar os eventos."));
     } finally {
       setLoading(false);
     }
   }, [dispatch]);
 
   useEffect(() => {
-    fetchEventos();
-  }, [fetchEventos]);
+    const timer = setTimeout(() => {
+      fetchEventos(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchEventos]);
 
   const eventosOrdenados = useMemo(() => {
     return [...eventos].sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
@@ -137,7 +154,9 @@ export default function EventosPage() {
       await api.delete(`/events/${deleteTargetEvent.id}`);
       closeDeleteModal();
       await fetchEventos();
-    } catch {
+    } catch (error: unknown) {
+      closeDeleteModal();
+      setErrorMessage(getApiErrorMessage(error, "Não foi possível excluir o evento."));
     }
   };
 
@@ -178,7 +197,12 @@ export default function EventosPage() {
     <Fragment>
       <Box sx={{ minHeight: "100vh", background: gradients.subtle.greenWhiteSoft }}>
 
-        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 2.5, md: 4 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
+        <Container maxWidth={false} sx={{ width: { xs: '98%', md: '95%' }, mx: 'auto', py: { xs: 2, sm: 2.5, md: 4 }, px: { xs: 1, sm: 2, md: 3 } }}>
+          {errorMessage && (
+            <Alert severity="error" data-testid="events-error" onClose={() => setErrorMessage(null)} sx={{ mb: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
             <Box
               sx={{
@@ -241,6 +265,34 @@ export default function EventosPage() {
                   justifyContent: { xs: "center", md: "flex-end" },
                 }}
               >
+                <TextField
+                  size="small"
+                  placeholder="Buscar eventos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.85)",
+                    borderRadius: 2,
+                    minWidth: { xs: "100%", sm: 220 },
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setSearchTerm("")}>
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
+                  }}
+                />
                 <ToggleButtonGroup
                   value={viewMode}
                   exclusive

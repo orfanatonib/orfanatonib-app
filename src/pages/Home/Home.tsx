@@ -3,14 +3,17 @@ import { Box } from '@mui/material';
 import { gradients } from '@/theme';
 import { HeroSection, FeaturesSection, TestimonialsSection, CTASection } from './components';
 import VisitMaterialsBanner from './VisitMaterialsBanner';
-import CardsSection from './CardsSection';
+import { MediaShowcaseSection } from '@/features/public-media';
 import SheltersSection from './components/SheltersSection';
 import { FEATURES } from './constants';
 import { useComments, useAuth } from './hooks';
+import { FeatureGate } from '@/components/common/FeatureGate';
+import { FeatureFlagKeys, useIsFeatureEnabled } from '@/features/feature-flags';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const comments = useComments();
+  const homeCommentsEnabled = useIsFeatureEnabled(FeatureFlagKeys.HOME_COMMENTS);
+  const comments = useComments(homeCommentsEnabled);
 
   return (
     <Box
@@ -23,12 +26,26 @@ const Home: React.FC = () => {
       }}
     >
       <HeroSection isAuthenticated={isAuthenticated} />
-      {isAuthenticated && <VisitMaterialsBanner />}
-      <SheltersSection />
-      <CardsSection />
+      {isAuthenticated && (
+        <FeatureGate flag={FeatureFlagKeys.VISIT_MATERIALS}>
+          <VisitMaterialsBanner />
+        </FeatureGate>
+      )}
+      <FeatureGate
+        flag={
+          isAuthenticated
+            ? FeatureFlagKeys.HOME_SHELTERS_PRIVATE
+            : FeatureFlagKeys.HOME_SHELTERS_PUBLIC
+        }
+      >
+        <SheltersSection />
+      </FeatureGate>
+      <MediaShowcaseSection />
       <FeaturesSection features={FEATURES} />
-      {comments && comments.length > 0 && (
-        <TestimonialsSection testimonials={comments.filter(comment => comment.id) as any} />
+      {homeCommentsEnabled && comments && comments.length > 0 && (
+        <TestimonialsSection testimonials={comments.flatMap(({ id, comment, name, shelter, neighborhood }) =>
+            id ? [{ id, comment, name, shelter, neighborhood }] : [],
+          )} />
       )}
       <CTASection isAuthenticated={isAuthenticated} />
     </Box>

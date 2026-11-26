@@ -1,48 +1,15 @@
-import { Theme } from "@mui/material/styles";
+import type { MediaItem } from '@/store/slices/types';
+import { IDEA_MEDIA_GROUPS_CONFIG } from '../constants';
+import type { IdeaMediaGroup } from '../types';
 
-export type MediaType = "videos" | "documents" | "images";
-
-export interface MediaItem {
-  id: string;
-  mediaType: "video" | "document" | "image";
-  [key: string]: any;
+/** Mídias da seção agrupadas por tipo, na ordem de exibição, sem os grupos vazios. */
+export function groupSectionMedias(medias: readonly MediaItem[]): IdeaMediaGroup[] {
+  return IDEA_MEDIA_GROUPS_CONFIG.map((config) => ({
+    ...config,
+    items: medias.filter((media) => media.mediaType === config.mediaType),
+  })).filter((group) => group.items.length > 0);
 }
 
-export function filterMediaByType(medias: MediaItem[], type: "video" | "document" | "image"): MediaItem[] {
-  return medias.filter((media) => media.mediaType === type);
-}
-
-export function getMediaColor(type: MediaType, theme: Theme): string {
-  const colorMap: Record<MediaType, string> = {
-    videos: theme.palette.error.main,
-    documents: theme.palette.success.main,
-    images: theme.palette.warning.main,
-  };
-  return colorMap[type];
-}
-
-export function getMediaEmoji(type: MediaType): string {
-  const emojiMap: Record<MediaType, string> = {
-    videos: "🎬",
-    documents: "📄",
-    images: "🖼️",
-  };
-  return emojiMap[type];
-}
-
-export function getMediaLabel(type: MediaType): string {
-  const labelMap: Record<MediaType, string> = {
-    videos: "Vídeos",
-    documents: "Documentos",
-    images: "Imagens",
-  };
-  return labelMap[type];
-}
-
-export function groupSectionMedias(medias: MediaItem[]) {
-  return {
-    videos: filterMediaByType(medias, "video"),
-    documents: filterMediaByType(medias, "document"),
-    images: filterMediaByType(medias, "image"),
-  };
-}
+/** Chave estável de uma mídia; a API pode devolver mídia sem id. */
+export const mediaKey = (media: MediaItem, sectionIndex: number, mediaIndex: number): string =>
+  media.id ?? `${sectionIndex}-${mediaIndex}`;

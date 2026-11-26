@@ -21,6 +21,7 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PagelaCard from "./PagelaCard";
 import type { Pagela } from "../types";
 import type { Tri } from "../hooks";
+import { MIN_TOUCH_TARGET_PX, PAGELA_TESTID_PREFIX as TID } from "../constants";
 
 type FiltersProps = {
   year?: number;
@@ -152,7 +153,7 @@ export default function PagelaList({
     };
 
   return (
-    <Stack spacing={1.75}>
+    <Stack spacing={1.75} data-testid={`${TID}-list`}>
       <Box
         sx={{
           display: "grid",
@@ -173,7 +174,7 @@ export default function PagelaList({
           onChange={(e) => handleYearChange(e.target.value)}
           onBlur={applyYearFromText}
           onKeyDown={onKeyDownApply(applyYearFromText)}
-          inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 4 }}
+          inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 4, "data-testid": `${TID}-filter-year` }}
           fullWidth
         />
 
@@ -186,7 +187,7 @@ export default function PagelaList({
           onChange={(e) => handleVisitChange(e.target.value)}
           onBlur={applyVisitFromText}
           onKeyDown={onKeyDownApply(applyVisitFromText)}
-          inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 2 }}
+          inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 2, "data-testid": `${TID}-filter-week` }}
           sx={{ width: { xs: "100%", sm: "100%" } }}
         />
 
@@ -196,16 +197,17 @@ export default function PagelaList({
             label="Presença"
             value={filters.presentQ}
             onChange={(e) => filters.setPresentQ(e.target.value as Tri)}
+            data-testid={`${TID}-filter-present`}
           >
-            <MenuItem value="any">
+            <MenuItem value="any" data-testid={`${TID}-filter-present-option-any`}>
               <AllInclusiveIcon fontSize="small" style={{ marginRight: 8 }} />
               Qualquer
             </MenuItem>
-            <MenuItem value="yes">
+            <MenuItem value="yes" data-testid={`${TID}-filter-present-option-yes`}>
               <CheckCircleIcon fontSize="small" style={{ marginRight: 8 }} />
               Sim
             </MenuItem>
-            <MenuItem value="no">
+            <MenuItem value="no" data-testid={`${TID}-filter-present-option-no`}>
               <HighlightOffIcon fontSize="small" style={{ marginRight: 8 }} />
               Não
             </MenuItem>
@@ -222,7 +224,8 @@ export default function PagelaList({
               }}
               size="small"
               variant="text"
-              sx={{ fontWeight: 700, textTransform: "none" }}
+              data-testid={`${TID}-clear-filters`}
+              sx={{ fontWeight: 700, textTransform: "none", minHeight: MIN_TOUCH_TARGET_PX }}
             >
               Limpar filtros
             </Button>
@@ -239,13 +242,14 @@ export default function PagelaList({
           ))}
         </Grid>
       ) : (
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, textAlign: "center", color: "text.secondary" }}>
+        <Paper variant="outlined" data-testid={`${TID}-empty`} sx={{ p: 2, borderRadius: 3, textAlign: "center", color: "text.secondary" }}>
           <Typography variant="body2">Sem registros para a busca.</Typography>
         </Paper>
       )}
 
       <Stack direction="row" justifyContent="center">
         <Pagination
+          data-testid={`${TID}-pages`}
           count={Math.max(1, Math.ceil(total / limit))}
           page={page}
           onChange={(_, p) => setPage(p)}

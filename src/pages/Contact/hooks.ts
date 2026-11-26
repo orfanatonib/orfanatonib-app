@@ -10,8 +10,9 @@ export const useContactForm = () => {
   const [submitted, setSubmitted] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const onSubmit = async (data: ContactFormData) => {
+  const onSubmit = async (data: ContactFormData): Promise<boolean> => {
     setLoading(true);
+    setSubmitted(false);
     setGlobalError(null);
     try {
       await api.post('/contact', {
@@ -19,10 +20,13 @@ export const useContactForm = () => {
         email: normalizeEmail(data.email),
         phone: digitsOnly(data.telefone),
         message: data.mensagem,
+        website: data.website ?? '',
       });
       setSubmitted(true);
+      return true;
     } catch (error) {
       setGlobalError(CONTACT_ERROR_MESSAGES.SUBMIT_GENERIC);
+      return false;
     } finally {
       setLoading(false);
     }

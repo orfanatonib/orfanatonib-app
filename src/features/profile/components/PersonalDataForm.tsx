@@ -18,6 +18,7 @@ import BRDatePicker from '@/components/common/BRDatePicker';
 import { PersonalData, UpdatePersonalDataDto } from '../types';
 import { apiUpdateCompleteProfile } from '../api';
 import { maskPhoneBR, digitsOnly } from '@/utils/masks';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface PersonalDataFormProps {
   personalData: PersonalData | undefined;
@@ -111,8 +112,8 @@ const PersonalDataForm: React.FC<PersonalDataFormProps> = ({
       setSuccess(true);
       onUpdate();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 'Erro ao atualizar dados pessoais';
+    } catch (err: unknown) {
+      const errorMessage = getApiErrorMessage(err, 'Erro ao atualizar dados pessoais');
       onError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -125,7 +126,7 @@ const PersonalDataForm: React.FC<PersonalDataFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="personal-data-form" sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>

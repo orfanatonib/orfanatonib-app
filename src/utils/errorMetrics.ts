@@ -62,7 +62,8 @@ class ErrorMetricsCollector {
       sessionId: error.sessionId,
       correlationId: error.correlationId,
       userAgent: navigator.userAgent,
-      url: window.location.href,
+      // Só o caminho: a query pode carregar token/e-mail (ex.: redefinição de senha).
+      url: window.location.pathname,
     };
 
     this.metrics.push(metric);

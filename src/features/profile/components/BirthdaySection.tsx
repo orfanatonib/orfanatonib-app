@@ -44,7 +44,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
     const visibleAvatars = isXs ? 2 : 3;
 
     return (
-        <Paper
+        <Paper data-testid={`birthday-section-${variant}`}
             elevation={0}
             sx={{
                 background: config.bg,
@@ -101,6 +101,7 @@ const BirthdaySection: React.FC<BirthdaySectionProps> = ({
                                 arrow
                             >
                                 <Avatar
+                                    data-testid={`birthday-avatar-${profile.id}`}
                                     onClick={(e) => { e.stopPropagation(); onProfileClick(profile); }}
                                     sx={{
                                         width: { xs: 24, sm: 28 },

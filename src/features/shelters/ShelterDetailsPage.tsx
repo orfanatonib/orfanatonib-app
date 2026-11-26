@@ -39,9 +39,10 @@ import { ShelterResponseDto } from "./types";
 import { apiGetMyShelters } from "@/features/leaders/api";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/slices";
-import { fmtDate } from "@/utils/dates";
+import { fmtDate } from "@/utils/dateUtils";
 import ChipsListWithExpand from "./components/ChipsListWithExpand";
 import { SUPPORT_CONTACTS, buildTeamLinkingWhatsappLink } from "@/utils/whatsapp";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 type ShelterOption = {
   id: string;
@@ -86,11 +87,9 @@ export default function ShelterDetailsPage() {
 
         const initialShelterId = shelters[0].id;
         setSelectedShelterId(initialShelterId);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(
-          err?.response?.data?.message ||
-          err?.message ||
-          "Erro ao carregar abrigos"
+          getApiErrorMessage(err, "Erro ao carregar abrigos")
         );
       } finally {
         setLoading(false);

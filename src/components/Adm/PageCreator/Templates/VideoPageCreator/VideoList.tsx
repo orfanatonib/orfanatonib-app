@@ -13,6 +13,7 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
   if (videos.length === 0) {
     return (
       <Paper
+        data-testid="video-list-empty"
         elevation={1}
         sx={{
           p: 6,
@@ -30,10 +31,11 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
 
   return (
     <Paper
+      data-testid="video-list"
       elevation={2}
       sx={{
-        p: { xs: 3, md: 4 },
-        mb: 4,
+        p: { xs: 2, md: 4 },
+        mb: { xs: 2, md: 4 },
         borderRadius: 3,
         bgcolor: 'background.paper',
       }}
@@ -45,6 +47,7 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
         {videos.map((video, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Card
+              data-testid="video-list-item"
               component={motion.div}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,6 +108,7 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
 
               <Box display="flex" justifyContent="flex-end" gap={1} mt="auto">
                 <Button
+                  data-testid="video-list-item-edit"
                   variant="outlined"
                   size="small"
                   startIcon={<Edit />}
@@ -122,6 +126,7 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
                   Editar
                 </Button>
                 <Button
+                  data-testid="video-list-item-delete"
                   variant="outlined"
                   color="error"
                   size="small"

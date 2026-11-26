@@ -16,8 +16,9 @@ import CancelIcon from "@mui/icons-material/Cancel";
 
 import { ShelteredSimpleResponseDto } from "@/features/sheltered/types";
 import DecisionModal from "./DecisionModal";
+import { FeatureFlagKeys, useIsFeatureEnabled } from "@/features/feature-flags";
 import ConfirmDialog from "@/components/common/modal/ConfirmDialog";
-import IntegrationButton from "@/features/integration/components/IntegrationButton";
+import { MIN_TOUCH_TARGET_PX, SHELTERED_AREA_TESTID_PREFIX as TID } from "../constants";
 
 function genderPastel(seed: string, gender: string | undefined) {
   const g = (gender || "").toUpperCase();
@@ -57,6 +58,7 @@ export default function ShelteredCard({
   onToggleStatus?: (id: string, active: boolean) => Promise<void>;
 }) {
   const theme = useTheme();
+  const decisionsEnabled = useIsFeatureEnabled(FeatureFlagKeys.ACCEPTED_CHRISTS);
   const colors = genderPastel(sheltered.name || sheltered.id, sheltered.gender);
   const initials = React.useMemo(() => {
     const parts = (sheltered.name || "").trim().split(/\s+/).slice(0, 2);
@@ -88,6 +90,8 @@ export default function ShelteredCard({
     <>
       <Card
         variant="outlined"
+        data-testid={`${TID}-card-${sheltered.id}`}
+        data-active={sheltered.active ? "true" : "false"}
         sx={{
           borderRadius: 4,
           height: "100%",
@@ -110,52 +114,61 @@ export default function ShelteredCard({
           },
         }}
       >
-        <Tooltip title={getTooltipText()}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              setModalOpen(true);
-            }}
-            sx={{
-              position: "absolute",
-              top: { xs: 6, sm: 8 },
-              left: { xs: 6, sm: 8 },
-              bgcolor: "background.paper",
-              border: "2px solid",
-              borderColor: hasAnyDecision ? getHeartColor() : "divider",
-              zIndex: 3,
-              boxShadow: hasAnyDecision ? 2 : 0,
-              width: { xs: 36, sm: 40 },
-              height: { xs: 36, sm: 40 },
-              transition: "all 0.2s ease",
-              "&:hover": { 
+        {decisionsEnabled && (
+          <Tooltip title={getTooltipText()}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalOpen(true);
+              }}
+              aria-label={`Registrar decisão de ${sheltered.name}`}
+              data-testid={`${TID}-card-decision-${sheltered.id}`}
+              data-decided={hasAnyDecision ? "true" : "false"}
+              sx={{
+                position: "absolute",
+                top: { xs: 6, sm: 8 },
+                left: { xs: 6, sm: 8 },
                 bgcolor: "background.paper",
-                transform: "scale(1.1)",
-                boxShadow: 3,
-              },
-            }}
-          >
-            <FavoriteIcon 
-              sx={{ 
-                color: getHeartColor(),
-                fontSize: { xs: "1.1rem", sm: "1.3rem" },
-                animation: hasAnyDecision ? "heartbeat 1.5s ease-in-out infinite" : "none",
-                "@keyframes heartbeat": {
-                  "0%, 100%": { transform: "scale(1)" },
-                  "10%, 30%": { transform: "scale(0.9)" },
-                  "20%, 40%": { transform: "scale(1.1)" },
-                }
-              }} 
-            />
-          </IconButton>
-        </Tooltip>
+                border: "2px solid",
+                borderColor: hasAnyDecision ? getHeartColor() : "divider",
+                zIndex: 3,
+                boxShadow: hasAnyDecision ? 2 : 0,
+                width: MIN_TOUCH_TARGET_PX,
+                height: MIN_TOUCH_TARGET_PX,
+                transition: "all 0.2s ease",
+                "&:hover": { 
+                  bgcolor: "background.paper",
+                  transform: "scale(1.1)",
+                  boxShadow: 3,
+                },
+              }}
+            >
+              <FavoriteIcon 
+                sx={{ 
+                  color: getHeartColor(),
+                  fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                  animation: hasAnyDecision ? "heartbeat 1.5s ease-in-out infinite" : "none",
+                  "@keyframes heartbeat": {
+                    "0%, 100%": { transform: "scale(1)" },
+                    "10%, 30%": { transform: "scale(0.9)" },
+                    "20%, 40%": { transform: "scale(1.1)" },
+                  }
+                }} 
+              />
+            </IconButton>
+          </Tooltip>
+        )}
 
         {!!onEdit && (
           <Tooltip title="Editar acolhido">
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); onEdit(sheltered); }}
+              aria-label={`Editar ${sheltered.name}`}
+              data-testid={`${TID}-card-edit-${sheltered.id}`}
               sx={{
+                width: MIN_TOUCH_TARGET_PX,
+                height: MIN_TOUCH_TARGET_PX,
                 position: "absolute",
                 top: 8,
                 right: 8,
@@ -200,6 +213,7 @@ export default function ShelteredCard({
 
         <CardActionArea 
           onClick={() => onClick(sheltered)} 
+          data-testid={`${TID}-card-open-${sheltered.id}`}
           sx={{ 
             display: "flex",
             backgroundColor: "transparent !important",
@@ -237,11 +251,13 @@ export default function ShelteredCard({
                 variant="subtitle1"
                 fontWeight={900}
                 title={sheltered.name}
+                data-testid={`${TID}-card-name-${sheltered.id}`}
                 sx={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
                 {sheltered.name}
               </Typography>
               <Chip
+                data-testid={`${TID}-card-gender-${sheltered.id}`}
                 icon={sheltered.gender === "F" ? <FemaleIcon /> : <MaleIcon />}
                 label={sheltered.gender === "F" ? "F" : "M"}
                 size="small"
@@ -267,6 +283,7 @@ export default function ShelteredCard({
                 color="text.secondary"
                 noWrap
                 title={sheltered.guardianName ?? undefined}
+                data-testid={`${TID}-card-guardian-${sheltered.id}`}
                 sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
               >
                 Resp.: {sheltered.guardianName || "—"}
@@ -275,7 +292,7 @@ export default function ShelteredCard({
 
             <Stack direction="row" spacing={0.75} alignItems="center">
               <PhoneIcon fontSize="small" sx={{ opacity: 0.7 }} />
-              <Typography variant="body2" color="text.secondary" noWrap title={sheltered.guardianPhone ?? undefined}>
+              <Typography variant="body2" color="text.secondary" noWrap title={sheltered.guardianPhone ?? undefined} data-testid={`${TID}-card-phone-${sheltered.id}`}>
                 Tel.: {sheltered.guardianPhone || "—"}
               </Typography>
             </Stack>
@@ -287,29 +304,6 @@ export default function ShelteredCard({
               </Typography>
               <FavoriteIcon fontSize="inherit" sx={{ opacity: 0.5, ml: 0.25 }} />
             </Stack>
-
-            {/* Botão de Integração GA */}
-            <Box
-              sx={{
-                mt: 1.25,
-                display: "flex",
-                justifyContent: "center",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <IntegrationButton
-                shelteredId={sheltered.id}
-                shelteredName={sheltered.name}
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: "0.75rem",
-                  py: 0.5,
-                  px: 1.5,
-                  minWidth: "auto",
-                }}
-              />
-            </Box>
 
             {!!onToggleStatus && (
               <Box
@@ -339,6 +333,10 @@ export default function ShelteredCard({
                 </Typography>
                 <Tooltip title={sheltered.active ? "Desativar acolhido" : "Ativar acolhido"}>
                   <Switch
+                    inputProps={{
+                      "aria-label": sheltered.active ? "Desativar acolhido" : "Ativar acolhido",
+                      "data-testid": `${TID}-card-status-${sheltered.id}`,
+                    } as React.InputHTMLAttributes<HTMLInputElement>}
                     checked={sheltered.active}
                     onChange={async (e) => {
                       e.stopPropagation();
@@ -348,6 +346,16 @@ export default function ShelteredCard({
                     size="small"
                     color="success"
                     sx={{
+                      // Área de toque de 44px sem mudar o tamanho visual do switch.
+                      height: MIN_TOUCH_TARGET_PX,
+                      "& .MuiSwitch-switchBase": {
+                        height: MIN_TOUCH_TARGET_PX,
+                        top: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 4px",
+                      },
+                      "& .MuiSwitch-track": { alignSelf: "center", height: 14 },
                       "& .MuiSwitch-switchBase.Mui-checked": {
                         color: "success.main",
                       },
@@ -362,6 +370,7 @@ export default function ShelteredCard({
           </CardContent>
         </CardActionArea>
       </Card>
+      {decisionsEnabled && (
       <DecisionModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -371,9 +380,11 @@ export default function ShelteredCard({
           handleCloseModal();
         }}
       />
+      )}
 
       <ConfirmDialog
         open={confirmToggleOpen}
+        testId={`${TID}-card-status-dialog-${sheltered.id}`}
         title={pendingActive ? "Ativar acolhido" : "Desativar acolhido"}
         content={
           <Typography sx={{ wordBreak: "break-word" }}>

@@ -13,17 +13,21 @@ import {
 } from '@mui/material';
 import { Dispatch, Fragment, SetStateAction, useState } from 'react';
 import { MediaItem, MediaPlatform, MediaUploadType } from 'store/slices/types';
+import { VideoFieldErrors } from './types';
+
+const FIELD_SX = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2,
+    transition: 'all 0.2s ease',
+    '&:hover:not(.Mui-error)': { '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' } },
+    '&.Mui-focused': { '& .MuiOutlinedInput-notchedOutline': { borderWidth: 2 } },
+  },
+  '& .MuiFormHelperText-root': { marginLeft: 0, marginTop: 1, fontSize: '0.75rem' },
+} as const;
 
 interface VideoFormProps {
   newVideo: MediaItem;
-  errors: {
-    pageTitle: boolean;
-    pageDescription: boolean;
-    newVideoTitle: boolean;
-    newVideoDescription: boolean;
-    newVideoSrc: boolean;
-    newVideoURL: boolean;
-  };
+  errors: VideoFieldErrors;
   setNewVideo: Dispatch<SetStateAction<MediaItem>>;
   handleUploadFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddVideo: () => void;
@@ -48,10 +52,11 @@ export default function VideoForm({
 
   return (
     <Paper
+      data-testid="video-form"
       elevation={2}
       sx={{
-        p: { xs: 3, md: 4 },
-        mb: 4,
+        p: { xs: 2, md: 4 },
+        mb: { xs: 2, md: 4 },
         borderRadius: 3,
         bgcolor: 'background.paper',
       }}
@@ -63,6 +68,7 @@ export default function VideoForm({
         <Grid item xs={12} sm={6}>
           <TextField
             label="Título do Vídeo"
+            inputProps={{ 'data-testid': 'video-form-title' }}
             fullWidth
             required
             value={newVideo.title}
@@ -73,33 +79,14 @@ export default function VideoForm({
             onBlur={() => setTouched((prev) => ({ ...prev, title: true }))}
             error={touched.title && errors.newVideoTitle}
             helperText={touched.title && errors.newVideoTitle ? 'Campo obrigatório' : ''}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                transition: 'all 0.2s ease',
-                '&:hover:not(.Mui-error)': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                },
-                '&.Mui-focused': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderWidth: 2,
-                  },
-                },
-              },
-              '& .MuiFormHelperText-root': {
-                marginLeft: 0,
-                marginTop: 1,
-                fontSize: '0.75rem',
-              },
-            }}
+            sx={FIELD_SX}
           />
         </Grid>
 
         <Grid item xs={12} sm={6}>
           <TextField
             label="Descrição do Vídeo"
+            inputProps={{ 'data-testid': 'video-form-description' }}
             fullWidth
             required
             value={newVideo.description}
@@ -110,27 +97,7 @@ export default function VideoForm({
             onBlur={() => setTouched((prev) => ({ ...prev, description: true }))}
             error={touched.description && errors.newVideoDescription}
             helperText={touched.description && errors.newVideoDescription ? 'Campo obrigatório' : ''}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                transition: 'all 0.2s ease',
-                '&:hover:not(.Mui-error)': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                },
-                '&.Mui-focused': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderWidth: 2,
-                  },
-                },
-              },
-              '& .MuiFormHelperText-root': {
-                marginLeft: 0,
-                marginTop: 1,
-                fontSize: '0.75rem',
-              },
-            }}
+            sx={FIELD_SX}
           />
         </Grid>
 
@@ -140,6 +107,7 @@ export default function VideoForm({
             <Select
               value={newVideo.uploadType}
               label="Tipo"
+              SelectDisplayProps={{ 'data-testid': 'video-form-type' } as object}
               onChange={(e) =>
                 setNewVideo((prev) => ({
                   ...prev,
@@ -161,8 +129,8 @@ export default function VideoForm({
                 },
               }}
             >
-              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
-              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK} data-testid="video-form-type-link">Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD} data-testid="video-form-type-upload">Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -174,6 +142,7 @@ export default function VideoForm({
               <Select
                 value={newVideo.platformType || ''}
                 label="Plataforma"
+                SelectDisplayProps={{ 'data-testid': 'video-form-platform' } as object}
                 onChange={(e) =>
                   setNewVideo((prev) => ({
                     ...prev,
@@ -204,6 +173,7 @@ export default function VideoForm({
           <Grid item xs={12}>
             <TextField
               label="URL do Vídeo (embed)"
+              inputProps={{ 'data-testid': 'video-form-url' }}
               fullWidth
               required
               value={newVideo.url || ''}
@@ -220,27 +190,7 @@ export default function VideoForm({
                     ? 'URL inválida para a plataforma selecionada'
                     : ''
               }
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  transition: 'all 0.2s ease',
-                  '&:hover:not(.Mui-error)': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    },
-                  },
-                  '&.Mui-focused': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderWidth: 2,
-                    },
-                  },
-                },
-                '& .MuiFormHelperText-root': {
-                  marginLeft: 0,
-                  marginTop: 1,
-                  fontSize: '0.75rem',
-                },
-              }}
+              sx={FIELD_SX}
             />
           </Grid>
         )}
@@ -262,11 +212,17 @@ export default function VideoForm({
                 }}
               >
                 Escolher Vídeo
-                <input type="file" hidden accept="video/*" onChange={handleUploadFile} />
+                <input
+                  type="file"
+                  hidden
+                  accept="video/*"
+                  onChange={handleUploadFile}
+                  data-testid="video-form-file"
+                />
               </Button>
               {newVideo.file && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" data-testid="video-form-file-name">
                     {newVideo.file.name}
                   </Typography>
                   {uploadProgress[newVideo.file.name] === false ? (
@@ -284,6 +240,7 @@ export default function VideoForm({
 
         <Grid item xs={12}>
           <Button
+            data-testid="video-form-submit"
             variant="contained"
             fullWidth
             onClick={() => {

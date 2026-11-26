@@ -2,11 +2,9 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
-import imageReducer from './image/imageSlice';
 import imageSectionReducer from './image-section/imageSectionSlice';
 import authReducer from './auth/authSlice';
 import routesReducer from './route/routeSlice';
-import videoReducer from './video/videoSlice';
 import meditationReducer from './meditation/meditationSlice';
 import visitMaterialReducer from './visit-material/visitMaterialSlice';
 import eventsReducer from './events/eventsSlice';
@@ -14,7 +12,6 @@ import commentsReducer from './comment/commentsSlice';
 import documentReducer from './documents/documentSlice';
 import ideasReducer from './ideas/ideasSlice';
 import informativeBannerReducer from './informative/informativeBannerSlice';
-import imageSectionPaginationReducer from './image-section-pagination/imageSectionPaginationSlice';
 import feedbackReducer from './feedback/feedbackSlice';
 import featureFlagsReducer from './feature-flags/featureFlagsSlice';
 import notificationReducer from './notification/notificationSlice';
@@ -27,10 +24,8 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
-  image: imageReducer,
   imageSection: imageSectionReducer,
   routes: routesReducer,
-  video: videoReducer,
   meditation: meditationReducer,
   visitMaterial: visitMaterialReducer,
   events: eventsReducer,
@@ -38,7 +33,6 @@ const rootReducer = combineReducers({
   document: documentReducer,
   ideas: ideasReducer,
   informativeBanner: informativeBannerReducer,
-  imageSectionPagination: imageSectionPaginationReducer,
   feedback: feedbackReducer,
   featureFlags: featureFlagsReducer,
   notification: notificationReducer,
@@ -50,6 +44,11 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+
+/** Só no dev server: os E2E semeiam o estado em memória que um login Google real deixaria (ver e2e/live/auth). */
+if (import.meta.env.DEV) {
+  (window as Window & { __APP_STORE__?: typeof store }).__APP_STORE__ = store;
+}
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

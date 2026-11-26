@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { ContentCopy, Close } from '@mui/icons-material';
 import { Fragment } from 'react/jsx-runtime';
-import { VideoPageData } from 'store/slices/video/videoSlice';
+import { VideoPageData } from '../types';
 import { MediaItem, MediaUploadType } from 'store/slices/types';
 import { copyToClipboard, formatDate } from '../utils';
 
@@ -25,6 +25,7 @@ export default function VideoPageDetailsModal({ page, open, onClose }: VideoPage
 
   return (
     <Dialog
+      data-testid="video-page-details"
       open={open}
       onClose={onClose}
       fullWidth
@@ -39,6 +40,7 @@ export default function VideoPageDetailsModal({ page, open, onClose }: VideoPage
         </DialogTitle>
         <IconButton
           onClick={onClose}
+          data-testid="video-page-details-close"
           size="small"
           sx={{ position: 'absolute', top: 12, right: 12 }}
           title="Fechar"

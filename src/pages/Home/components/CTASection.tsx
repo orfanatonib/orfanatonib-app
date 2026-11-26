@@ -1,5 +1,7 @@
 import React from 'react';
 import { gradients } from '@/theme';
+import { FeatureGate } from "@/components/common/FeatureGate";
+import { FeatureFlagKeys } from "@/features/feature-flags/types";
 import { Box, Typography, Container, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -85,7 +87,8 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
         >
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
             {isAuthenticated ? (
-              <motion.div
+              <FeatureGate flag={FeatureFlagKeys.MEMBER_AREA}>
+<motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -112,8 +115,10 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
                   Área do membro
                 </Button>
               </motion.div>
+</FeatureGate>
             ) : (
-              <motion.div
+              <FeatureGate flag={FeatureFlagKeys.CONTACT_FORM}>
+<motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -140,6 +145,7 @@ const CTASection: React.FC<CTASectionProps> = ({ isAuthenticated }) => {
                   Entre em Contato
                 </Button>
               </motion.div>
+</FeatureGate>
             )}
           </Box>
         </motion.div>

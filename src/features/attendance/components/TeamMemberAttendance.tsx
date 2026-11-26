@@ -1,290 +1,387 @@
-import { memo } from 'react';
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
-  Grid,
-  IconButton,
+  Button,
+  Chip,
+  CircularProgress,
+  LinearProgress,
+  MenuItem,
+  Pagination,
   Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import EditIcon from '@mui/icons-material/Edit';
+} from "@mui/material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import SaveOutlined from "@mui/icons-material/SaveOutlined";
+import { useTeamAttendance } from "../hooks/useTeamAttendance";
+import { AttendanceType, EventCategory } from "../types";
+import type { TeamAttendanceProps } from "../workspace.types";
+import { ATTENDANCE_MEMBERS_PAGE_SIZE } from "../constants";
+import { normalizeAttendanceSearch } from "../workspace.utils";
+import { formatScheduleLabel } from "../utils";
+import {
+  attendanceCardSx,
+  attendanceColors,
+  attendancePrimarySx,
+} from "@/theme/attendance";
+import UnsavedChangesDialog from "@/components/common/modal/UnsavedChangesDialog";
+import AttendanceMemberRow from "./AttendanceMemberRow";
 
-import type {
-  ShelterWithTeamsDto,
-  TeamWithMembersDto,
-  TeamScheduleDto,
-} from '../types';
-import { useTeamAttendance } from '../hooks/useTeamAttendance';
-import EventFilterSelector from './EventFilterSelector';
-import AttendanceSummaryCard from './AttendanceSummaryCard';
-import AttendanceQuickActions from './AttendanceQuickActions';
-import AttendanceSubmitSection from './AttendanceSubmitSection';
-import MembersList from './MembersList';
-
-interface TeamMemberAttendanceProps {
-  shelter: ShelterWithTeamsDto;
-  team: TeamWithMembersDto;
-  schedules: TeamScheduleDto[];
-  loadingSchedules?: boolean;
-  onBack: () => void;
-  onAttendanceRegistered: () => void;
-}
-
-const TeamMemberAttendance = memo(({
+export default function TeamMemberAttendance({
   shelter,
   team,
   schedules,
-  loadingSchedules = false,
   onBack,
-  onAttendanceRegistered
-}: TeamMemberAttendanceProps) => {
-  const {
-    scheduleId,
-    setScheduleId,
-    eventTypeFilter,
-    setEventTypeFilter,
-    filteredSchedules,
-    membersOnly,
-    memberAttendances,
-    formState,
-    existingRecordsScheduleId,
-    loadingExistingRecords,
-    hasExistingAttendance,
-    presentCount,
-    absentCount,
-    handleMemberTypeChange,
-    handleMemberCommentChange,
-    bulkSetType,
-    clearAllComments,
-    clearError,
-    clearFeedback,
-    handleSubmit,
-    safeSchedules,
-  } = useTeamAttendance({
-    team,
-    schedules,
-    onAttendanceRegistered,
-  });
-
-  const isSubmitDisabled =
-    formState.loading ||
-    loadingSchedules ||
-    safeSchedules.length === 0 ||
-    !scheduleId ||
-    membersOnly.length === 0;
-
-  const disabledReason = loadingSchedules
-    ? 'Carregando eventos...'
-    : safeSchedules.length === 0
-      ? 'Nenhum evento disponível para esta equipe'
-      : !scheduleId
-        ? 'Selecione um evento'
-        : membersOnly.length === 0
-          ? 'Nenhum membro na equipe'
-          : '';
-
+  onAttendanceRegistered,
+  onBusyChange,
+}: TeamAttendanceProps) {
+  const form = useTeamAttendance({ team, schedules, onAttendanceRegistered });
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const disabled = !form.ready || form.formState.loading;
+  const members = Object.values(form.memberAttendances).filter((row) =>
+    normalizeAttendanceSearch(row.member.name).includes(
+      normalizeAttendanceSearch(search),
+    ),
+  );
+  const pageCount = Math.max(
+    1,
+    Math.ceil(members.length / ATTENDANCE_MEMBERS_PAGE_SIZE),
+  );
+  const currentPage = Math.min(page, pageCount);
+  const visible = members.slice(
+    (currentPage - 1) * ATTENDANCE_MEMBERS_PAGE_SIZE,
+    currentPage * ATTENDANCE_MEMBERS_PAGE_SIZE,
+  );
+  useEffect(() => {
+    onBusyChange?.(form.formState.loading);
+    return () => onBusyChange?.(false);
+  }, [form.formState.loading, onBusyChange]);
+  const changeSelection = (action: () => void) => {
+    if (form.formState.loading) return;
+    if (form.isDirty) setPendingAction(() => action);
+    else action();
+  };
   return (
-    <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          bgcolor: 'background.paper',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          p: { xs: 1, sm: 1.5, md: 2 },
-          mb: { xs: 1, md: 2 },
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        }}
+    <Box data-testid="team-attendance-page" sx={{ minWidth: 0 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => changeSelection(onBack)}
+        disabled={form.formState.loading}
+        sx={{ minHeight: 44, mb: 1, color: attendanceColors.ink }}
       >
-        <Stack direction="row" alignItems="center" spacing={{ xs: 1, md: 2 }}>
-          <IconButton
-            onClick={onBack}
-            aria-label="Voltar para seleção de equipes"
-            sx={{ flexShrink: 0 }}
-            size="small"
-          >
-            <ArrowBackIcon sx={{ fontSize: { xs: 20, md: 24 } }} />
-          </IconButton>
-
-          <Box flex={1} minWidth={0}>
-            <Typography variant="h6" fontWeight="bold" noWrap sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
-              Equipe {team.teamNumber}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap sx={{ fontSize: { xs: '0.7rem', md: '0.875rem' } }}>
-              {shelter.shelterName} • {membersOnly.length} membro{membersOnly.length !== 1 ? 's' : ''}
-            </Typography>
-          </Box>
-
-          {/* Desktop event filter */}
-          <Box
+        Trocar equipe
+      </Button>
+      <Box sx={{ ...attendanceCardSx, mb: 2 }}>
+        <Typography variant="overline" color="text.secondary">
+          Equipe {team.teamNumber} · {shelter.shelterName}
+        </Typography>
+        <Typography component="h2" variant="h6" fontWeight={800} sx={{ mb: 2 }}>
+          Escolha o evento
+        </Typography>
+        <Stack direction={{ xs: "column", md: "row" }} gap={2}>
+          <ToggleButtonGroup
+            value={form.eventTypeFilter}
+            exclusive
+            disabled={form.formState.loading}
+            aria-label="Tipo de evento"
+            onChange={(_, value: EventCategory | null) =>
+              value &&
+              changeSelection(() => {
+                form.setEventTypeFilter(value);
+                setPage(1);
+              })
+            }
             sx={{
-              display: { xs: 'none', md: 'block' },
-              minWidth: { md: 300, lg: 400 },
-              maxWidth: { md: 300, lg: 400 },
+              "& .MuiToggleButton-root": {
+                flex: 1,
+                minHeight: 48,
+                minWidth: 110,
+                textTransform: "none",
+              },
             }}
           >
-            <EventFilterSelector
-              eventTypeFilter={eventTypeFilter}
-              scheduleId={scheduleId}
-              filteredSchedules={filteredSchedules}
-              existingRecordsScheduleId={existingRecordsScheduleId}
-              hasExistingAttendance={hasExistingAttendance}
-              loadingSchedules={loadingSchedules}
-              loadingExistingRecords={loadingExistingRecords}
-              onEventTypeChange={setEventTypeFilter}
-              onScheduleChange={setScheduleId}
-            />
-          </Box>
-        </Stack>
-      </Box>
-
-      <Grid container spacing={{ xs: 1, sm: 1.5, md: 3 }} sx={{ flex: 1, overflow: 'hidden', px: { xs: 0.5, sm: 1, md: 0 } }}>
-        {/* Sidebar */}
-        <Grid item xs={12} md={4} lg={3}>
-          <Stack spacing={{ xs: 1, sm: 1.5, md: 3 }}>
-            {/* Mobile event filter */}
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-              <EventFilterSelector
-                eventTypeFilter={eventTypeFilter}
-                scheduleId={scheduleId}
-                filteredSchedules={filteredSchedules}
-                existingRecordsScheduleId={existingRecordsScheduleId}
-                hasExistingAttendance={hasExistingAttendance}
-                loadingSchedules={loadingSchedules}
-                loadingExistingRecords={loadingExistingRecords}
-                onEventTypeChange={setEventTypeFilter}
-                onScheduleChange={setScheduleId}
-                isMobile
-              />
-            </Box>
-
-            {/* Editing existing attendance alert */}
-            {hasExistingAttendance && (
-              <Alert
-                severity="info"
-                icon={<EditIcon sx={{ fontSize: { xs: 22, md: 18 } }} />}
-                sx={{
-                  py: { xs: 1.5, md: 1 },
-                  bgcolor: 'info.main',
-                  color: 'info.contrastText',
-                  border: 'none',
-                  borderRadius: 2,
-                  '& .MuiAlert-icon': {
-                    color: 'info.contrastText',
-                  },
-                }}
+            <ToggleButton value={EventCategory.VISIT}>Visitas</ToggleButton>
+            <ToggleButton value={EventCategory.MEETING}>Reuniões</ToggleButton>
+          </ToggleButtonGroup>
+          <TextField
+            select
+            fullWidth
+            label="Evento"
+            value={form.scheduleId}
+            disabled={form.formState.loading || !form.filteredSchedules.length}
+            onChange={(event) =>
+              changeSelection(() => {
+                form.setScheduleId(event.target.value);
+                setPage(1);
+              })
+            }
+            sx={{ minWidth: 0 }}
+          >
+            {form.filteredSchedules.map((schedule) => (
+              <MenuItem
+                key={`${schedule.id}-${schedule.category}`}
+                value={schedule.id}
+                sx={{ whiteSpace: "normal" }}
               >
-                <Typography variant="body2" fontWeight="bold" sx={{ fontSize: { xs: '0.9rem', md: '0.85rem' } }}>
-                  Editando frequência existente
-                </Typography>
+                {formatScheduleLabel(schedule)}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+        {form.selectionError && (
+          <Alert
+            severity="warning"
+            sx={{ mt: 2 }}
+            action={
+              <Button
+                onClick={() => form.setScheduleId("")}
+                color="inherit"
+                sx={{ minHeight: 44 }}
+              >
+                Escolher evento
+              </Button>
+            }
+          >
+            O evento deste link não está disponível para esta equipe e
+            categoria.
+          </Alert>
+        )}
+        {!form.filteredSchedules.length && (
+          <Alert
+            data-testid="team-attendance-no-events"
+            severity="info"
+            sx={{ mt: 2 }}
+          >
+            Nenhuma{" "}
+            {form.eventTypeFilter === EventCategory.VISIT
+              ? "visita"
+              : "reunião"}{" "}
+            agendada para esta equipe. Selecione outro tipo de evento ou confira
+            a agenda.
+          </Alert>
+        )}
+      </Box>
+      {form.loadError ? (
+        <Alert
+          data-testid="team-attendance-load-error"
+          severity="error"
+          action={
+            <Button
+              onClick={form.retryLoad}
+              color="inherit"
+              sx={{ minHeight: 44 }}
+            >
+              Tentar novamente
+            </Button>
+          }
+        >
+          {form.loadError}
+        </Alert>
+      ) : form.scheduleId && !form.ready ? (
+        <Box data-testid="team-attendance-loading" sx={{ py: 4 }}>
+          <LinearProgress />
+          <Typography sx={{ mt: 1 }}>
+            Carregando a frequência antes de liberar o preenchimento...
+          </Typography>
+        </Box>
+      ) : (
+        form.ready && (
+          <>
+            <Stack
+              direction="row"
+              gap={1}
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ mb: 2 }}
+            >
+              <Chip
+                label={`${form.counts.present} presentes`}
+                color="success"
+                variant="outlined"
+              />
+              <Chip
+                label={`${form.counts.absent} faltas`}
+                color="error"
+                variant="outlined"
+              />
+              <Chip
+                label={`${form.counts.pending} por marcar`}
+                variant="outlined"
+              />
+            </Stack>
+            {form.hasExistingAttendance && (
+              <Alert
+                data-testid="team-attendance-existing"
+                severity="info"
+                sx={{ mb: 2 }}
+              >
+                Esta frequência já tem registros. Confira as marcações antes de
+                atualizar.
               </Alert>
             )}
-
-            {/* Mobile summary and quick actions side by side */}
-            <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
-              <AttendanceSummaryCard
-                totalCount={membersOnly.length}
-                presentCount={presentCount}
-                absentCount={absentCount}
-                isMobile
+            <Box sx={{ ...attendanceCardSx, mb: 2 }}>
+              <Typography component="h2" variant="h6" fontWeight={800}>
+                Marque a presença de cada membro
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                As marcações só são enviadas quando você toca em salvar.
+              </Typography>
+              <TextField
+                label="Buscar membro"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+                fullWidth
+                size="small"
               />
-              <AttendanceQuickActions
-                onBulkSetType={bulkSetType}
-                onClearComments={clearAllComments}
-                disabled={formState.loading}
-                isMobile
-              />
+              <Button
+                disabled={disabled || !form.counts.pending}
+                onClick={() =>
+                  Object.values(form.memberAttendances)
+                    .filter((row) => row.type === null)
+                    .forEach((row) =>
+                      form.handleMemberTypeChange(
+                        row.member.id,
+                        AttendanceType.PRESENT,
+                      ),
+                    )
+                }
+                sx={{ minHeight: 44, mt: 1, color: attendanceColors.accent }}
+              >
+                Marcar pendentes como presentes
+              </Button>
             </Box>
-
-            {/* Desktop summary */}
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <AttendanceSummaryCard
-                totalCount={membersOnly.length}
-                presentCount={presentCount}
-                absentCount={absentCount}
+            <Stack spacing={1.5}>
+              {visible.map((row) => (
+                <AttendanceMemberRow
+                  key={`${form.scheduleId}-${form.eventTypeFilter}-${row.member.id}`}
+                  row={row}
+                  disabled={disabled}
+                  onTypeChange={(type) =>
+                    form.handleMemberTypeChange(row.member.id, type)
+                  }
+                  onCommentChange={(comment) =>
+                    form.handleMemberCommentChange(row.member.id, comment)
+                  }
+                />
+              ))}
+            </Stack>
+            {!members.length && (
+              <Alert severity="info" data-testid="team-attendance-no-members">
+                {search
+                  ? "Nenhum membro corresponde à busca."
+                  : "Esta equipe ainda não tem membros vinculados."}
+              </Alert>
+            )}
+            {pageCount > 1 && (
+              <Pagination
+                count={pageCount}
+                page={currentPage}
+                onChange={(_, value) => setPage(value)}
+                size="small"
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  my: 2,
+                  "& .MuiPaginationItem-root": { minWidth: 44, height: 44 },
+                }}
               />
-            </Box>
-
-            {/* Desktop quick actions */}
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <AttendanceQuickActions
-                onBulkSetType={bulkSetType}
-                onClearComments={clearAllComments}
-                disabled={formState.loading}
-              />
-            </Box>
-
-            {/* Desktop submit section */}
-            <Box
-              sx={{
-                display: { xs: 'none', md: 'block' },
-                position: 'sticky',
-                bottom: 0,
-                pt: 2,
-              }}
-            >
-              <AttendanceSubmitSection
-                formState={formState}
-                hasExistingAttendance={hasExistingAttendance}
-                isDisabled={isSubmitDisabled}
-                disabledReason={disabledReason}
-                onSubmit={handleSubmit}
-                onClearError={clearError}
-                onClearFeedback={clearFeedback}
-              />
-            </Box>
-          </Stack>
-        </Grid>
-
-        {/* Members list */}
-        <Grid item xs={12} md={8} lg={9}>
-          <MembersList
-            members={membersOnly}
-            memberAttendances={memberAttendances}
-            onTypeChange={handleMemberTypeChange}
-            onCommentChange={handleMemberCommentChange}
-            onBulkSetType={bulkSetType}
-            disabled={formState.loading}
-            teamId={team.teamId}
-            scheduleId={scheduleId}
-          />
-        </Grid>
-      </Grid>
-
-      {/* Mobile submit section */}
+            )}
+          </>
+        )
+      )}
       <Box
+        data-testid="team-attendance-save-bar"
         sx={{
-          display: { xs: 'block', md: 'none' },
-          position: 'sticky',
+          position: "sticky",
           bottom: 0,
-          left: 0,
-          right: 0,
+          mt: 2,
           p: 2,
-          bgcolor: 'background.default',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          zIndex: 10,
+          pb: "max(16px, env(safe-area-inset-bottom))",
+          borderTop: "1px solid",
+          borderColor: attendanceColors.border,
+          bgcolor: "background.paper",
+          zIndex: 5,
+          borderRadius: 2,
         }}
       >
-        <AttendanceSubmitSection
-          formState={formState}
-          hasExistingAttendance={hasExistingAttendance}
-          isDisabled={isSubmitDisabled}
-          disabledReason={disabledReason}
-          onSubmit={handleSubmit}
-          onClearError={clearError}
-          onClearFeedback={clearFeedback}
-          isMobile
-        />
+        {form.formState.error && (
+          <Alert
+            data-testid="team-attendance-error"
+            severity="error"
+            sx={{ mb: 1 }}
+          >
+            {form.formState.error}
+          </Alert>
+        )}
+        {form.formState.feedback && (
+          <Alert
+            data-testid="team-attendance-feedback"
+            severity="success"
+            sx={{ mb: 1 }}
+          >
+            {form.formState.feedback.message}
+          </Alert>
+        )}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          gap={1}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "center" }}
+        >
+          <Typography variant="body2" aria-live="polite" color="text.secondary">
+            {form.formState.loading
+              ? "Salvando, aguarde..."
+              : !form.ready
+                ? "Selecione e carregue um evento para continuar."
+                : form.counts.pending
+                  ? `${form.counts.pending} membro(s) ainda por marcar`
+                  : form.isDirty
+                    ? "Marcações prontas para salvar"
+                    : "Nenhuma alteração pendente"}
+          </Typography>
+          <Button
+            data-testid="team-attendance-submit"
+            startIcon={
+              form.formState.loading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <SaveOutlined />
+              )
+            }
+            variant="contained"
+            disabled={
+              disabled ||
+              !form.isDirty ||
+              form.counts.pending > 0 ||
+              !form.counts.total
+            }
+            onClick={() => void form.handleSubmit()}
+            sx={{ ...attendancePrimarySx, px: 3 }}
+          >
+            {form.formState.loading
+              ? "Salvando..."
+              : form.hasExistingAttendance
+                ? "Salvar alterações"
+                : "Salvar presenças"}
+          </Button>
+        </Stack>
       </Box>
+      <UnsavedChangesDialog
+        open={pendingAction !== null}
+        onStay={() => setPendingAction(null)}
+        onLeave={() => {
+          pendingAction?.();
+          setPendingAction(null);
+        }}
+      />
     </Box>
   );
-});
-
-TeamMemberAttendance.displayName = 'TeamMemberAttendance';
-
-export default TeamMemberAttendance;
+}

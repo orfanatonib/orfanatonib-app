@@ -20,7 +20,8 @@ import PersonalDataForm from '@/features/profile/components/PersonalDataForm';
 import PreferencesForm from '@/features/profile/components/PreferencesForm';
 import { PROFILE_ERROR_MESSAGES } from '@/constants/errors';
 import ProfileSidebar, { menuItems } from './components/ProfileSidebar';
-import ImagePreviewDialog from '@/components/Common/ImagePreviewDialog';
+import ImagePreviewDialog from '@/components/common/ImagePreviewDialog';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -116,8 +117,8 @@ const ProfilePage: React.FC = () => {
     try {
       setError(null);
       await dispatch(fetchCurrentUser());
-    } catch (err: any) {
-      setError(err?.response?.data?.message || PROFILE_ERROR_MESSAGES.UPDATE_GENERIC);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, PROFILE_ERROR_MESSAGES.UPDATE_GENERIC));
     }
   };
 
@@ -172,7 +173,7 @@ const ProfilePage: React.FC = () => {
 
   if (!initialized || isLoading) {
     return (
-      <Box
+      <Box data-testid="profile-page"
         sx={{
           minHeight: '100vh',
           display: 'flex',
@@ -262,7 +263,7 @@ const ProfilePage: React.FC = () => {
             </Box>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+              <Alert data-testid="profile-error" severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}

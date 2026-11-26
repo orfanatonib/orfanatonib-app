@@ -1,0 +1,40 @@
+import { describe, expect, it } from "vitest";
+
+import { isStudioRoot, studioRouteMeta } from "./shell.utils";
+
+describe("cabeçalho do Estúdio por rota", () => {
+  it("cada tela tem o seu título e a volta certa", () => {
+    expect(studioRouteMeta("/adm/estudio").title).toBe("Estúdio Orfanato");
+    expect(studioRouteMeta("/adm/estudio").backTo).toBeUndefined();
+    expect(studioRouteMeta("/adm/estudio/producao")).toMatchObject({ title: "Materiais para visita", backTo: "/adm/estudio" });
+    expect(studioRouteMeta("/adm/estudio/revisao").title).toBe("Revisão editorial");
+    expect(studioRouteMeta("/adm/estudio/orientacoes").title).toBe("Orientações de criação");
+  });
+  it("o material abre voltando para a lista, não para a visão geral", () => {
+    expect(studioRouteMeta("/adm/estudio/pacotes/abc-123")).toMatchObject({
+      title: "Material para visita",
+      backTo: "/adm/estudio/producao",
+      backLabel: "Voltar aos materiais",
+      detail: true,
+    });
+    // Revisão: a lista tem título; o detalhe tem UMA volta (para a lista) e nenhum título repetido.
+    expect(studioRouteMeta("/adm/estudio/revisao")).toMatchObject({
+      title: "Revisão editorial",
+      backTo: "/adm/estudio",
+      backLabel: "Voltar à visão geral",
+    });
+    expect(studioRouteMeta("/adm/estudio/revisao").detail).toBeUndefined();
+    expect(studioRouteMeta("/adm/estudio/revisao/abc-123")).toMatchObject({
+      backTo: "/adm/estudio/revisao",
+      backLabel: "Voltar para a revisão",
+      detail: true,
+    });
+    expect(studioRouteMeta("/adm/estudio/revisao/abc-123/").detail).toBe(true);
+  });
+  it("barra final e rota desconhecida não quebram", () => {
+    expect(studioRouteMeta("/adm/estudio/")).toMatchObject({ title: "Estúdio Orfanato" });
+    expect(studioRouteMeta("/adm/estudio/xyz").title).toBe("Estúdio Orfanato");
+    expect(isStudioRoot("/adm/estudio/")).toBe(true);
+    expect(isStudioRoot("/adm/estudio/producao")).toBe(false);
+  });
+});

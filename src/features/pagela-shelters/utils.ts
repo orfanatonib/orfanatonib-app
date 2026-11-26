@@ -17,13 +17,14 @@ export function useDebounced<T>(value: T, delay = 350) {
     return v;
 }
 
+/** `AAAA-MM-DD` é data de calendário: não passa por `Date` (UTC) para não voltar um dia em fusos negativos. */
+const CALENDAR_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 export function fmtDate(isoLike: string) {
+    const calendar = CALENDAR_DATE.exec(isoLike);
+    if (calendar) return `${calendar[3]}/${calendar[2]}/${calendar[1]}`;
     const d = new Date(isoLike);
-    if (Number.isNaN(d.getTime())) {
-        const [y, m, day] = isoLike.split("-").map(Number);
-        if (y && m && day) return `${String(day).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
-        return isoLike;
-    }
+    if (Number.isNaN(d.getTime())) return isoLike;
     return d.toLocaleDateString("pt-BR");
 }
 

@@ -17,8 +17,9 @@ export const initSentry = () => {
     beforeSend(event, hint) {
       const error = hint.originalException;
       if (error && typeof error === 'object') {
-        const message = (error as any).message || '';
-        const stack = (error as any).stack || '';
+        const { message: rawMessage, stack: rawStack } = error as { message?: unknown; stack?: unknown };
+        const message = typeof rawMessage === 'string' ? rawMessage : '';
+        const stack = typeof rawStack === 'string' ? rawStack : '';
 
         if (message.includes('Loading chunk') && message.includes('failed')) {
           return null;

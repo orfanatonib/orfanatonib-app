@@ -42,7 +42,7 @@ const getPreviewUrl = (media: MediaItem): string => {
 export default function ImageItem({ mediaItems, onRemoveMedia }: ImageItemProps) {
   if (mediaItems.length === 0) {
     return (
-      <Alert severity="warning" sx={{ mb: 2 }}>
+      <Alert data-testid="image-item-empty" severity="warning" sx={{ mb: 2 }}>
         Nenhuma mídia adicionada nesta seção.
       </Alert>
     );
@@ -50,6 +50,7 @@ export default function ImageItem({ mediaItems, onRemoveMedia }: ImageItemProps)
 
   return (
     <Swiper
+      data-testid="image-item-carousel"
       modules={[Navigation, Pagination, Autoplay]}
       navigation
       pagination={{ clickable: true }}
@@ -61,11 +62,14 @@ export default function ImageItem({ mediaItems, onRemoveMedia }: ImageItemProps)
         <SwiperSlide key={index}>
           <Box sx={{ position: 'relative' }}>
             <img
+              data-testid="image-item-preview"
               src={getPreviewUrl(media)}
               alt={media.title || `Mídia ${index + 1}`}
               style={{ width: '100%', height: 300, objectFit: 'cover' }}
             />
             <IconButton
+              data-testid="image-item-remove"
+              aria-label="Remover mídia"
               onClick={() => onRemoveMedia(index)}
               sx={{
                 position: 'absolute',

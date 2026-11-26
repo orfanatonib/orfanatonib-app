@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { AxiosError } from "axios";
 import {
   apiListTeams,
   apiGetTeam,
@@ -22,8 +23,12 @@ export function useTeams(shelterId?: string) {
         ? await apiGetTeamsByShelter(shelterId)
         : await apiListTeams();
       setTeams(data || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || "Erro ao listar equipes");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || err.message || "Erro ao listar equipes");
+      } else {
+        setError("Erro ao listar equipes");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,8 +64,12 @@ export function useTeamMutations(onSuccess?: () => Promise<void>) {
       try {
         await apiCreateTeam(payload);
         if (onSuccess) await onSuccess();
-      } catch (err: any) {
-        setError(err?.response?.data?.message || err.message || "Erro ao criar equipe");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setError(err.response?.data?.message || err.message || "Erro ao criar equipe");
+        } else {
+          setError("Erro ao criar equipe");
+        }
         throw err;
       } finally {
         setLoading(false);
@@ -76,8 +85,12 @@ export function useTeamMutations(onSuccess?: () => Promise<void>) {
       try {
         await apiUpdateTeam(teamId, payload);
         if (onSuccess) await onSuccess();
-      } catch (err: any) {
-        setError(err?.response?.data?.message || err.message || "Erro ao atualizar equipe");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setError(err.response?.data?.message || err.message || "Erro ao atualizar equipe");
+        } else {
+          setError("Erro ao atualizar equipe");
+        }
         throw err;
       } finally {
         setLoading(false);
@@ -93,8 +106,12 @@ export function useTeamMutations(onSuccess?: () => Promise<void>) {
       try {
         await apiDeleteTeam(teamId);
         if (onSuccess) await onSuccess();
-      } catch (err: any) {
-        setError(err?.response?.data?.message || err.message || "Erro ao remover equipe");
+      } catch (err: unknown) {
+        if (err instanceof AxiosError) {
+          setError(err.response?.data?.message || err.message || "Erro ao remover equipe");
+        } else {
+          setError("Erro ao remover equipe");
+        }
         throw err;
       } finally {
         setLoading(false);

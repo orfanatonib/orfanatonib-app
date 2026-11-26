@@ -1,169 +1,83 @@
-import React from "react";
-import {
-  Card,
-  CardContent,
-  Box,
-  Badge,
-  IconButton,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
-import {
-  CalendarMonth as CalendarIcon,
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Event as EventIcon,
-} from "@mui/icons-material";
+import { Event as EventIcon, Edit as EditIcon, Visibility as VisibilityIcon } from "@mui/icons-material";
 import dayjs from "dayjs";
 
+import { AdminChipRow, AdminEntityCard, type AdminCardAction } from "@/components/common/admin-shell";
+import type { AdminChipRowItem } from "@/components/common/admin-shell/chipRow.types";
 import { ShelterScheduleResponseDto } from "../types";
 
 interface VisitCardProps {
   schedule: ShelterScheduleResponseDto;
-  isSelected: boolean;
-  getVisitColor: (visitNumber: number) => string;
   onViewDetails: (schedule: ShelterScheduleResponseDto) => void;
   onEdit: (schedule: ShelterScheduleResponseDto) => void;
   onDelete: (schedule: ShelterScheduleResponseDto) => void;
 }
 
-export default function VisitCard({
-  schedule,
-  isSelected,
-  getVisitColor,
-  onViewDetails,
-  onEdit,
-  onDelete,
-}: VisitCardProps) {
-  const theme = useTheme();
+/** Cartão de um agendamento: abrigo, equipe, lição e datas (casca `AdminEntityCard`). */
+export default function VisitCard({ schedule, onViewDetails, onEdit, onDelete }: VisitCardProps) {
+  const id = schedule.id;
+  const { shelter } = schedule;
+  const place = shelter.address?.city ? ` · ${shelter.address.city}/${shelter.address.state}` : "";
+
+  const chips: AdminChipRowItem[] = [
+    { key: "number", label: `Visita nº ${schedule.visitNumber}`, testId: `shelter-schedule-card-number-${id}`, color: "primary" },
+  ];
+  if (schedule.visitDate) {
+    chips.push({
+      key: "visit",
+      label: `${dayjs(schedule.visitDate).format("DD/MM")} (Visita)`,
+      testId: `shelter-schedule-card-visit-${id}`,
+      color: "success",
+      icon: <EventIcon />,
+    });
+  }
+  if (schedule.meetingDate) {
+    chips.push({
+      key: "meeting",
+      label: `${dayjs(schedule.meetingDate).format("DD/MM")} (Reunião)`,
+      testId: `shelter-schedule-card-meeting-${id}`,
+      color: "info",
+      icon: <EventIcon />,
+    });
+  }
+  if (!schedule.visitDate && !schedule.meetingDate) {
+    chips.push({ key: "tbd", label: "Data a definir", testId: `shelter-schedule-card-tbd-${id}`, icon: <EventIcon /> });
+  }
+
+  const actions: AdminCardAction[] = [
+    {
+      key: "details",
+      label: "Detalhes",
+      ariaLabel: "Ver detalhes",
+      testId: `schedule-details-${id}`,
+      variant: "outlined",
+      icon: <VisibilityIcon />,
+      onClick: () => onViewDetails(schedule),
+    },
+    {
+      key: "edit",
+      label: "Editar",
+      ariaLabel: "Editar agendamento",
+      testId: `schedule-edit-${id}`,
+      variant: "outlined",
+      icon: <EditIcon />,
+      onClick: () => onEdit(schedule),
+    },
+  ];
 
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: `2px solid ${isSelected ? theme.palette.primary.main : "transparent"}`,
-        transition: "all 0.15s ease",
-        "&:hover": {
-          boxShadow: 4,
-          borderColor: alpha(theme.palette.primary.main, 0.3),
-        },
-        minWidth: 0,
-      }}
-    >
-      <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 1,
-          }}
-        >
-          <Badge
-            badgeContent={schedule.visitNumber}
-            sx={{
-              "& .MuiBadge-badge": {
-                bgcolor: getVisitColor(schedule.visitNumber),
-                color: "white",
-                fontWeight: "bold",
-                fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                minWidth: { xs: 20, sm: 24 },
-                height: { xs: 20, sm: 24 },
-              },
-            }}
-          >
-            <CalendarIcon
-              sx={{
-                fontSize: { xs: 24, sm: 28 },
-                color: getVisitColor(schedule.visitNumber),
-                opacity: 0.8,
-              }}
-            />
-          </Badge>
-
-          <Box sx={{ display: "flex", flexWrap: "nowrap" }}>
-            <IconButton
-              size="small"
-              color="info"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewDetails(schedule);
-              }}
-              sx={{ p: 0.5 }}
-              title="Ver detalhes"
-            >
-              <VisibilityIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(schedule);
-              }}
-              sx={{ p: 0.5 }}
-            >
-              <EditIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-            <IconButton
-              size="small"
-              color="error"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(schedule);
-              }}
-              sx={{ p: 0.5 }}
-            >
-              <DeleteIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Typography
-          variant="subtitle2"
-          fontWeight="bold"
-          sx={{
-            display: "-webkit-box",
-            WebkitLineClamp: { xs: 1, sm: 2 },
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            lineHeight: 1.3,
-            minHeight: { xs: "auto", sm: 34 },
-            fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            wordBreak: "break-word",
-          }}
-        >
-          {schedule.lessonContent}
-        </Typography>
-
-        <Box mt={1} display="flex" flexDirection="row" flexWrap="wrap" gap={1.5}>
-          {schedule.visitDate && (
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <EventIcon sx={{ fontSize: 12, color: "success.main" }} />
-              <Typography variant="caption" color="text.secondary">
-                {dayjs(schedule.visitDate).format("DD/MM")} (Visita)
-              </Typography>
-            </Box>
-          )}
-          {schedule.meetingDate && (
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <EventIcon sx={{ fontSize: 12, color: "info.main" }} />
-              <Typography variant="caption" color="text.secondary">
-                {dayjs(schedule.meetingDate).format("DD/MM")} (Reunião)
-              </Typography>
-            </Box>
-          )}
-          {!schedule.visitDate && !schedule.meetingDate && (
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <EventIcon sx={{ fontSize: 12, color: "text.disabled" }} />
-              <Typography variant="caption" color="text.secondary">
-                Data a definir
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </CardContent>
-    </Card>
+    <AdminEntityCard
+      testId={`shelter-schedule-card-${id}`}
+      title={shelter.name}
+      titleTestId={`shelter-schedule-card-title-${id}`}
+      subtitle={`Equipe ${shelter.team.numberTeam}${place}`}
+      subtitleTestId={`shelter-schedule-card-team-${id}`}
+      description={schedule.lessonContent}
+      descriptionTestId={`shelter-schedule-card-lesson-${id}`}
+      meta={<AdminChipRow testId={`shelter-schedule-card-dates-${id}`} chips={chips} />}
+      actions={actions}
+      onDelete={() => onDelete(schedule)}
+      deleteTestId={`schedule-delete-${id}`}
+      deleteLabel="Excluir agendamento"
+    />
   );
 }

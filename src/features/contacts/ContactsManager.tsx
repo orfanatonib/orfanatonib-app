@@ -1,26 +1,76 @@
-import React from "react";
-import { Box, Snackbar, Alert, Container } from "@mui/material";
-import { motion } from "framer-motion";
-import { useContacts, useContactMutations, useContactSearch } from "./hooks";
-import ContactToolbar from "./components/ContactToolbar";
-import ContactGrid from "./components/ContactGrid";
-import ContactDetailsModal from "./components/ContactDetailsModal";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
-import BackHeader from "@/components/common/header/BackHeader";
-import { Contact, SnackbarKind } from "./types";
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Snackbar } from '@mui/material';
+import { ContactPhone } from '@mui/icons-material';
+import { useRefreshPendingCounts } from '@/features/admin-pending-counts';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
+import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import ContactCard from './components/ContactCard';
+import ContactDetailsModal from './components/ContactDetailsModal';
+import { fetchContactsPage } from './api';
+import {
+  CONTACTS_DEFAULT_SORT,
+  CONTACTS_LABELS,
+  CONTACTS_TEST_ID_PREFIX,
+  CONTACT_FILTER_KEYS,
+  CONTACT_SORT_OPTIONS,
+} from './constants';
+import { useContactMutations } from './hooks';
+import { ContactReadFilter } from './types';
+import type { Contact, SnackbarKind } from './types';
+
+const P = CONTACTS_TEST_ID_PREFIX;
+const K = CONTACT_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.READ,
+    label: CONTACTS_LABELS.FILTER_STATUS,
+    allLabel: CONTACTS_LABELS.FILTER_STATUS_ALL,
+    options: [
+      { value: ContactReadFilter.UNREAD, label: CONTACTS_LABELS.UNREAD },
+      { value: ContactReadFilter.READ, label: CONTACTS_LABELS.READ },
+    ],
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: CONTACTS_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: CONTACTS_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: CONTACTS_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: CONTACT_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: CONTACTS_DEFAULT_SORT };
 
 export default function ContactsManager() {
-  const { contacts, loading, error, setError, fetchContacts } = useContacts();
-  const { searchTerm, setSearchTerm, filtered } = useContactSearch(contacts);
-  const { busy, error: mError, setError: setMError, remove, markAsRead } =
-    useContactMutations(fetchContacts);
+  const list = useAdminList<Contact>({
+    fetcher: fetchContactsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: CONTACTS_LABELS.LOAD_ERROR,
+  });
+  const refreshPending = useRefreshPendingCounts();
+  const { reload } = list;
 
-  const [selected, setSelected] = React.useState<Contact | null>(null);
-  const [toDelete, setToDelete] = React.useState<Contact | null>(null);
-  const [snackbar, setSnackbar] = React.useState({
+  useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
+
+  const refetchAll = useCallback(() => {
+    reload();
+    void refreshPending();
+  }, [reload, refreshPending]);
+  const { remove, markAsRead } = useContactMutations(refetchAll);
+
+  const [selected, setSelected] = useState<Contact | null>(null);
+  const [toDelete, setToDelete] = useState<Contact | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: SnackbarKind }>({
     open: false,
-    message: "",
-    severity: "success" as SnackbarKind,
+    message: '',
+    severity: 'success',
   });
 
   const showSnackbar = (message: string, severity: SnackbarKind) =>
@@ -30,84 +80,82 @@ export default function ContactsManager() {
     if (!toDelete) return;
     try {
       await remove(toDelete.id);
-      showSnackbar("Contato excluído com sucesso", "success");
+      showSnackbar(CONTACTS_LABELS.DELETED_OK, 'success');
     } catch {
-      showSnackbar(mError || "Erro ao excluir contato", "error");
+      showSnackbar(CONTACTS_LABELS.DELETE_ERROR, 'error');
     } finally {
       setToDelete(null);
     }
   };
 
-  const handleMarkAsRead = async () => {
-    if (!selected) return;
+  const handleMarkAsRead = async (contact: Contact) => {
     try {
-      await markAsRead(selected.id);
-      showSnackbar("Contato marcado como lido", "success");
+      await markAsRead(contact.id);
+      showSnackbar(CONTACTS_LABELS.MARKED_OK, 'success');
     } catch {
-      showSnackbar(mError || "Erro ao marcar como lido", "error");
+      showSnackbar(CONTACTS_LABELS.MARK_ERROR, 'error');
     }
   };
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="📞 Gerenciar Contatos" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <ContactToolbar
-            search={searchTerm}
-            onSearchChange={setSearchTerm}
-            onRefresh={fetchContacts}
-            loading={busy}
+    <AdminListScreen
+      testIdPrefix={P}
+      title={CONTACTS_LABELS.TITLE}
+      searchLabel={CONTACTS_LABELS.SEARCH}
+      searchPlaceholder={CONTACTS_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={CONTACTS_LABELS.EMPTY}
+      emptyIcon={<ContactPhone sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      overlays={
+        <>
+          <ContactDetailsModal
+            contact={selected}
+            onClose={() => setSelected(null)}
+            onMarkAsRead={() => selected && handleMarkAsRead(selected)}
+            onDelete={() => {
+              if (selected) setToDelete(selected);
+              setSelected(null);
+            }}
           />
-        </motion.div>
 
-        <ContactGrid
-          items={filtered}
-          loading={loading}
-          error={error}
-          onView={(c) => setSelected(c)}
-          onDeleteAsk={(c) => setToDelete(c)}
-        />
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!toDelete}
+            title={toDelete?.name || ''}
+            onClose={() => setToDelete(null)}
+            onConfirm={handleDelete}
+          />
 
-        <ContactDetailsModal
-          contact={selected}
-          onClose={() => setSelected(null)}
-          onMarkAsRead={handleMarkAsRead}
-          onDelete={() => {
-            if (selected) setToDelete(selected);
-            setSelected(null);
-          }}
-        />
-
-        <DeleteConfirmDialog
-          open={!!toDelete}
-          title={toDelete?.name || ""}
-          onClose={() => setToDelete(null)}
-          onConfirm={handleDelete}
-        />
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={5000}
-          onClose={() => setSnackbar((p) => ({ ...p, open: false }))}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity={snackbar.severity} variant="filled" sx={{ borderRadius: 2 }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
-    </Box>
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={5000}
+            onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          >
+            <Alert
+              data-testid={`${P}-snackbar`}
+              severity={snackbar.severity}
+              variant="filled"
+              sx={{ borderRadius: 2 }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((contact) => (
+          <ContactCard
+            key={contact.id}
+            contact={contact}
+            onView={setSelected}
+            onMarkRead={handleMarkAsRead}
+            onDelete={setToDelete}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

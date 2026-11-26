@@ -92,7 +92,7 @@ export function useErrorHandler(context?: string): UseErrorHandlerResult {
       {
         showNotification: options?.showNotification ?? true,
         retry: false,
-        fallback: options?.fallback,
+        fallback: options?.fallback as T | undefined,
       }
     );
 
@@ -161,7 +161,7 @@ export function useErrorHandler(context?: string): UseErrorHandlerResult {
         error: appError,
       }));
 
-      return options?.fallback;
+      return options?.fallback as T | undefined;
     }
   }, [context]);
 

@@ -1,4 +1,7 @@
 import api from "@/config/axiosConfig";
+import { uploadProgressPercent } from "@/utils/mediaUpload";
+import { buildListQuery } from "@/components/common/admin-shell/listQuery";
+import type { AdminListFetcher } from "@/components/common/admin-shell/types";
 import { 
   Profile, 
   UpdateProfileDto, 
@@ -28,12 +31,16 @@ export async function apiChangePassword(payload: ChangePasswordDto): Promise<{ m
 }
 
 export async function apiUpdateProfileImage(
-  payload: UpdateProfileImageDto | FormData
+  payload: UpdateProfileImageDto | FormData,
+  onProgress?: (percent: number) => void
 ): Promise<Profile> {
   const { data } = await api.patch<Profile>("/profile/image", payload, {
     headers: payload instanceof FormData 
       ? { 'Content-Type': 'multipart/form-data' }
-      : { 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' },
+    onUploadProgress: onProgress
+      ? (event) => onProgress(uploadProgressPercent(event.loaded, event.total))
+      : undefined,
   });
   return data;
 }
@@ -72,6 +79,12 @@ export async function apiGetAllProfiles(params?: QueryProfilesDto): Promise<Pagi
   const { data } = await api.get<PaginatedProfilesResponse>("/profiles", { params: cleanParams });
   return data;
 }
+
+/** Página de perfis filtrada, ordenada e paginada no servidor (`{ items, meta }` vira itens e total). */
+export const fetchProfilesPage: AdminListFetcher<CompleteProfileListItem> = async (params, signal) => {
+  const { data } = await api.get<PaginatedProfilesResponse>("/profiles", { params: buildListQuery(params), signal });
+  return { items: data.items, total: data.meta.totalItems, totalPages: Math.max(1, data.meta.totalPages) };
+};
 
 export async function apiGetProfileById(id: string): Promise<CompleteProfile> {
   const { data } = await api.get<CompleteProfile>(`/profiles/${id}`);

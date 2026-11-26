@@ -3,18 +3,13 @@ export interface BannerSectionProps {
   showMeditationBanner: boolean;
 }
 
-export interface MotivationSectionProps {
-  motivationText: string;
-}
-
 export interface MemberContentProps {
   userName?: string;
 }
 
-export interface SpecialFamilyCalloutProps {
-}
-
 export interface IdeasSharingBannerProps {
+  variant?: 'full' | 'compact';
+  forceColumnLayout?: boolean;
 }
 
 export interface InformativeBannerProps {
@@ -30,4 +25,11 @@ export interface MemberAreaState {
   loading: boolean;
   showWeek: boolean;
   showMeditation: boolean;
+}
+
+export * from './navigation';
+export * from './gallery';
+
+export interface MemberQuickActionsProps {
+  references: readonly string[];
 }

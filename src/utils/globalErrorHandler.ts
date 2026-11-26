@@ -189,7 +189,14 @@ class GlobalErrorHandler {
     };
 
     const originalOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...args: any[]) {
+    XMLHttpRequest.prototype.open = function (
+      this: XMLHttpRequest,
+      method: string,
+      url: string | URL,
+      async: boolean = true,
+      username?: string | null,
+      password?: string | null,
+    ) {
       const xhrUrl = url.toString();
       this.addEventListener('error', () => {
         const errorKey = `xhr-error-${xhrUrl}`;
@@ -210,7 +217,8 @@ class GlobalErrorHandler {
         }
       });
 
-      return (originalOpen as any).apply(this, [method, url, ...args]);
+
+      return originalOpen.call(this, method, url, async, username, password);
     };
   }
 
@@ -244,7 +252,7 @@ class GlobalErrorHandler {
     }
   }
 
-  reportCustomError(error: unknown, context: Record<string, any> = {}): void {
+  reportCustomError(error: unknown, context: Record<string, unknown> = {}): void {
     const errorKey = `custom-error-${error?.toString() || 'unknown'}`;
 
     if (!this.shouldReportError(errorKey)) {

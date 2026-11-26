@@ -30,7 +30,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SendIcon from '@mui/icons-material/Send';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import api from '@/config/axiosConfig';
+import { apiGetPublishedComments, apiSubmitComment } from '@/features/comments/api';
 import { setComments } from 'store/slices/comment/commentsSlice';
 
 const CommentsSection: React.FC = () => {
@@ -44,6 +44,7 @@ const CommentsSection: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const MAX_COMMENT_LENGTH = 500;
 
   const [formData, setFormData] = useState({
@@ -62,9 +63,9 @@ const CommentsSection: React.FC = () => {
 
   const fetchComments = useCallback(async () => {
     try {
-      const response = await api.get('/comments/published');
-      dispatch(setComments(response.data));
+      dispatch(setComments(await apiGetPublishedComments()));
     } catch {
+      setErrorSnackbarOpen(true);
     }
   }, [dispatch]);
 
@@ -85,13 +86,14 @@ const CommentsSection: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.post('/comments', formData);
+      await apiSubmitComment(formData);
       setFormData({ name: '', comment: '', shelter: '', neighborhood: '' });
       setErrors({ name: false, comment: false, shelter: false, neighborhood: false });
       setFormOpen(false);
       setSuccessSnackbarOpen(true);
       await fetchComments();
     } catch {
+      setErrorSnackbarOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -99,6 +101,10 @@ const CommentsSection: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSuccessSnackbarOpen(false);
+  };
+
+  const handleCloseErrorSnackbar = () => {
+    setErrorSnackbarOpen(false);
   };
 
   const scrollComments = (direction: 'left' | 'right') => {
@@ -150,6 +156,7 @@ const CommentsSection: React.FC = () => {
 
   return (
     <motion.div
+      data-testid="member-comments-section"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -234,6 +241,7 @@ const CommentsSection: React.FC = () => {
               whileTap={{ scale: 0.98 }}
             >
               <Button
+                data-testid="member-comments-toggle-form"
                 variant="contained"
                 size="medium"
                 startIcon={<ExpandMoreIcon sx={{ transform: formOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }} />}
@@ -279,6 +287,7 @@ const CommentsSection: React.FC = () => {
                 transition={{ duration: 0.4 }}
               >
                 <Card
+                  data-testid="member-comments-form"
                   elevation={3}
                   sx={{
                     borderRadius: 3,
@@ -317,6 +326,7 @@ const CommentsSection: React.FC = () => {
                         <Grid item xs={12} sm={field === 'comment' ? 12 : 6} md={field === 'comment' ? 8 : 4} key={field}>
                           <Box sx={{ position: 'relative' }}>
                             <TextField
+                              data-testid={`member-comments-field-${field}`}
                               fullWidth
                               required
                               label={labels[field]}
@@ -391,6 +401,7 @@ const CommentsSection: React.FC = () => {
                         whileTap={{ scale: 0.95 }}
                       >
                         <Button
+                          data-testid="member-comments-submit"
                           variant="contained"
                           color="primary"
                           size="medium"
@@ -452,6 +463,8 @@ const CommentsSection: React.FC = () => {
                     <>
                       <IconButton
                         onClick={() => scrollComments('left')}
+                        data-testid="member-comments-scroll-left"
+                        aria-label="Rolar comentários para a esquerda"
                         sx={{
                           position: 'absolute',
                           left: { xs: -2, sm: 8 },
@@ -478,6 +491,8 @@ const CommentsSection: React.FC = () => {
                       </IconButton>
                       <IconButton
                         onClick={() => scrollComments('right')}
+                        data-testid="member-comments-scroll-right"
+                        aria-label="Rolar comentários para a direita"
                         sx={{
                           position: 'absolute',
                           right: { xs: -2, sm: 8 },
@@ -507,6 +522,7 @@ const CommentsSection: React.FC = () => {
 
                   <Box
                     ref={commentsScrollRef}
+                    data-testid="member-comments-list"
                     sx={{
                       display: 'flex',
                       gap: 2,
@@ -534,6 +550,7 @@ const CommentsSection: React.FC = () => {
                   >
                     {comments.map((comment, index) => (
                       <Card
+                        data-testid={`member-comments-card-${comment.id}`}
                         key={comment.id}
                         elevation={4}
                         sx={{
@@ -710,6 +727,7 @@ const CommentsSection: React.FC = () => {
                 transition={{ duration: 0.6 }}
               >
                 <Paper
+                  data-testid="member-comments-empty"
                   elevation={1}
                   sx={{
                     p: 4,
@@ -739,6 +757,7 @@ const CommentsSection: React.FC = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
+          data-testid="member-comments-success"
           onClose={handleCloseSnackbar}
           severity="success"
           sx={{
@@ -748,6 +767,25 @@ const CommentsSection: React.FC = () => {
           }}
         >
           ✅ Comentário enviado com sucesso! Ele será avaliado antes de ser publicado.
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={errorSnackbarOpen}
+        autoHideDuration={5000}
+        onClose={handleCloseErrorSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          data-testid="member-comments-error"
+          onClose={handleCloseErrorSnackbar}
+          severity="error"
+          sx={{
+            width: '100%',
+            borderRadius: 2,
+            boxShadow: 6,
+          }}
+        >
+          Não foi possível processar os comentários. Tente novamente em instantes.
         </Alert>
       </Snackbar>
     </motion.div>

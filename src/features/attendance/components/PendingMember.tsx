@@ -13,9 +13,11 @@ import {
 import { getAllPendings } from '../api';
 import { EventCategory } from '../types';
 import type { PendingForMemberDto } from '../types';
+import { attendanceErrorMessage } from '../errors';
+import { formatDayBR } from 'utils/dateUtils';
 
 const formatScheduleLabel = (pending: PendingForMemberDto) => {
-  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const readableDate = formatDayBR(pending.date);
   const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
@@ -31,8 +33,8 @@ const PendingMember = () => {
     try {
       const res = await getAllPendings();
       setPendings(res.memberPendings);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências do membro.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao buscar pendências do membro.');
       setError(message);
       setPendings([]);
     } finally {

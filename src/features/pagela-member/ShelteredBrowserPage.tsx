@@ -14,12 +14,16 @@ import { selectIsAdmin, selectIsLeader, selectIsMember } from "@/store/selectors
 import { useShelteredBrowser } from "./hooks";
 import ShelteredCard from "./components/ShelteredCard";
 import { CreateShelteredForm, EditShelteredForm, ShelteredResponseDto } from "../sheltered/types";
+import { ShelteredFormMode, ShelteredGender } from "../sheltered/enums";
 import { useShelteredMutations } from "../sheltered/hooks";
 import ShelteredFormDialog from "../sheltered/components/ShelteredFormDialog";
 import { apiFetchSheltered } from "../sheltered/api";
 import NoShelterLinkedPage from "./NoShelterLinkedPage";
 import { useDispatch } from "react-redux";
 import { fetchCurrentUser } from "@/store/slices/auth/authSlice";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import { logger } from '@/utils/logger';
+import { MIN_TOUCH_TARGET_PX, SHELTERED_AREA_TESTID_PREFIX as TID } from "./constants";
 
 export default function ShelteredBrowserPage() {
   const nav = useNavigate();
@@ -126,7 +130,7 @@ export default function ShelteredBrowserPage() {
 
         setFullProfile(updatedUser);
       } catch (error) {
-        console.error('Falha ao verificar vínculo com abrigo:', error);
+        logger.error('Falha ao verificar vínculo com abrigo:', undefined, error);
         hasCheckedProfileRef.current = false;
       } finally {
         setCheckingShelter(false);
@@ -207,6 +211,7 @@ export default function ShelteredBrowserPage() {
     },
   };
 
+  const hasFilters = Boolean(q) || acceptedJesus !== "all" || active !== "all";
   const [creating, setCreating] = React.useState<CreateShelteredForm | null>(null);
   const [editing, setEditing] = React.useState<EditShelteredForm | null>(null);
 
@@ -223,77 +228,59 @@ export default function ShelteredBrowserPage() {
   const openCreate = () =>
     setCreating({
       name: "",
-      gender: "M",
+      gender: ShelteredGender.MALE,
       guardianName: "",
       guardianPhone: "",
       birthDate: "",
       joinedAt: null,
       shelterId: null,
-      address: { street: "", district: "", city: "", state: "", postalCode: "" } as any,
+      address: { street: "", district: "", city: "", state: "", postalCode: "" },
     });
 
   const submitCreate = async () => {
     if (!creating) return;
-    const payload = { ...creating };
-    if (!payload.joinedAt) payload.joinedAt = null;
-    if (!payload.shelterId) payload.shelterId = null as any;
-
-    try {
-      await createSheltered(payload, 1, 12);
-      setCreating(null);
-      setDialogError("");
-    } catch (error: any) {
-      console.error('Erro ao criar acolhido:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao criar acolhido. Tente novamente.");
-    }
+    const created = await createSheltered({
+      ...creating,
+      joinedAt: creating.joinedAt || null,
+      shelterId: creating.shelterId || null,
+    });
+    if (created) setCreating(null);
   };
 
   const openEdit = async (shelteredId: string) => {
     try {
       const full: ShelteredResponseDto = await apiFetchSheltered(shelteredId);
-      const isoToBr = (raw?: string | null) => {
-        if (!raw) return raw ?? "";
-        const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
-      };
       setEditing({
         id: full.id,
-        name: full.name ?? "",
-        gender: (full.gender as any) ?? "M",
+        name: full.name,
+        gender: full.gender,
         guardianName: full.guardianName ?? "",
         guardianPhone: full.guardianPhone ?? "",
-        birthDate: isoToBr(full.birthDate ?? ""),
-        joinedAt: (isoToBr((full as any).joinedAt) as any) || null,
-        shelterId: (full as any)?.shelter?.id ?? null,
+        birthDate: full.birthDate,
+        joinedAt: full.joinedAt,
+        shelterId: full.shelter?.id ?? null,
         address: full.address
           ? {
             street: full.address.street ?? "",
-            number: (full.address as any).number ?? "",
+            number: full.address.number ?? "",
             district: full.address.district ?? "",
-            city: full.address.city ?? "",
-            state: full.address.state ?? "",
+            city: full.address.city,
+            state: full.address.state,
             postalCode: full.address.postalCode ?? "",
-            complement: (full.address as any).complement ?? "",
+            complement: full.address.complement ?? "",
           }
-          : { street: "", number: "", district: "", city: "", state: "", postalCode: "", complement: "" } as any,
+          : { street: "", number: "", district: "", city: "", state: "", postalCode: "", complement: "" },
       });
       setDialogError("");
-    } catch (e: any) {
-      setDialogError(e?.response?.data?.message || e?.message || "Não foi possível abrir o acolhido para edição");
+    } catch (e: unknown) {
+      setDialogError(getApiErrorMessage(e, "Não foi possível abrir o acolhido para edição"));
     }
   };
 
   const submitEdit = async () => {
     if (!editing) return;
     const { id, ...rest } = editing;
-    try {
-      await updateSheltered(id, rest, 1, 12);
-      setEditing(null);
-      setDialogError("");
-    } catch (error: any) {
-      console.error('Erro ao atualizar acolhido:', error);
-      setDialogError(error?.response?.data?.message || error?.message || "Erro ao atualizar acolhido. Tente novamente.");
-    }
+    if (await updateSheltered(id, rest)) setEditing(null);
   };
 
   React.useEffect(() => {
@@ -306,6 +293,7 @@ export default function ShelteredBrowserPage() {
 
   return (
     <Box
+      data-testid={`${TID}-page`}
       sx={{
         px: { xs: 1.5, sm: 2, md: 4 },
         pt: { xs: 1.5, sm: 2, md: 4 },
@@ -330,6 +318,7 @@ export default function ShelteredBrowserPage() {
               <IconButton
                 onClick={() => nav(-1)}
                 aria-label="Voltar para a página anterior"
+                data-testid={`${TID}-back`}
                 sx={{
                   mr: 0.5,
                   bgcolor: "white",
@@ -345,6 +334,7 @@ export default function ShelteredBrowserPage() {
           <Box>
             <Typography
               component="h1"
+              data-testid={`${TID}-heading`}
               variant="h5"
               fontWeight={900}
               sx={{ color: "#2c3e50", fontSize: { xs: "1.25rem", md: "1.75rem" } }}
@@ -368,6 +358,7 @@ export default function ShelteredBrowserPage() {
             <Typography
               variant="body1"
               fontWeight={600}
+              data-testid={`${TID}-shelter-name`}
               sx={{
                 fontSize: { xs: "0.875rem", sm: "1rem", md: "1.125rem" },
                 color: "primary.main",
@@ -383,7 +374,8 @@ export default function ShelteredBrowserPage() {
               onClick={openCreate}
               startIcon={<PersonAdd />}
               variant="contained"
-              sx={{ display: { xs: "none", md: "inline-flex" } }}
+              data-testid={`${TID}-create`}
+              sx={{ display: { xs: "none", md: "inline-flex" }, minHeight: MIN_TOUCH_TARGET_PX }}
             >
               Cadastrar acolhido
             </Button>
@@ -396,6 +388,7 @@ export default function ShelteredBrowserPage() {
           color="primary"
           aria-label="Cadastrar acolhido"
           onClick={openCreate}
+          data-testid={`${TID}-create-fab`}
           sx={{
             position: "fixed",
             bottom: 24,
@@ -409,7 +402,7 @@ export default function ShelteredBrowserPage() {
       )}
 
       {!canAccess ? (
-        <Alert severity="warning" sx={{ mt: 4 }}>
+        <Alert severity="warning" sx={{ mt: 4 }} data-testid={`${TID}-unauthorized`}>
           <Typography fontWeight="bold">
             Acesso não autorizado
           </Typography>
@@ -421,6 +414,7 @@ export default function ShelteredBrowserPage() {
         <>
           <Paper
             elevation={0}
+            data-testid={`${TID}-toolbar`}
             sx={{
               p: { xs: 1.5, sm: 2 },
               mb: { xs: 1.5, sm: 2 },
@@ -452,6 +446,7 @@ export default function ShelteredBrowserPage() {
                 value={q}
                 onChange={(e) => onChangeQ(e.target.value)}
                 size="small"
+                inputProps={{ "data-testid": `${TID}-search`, "aria-label": "Buscar acolhido" }}
                 sx={{
                   flex: { xs: "1 1 100%", sm: "0 0 40%" },
                   width: { xs: "100%", sm: "40%" },
@@ -482,15 +477,16 @@ export default function ShelteredBrowserPage() {
                   value={acceptedJesus}
                   onChange={(e) => onChangeAcceptedJesus(e.target.value as "all" | "accepted" | "not_accepted")}
                   label="Aceitou Jesus"
+                  data-testid={`${TID}-filter-accepted`}
                 >
-                  <MenuItem value="all">Todos</MenuItem>
-                  <MenuItem value="accepted">
+                  <MenuItem value="all" data-testid={`${TID}-filter-accepted-option-all`}>Todos</MenuItem>
+                  <MenuItem value="accepted" data-testid={`${TID}-filter-accepted-option-accepted`}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Favorite fontSize="small" />
                       Aceitou Jesus
                     </Box>
                   </MenuItem>
-                  <MenuItem value="not_accepted">Não aceitou</MenuItem>
+                  <MenuItem value="not_accepted" data-testid={`${TID}-filter-accepted-option-not-accepted`}>Não aceitou</MenuItem>
                 </Select>
               </FormControl>
 
@@ -507,15 +503,16 @@ export default function ShelteredBrowserPage() {
                   value={active}
                   onChange={(e) => onChangeActive(e.target.value as "all" | "active" | "inactive")}
                   label="Status"
+                  data-testid={`${TID}-filter-active`}
                 >
-                  <MenuItem value="all">Todos</MenuItem>
-                  <MenuItem value="active">
+                  <MenuItem value="all" data-testid={`${TID}-filter-active-option-all`}>Todos</MenuItem>
+                  <MenuItem value="active" data-testid={`${TID}-filter-active-option-active`}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CheckCircle fontSize="small" />
                       Ativos
                     </Box>
                   </MenuItem>
-                  <MenuItem value="inactive">
+                  <MenuItem value="inactive" data-testid={`${TID}-filter-active-option-inactive`}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Cancel fontSize="small" />
                       Inativos
@@ -529,6 +526,7 @@ export default function ShelteredBrowserPage() {
                   variant="outlined"
                   size="small"
                   startIcon={<Clear />}
+                  data-testid={`${TID}-clear-filters`}
                   onClick={() => {
                     onChangeQ("");
                     onChangeAcceptedJesus("all");
@@ -538,6 +536,7 @@ export default function ShelteredBrowserPage() {
                     flex: { xs: "1 1 100%", sm: "0 0 auto" },
                     width: { xs: "100%", sm: "auto" },
                     minWidth: { xs: "auto", sm: 120 },
+                    minHeight: MIN_TOUCH_TARGET_PX,
                     textTransform: "none",
                     fontWeight: 600,
                     borderColor: "text.secondary",
@@ -556,32 +555,34 @@ export default function ShelteredBrowserPage() {
           </Paper>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")} data-testid={`${TID}-error`}>
               {error}
             </Alert>
           )}
 
           {loading && !items.length ? (
-            <Box textAlign="center" my={{ xs: 4, sm: 6 }}>
+            <Box textAlign="center" my={{ xs: 4, sm: 6 }} data-testid={`${TID}-loading`}>
               <CircularProgress size={isXs ? 32 : 40} />
             </Box>
           ) : items.length === 0 ? (
-            <Box textAlign="center" my={{ xs: 4, sm: 6 }} px={2}>
+            <Box textAlign="center" my={{ xs: 4, sm: 6 }} px={2} data-testid={`${TID}-empty`}>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
               >
-                {q ? "Nenhum acolhido encontrado com os filtros aplicados." : "Nenhum acolhido cadastrado."}
+                {hasFilters ? "Nenhum acolhido encontrado com os filtros aplicados." : "Nenhum acolhido cadastrado."}
               </Typography>
 
-              {!q && (
+              {!hasFilters && (
                 <Box sx={{ mt: 2 }}>
                   <Button
                     variant="contained"
                     startIcon={<PersonAdd />}
                     onClick={openCreate}
+                    data-testid={`${TID}-empty-create`}
                     sx={{
+                      minHeight: MIN_TOUCH_TARGET_PX,
                       textTransform: "none",
                       fontWeight: 800,
                       width: { xs: "100%", sm: "auto" },
@@ -599,6 +600,7 @@ export default function ShelteredBrowserPage() {
             <>
               <Fade in={loading && items.length > 0}>
                 <LinearProgress
+                  data-testid={`${TID}-fetching`}
                   sx={{
                     mb: 2,
                     borderRadius: 1,
@@ -610,7 +612,7 @@ export default function ShelteredBrowserPage() {
                 />
               </Fade>
 
-              <Box sx={{
+              <Box data-testid={`${TID}-list`} sx={{
                 position: "relative",
                 opacity: loading && items.length > 0 ? 0.6 : 1,
                 transition: "opacity 0.2s ease",
@@ -632,13 +634,14 @@ export default function ShelteredBrowserPage() {
               </Box>
 
               {pagination.totalPages > 1 && (
-                <Stack spacing={2} alignItems="center" sx={{ mt: { xs: 3, md: 4 }, mb: { xs: 2, md: 2 }, position: "relative" }}>
+                <Stack spacing={2} alignItems="center" data-testid={`${TID}-pagination`} sx={{ mt: { xs: 3, md: 4 }, mb: { xs: 2, md: 2 }, position: "relative" }}>
                   {loading && items.length > 0 && (
                     <Box sx={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
                       <CircularProgress size={16} thickness={4} />
                     </Box>
                   )}
                   <Pagination
+                    data-testid={`${TID}-pages`}
                     count={pagination.totalPages}
                     page={pagination.page}
                     onChange={(_, page) => pagination.setPage(page)}
@@ -653,6 +656,7 @@ export default function ShelteredBrowserPage() {
                   <Typography
                     variant="body2"
                     color="text.secondary"
+                    data-testid={`${TID}-pagination-summary`}
                     sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
                   >
                     Mostrando {items.length} de {pagination.totalItems} acolhido(s)
@@ -665,7 +669,7 @@ export default function ShelteredBrowserPage() {
       )}
 
       <ShelteredFormDialog
-        mode="create"
+        mode={ShelteredFormMode.CREATE}
         open={!!creating}
         value={creating}
         onChange={(v) => setCreating(v as CreateShelteredForm)}
@@ -679,7 +683,7 @@ export default function ShelteredBrowserPage() {
       />
 
       <ShelteredFormDialog
-        mode="edit"
+        mode={ShelteredFormMode.EDIT}
         open={!!editing}
         value={editing}
         onChange={(v) => setEditing(v as EditShelteredForm)}

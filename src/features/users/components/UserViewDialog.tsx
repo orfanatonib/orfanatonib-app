@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useMemo, useEffect, useState } from "react";
 import {
   Dialog,
@@ -35,7 +36,8 @@ import { UserRole } from "@/store/slices/auth/authSlice";
 import { buildWhatsappLink } from "@/utils/whatsapp";
 import { formatDate } from "@/utils/dateUtils";
 import { roleChipColor, anchorProps, isCoreOrSensitive } from "@/utils/textUtils";
-import { initials, CopyButton } from "@/utils/components";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 import { RootState } from "@/store/slices";
 import { apiGetUserProfile } from "../api";
 
@@ -57,7 +59,7 @@ function LineCard({
   children: React.ReactNode;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+    <Paper data-testid="user-view-card" variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
       <Stack spacing={0.5}>
         <Stack direction="row" spacing={0.75} alignItems="center">
           {icon}
@@ -99,7 +101,8 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
         } else {
           setTeamLabel(null);
         }
-      } catch {
+      } catch (error: unknown) {
+        logger.debug('Equipe do usuário indisponível', { feature: 'users' }, error);
         if (!cancelled) setTeamLabel(null);
       }
     };
@@ -113,6 +116,7 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
 
   return (
     <Dialog
+      data-testid="user-view-dialog"
       open={open}
       onClose={onClose}
       fullWidth
@@ -316,13 +320,14 @@ const waLink = useMemo(() => (user ? buildWhatsappLink(user.name, loggedUser?.na
               startIcon={<WhatsApp />}
               {...anchorProps(waLink)}
               disabled={!waLink}
+              data-testid="user-view-whatsapp"
             >
               Conversar no WhatsApp
             </Button>
           </span>
         </Tooltip>
 
-        <Button fullWidth={isXs} onClick={onClose}>
+        <Button fullWidth={isXs} onClick={onClose} data-testid="user-view-close">
           Fechar
         </Button>
       </DialogActions>

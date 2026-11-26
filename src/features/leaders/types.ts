@@ -89,27 +89,6 @@ export type PageDto<T> = {
   pageCount: number;
 };
 
-export type LeaderFilters = {
-  page?: number;
-  limit?: number;
-  sort?: "name" | "updatedAt" | "createdAt";
-  order?: "asc" | "desc";
-
-  leaderSearchString?: string;  
-  shelterSearchString?: string; 
-
-  hasShelter?: boolean;         
-  teamId?: string;             
-  teamName?: string;           
-  hasTeam?: boolean;           
-
-  searchString?: string;
-  q?: string;
-  active?: boolean;
-  hasShelters?: boolean;
-  shelterName?: string;
-};
-
 export type LeaderSimpleListDto = {
   leaderProfileId: string;
   user: {
@@ -149,3 +128,8 @@ export type TeamsCompleteResponse = {
 }[];
 
 export type LeaderSimpleApi = LeaderSimpleListDto;
+
+export type LeaderFilterOptions = {
+  shelters: { value: string; label: string }[];
+  teams: { value: string; label: string }[];
+};

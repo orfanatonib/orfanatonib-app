@@ -38,6 +38,9 @@ import type { UserSimpleDto } from "@/features/users/api";
 import MediaDocumentPreviewModal from "@/utils/MediaDocumentPreviewModal";
 import type { MediaItem } from "@/store/slices/types";
 import { MediaType, MediaUploadType } from "@/store/slices/types";
+import { ATENDENTES_TEST_ID_PREFIX } from "../constants";
+
+const P = ATENDENTES_TEST_ID_PREFIX;
 
 const ATTENDABLE_NONE = "none" as const;
 type AttendableTypeOption = typeof ATTENDABLE_NONE | AttendableType;
@@ -261,6 +264,7 @@ export default function AtendenteFormDialog({
 
   return (
     <Dialog
+      data-testid={`${P}-form-dialog`}
       open={open}
       onClose={onClose}
       maxWidth="sm"
@@ -285,11 +289,13 @@ export default function AtendenteFormDialog({
             letterSpacing: "-0.01em",
           }}
         >
-          {editing ? "Editar Antecedente Criminal" : "Novo Antecedente Criminal"}
+          <span data-testid={`${P}-form-title`}>
+            {editing ? "Editar Antecedente Criminal" : "Novo Antecedente Criminal"}
+          </span>
         </DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2.5, px: 3, pt: 6, pb: 3 }}>
           {(error || nameError) && (
-            <Alert severity="error" onClose={() => setNameError("")}>
+            <Alert data-testid={`${P}-form-error`} severity="error" onClose={() => setNameError("")}>
               {error || nameError}
             </Alert>
           )}
@@ -299,6 +305,7 @@ export default function AtendenteFormDialog({
             <Select
               value={formData.attendableType}
               label="Vínculo"
+              SelectDisplayProps={{ "data-testid": `${P}-form-link-type` } as React.HTMLAttributes<HTMLDivElement>}
               renderValue={(v) =>
                 v === ATTENDABLE_NONE
                   ? "Nenhum"
@@ -314,9 +321,9 @@ export default function AtendenteFormDialog({
                 }));
               }}
             >
-              <MenuItem value={ATTENDABLE_NONE}>Nenhum</MenuItem>
-              <MenuItem value="integration">Integração FM</MenuItem>
-              <MenuItem value="user">Usuário</MenuItem>
+              <MenuItem value={ATTENDABLE_NONE} data-testid={`${P}-form-link-type-option-none`}>Nenhum</MenuItem>
+              <MenuItem value="integration" data-testid={`${P}-form-link-type-option-integration`}>Integração FM</MenuItem>
+              <MenuItem value="user" data-testid={`${P}-form-link-type-option-user`}>Usuário</MenuItem>
             </Select>
           </FormControl>
 
@@ -367,6 +374,7 @@ export default function AtendenteFormDialog({
             }}
             fullWidth
             size="small"
+            inputProps={{ "data-testid": `${P}-form-name` }}
             required={hasNoLink}
             error={hasNoLink && !formData.name.trim() && !!nameError}
             helperText={hasNoLink && !formData.name.trim() ? nameError : undefined}
@@ -390,6 +398,7 @@ export default function AtendenteFormDialog({
             }}
           >
             <input
+              data-testid={`${P}-form-file-estadual`}
               ref={fileInputEstadualRef}
               type="file"
               accept=".pdf,application/pdf"
@@ -403,6 +412,7 @@ export default function AtendenteFormDialog({
               }}
             />
             <input
+              data-testid={`${P}-form-file-federal`}
               ref={fileInputFederalRef}
               type="file"
               accept=".pdf,application/pdf"
@@ -436,6 +446,7 @@ export default function AtendenteFormDialog({
                   onMouseLeave={() => setHoveredScope(null)}
                 >
                   <Button
+                    data-testid={`${P}-form-pick-${scope}`}
                     type="button"
                     onClick={() => handleScopeClick(scope)}
                     disableRipple={hasFile}
@@ -520,6 +531,7 @@ export default function AtendenteFormDialog({
                     >
                       <Tooltip title="Visualizar PDF">
                         <IconButton
+                          data-testid={`${P}-form-preview-${scope}`}
                           size="small"
                           aria-label="Visualizar PDF"
                           onClick={(e) => {
@@ -532,6 +544,7 @@ export default function AtendenteFormDialog({
                       </Tooltip>
                       <Tooltip title="Remover e escolher outro">
                         <IconButton
+                          data-testid={`${P}-form-remove-${scope}`}
                           size="small"
                           aria-label="Remover PDF"
                           onClick={() => {
@@ -562,15 +575,16 @@ export default function AtendenteFormDialog({
             gap: 1,
           }}
         >
-          <Button type="button" onClick={onClose} sx={{ textTransform: "none", fontWeight: 600 }}>
+          <Button data-testid={`${P}-form-cancel`} type="button" onClick={onClose} sx={{ textTransform: "none", fontWeight: 600, minHeight: 44 }}>
             Cancelar
           </Button>
           <Button
+            data-testid={`${P}-form-submit`}
             type="submit"
             variant="contained"
             disabled={!canSubmit || loading}
             startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
-            sx={{ textTransform: "none", fontWeight: 600, px: 2.5, boxShadow: 1 }}
+            sx={{ textTransform: "none", fontWeight: 600, px: 2.5, boxShadow: 1, minHeight: 44 }}
           >
             {editing ? "Salvar" : "Criar"}
           </Button>

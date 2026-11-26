@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import api from "@/config/axiosConfig";
+import { apiDeleteIdeasPage, apiGetIdeasPage } from "@/features/ideas-pages/api";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
 import { fetchRoutes } from "store/slices/route/routeSlice";
 import { setIdeasData, IdeasPageData } from "store/slices/ideas/ideasSlice";
 import { AppDispatch } from "store/slices";
@@ -37,11 +38,11 @@ export function useIdeasPage({ idToFetch }: UseIdeasPageOptions): UseIdeasPageRe
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get(`/ideas-pages/${idToFetch}`);
-        setIdeasPage(response.data);
-        dispatch(setIdeasData(response.data));
+        const data = await apiGetIdeasPage(idToFetch);
+        setIdeasPage(data);
+        dispatch(setIdeasData(data));
       } catch (err) {
-        setError("Erro ao carregar a página de ideias. Tente novamente mais tarde.");
+        setError(getApiErrorMessage(err, "Erro ao carregar a página de ideias. Tente novamente mais tarde."));
       } finally {
         setLoading(false);
       }
@@ -54,11 +55,11 @@ export function useIdeasPage({ idToFetch }: UseIdeasPageOptions): UseIdeasPageRe
     try {
       if (!ideasPage?.id) return;
       setIsDeleting(true);
-      await api.delete(`/ideas-pages/${ideasPage.id}`);
+      await apiDeleteIdeasPage(ideasPage.id);
       await dispatch(fetchRoutes());
       navigate("/");
     } catch (err) {
-      setError("Erro ao excluir a página. Tente novamente mais tarde.");
+      setError(getApiErrorMessage(err, "Erro ao excluir a página. Tente novamente mais tarde."));
     } finally {
       setIsDeleting(false);
       setDeleteConfirmOpen(false);

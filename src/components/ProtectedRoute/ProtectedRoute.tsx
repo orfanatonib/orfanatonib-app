@@ -26,9 +26,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     dispatch(logout());
   };
 
-  if (!initialized || loadingUser || (accessToken && !user)) {
+  if (!initialized || (loadingUser && !user) || (accessToken && !user)) {
     return (
       <Box
+        data-testid="protected-route-loading"
         sx={{
           height: "100vh",
           display: "flex",
@@ -44,6 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           Verificando autenticação...
         </Typography>
         <Button
+          data-testid="protected-route-logout"
           variant="outlined"
           color="error"
           onClick={handleLogout}

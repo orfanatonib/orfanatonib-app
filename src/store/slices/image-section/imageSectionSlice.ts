@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MediaItem } from '@/store/slices/types';
+import type { ImageSectionReviewStatus } from '@/features/image-sections/types';
 
 export interface SectionData {
   id?: string;
@@ -7,6 +8,11 @@ export interface SectionData {
   caption: string;
   description: string;
   mediaItems: MediaItem[];
+  /** Quem enviou (só a moderação recebe); `null` = autoria desconhecida. */
+  author?: { displayName: string } | null;
+  reviewStatus?: ImageSectionReviewStatus;
+  /** Motivo dado pelo admin quando reprovou. */
+  rejectionReason?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

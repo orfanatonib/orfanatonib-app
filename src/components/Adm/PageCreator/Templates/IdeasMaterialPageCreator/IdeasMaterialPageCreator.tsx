@@ -1,34 +1,38 @@
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Box,
-  TextField,
-  Button,
-  Typography,
   Accordion,
-  AccordionSummary,
   AccordionDetails,
-  Paper,
-  Snackbar,
-  Alert,
-  CircularProgress,
+  AccordionSummary,
+  Box,
+  Button,
   IconButton,
-  Container,
-  Grid,
+  Paper,
+  Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import Save from '@mui/icons-material/Save';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'store/slices';
 import { fetchRoutes } from 'store/slices/route/routeSlice';
 import { clearIdeasData, IdeasSection } from 'store/slices/ideas/ideasSlice';
-import api from '@/config/axiosConfig';
-import { MediaUploadType } from 'store/slices/types';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import { apiSaveIdeasPage } from '@/features/ideas-pages/api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import { IdeasMaterialSection } from './IdeasMaterialSection';
+import {
+  IDEAS_PAGE_MESSAGES,
+  IDEAS_PAGE_TEST_ID,
+} from './constants';
+import { buildIdeasFormData, hasIdeasErrors } from './utils';
+import PageFormBase from '../shared/PageFormBase';
+import PageBasicInfoSection from '../shared/PageBasicInfoSection';
+import PageFormActions from '../shared/PageFormActions';
+import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
+import { PAGE_ACTION_BUTTON_SX, PAGE_PAPER_SX } from '../shared/styles';
+import { useTouchedFields } from '../shared/useTouchedFields';
+import { FeedbackSeverity } from '../shared/types';
 
 interface PageCreatorProps {
   fromTemplatePage?: boolean;
@@ -44,11 +48,11 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
   const [sections, setSections] = useState<IdeasSection[]>([]);
   const [expandedSectionIndex, setExpandedSectionIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [touched, setTouched] = useState({ title: false, description: false });
-  const [snackbar, setSnackbar] = useState({
+  const { touched, setField, touchAll } = useTouchedFields();
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: FeedbackSeverity }>({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error',
+    severity: 'success',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<number | null>(null);
@@ -65,12 +69,6 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
       setSections(ideasData.sections || []);
     }
   }, [fromTemplatePage, ideasData, dispatch]);
-
-  const errors = useMemo(() => ({
-    title: !pageTitle.trim(),
-    description: !pageDescription.trim(),
-    sections: sections.length === 0,
-  }), [pageTitle, pageDescription, sections]);
 
   const handleAddSection = () => {
     const newSection: IdeasSection = {
@@ -103,72 +101,32 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
   };
 
   const handleSavePage = async () => {
-    setTouched({ title: true, description: true });
+    touchAll();
 
-    if (Object.values(errors).some(Boolean)) {
-      setSnackbar({
-        open: true,
-        message: 'Preencha todos os campos obrigatórios e adicione pelo menos uma seção.',
-        severity: 'error',
-      });
+    if (hasIdeasErrors({ title: pageTitle, description: pageDescription, sectionCount: sections.length })) {
+      setSnackbar({ open: true, message: IDEAS_PAGE_MESSAGES.REQUIRED, severity: 'error' });
       return;
     }
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      const payload: any = {
-        ...(fromTemplatePage ? {} : ideasData?.id ? { id: ideasData.id } : {}),
+      const formData = buildIdeasFormData({
         title: pageTitle,
         description: pageDescription,
-        sections: sections.map((section, sectionIndex) => {
-          const sectionPayload: any = {
-            ...(fromTemplatePage ? {} : section.id ? { id: section.id } : {}),
-            title: section.title,
-            description: section.description,
-            medias: section.medias.map((media, midiaIndex) => {
-              const baseItem: any = {
-                ...(fromTemplatePage ? {} : media.id ? { id: media.id } : {}),
-                title: media.title,
-                description: media.description,
-                mediaType: media.mediaType,
-                uploadType: media.uploadType,
-                platformType: media.platformType,
-                isLocalFile: media.uploadType === MediaUploadType.UPLOAD,
-              };
-              if (media.uploadType === MediaUploadType.UPLOAD && media.file) {
-                const extension = media.file.name.split('.').pop() || 'bin';
-                const fieldKey = `${media.mediaType}_${sectionIndex}_${midiaIndex}.${extension}`;
-                formData.append(fieldKey, media.file, fieldKey);
-                return { ...baseItem, fieldKey };
-              }
-              return { ...baseItem, url: media.url };
-            }),
-          };
-          return sectionPayload;
-        }),
-      };
-
-      formData.append('ideasMaterialsPageData', JSON.stringify(payload));
-
-      const response = await (fromTemplatePage
-        ? api.post('/ideas-pages', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-        : api.patch(`/ideas-pages/${ideasData?.id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }));
-
-      if (!response?.data) throw new Error('Erro ao salvar');
-
-      setSnackbar({
-        open: true,
-        message: 'Página salva com sucesso!',
-        severity: 'success',
+        sections,
+        fromTemplatePage: Boolean(fromTemplatePage),
+        existingId: ideasData?.id,
       });
+      const saved = await apiSaveIdeasPage(formData, fromTemplatePage ? undefined : ideasData?.id);
+      if (!saved?.route?.path) throw new Error(IDEAS_PAGE_MESSAGES.SAVE_FAILED);
 
+      setSnackbar({ open: true, message: IDEAS_PAGE_MESSAGES.SAVED, severity: 'success' });
       await dispatch(fetchRoutes());
-      navigate(`/${response.data.route.path}`);
-    } catch {
+      navigate(`/${saved.route.path}`);
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: 'Erro ao salvar a página.',
+        message: getApiErrorMessage(err, IDEAS_PAGE_MESSAGES.SAVE_ERROR),
         severity: 'error',
       });
     } finally {
@@ -177,266 +135,122 @@ export function IdeasMaterialPageCreator({ fromTemplatePage }: PageCreatorProps)
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        py: { xs: 2, md: 4 },
-      }}
+    <PageFormBase
+      testId={IDEAS_PAGE_TEST_ID}
+      heading={fromTemplatePage ? IDEAS_PAGE_MESSAGES.CREATE_HEADING : IDEAS_PAGE_MESSAGES.EDIT_HEADING}
+      onBack={() => navigate(-1)}
     >
-      <Container maxWidth="lg">
-        <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
-          <IconButton
-            onClick={() => navigate(-1)}
-            sx={{
-              bgcolor: 'background.paper',
-              boxShadow: 2,
-              '&:hover': {
-                bgcolor: 'action.hover',
-                transform: 'scale(1.05)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h4" fontWeight="bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-            {fromTemplatePage ? '💡 Nova Página de Ideias' : '✏️ Editar Página de Ideias'}
-          </Typography>
-        </Box>
+      <PageBasicInfoSection
+        testId={IDEAS_PAGE_TEST_ID}
+        titleLabel={IDEAS_PAGE_MESSAGES.TITLE_LABEL}
+        descriptionLabel={IDEAS_PAGE_MESSAGES.DESCRIPTION_LABEL}
+        title={pageTitle}
+        description={pageDescription}
+        isPublic
+        showPublicSwitch={false}
+        touched={touched}
+        onTitleChange={setPageTitle}
+        onDescriptionChange={setPageDescription}
+        onPublicChange={() => undefined}
+        onTouchedChange={setField}
+      />
 
-        <Paper
-          elevation={2}
+      {sections.length > 0 && (
+        <Paper data-testid={`${IDEAS_PAGE_TEST_ID}-sections`} elevation={2} sx={PAGE_PAPER_SX}>
+          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+            📚 Seções ({sections.length})
+          </Typography>
+          {sections.map((section, index) => (
+            <Accordion
+              data-testid={`${IDEAS_PAGE_TEST_ID}-section`}
+              key={index}
+              expanded={expandedSectionIndex === index}
+              onChange={() => setExpandedSectionIndex(expandedSectionIndex === index ? null : index)}
+              sx={{ mb: 2, borderRadius: 2, '&:before': { display: 'none' } }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  borderRadius: 2,
+                  '&.Mui-expanded': { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+                }}
+              >
+                <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+                  {section.title || `Seção ${index + 1}`}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <IdeasMaterialSection
+                  section={section}
+                  onUpdate={(updatedSection) => handleUpdateSection(index, updatedSection)}
+                />
+              </AccordionDetails>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, borderTop: 1, borderColor: 'divider' }}>
+                <IconButton
+                  data-testid={`${IDEAS_PAGE_TEST_ID}-section-delete`}
+                  color="error"
+                  aria-label="Excluir seção"
+                  onClick={() => handleDeleteSectionClick(index)}
+                  sx={{ '&:hover': { bgcolor: 'error.lighter' } }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            </Accordion>
+          ))}
+        </Paper>
+      )}
+
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Button
+          data-testid={`${IDEAS_PAGE_TEST_ID}-add-section`}
+          variant="outlined"
+          startIcon={<AddIcon />}
+          onClick={handleAddSection}
           sx={{
-            p: { xs: 3, md: 4 },
-            mb: 4,
-            borderRadius: 3,
-            bgcolor: 'background.paper',
+            ...PAGE_ACTION_BUTTON_SX,
+            borderWidth: 2,
+            '&:hover': {
+              borderWidth: 2,
+              transform: 'translateY(-2px)',
+              boxShadow: 3,
+              bgcolor: 'action.hover',
+            },
           }}
         >
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
-            Informações Básicas
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                label="Título da Página"
-                fullWidth
-                required
-                value={pageTitle}
-                onChange={(e) => {
-                  setPageTitle(e.target.value);
-                  if (touched.title) setTouched((prev) => ({ ...prev, title: false }));
-                }}
-                onBlur={() => setTouched((prev) => ({ ...prev, title: true }))}
-                error={touched.title && errors.title}
-                helperText={touched.title && errors.title ? 'Campo obrigatório' : ''}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover:not(.Mui-error)': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    marginLeft: 0,
-                    marginTop: 1,
-                    fontSize: '0.75rem',
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Descrição da Página"
-                fullWidth
-                required
-                multiline
-                rows={4}
-                value={pageDescription}
-                onChange={(e) => {
-                  setPageDescription(e.target.value);
-                  if (touched.description) setTouched((prev) => ({ ...prev, description: false }));
-                }}
-                onBlur={() => setTouched((prev) => ({ ...prev, description: true }))}
-                error={touched.description && errors.description}
-                helperText={touched.description && errors.description ? 'Campo obrigatório' : ''}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover:not(.Mui-error)': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderWidth: 2,
-                      },
-                    },
-                  },
-                  '& .MuiFormHelperText-root': {
-                    marginLeft: 0,
-                    marginTop: 1,
-                    fontSize: '0.75rem',
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Paper>
+          Adicionar Seção
+        </Button>
+      </Box>
 
-        {sections.length > 0 && (
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
-              📚 Seções ({sections.length})
-            </Typography>
-            {sections.map((section, index) => (
-              <Accordion
-                key={index}
-                expanded={expandedSectionIndex === index}
-                onChange={() => setExpandedSectionIndex(expandedSectionIndex === index ? null : index)}
-                sx={{ mb: 2, borderRadius: 2, '&:before': { display: 'none' } }}
-              >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{
-                    borderRadius: 2,
-                    '&.Mui-expanded': {
-                      borderBottomLeftRadius: 0,
-                      borderBottomRightRadius: 0,
-                    },
-                  }}
-                >
-                  <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                    {section.title || `Seção ${index + 1}`}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <IdeasMaterialSection
-                    section={section}
-                    onUpdate={(updatedSection) => handleUpdateSection(index, updatedSection)}
-                  />
-                </AccordionDetails>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, borderTop: 1, borderColor: 'divider' }}>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteSectionClick(index)}
-                    sx={{
-                      '&:hover': {
-                        bgcolor: 'error.lighter',
-                      },
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Accordion>
-            ))}
-          </Paper>
-        )}
-
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={handleAddSection}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-              borderWidth: 2,
-              '&:hover': {
-                borderWidth: 2,
-                transform: 'translateY(-2px)',
-                boxShadow: 3,
-                bgcolor: 'action.hover',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Adicionar Seção
-          </Button>
-        </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => navigate(-1)}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleSavePage}
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-              '&:hover:not(:disabled)': {
-                transform: 'translateY(-2px)',
-                boxShadow: 4,
-              },
-              '&:disabled': {
-                opacity: 0.6,
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {loading ? 'Salvando...' : 'Salvar Página'}
-          </Button>
-        </Box>
-      </Container>
+      <PageFormActions
+        testId={IDEAS_PAGE_TEST_ID}
+        saveLabel={IDEAS_PAGE_MESSAGES.SAVE}
+        savingLabel={IDEAS_PAGE_MESSAGES.SAVING}
+        saveColor="primary"
+        isSaving={loading}
+        savingSpinner
+        onCancel={() => navigate(-1)}
+        onSave={handleSavePage}
+      />
 
       <DeleteConfirmationModal
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={confirmDeleteSection}
         loading={false}
-        description="Tem certeza que deseja excluir esta seção? Esta ação não pode ser desfeita."
+        testId={`${IDEAS_PAGE_TEST_ID}-delete-section-dialog`}
+        description={IDEAS_PAGE_MESSAGES.DELETE_SECTION}
       />
 
-      <Snackbar
+      <PageFeedbackSnackbar
+        testId={`${IDEAS_PAGE_TEST_ID}-feedback`}
         open={snackbar.open}
-        autoHideDuration={5000}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        filled
+        showCloseButton={false}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert severity={snackbar.severity} variant="filled">
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+      />
+    </PageFormBase>
   );
 }

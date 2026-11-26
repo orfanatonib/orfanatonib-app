@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useErrorHandler } from './useErrorHandler';
-import type { ErrorHandlingOptions } from '@/utils/errorHandler';
+import type { AppError, ErrorHandlingOptions } from '@/utils/errorHandler';
 
 export interface UseApiCallResult<T> {
   execute: (options?: ErrorHandlingOptions) => Promise<T | undefined>;
@@ -8,7 +8,7 @@ export interface UseApiCallResult<T> {
   isLoading: boolean;
   isRetrying: boolean;
   retryCount: number;
-  error: any;
+  error: AppError | null;
   clearError: () => void;
 }
 

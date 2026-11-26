@@ -43,6 +43,7 @@ const AttendanceSubmitSection = memo(({
     <Stack spacing={2}>
       {formState.error && (
         <Alert
+          data-testid={isMobile ? 'team-attendance-error-mobile' : 'team-attendance-error'}
           severity="error"
           onClose={onClearError}
           sx={{ mb: 0 }}
@@ -53,6 +54,7 @@ const AttendanceSubmitSection = memo(({
 
       {formState.feedback && (
         <Alert
+          data-testid={isMobile ? 'team-attendance-feedback-mobile' : 'team-attendance-feedback'}
           severity={formState.feedback.status}
           onClose={onClearFeedback}
           sx={{ mb: 0 }}
@@ -62,6 +64,7 @@ const AttendanceSubmitSection = memo(({
       )}
 
       <Button
+        data-testid={isMobile ? 'team-attendance-submit-mobile' : 'team-attendance-submit'}
         variant="contained"
         size="large"
         onClick={onSubmit}

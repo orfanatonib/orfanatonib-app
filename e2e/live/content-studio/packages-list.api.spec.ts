@@ -1,0 +1,112 @@
+import { tagged } from "../support/factory";
+import { API_URL } from "../../../playwright.live.config";
+import { closeDb, queryAll, queryOne } from "../support/db";
+import { authHeaders, expect, loginAs, test } from "../support/live";
+
+/**
+ * Listagem de pacotes do Estúdio: a página devolve exatamente `limit` pacotes (antes devolvia 2 de 8 porque o
+ * TypeORM limitava linhas do join) e o filtro por faixa funciona (antes dava 500 por causa do join solto).
+ */
+const FLAGS = ["content_studio"] as const;
+const before: Record<string, number> = {};
+let admin = "";
+
+type Page = { data: Array<{ id: string }>; total: number; page: number; limit: number };
+
+test.beforeAll(async ({ request }) => {
+  admin = (await loginAs(request, "admin")).accessToken;
+  for (const key of FLAGS) {
+    before[key] = (await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 0;
+    await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: true } });
+  }
+  // Pré-condição montada pelo próprio spec (a paginação precisa de mais de uma página de 3).
+  for (let index = await activePackages(); index < MINIMUM_PACKAGES; index += 1) {
+    const created = await request.post(`${API_URL}/content-studio/packages`, {
+      headers: authHeaders(admin),
+      data: { theme: tagged(`listagem-${index}`), biblicalReferences: "Salmos 23", canonicalObjective: "Provar a paginação da lista" },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+  }
+});
+
+const MINIMUM_PACKAGES = 4;
+const activePackages = async (): Promise<number> =>
+  Number((await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status <> 'ARCHIVED'"))?.n ?? 0);
+
+test.afterAll(async ({ request }) => {
+  for (const key of FLAGS) {
+    await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: before[key] === 1 } });
+  }
+  await closeDb();
+});
+
+const list = async (request: import("@playwright/test").APIRequestContext, query: string): Promise<Page> => {
+  const res = await request.get(`${API_URL}/content-studio/packages?${query}`, { headers: authHeaders(admin) });
+  expect(res.status(), await res.text()).toBe(200);
+  return (await res.json()) as Page;
+};
+
+test("percorrendo as páginas de 3 em 3 vem todo pacote uma única vez, e cada página está cheia", async ({ request }) => {
+  const total = await activePackages();
+  expect(total).toBeGreaterThanOrEqual(MINIMUM_PACKAGES);
+
+  const seen: string[] = [];
+  for (let page = 1; page <= Math.ceil(total / 3); page++) {
+    const body = await list(request, `page=${page}&limit=3`);
+    expect(body.total).toBe(total);
+    expect(body.data.length).toBe(Math.min(3, total - (page - 1) * 3));
+    seen.push(...body.data.map((item) => item.id));
+  }
+  expect(seen).toHaveLength(total);
+  expect(new Set(seen).size).toBe(total);
+});
+
+test("filtro por faixa etária e por situação respondem 200 e só devolvem o que existe", async ({ request }) => {
+  const all = await list(request, "page=1&limit=50");
+  for (const audience of ["BABY", "CHILD", "TEEN", "ADULT"]) {
+    const filtered = await list(request, `page=1&limit=50&audience=${audience}`);
+    expect(filtered.total).toBeLessThanOrEqual(all.total);
+    // A página devolve o que cabe nela, nunca menos (o defeito antigo cortava pela contagem do join).
+    expect(filtered.data.length).toBe(Math.min(50, filtered.total));
+  }
+  const archived = await list(request, "page=1&limit=50&status=ARCHIVED");
+  const rows = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status = 'ARCHIVED'"))?.n ?? 0;
+  expect(archived.total).toBe(rows);
+});
+
+test.describe("listagem: ordenação, arquivados e segmentos", () => {
+  test("sem filtro de situação os arquivados ficam de fora; com `status=ARCHIVED` só eles", async ({ request }) => {
+    const admin = (await loginAs(request, "admin")).accessToken;
+    const all = (await (await request.get(`${API_URL}/content-studio/packages?limit=100`, { headers: authHeaders(admin) })).json()) as { data: Array<{ status: string }> };
+    expect(all.data.some((p) => p.status === "ARCHIVED")).toBe(false);
+    const archived = (await (await request.get(`${API_URL}/content-studio/packages?limit=100&status=ARCHIVED`, { headers: authHeaders(admin) })).json()) as {
+      data: Array<{ status: string }>;
+    };
+    expect(archived.data.every((p) => p.status === "ARCHIVED")).toBe(true);
+  });
+
+  test("ordenação por tema respeita a direção e valores inválidos dão 400; itens trazem os segmentos de etapas", async ({ request }) => {
+    const admin = (await loginAs(request, "admin")).accessToken;
+    const asc = (await (await request.get(`${API_URL}/content-studio/packages?limit=100&sort=theme&order=ASC`, { headers: authHeaders(admin) })).json()) as {
+      data: Array<{ theme: string; stagesCount: number; stageSegments: unknown[] }>;
+    };
+    const expected = await queryAll<{ theme: string }>("SELECT theme FROM content_packages WHERE status <> 'ARCHIVED' ORDER BY theme ASC, id ASC LIMIT 100");
+    expect(asc.data.map((p) => p.theme)).toEqual(expected.map((row) => row.theme));
+    for (const item of asc.data) expect(item.stageSegments).toHaveLength(item.stagesCount);
+    expect((await request.get(`${API_URL}/content-studio/packages?sort=senha`, { headers: authHeaders(admin) })).status()).toBe(400);
+    expect((await request.get(`${API_URL}/content-studio/packages?order=SIDEWAYS`, { headers: authHeaders(admin) })).status()).toBe(400);
+  });
+});
+
+test("filtro por várias situações (`statuses`) soma as situações e recusa valor inválido", async ({ request }) => {
+  const admin = (await loginAs(request, "admin")).accessToken;
+  const get = (query: string) => request.get(`${API_URL}/content-studio/packages?${query}`, { headers: authHeaders(admin) });
+  const body = (await (await get("limit=100&statuses=IN_REVIEW,PACKAGE_READY")).json()) as { data: Array<{ status: string }>; total: number };
+  expect(body.data.every((p) => ["IN_REVIEW", "PACKAGE_READY"].includes(p.status))).toBe(true);
+  const rows = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status IN ('IN_REVIEW','PACKAGE_READY')"))?.n ?? 0;
+  expect(body.total).toBe(rows);
+  // Publicados só aparecem pedindo explicitamente.
+  const published = (await (await get("limit=100&statuses=PUBLISHED")).json()) as { data: Array<{ status: string }> };
+  expect(published.data.every((p) => p.status === "PUBLISHED")).toBe(true);
+  expect((await get("statuses=NAO_EXISTE")).status()).toBe(400);
+});

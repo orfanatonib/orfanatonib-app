@@ -1,203 +1,162 @@
-import React, { useCallback, useState } from "react";
-import { Alert, Box, CircularProgress, Container, Paper, Typography } from "@mui/material";
-import { useTheme, useMediaQuery } from "@mui/material";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, Button, Snackbar } from "@mui/material";
+import { Add, Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import SearchIcon from "@mui/icons-material/Search";
-import SheltersToolbar from "./SheltersToolbar";
-import SheltersTable from "./SheltersTable";
-import ShelterViewDialog from "./ShelterViewDialog";
-import { useShelterDetails, useShelterMutations, useShelters } from "./hooks";
-import {
-  ShelterResponseDto,
-  ShelterFilters,
-  ShelterSort,
-} from "./types";
-import { apiFetchShelters } from "./api";
-import BackHeader from "@/components/common/header/BackHeader";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 import { useSelector } from "react-redux";
+import {
+  AdminTableListScreen,
+  splitSort,
+  useAdminList,
+  type AdminListFetcher,
+} from "@/components/common/admin-shell";
+import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
 import { selectIsAdmin, selectIsLeader } from "@/store/selectors/routeSelectors";
+import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
+import ShelterViewDialog from "./ShelterViewDialog";
 import ShelterDetailsPage from "./ShelterDetailsPage";
+import ShelterCard from "./list/ShelterCard";
+import { buildShelterColumns } from "./list/columns";
+import {
+  SHELTERS_DEFAULT_SORT,
+  SHELTERS_FILTER as F,
+  SHELTERS_LABELS,
+  SHELTERS_TESTID,
+  buildSheltersFields,
+} from "./list/constants";
+import { apiFetchSheltersPage } from "./api";
+import { useShelterDetails, useShelterMutations } from "./hooks";
+import type { ShelterResponseDto } from "./types";
+
+const DEFAULT_FILTERS = { [F.SORT]: SHELTERS_DEFAULT_SORT };
+
+/** Mapeia busca/filtros/ordenação/página da casca para a query do `/shelters` (tudo filtrado no banco). */
+const fetchShelters: AdminListFetcher<ShelterResponseDto> = async ({ page, limit, search, filters }, signal) => {
+  const { sortBy, order } = splitSort(filters[F.SORT]);
+  const data = await apiFetchSheltersPage(
+    {
+      page,
+      limit,
+      search,
+      sort: sortBy,
+      order,
+      city: filters[F.CITY],
+      state: filters[F.STATE],
+      createdFrom: filters[F.CREATED_FROM],
+      createdTo: filters[F.CREATED_TO],
+    },
+    signal,
+  );
+  return {
+    items: data.items ?? [],
+    total: Number(data.total ?? 0),
+    totalPages: Math.max(1, Number(data.pageCount ?? 1)),
+  };
+};
 
 export default function SheltersManager() {
+  const isLeader = useSelector(selectIsLeader);
+  return isLeader ? <ShelterDetailsPage /> : <SheltersListScreen />;
+}
+
+function SheltersListScreen() {
   const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
-  const isLeader = useSelector(selectIsLeader);
+  const addressEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_ADDRESS);
 
-  if (isLeader) {
-    return <ShelterDetailsPage />;
-  }
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const [filters, setFilters] = useState<ShelterFilters>({
-    searchString: undefined,
-    nameSearchString: undefined,
-    leaderId: undefined,
+  const list = useAdminList<ShelterResponseDto>({
+    fetcher: fetchShelters,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: SHELTERS_LABELS.LOAD_ERROR,
   });
-
-  const [pageSize, setPageSize] = useState<number>(12);
-  const [pageIndex, setPageIndex] = useState<number>(0);
-  const [sorting, setSorting] = useState<ShelterSort>({ id: "updatedAt", desc: true });
-
-  const { rows, total, loading, error, setError, fetchPage } =
-    useShelters(pageIndex, pageSize, sorting, filters);
-
-  const doRefresh = useCallback(() => {
-    fetchPage();
-  }, [fetchPage]);
 
   const { viewing, setViewing, loading: viewingLoading, fetchShelter } = useShelterDetails();
-  const handleOpenView = (shelter: ShelterResponseDto) => {
-    setViewing(shelter);
-    fetchShelter(shelter.id);
-  };
-
-  const {
-    deleteShelter,
-  } = useShelterMutations(async () => {
-    await fetchPage();
-  });
-
-  const handleCreate = () => {
-    navigate("/adm/abrigos/novo");
-  };
-
-  const handleEdit = (shelter: ShelterResponseDto) => {
-    navigate(`/adm/abrigos/${shelter.id}/edit`);
-  };
-
   const [confirmDelete, setConfirmDelete] = useState<ShelterResponseDto | null>(null);
-  const askDelete = (c: ShelterResponseDto) => setConfirmDelete(c);
+  const [deleteError, setDeleteError] = useState("");
+
+  const reload = useCallback(async () => list.reload(), [list.reload]);
+  const { deleteShelter } = useShelterMutations(reload);
+
+  const onView = useCallback(
+    (shelter: ShelterResponseDto) => {
+      setViewing(shelter);
+      void fetchShelter(shelter.id);
+    },
+    [fetchShelter, setViewing],
+  );
+  const onEdit = useCallback((shelter: ShelterResponseDto) => navigate(`/adm/abrigos/${shelter.id}/edit`), [navigate]);
+  const onDelete = useCallback((shelter: ShelterResponseDto) => setConfirmDelete(shelter), []);
 
   const submitDelete = async () => {
     if (!confirmDelete) return;
-    await deleteShelter(confirmDelete.id);
+    try {
+      await deleteShelter(confirmDelete.id);
+    } catch {
+      setDeleteError("Não foi possível excluir o abrigo.");
+    }
     setConfirmDelete(null);
   };
 
+  const fields = useMemo(() => buildSheltersFields(addressEnabled), [addressEnabled]);
+  const columns = useMemo(
+    () => buildShelterColumns({ isAdmin, addressEnabled, onView, onEdit, onDelete }),
+    [isAdmin, addressEnabled, onView, onEdit, onDelete],
+  );
+
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        pb: 4,
-      }}
-    >
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+    <AdminTableListScreen<ShelterResponseDto>
+      testIdPrefix={SHELTERS_TESTID}
+      title={SHELTERS_LABELS.TITLE}
+      searchLabel={SHELTERS_LABELS.SEARCH}
+      searchPlaceholder={SHELTERS_LABELS.SEARCH_PLACEHOLDER}
+      fields={fields}
+      list={list}
+      columns={columns}
+      rowKey={(shelter) => shelter.id}
+      renderCard={(shelter) => (
+        <ShelterCard
+          shelter={shelter}
+          isAdmin={isAdmin}
+          addressEnabled={addressEnabled}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
+      emptyMessage={SHELTERS_LABELS.EMPTY}
+      emptyIcon={<Home sx={{ fontSize: 64, color: "text.secondary" }} />}
+      primaryAction={
+        <Button
+          data-testid="create-shelter-button"
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => navigate("/adm/abrigos/novo")}
+          sx={{ minHeight: 44, textTransform: "none", whiteSpace: "nowrap" }}
         >
-          <BackHeader title="Gerenciar Abrigos" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <SheltersToolbar
-            filters={filters}
-            onChange={(updater) => {
-              setFilters(updater);
-              setPageIndex(0);
-            }}
-            onCreateClick={handleCreate}
-            onRefreshClick={doRefresh}
-            isXs={isXs}
+          {SHELTERS_LABELS.CREATE}
+        </Button>
+      }
+      overlays={
+        <>
+          <ShelterViewDialog
+            open={!!viewing}
+            loading={viewingLoading}
+            shelter={viewing}
+            onClose={() => setViewing(null)}
           />
-        </motion.div>
-
-        {loading && !rows.length && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              py: 8,
-            }}
-          >
-            <CircularProgress size={48} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando abrigos...
-            </Typography>
-          </Box>
-        )}
-
-        {error && !loading && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2, borderRadius: 2 }}
-            onClose={() => setError("")}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {!loading && !error && rows.length === 0 && (
-          <Paper
-            sx={{
-              p: 6,
-              textAlign: "center",
-              borderRadius: 2,
-              bgcolor: "background.paper",
-            }}
-          >
-            <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum abrigo encontrado
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tente ajustar os filtros de busca ou criar um novo abrigo.
-            </Typography>
-          </Paper>
-        )}
-
-        {!loading && rows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <SheltersTable
-              isAdmin={isAdmin}
-              rows={rows}
-              total={total}
-              pageIndex={pageIndex}
-              pageSize={pageSize}
-              setPageIndex={setPageIndex}
-              setPageSize={setPageSize}
-              sorting={sorting ? ([sorting] as any) : []}
-              setSorting={(s) =>
-                setSorting(Array.isArray(s) ? (s[0] ?? null) : (s as any))
-              }
-              onOpenView={handleOpenView}
-              onStartEdit={handleEdit}
-              onAskDelete={askDelete}
-            />
-          </motion.div>
-        )}
-
-      <ShelterViewDialog
-        open={!!viewing}
-        loading={viewingLoading}
-        shelter={viewing}
-        onClose={() => setViewing(null)}
-      />
-
-      <DeleteConfirmDialog
-        open={!!confirmDelete}
-        title={confirmDelete ? confirmDelete.name : ""}
-        onClose={() => {
-          setConfirmDelete(null);
-        }}
-        onConfirm={submitDelete}
-      />
-      </Container>
-    </Box>
+          <DeleteConfirmDialog
+            testId="shelters-delete-dialog"
+            open={!!confirmDelete}
+            title={confirmDelete ? confirmDelete.name : ""}
+            onClose={() => setConfirmDelete(null)}
+            onConfirm={submitDelete}
+          />
+          <Snackbar open={!!deleteError} autoHideDuration={6000} onClose={() => setDeleteError("")}>
+            <Alert severity="error" data-testid="shelters-delete-error" onClose={() => setDeleteError("")}>
+              {deleteError}
+            </Alert>
+          </Snackbar>
+        </>
+      }
+    />
   );
 }

@@ -1,194 +1,159 @@
-import { useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  Container,
-  Paper,
-  Typography,
-} from '@mui/material';
-import { MenuBook } from '@mui/icons-material';
-import { motion } from 'framer-motion';
-
-import type { MeditationData, DayItem } from '@/store/slices/meditation/meditationSlice';
-import MeditationCard from './components/MeditationCard';
-import DayDetailsDialog from './components/DayDetailsDialog';
-import { formatPtBrDate, useMeditationsList } from './hooks';
-import BackHeader from '@/components/common/header/BackHeader';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, Button, Snackbar } from '@mui/material';
+import { Add, MenuBook } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
-import ImagePageToolbar from '../image-pages/components/ImagePageToolbar';
+import MediaDocumentPreviewModal from 'utils/MediaDocumentPreviewModal';
+import { getMediaPreviewUrl } from 'utils/getMediaPreviewUrl';
+import {
+  type DayItem,
+  type MeditationData,
+  setMeditationData,
+} from '@/store/slices/meditation/meditationSlice';
+import type { AppDispatch } from '@/store/slices';
+import MeditationCard from './components/MeditationCard';
+import MeditationDaysDialog from './components/MeditationDaysDialog';
+import DayDetailsDialog from './components/DayDetailsDialog';
+import { deleteMeditation, fetchMeditationsPage } from './api';
+import {
+  MEDITATIONS_DEFAULT_SORT,
+  MEDITATIONS_LABELS,
+  MEDITATIONS_TEST_ID_PREFIX,
+  MEDITATION_CREATE_PATH,
+  MEDITATION_EDIT_PATH,
+  MEDITATION_FILTER_KEYS,
+  MEDITATION_PERIOD_FILTER_LABELS,
+  MEDITATION_SORT_OPTIONS,
+} from './constants';
+import { MeditationPeriod } from './types';
+
+const P = MEDITATIONS_TEST_ID_PREFIX;
+const K = MEDITATION_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.PERIOD,
+    label: MEDITATIONS_LABELS.FILTER_PERIOD,
+    allLabel: 'Todos os períodos',
+    options: Object.values(MeditationPeriod).map((value) => ({ value, label: MEDITATION_PERIOD_FILTER_LABELS[value] })),
+  },
+  { kind: 'date', key: K.START_FROM, label: MEDITATIONS_LABELS.FILTER_START_FROM },
+  { kind: 'date', key: K.START_TO, label: MEDITATIONS_LABELS.FILTER_START_TO },
+  { kind: 'date', key: K.CREATED_FROM, label: MEDITATIONS_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: MEDITATIONS_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: MEDITATIONS_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: MEDITATION_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: MEDITATIONS_DEFAULT_SORT };
 
 export default function MeditationManager() {
-  const {
-    meditations,
-    loading,
-    filtering,
-    error,
-    setError,
-    search,
-    setSearch,
-    removeMeditation,
-  } = useMeditationsList();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const list = useAdminList<MeditationData>({
+    fetcher: fetchMeditationsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: MEDITATIONS_LABELS.LOAD_ERROR,
+  });
 
+  const [daysOf, setDaysOf] = useState<MeditationData | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayItem | null>(null);
-  const [meditationToDelete, setMeditationToDelete] = useState<MeditationData | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const isBusy = loading || filtering;
+  const [materialOf, setMaterialOf] = useState<MeditationData | null>(null);
+  const [toDelete, setToDelete] = useState<MeditationData | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
-  const handleToggleExpand = (id: string) => {
-    setExpandedId((curr) => (curr === id ? null : id));
+  const handleEdit = useCallback(
+    (meditation: MeditationData) => {
+      dispatch(setMeditationData(meditation));
+      navigate(MEDITATION_EDIT_PATH);
+    },
+    [dispatch, navigate],
+  );
+
+  const handleConfirmDelete = async () => {
+    if (!toDelete) return;
+    try {
+      await deleteMeditation(toDelete.id);
+      list.reload();
+    } catch {
+      setDeleteError(MEDITATIONS_LABELS.DELETE_ERROR);
+    } finally {
+      setToDelete(null);
+    }
   };
 
+  const materialMedia = useMemo(
+    () => (materialOf ? { ...materialOf.media, url: getMediaPreviewUrl(materialOf.media) } : null),
+    [materialOf],
+  );
+
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+    <AdminListScreen
+      testIdPrefix={P}
+      title={MEDITATIONS_LABELS.TITLE}
+      searchLabel={MEDITATIONS_LABELS.SEARCH}
+      searchPlaceholder={MEDITATIONS_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={MEDITATIONS_LABELS.EMPTY}
+      emptyIcon={<MenuBook sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      primaryAction={
+        <Button
+          data-testid={`${P}-create`}
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => navigate(MEDITATION_CREATE_PATH)}
+          fullWidth
+          sx={{ minHeight: 44, textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}
         >
-          <BackHeader title="📖 Lista de Meditações" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Box>
-              <ImagePageToolbar search={search} onSearchChange={setSearch} loading={filtering} />
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {isBusy && meditations.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-            <Typography variant="body2" mt={2} color="text.secondary">
-              Carregando meditações...
-            </Typography>
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-              onClose={() => setError('')}
-            >
-              {error}
+          {MEDITATIONS_LABELS.CREATE}
+        </Button>
+      }
+      overlays={
+        <>
+          <MeditationDaysDialog meditation={daysOf} onClose={() => setDaysOf(null)} onDayClick={setSelectedDay} />
+          <DayDetailsDialog day={selectedDay} onClose={() => setSelectedDay(null)} />
+          <MediaDocumentPreviewModal
+            open={!!materialOf}
+            onClose={() => setMaterialOf(null)}
+            media={materialMedia as MeditationData['media'] | null}
+          />
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!toDelete}
+            title={toDelete?.topic || MEDITATIONS_LABELS.DELETE_TITLE_FALLBACK}
+            onClose={() => setToDelete(null)}
+            onConfirm={handleConfirmDelete}
+          />
+          <Snackbar open={!!deleteError} autoHideDuration={5000} onClose={() => setDeleteError('')}>
+            <Alert data-testid={`${P}-delete-error`} severity="error" variant="filled" onClose={() => setDeleteError('')}>
+              {deleteError}
             </Alert>
-          </motion.div>
-        ) : meditations.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <MenuBook sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma meditação encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {search
-                  ? 'Tente ajustar sua busca ou limpar os filtros.'
-                  : 'Ainda não há meditações cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <Box sx={{ position: 'relative', minHeight: '400px' }}>
-            {filtering && meditations.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3} alignItems="stretch">
-              {meditations.map((meditation, index) => {
-                const isExpanded = expandedId === meditation.id;
-
-                return (
-                  <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    lg={3}
-                    key={meditation.id}
-                    sx={{ display: 'flex' }}
-                    component={motion.div}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                  >
-                    <MeditationCard
-                      meditation={meditation}
-                      onDelete={setMeditationToDelete}
-                      onDayClick={setSelectedDay}
-                      formatDate={formatPtBrDate}
-                      isExpanded={isExpanded}
-                      onToggleExpand={() => handleToggleExpand(meditation.id)}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </Box>
-        )}
-
-        <DayDetailsDialog day={selectedDay} onClose={() => setSelectedDay(null)} />
-
-        <DeleteConfirmDialog
-          open={!!meditationToDelete}
-          title={meditationToDelete?.topic || 'Meditação'}
-          onClose={() => setMeditationToDelete(null)}
-          onConfirm={async () => {
-            if (!meditationToDelete) return;
-            await removeMeditation(meditationToDelete);
-            setMeditationToDelete(null);
-          }}
-        />
-      </Container>
-    </Box>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((meditation) => (
+          <MeditationCard
+            key={meditation.id}
+            meditation={meditation}
+            onDelete={setToDelete}
+            onShowDays={setDaysOf}
+            onShowMaterial={setMaterialOf}
+            onEdit={handleEdit}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

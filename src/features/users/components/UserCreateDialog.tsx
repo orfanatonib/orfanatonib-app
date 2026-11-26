@@ -33,16 +33,17 @@ export default function UserCreateDialog({
   const roleOptions = [UserRole.LEADER, UserRole.MEMBER];
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+    <Dialog data-testid="user-create-dialog" open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Criar Usuário</DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2 }} data-testid="user-create-error">{error}</Alert>}
 
         <Grid container spacing={{ xs: 1.5, md: 2 }} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Nome"
+              inputProps={{ "data-testid": "user-create-name" }}
               value={value.name}
               onChange={(e) => onChange({ ...value, name: e.target.value })}
               onBlur={() => onChange({ ...value, name: normalizeName(value.name || "") })}
@@ -53,6 +54,7 @@ export default function UserCreateDialog({
             <TextField
               fullWidth
               label="E-mail"
+              inputProps={{ "data-testid": "user-create-email" }}
               value={value.email}
               onChange={(e) => onChange({ ...value, email: e.target.value })}
             />
@@ -62,6 +64,7 @@ export default function UserCreateDialog({
             <TextField
               fullWidth
               label="Senha"
+              inputProps={{ "data-testid": "user-create-password" }}
               type="password"
               value={value.password}
               onChange={(e) => onChange({ ...value, password: e.target.value })}
@@ -72,6 +75,7 @@ export default function UserCreateDialog({
             <TextField
               fullWidth
               label="Confirmar Senha"
+              inputProps={{ "data-testid": "user-create-confirm-password" }}
               type="password"
               value={value.confirmPassword || ""}
               onChange={(e) => onChange({ ...value, confirmPassword: e.target.value })}
@@ -83,13 +87,14 @@ export default function UserCreateDialog({
               <InputLabel>Papel</InputLabel>
               <Select
                 label="Papel"
+                SelectDisplayProps={{ "data-testid": "user-create-role" } as React.HTMLAttributes<HTMLDivElement>}
                 value={value.role ?? UserRole.MEMBER}
                 onChange={(e) =>
                   onChange({ ...value, role: e.target.value as UserRole })
                 }
               >
                 {roleOptions.map((role) => (
-                  <MenuItem key={role} value={role}>
+                  <MenuItem key={role} value={role} data-testid={`user-create-role-option-${role}`}>
                     {roleLabels[role]}
                   </MenuItem>
                 ))}
@@ -101,6 +106,7 @@ export default function UserCreateDialog({
             <TextField
               fullWidth
               label="Telefone"
+              inputProps={{ "data-testid": "user-create-phone" }}
               inputMode="numeric"
               value={maskPhoneBR(value.phone || "")}
               onChange={(e) => onChange({ ...value, phone: maskPhoneBR(e.target.value) })}
@@ -117,10 +123,10 @@ export default function UserCreateDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onCancel} sx={{ color: "text.secondary" }}>
+        <Button onClick={onCancel} sx={{ color: "text.secondary" }} data-testid="user-create-cancel">
           Cancelar
         </Button>
-        <Button variant="contained" onClick={onConfirm} disabled={loading}>
+        <Button variant="contained" onClick={onConfirm} disabled={loading} data-testid="user-create-submit">
           Criar
         </Button>
       </DialogActions>

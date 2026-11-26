@@ -1,4 +1,5 @@
 import type { ScheduleDates, TeamScheduleDto, ValidationResult } from './types';
+import { formatDayBR } from 'utils/dateUtils';
 
 export const ATTENDANCE_RULES = {
   MAX_COMMENT_LENGTH: 500,
@@ -43,7 +44,7 @@ export const getScheduleType = (schedule: ScheduleDates | TeamScheduleDto): 'vis
 
 export const formatScheduleLabel = (schedule: TeamScheduleDto): string => {
   const date = schedule.date || schedule.visitDate || schedule.meetingDate;
-  const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const readableDate = formatDateBR(date);
 
   const category = schedule.category || (schedule.visitDate ? 'visit' : 'meeting');
   const kind = category === 'visit' ? 'Visita' : 'Reunião';
@@ -52,11 +53,8 @@ export const formatScheduleLabel = (schedule: TeamScheduleDto): string => {
   return `${kind} #${schedule.visitNumber} • ${readableDate}${extra ? ` • ${extra}` : ''}`;
 };
 
-export const formatDateBR = (iso?: string) => {
-  if (!iso) return 'Data a definir';
-  try {
-    return new Date(iso).toLocaleDateString('pt-BR');
-  } catch {
-    return 'Data inválida';
-  }
-};
+/**
+ * Data de um encontro, no formato brasileiro. A regra mora em
+ * `src/utils/dates` porque o mesmo dia puro é exibido fora da frequência.
+ */
+export const formatDateBR = (iso?: string): string => formatDayBR(iso);

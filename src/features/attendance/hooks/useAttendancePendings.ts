@@ -5,6 +5,7 @@ import type { AllPendingsResponseDto, PendingForMemberDto, TeamPendingsDto, Team
 import type { RootState } from '@/store/slices';
 import { UserRole } from '@/store/slices/auth/authSlice';
 import { useDataFetcher } from '@/hooks/error-handling';
+import { FeatureFlagKeys, useIsFeatureEnabled } from '@/features/feature-flags';
 
 export interface UseAttendancePendingsResult {
   memberPendings: PendingForMemberDto[];
@@ -14,12 +15,16 @@ export interface UseAttendancePendingsResult {
   memberPendingsCount: number;
   visitReportPendingsCount: number;
   loading: boolean;
-  error: any;
-  refetch: (options?: any) => Promise<any>;
+  error: unknown;
+  refetch: () => Promise<unknown>;
 }
 
 export function useAttendancePendings(): UseAttendancePendingsResult {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  // Pendências de presença e de relatório dependem das flags dos próprios recursos.
+  const attendanceEnabled = useIsFeatureEnabled(FeatureFlagKeys.ATTENDANCE_CONTROL);
+  const visitReportsEnabled = useIsFeatureEnabled(FeatureFlagKeys.VISIT_REPORTS);
 
   const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
   const isLeaderOrAdmin = isAuthenticated && (user?.role === UserRole.LEADER || user?.role === UserRole.ADMIN);
@@ -29,7 +34,7 @@ export function useAttendancePendings(): UseAttendancePendingsResult {
     leaderPendings: TeamPendingsDto[];
     visitReportPendings: TeamVisitReportPendingsDto[];
   }> => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !attendanceEnabled) {
       return { memberPendings: [], leaderPendings: [], visitReportPendings: [] };
     }
 
@@ -45,17 +50,17 @@ export function useAttendancePendings(): UseAttendancePendingsResult {
       return {
         leaderPendings: res.leaderPendings,
         memberPendings: res.memberPendings,
-        visitReportPendings: res.visitReportPendings || [],
+        visitReportPendings: visitReportsEnabled ? res.visitReportPendings || [] : [],
       };
     }
 
     return { memberPendings: [], leaderPendings: [], visitReportPendings: [] };
-  }, [isAuthenticated, isMember, isLeaderOrAdmin]);
+  }, [isAuthenticated, attendanceEnabled, visitReportsEnabled, isMember, isLeaderOrAdmin]);
 
   const { data, isLoading, error, refetch } = useDataFetcher(
     fetchFunction,
     {
-      enabled: isAuthenticated,
+      enabled: isAuthenticated && attendanceEnabled,
       staleTime: 2 * 60 * 1000, // 2 minutes
       retry: true,
       context: 'attendance-pendings',

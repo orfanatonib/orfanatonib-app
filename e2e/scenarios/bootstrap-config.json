@@ -1,0 +1,30 @@
+{
+ "unit": "bootstrap-config",
+ "scenarios": [
+  "bootstrap-config.get.health#feliz",
+  "bootstrap-config.get.health#perfil-admin",
+  "bootstrap-config.get.health#perfil-anonimo",
+  "bootstrap-config.get.health#perfil-lider",
+  "bootstrap-config.get.health#perfil-membro",
+  "bootstrap-config.get.health-detailed#removido",
+  "bootstrap-config.get.health-ready#feliz",
+  "bootstrap-config.get.health-ready#perfil-admin",
+  "bootstrap-config.get.health-ready#perfil-anonimo",
+  "bootstrap-config.get.health-ready#perfil-lider",
+  "bootstrap-config.get.health-ready#perfil-membro",
+  "bootstrap-config.get.raiz#feliz",
+  "bootstrap-config.get.raiz#perfil-admin",
+  "bootstrap-config.get.raiz#perfil-anonimo",
+  "bootstrap-config.get.raiz#perfil-lider",
+  "bootstrap-config.get.raiz#perfil-membro",
+  "bootstrap-config.ui.boot#feliz",
+  "bootstrap-config.ui.boot#mobile",
+  "bootstrap-config.ui.rota-lazy#admin",
+  "bootstrap-config.ui.rota-lazy#flag-desligada",
+  "bootstrap-config.ui.rota-lazy#guarda-anonimo",
+  "bootstrap-config.ui.rota-lazy#guarda-membro",
+  "bootstrap-config.ui.rota-lazy#mobile",
+  "bootstrap-config.ui.rota-lazy#nao-encontrada",
+  "bootstrap-config.ui.rota-lazy#publica"
+ ]
+}

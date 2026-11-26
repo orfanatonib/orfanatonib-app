@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import apiAxios from '@/config/axiosConfig';
 import { MediaItem } from '@/store/slices/types';
 import { API_ERROR_MESSAGES } from '@/constants/errors';
+import { logger } from '@/utils/logger';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -94,6 +95,8 @@ interface User {
 interface GoogleUser {
   name: string;
   email: string;
+  /** Só em memória (fora do `whitelist` do persist): nunca vai para localStorage. */
+  completionToken?: string;
 }
 
 export interface LoginResponse {
@@ -134,8 +137,8 @@ const initialState: AuthState = {
 const IS_DEV = import.meta.env.DEV === true;
 const DEBUG_AUTH = import.meta.env.VITE_DEBUG_AUTH === 'true';
 
-const log = (message: string, ...args: any[]) => {
-  if (IS_DEV || DEBUG_AUTH) console.debug(message, ...args);
+const log = (message: string, ...args: unknown[]) => {
+  if (IS_DEV || DEBUG_AUTH) logger.debug(message, { feature: 'auth', metadata: { args } });
 };
 
 const clean = (s: string) => s.replace(/^"|"$/g, '');
@@ -162,12 +165,17 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { rejectValue: stri
 
       clearTimeout(timeoutId);
       return response.data;
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+    } catch (error: unknown) {
+      const failure = error as {
+        name?: string;
+        code?: string;
+        response?: { data?: { message?: string } };
+      } | null;
+      if (failure?.name === 'AbortError' || failure?.code === 'ECONNABORTED') {
         log('[Auth] Request timeout');
         return rejectWithValue('Timeout ao verificar autenticação');
       }
-      const errorMessage = error?.response?.data?.message || API_ERROR_MESSAGES.FETCH_USER;
+      const errorMessage = failure?.response?.data?.message || API_ERROR_MESSAGES.FETCH_USER;
       log('[Auth] Error fetching user:', errorMessage);
       return rejectWithValue(errorMessage);
     }
@@ -198,7 +206,7 @@ export const initAuth = createAsyncThunk<void, void, { rejectValue: string }>(
           dispatch(logout());
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       log('[Auth] Init error:', e);
       return rejectWithValue('Falha ao inicializar auth');
     }
@@ -228,7 +236,7 @@ const authSlice = createSlice({
         localStorage.setItem('accessToken', state.accessToken!);
         localStorage.setItem('refreshToken', state.refreshToken!);
       } catch (e) {
-        console.warn('Failed to save auth to localStorage', e);
+        logger.warn('Failed to save auth to localStorage', undefined, e);
       }
     },
     logout: (state) => {
@@ -244,7 +252,7 @@ const authSlice = createSlice({
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       } catch (e) {
-        console.warn('Failed to remove auth from localStorage', e);
+        logger.warn('Failed to remove auth from localStorage', undefined, e);
       }
     },
     setEmailVerificationAlert: (state, action: PayloadAction<{ verificationEmailSent: boolean; message?: string } | null>) => {
@@ -297,7 +305,7 @@ const authSlice = createSlice({
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
         } catch (e) {
-          console.warn('Failed to clear auth from localStorage', e);
+          logger.warn('Failed to clear auth from localStorage', undefined, e);
         }
       });
   },

@@ -28,6 +28,7 @@ export default function ContactDetailsModal({ contact, onClose, onMarkAsRead, on
 
   return (
     <Dialog
+      data-testid="contact-view-dialog"
       open={!!contact}
       onClose={onClose}
       maxWidth="sm"
@@ -38,37 +39,37 @@ export default function ContactDetailsModal({ contact, onClose, onMarkAsRead, on
         <DialogTitle sx={{ p: 0, display: "flex", alignItems: "center", gap: 1, fontSize: { xs: ".9rem", md: "1.1rem" } }}>
           <MarkEmailReadIcon color="primary" /> Detalhes do Contato
         </DialogTitle>
-        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+        <IconButton data-testid="close-contact-view-dialog-button" aria-label="Fechar" onClick={onClose} sx={{ width: 44, height: 44 }}><CloseIcon /></IconButton>
       </Box>
 
       <DialogContent sx={{ mt: 2, px: isMobile ? 2 : 3 }}>
         <Box display="flex" alignItems="center" mb={1}>
-          <PersonIcon sx={{ mr: 1 }} /><Typography><strong>Nome:</strong> {contact.name}</Typography>
+          <PersonIcon sx={{ mr: 1 }} /><Typography data-testid="contact-view-name"><strong>Nome:</strong> {contact.name}</Typography>
         </Box>
         <Box display="flex" alignItems="center" mb={1}>
-          <EmailIcon sx={{ mr: 1 }} /><Typography><strong>Email:</strong> {contact.email}</Typography>
+          <EmailIcon sx={{ mr: 1 }} /><Typography data-testid="contact-view-email"><strong>Email:</strong> {contact.email}</Typography>
         </Box>
         <Box display="flex" alignItems="center" mb={1}>
-          <PhoneIcon sx={{ mr: 1 }} /><Typography><strong>Telefone:</strong> {contact.phone}</Typography>
+          <PhoneIcon sx={{ mr: 1 }} /><Typography data-testid="contact-view-phone"><strong>Telefone:</strong> {contact.phone}</Typography>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" gutterBottom><strong>Mensagem:</strong></Typography>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>{contact.message}</Typography>
+        <Typography data-testid="contact-view-message" variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>{contact.message}</Typography>
 
-        <Chip label={contact.read ? "Lido" : "Não lido"} color={contact.read ? "success" : "warning"} size="small" />
+        <Chip data-testid="contact-view-status" label={contact.read ? "Lido" : "Não lido"} color={contact.read ? "success" : "warning"} size="small" />
       </DialogContent>
 
       <DialogActions sx={{ p: 2, flexDirection: isMobile ? "column" : "row", gap: 1 }}>
-        <Button onClick={onClose} fullWidth={isMobile} size={isMobile ? "small" : "medium"}>Fechar</Button>
+        <Button data-testid="contact-view-close" onClick={onClose} fullWidth={isMobile} sx={{ minHeight: 44 }}>Fechar</Button>
 
         {!contact.read ? (
-          <Button onClick={handleMarkAsRead} variant="contained" color="primary" fullWidth={isMobile} size={isMobile ? "small" : "medium"}>
+          <Button data-testid="contact-view-mark-read" onClick={handleMarkAsRead} variant="contained" color="primary" fullWidth={isMobile} sx={{ minHeight: 44 }}>
             Marcar como lido
           </Button>
         ) : (
-          <Button onClick={onDelete} variant="contained" color="error" startIcon={<DeleteIcon />} fullWidth={isMobile} size={isMobile ? "small" : "medium"}>
+          <Button data-testid="contact-view-delete" onClick={onDelete} variant="contained" color="error" startIcon={<DeleteIcon />} fullWidth={isMobile} sx={{ minHeight: 44 }}>
             Excluir
           </Button>
         )}

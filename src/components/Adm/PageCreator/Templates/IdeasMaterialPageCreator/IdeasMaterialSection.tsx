@@ -58,6 +58,7 @@ export function IdeasMaterialSection({ section, onUpdate, isCreationMode = false
             fullWidth
             value={title}
             onChange={handleTitleChange}
+            inputProps={{ 'data-testid': 'ideas-material-title' }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -84,6 +85,7 @@ export function IdeasMaterialSection({ section, onUpdate, isCreationMode = false
             rows={4}
             value={description}
             onChange={handleDescriptionChange}
+            inputProps={{ 'data-testid': 'ideas-material-description' }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -142,9 +144,9 @@ export function IdeasMaterialSection({ section, onUpdate, isCreationMode = false
           },
         }}
       >
-        <Tab label="📄 Documentos" />
-        <Tab label="🖼️ Imagens" />
-        <Tab label="🎥 Vídeos" />
+        <Tab data-testid="ideas-material-tab-documents" label="📄 Documentos" />
+        <Tab data-testid="ideas-material-tab-images" label="🖼️ Imagens" />
+        <Tab data-testid="ideas-material-tab-videos" label="🎥 Vídeos" />
       </Tabs>
 
       {tabIndex === 0 && (

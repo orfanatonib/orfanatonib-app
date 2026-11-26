@@ -1,38 +1,60 @@
-import React, { useState } from 'react';
-import { Box, CircularProgress, Alert, Typography, Stack, Container, Paper } from '@mui/material';
-import { Campaign } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Add, Campaign } from '@mui/icons-material';
+import { Alert, Button, Snackbar } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'store/slices';
 import { setInformativeBanner, InformativeBannerData } from 'store/slices/informative/informativeBannerSlice';
-import { useInformativeBanners } from './hooks';
-import { deleteBannerApi } from './api';
-
-import BannerToolbar from './components/BannerToolbar';
-import BannerSearch from './components/BannerSearch';
-import BannerGrid from './components/BannerGrid';
-
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
 import InformativeBannerModal from './components/InformativeBannerModal';
-import BackHeader from '@/components/common/header/BackHeader';
+import InformativeCard from './components/InformativeCard';
+import { deleteBannerApi, fetchBannersPage } from './api';
+import {
+  INFORMATIVES_DEFAULT_SORT,
+  INFORMATIVES_LABELS,
+  INFORMATIVES_TEST_ID_PREFIX,
+  INFORMATIVE_FILTER_KEYS,
+  INFORMATIVE_SORT_OPTIONS,
+  INFORMATIVE_VISIBILITY_OPTIONS,
+} from './constants';
+
+const P = INFORMATIVES_TEST_ID_PREFIX;
+const K = INFORMATIVE_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.PUBLIC,
+    label: INFORMATIVES_LABELS.FILTER_VISIBILITY,
+    allLabel: INFORMATIVES_LABELS.FILTER_VISIBILITY_ALL,
+    options: INFORMATIVE_VISIBILITY_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: INFORMATIVES_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: INFORMATIVES_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: INFORMATIVES_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: INFORMATIVE_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: INFORMATIVES_DEFAULT_SORT };
 
 export default function InformativeBannerLManager() {
   const dispatch = useDispatch<AppDispatch>();
-
-  const {
-    filtered,
-    searchTerm,
-    setSearchTerm,
-    isFiltering,
-    loading,
-    error,
-    setError,
-    fetchBanners,
-  } = useInformativeBanners();
+  const list = useAdminList<InformativeBannerData>({
+    fetcher: fetchBannersPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: INFORMATIVES_LABELS.LOAD_ERROR,
+  });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<InformativeBannerData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InformativeBannerData | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const handleOpenCreate = () => {
     setEditData(null);
@@ -49,152 +71,64 @@ export default function InformativeBannerLManager() {
     if (!deleteTarget) return;
     try {
       await deleteBannerApi(deleteTarget.id || '');
-      await fetchBanners();
+      list.reload();
     } catch {
-      setError('Erro ao excluir o banner. Tente novamente.');
+      setDeleteError(INFORMATIVES_LABELS.DELETE_ERROR);
     } finally {
       setDeleteTarget(null);
     }
   };
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+    <AdminListScreen
+      testIdPrefix={P}
+      title={INFORMATIVES_LABELS.TITLE}
+      searchLabel={INFORMATIVES_LABELS.SEARCH}
+      searchPlaceholder={INFORMATIVES_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={INFORMATIVES_LABELS.EMPTY}
+      emptyIcon={<Campaign sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      primaryAction={
+        <Button
+          data-testid={`${P}-create`}
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleOpenCreate}
+          fullWidth
+          sx={{ minHeight: 44, textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}
         >
-          <BackHeader title="📢 Banners Informativos" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
-              alignItems={{ xs: 'stretch', sm: 'center' }}
-            >
-              <BannerSearch value={searchTerm} onChange={setSearchTerm} loading={isFiltering} />
-              <BannerToolbar onCreate={handleOpenCreate} />
-            </Stack>
-          </Paper>
-        </motion.div>
-
-        {loading && filtered.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-            <Typography variant="body2" mt={2} color="text.secondary">
-              Carregando banners informativos...
-            </Typography>
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-              action={
-                <Box
-                  component="span"
-                  sx={{
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
-                  onClick={fetchBanners}
-                >
-                  Tentar novamente
-                </Box>
-              }
-            >
-              {error}
+          {INFORMATIVES_LABELS.CREATE}
+        </Button>
+      }
+      overlays={
+        <>
+          <InformativeBannerModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSave={async () => list.reload()}
+            initialData={editData}
+          />
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!deleteTarget}
+            title={deleteTarget?.title}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={handleDelete}
+          />
+          <Snackbar open={!!deleteError} autoHideDuration={5000} onClose={() => setDeleteError('')}>
+            <Alert data-testid={`${P}-delete-error`} severity="error" variant="filled" onClose={() => setDeleteError('')}>
+              {deleteError}
             </Alert>
-          </motion.div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Campaign sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhum banner encontrado
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {searchTerm
-                  ? 'Tente ajustar sua busca ou limpar os filtros.'
-                  : 'Ainda não há banners informativos cadastrados.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {isFiltering && filtered.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <BannerGrid items={filtered} onEdit={handleOpenEdit} onDeleteAsk={setDeleteTarget} />
-          </>
-        )}
-
-        <InformativeBannerModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSave={fetchBanners}
-          initialData={editData}
-        />
-
-        <DeleteConfirmDialog
-          open={!!deleteTarget}
-          title={deleteTarget?.title}
-          onClose={() => setDeleteTarget(null)}
-          onConfirm={handleDelete}
-        />
-      </Container>
-    </Box>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((banner) => (
+          <InformativeCard key={banner.id} banner={banner} onEdit={handleOpenEdit} onDeleteAsk={setDeleteTarget} />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

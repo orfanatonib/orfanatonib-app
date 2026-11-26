@@ -12,6 +12,11 @@ export function normalizeName(s?: string | null): string {
     .join(" ");
 }
 
+/**
+ * Chave de BUSCA: minúsculas e sem acento. Nunca para exibir nem para salvar.
+ * Contrato dos três normalizadores: `normalizeName` (exibição: Primeira Maiúscula),
+ * `normalize` (busca: sem caixa/acento) e `normalizeEmail` em `validators.ts` (e-mail: trim + minúsculas).
+ */
 export function normalize(s?: string | null) {
   return (s ?? "")
     .toLowerCase()
@@ -56,3 +61,12 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 export const isCoreOrSensitive = (k: string) => CORE_KEYS.has(k) || SENSITIVE_KEYS.has(k);
+
+/** Iniciais (até 2 letras) de um nome; "?" quando não há nome. */
+export const initials = (name?: string): string =>
+  (name || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("") || "?";

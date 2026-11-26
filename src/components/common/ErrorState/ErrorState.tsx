@@ -53,6 +53,7 @@ export default function ErrorState({
 
   return (
     <Paper
+      data-testid="error-state"
       elevation={2}
       sx={{
         p: 4,
@@ -79,7 +80,7 @@ export default function ErrorState({
         />
       </Box>
 
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
+      <Typography data-testid="error-state-title" variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
         {title || config.defaultTitle}
       </Typography>
 
@@ -89,6 +90,7 @@ export default function ErrorState({
 
       {showRetryButton && onRetry && (
         <Button
+          data-testid="error-state-retry"
           variant="contained"
           onClick={onRetry}
           sx={{

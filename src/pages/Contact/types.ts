@@ -3,10 +3,13 @@ export interface ContactFormData {
   email: string;
   telefone: string;
   mensagem: string;
+  /** Isca anti-robô: escondida, pessoas nunca a preenchem. */
+  website?: string;
 }
 
 export interface ContactFormProps {
-  onSubmit: (data: ContactFormData) => Promise<void>;
+  /** Resolve `true` só quando a mensagem foi aceita pela API. */
+  onSubmit: (data: ContactFormData) => Promise<boolean>;
   loading: boolean;
   submitted: boolean;
   globalError: string | null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 
 interface Props {
     open: boolean;
@@ -7,6 +7,7 @@ interface Props {
     onClose: () => void;
     onConfirm: () => Promise<void> | void;
     loading?: boolean;
+    testId?: string;
 }
 
 export default function DeleteConfirmDialog({
@@ -15,6 +16,7 @@ export default function DeleteConfirmDialog({
     onClose,
     onConfirm,
     loading = false,
+    testId,
 }: Props) {
     return (
         <DeleteConfirmationModal
@@ -22,6 +24,7 @@ export default function DeleteConfirmDialog({
             onClose={onClose}
             onConfirm={onConfirm}
             loading={loading}
+            testId={testId}
             description={
                 <span>
                     Você está prestes a excluir permanentemente:

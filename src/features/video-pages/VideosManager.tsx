@@ -1,48 +1,25 @@
-import { useEffect, useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  Paper,
-  Snackbar,
-  Alert as MuiAlert,
-  useMediaQuery,
-  useTheme,
-  Container,
-  Typography,
-} from '@mui/material';
+import { useState } from 'react';
+import { Snackbar, Alert as MuiAlert } from '@mui/material';
 import { VideoLibrary } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { AppDispatch } from '@/store/slices';
-import { setVideoData, VideoPageData } from 'store/slices/video/videoSlice';
+import { VideoPageData } from './types';
 
-import { useVideoPages } from './hooks';
-import VideoPageToolbar from './components/VideoPageToolbar';
+import { useVideoPagesList } from './hooks';
+import { videoPageEditPath } from './utils';
+import {
+  VIDEO_PAGES_FILTER_FIELDS,
+  VIDEO_PAGES_MESSAGES,
+  VIDEO_PAGES_TEST_ID_PREFIX,
+} from './constants';
 import VideoPageCard from './components/VideoPageCard';
-import DeleteConfirmationModal from '@/components/Common/DeleteConfirmationModal';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 import VideoPageDetailsModal from './components/VideoPageDetailsModal';
-import BackHeader from '@/components/common/header/BackHeader';
+import AdminListScreen from '@/components/common/admin-shell/AdminListScreen';
+import AdminCardGrid from '@/components/common/admin-shell/AdminCardGrid';
 
 export default function VideosManager() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const {
-    pages,
-    filtered,
-    loading,
-    error,
-    search,
-    setSearch,
-    fetchPages,
-    removePage,
-    setError,
-  } = useVideoPages();
+  const { list, removePage } = useVideoPagesList();
 
   const [selectedPage, setSelectedPage] = useState<VideoPageData | null>(null);
   const [pageToDelete, setPageToDelete] = useState<VideoPageData | null>(null);
@@ -53,187 +30,79 @@ export default function VideosManager() {
   });
 
   const handleEdit = (page: VideoPageData) => {
-    dispatch(setVideoData(page));
-    navigate('/adm/editar-pagina-videos');
+    if (page.id) navigate(videoPageEditPath(page.id));
   };
 
   const handleDelete = async () => {
     if (!pageToDelete) return;
     try {
       await removePage(pageToDelete.id || '');
-      setSnackbar({ open: true, message: 'Página excluída com sucesso.', severity: 'success' });
+      setSnackbar({ open: true, message: VIDEO_PAGES_MESSAGES.DELETE_SUCCESS, severity: 'success' });
     } catch {
-      setError('Erro ao deletar página');
-      setSnackbar({ open: true, message: 'Erro ao excluir página.', severity: 'error' });
+      setSnackbar({ open: true, message: VIDEO_PAGES_MESSAGES.DELETE_ERROR, severity: 'error' });
     } finally {
       setPageToDelete(null);
     }
   };
 
-  const isFiltering = pages.length > 0 && pages.length !== filtered.length;
-
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="🎥 Páginas de Vídeos" />
-        </motion.div>
+    <AdminListScreen
+      testIdPrefix={VIDEO_PAGES_TEST_ID_PREFIX}
+      title={VIDEO_PAGES_MESSAGES.TITLE}
+      searchLabel={VIDEO_PAGES_MESSAGES.SEARCH_LABEL}
+      searchPlaceholder={VIDEO_PAGES_MESSAGES.SEARCH_PLACEHOLDER}
+      fields={VIDEO_PAGES_FILTER_FIELDS}
+      list={list}
+      emptyMessage={VIDEO_PAGES_MESSAGES.EMPTY}
+      emptyIcon={<VideoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />}
+      overlays={
+        <>
+          <DeleteConfirmationModal
+            open={!!pageToDelete}
+            testId="video-pages-delete-modal"
+            description={`Você está prestes a excluir permanentemente: ${pageToDelete?.title ?? "esta página"}.`}
+            onClose={() => setPageToDelete(null)}
+            onConfirm={handleDelete}
+          />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <VideoPageToolbar
-              search={search}
-              onSearch={setSearch}
-              onRefresh={fetchPages}
-              isFiltering={isFiltering}
-            />
-          </Paper>
-        </motion.div>
+          <VideoPageDetailsModal
+            page={selectedPage}
+            open={!!selectedPage}
+            onClose={() => setSelectedPage(null)}
+          />
 
-        {loading && filtered.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-          </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-            >
-              {error}
-            </Alert>
-          </motion.div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <VideoLibrary sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma página encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {isFiltering
-                  ? 'Nenhuma página corresponde ao filtro aplicado.'
-                  : search
-                    ? 'Tente ajustar sua busca ou limpar os filtros.'
-                    : 'Ainda não há páginas de vídeos cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {loading && filtered.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3} alignItems="stretch">
-              {filtered.map((page, index) => (
-                <Grid
-                  item
-                  key={page.id}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: 'flex' }}
-                >
-                  <VideoPageCard
-                    page={page}
-                    onView={() => setSelectedPage(page)}
-                    onEdit={() => handleEdit(page)}
-                    onDelete={() => setPageToDelete(page)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-
-        <DeleteConfirmationModal
-          open={!!pageToDelete}
-          description={`Você está prestes a excluir permanentemente: ${pageToDelete?.title ?? "esta página"}.`}
-          onClose={() => setPageToDelete(null)}
-          onConfirm={handleDelete}
-        />
-
-        <VideoPageDetailsModal
-          page={selectedPage}
-          open={!!selectedPage}
-          onClose={() => setSelectedPage(null)}
-        />
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={5000}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <MuiAlert
-            severity={snackbar.severity}
-            variant="filled"
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={5000}
             onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-            sx={{
-              borderRadius: 2,
-            }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           >
-            {snackbar.message}
-          </MuiAlert>
-        </Snackbar>
-      </Container>
-    </Box>
+            <MuiAlert
+              data-testid="video-pages-snackbar"
+              severity={snackbar.severity}
+              variant="filled"
+              onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+              sx={{
+                borderRadius: 2,
+              }}
+            >
+              {snackbar.message}
+            </MuiAlert>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId="video-pages-list">
+        {list.items.map((page) => (
+          <VideoPageCard
+            key={page.id}
+            page={page}
+            onView={() => setSelectedPage(page)}
+            onEdit={() => handleEdit(page)}
+            onDelete={() => setPageToDelete(page)}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

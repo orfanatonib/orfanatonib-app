@@ -1,3 +1,4 @@
+import { useVisibleRoutes } from '@/features/feature-flags';
 import React from 'react';
 import { gradients } from '@/theme';
 import { useSelector } from 'react-redux';
@@ -6,11 +7,12 @@ import { Box, Typography, Button, Container } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MediaTargetType } from '@/store/slices/types';
+import { MEMBER_SUBPAGE_PATHS } from '@/pages/MemberArea/constants/navigation';
 
 const VisitMaterialsBanner: React.FC = () => {
   return null;
 
-  const routes = useSelector((state: RootState) => state.routes.routes);
+  const routes = useVisibleRoutes();
   const { user } = useSelector((state: RootState) => state.auth);
   const currentVisitRoute = routes.find(
     (route) => route.entityType === MediaTargetType.VisitMaterialsPage && route.current === true
@@ -198,7 +200,7 @@ const VisitMaterialsBanner: React.FC = () => {
               variant="contained"
               size="large"
               component={Link}
-              to="/lista-materias-visita"
+              to={MEMBER_SUBPAGE_PATHS.materials}
               sx={{
                 px: { xs: 4, md: 6 },
                 py: { xs: 2, md: 2.5 },

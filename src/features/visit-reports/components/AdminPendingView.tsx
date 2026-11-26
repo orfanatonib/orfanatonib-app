@@ -28,6 +28,7 @@ import {
     AssignmentLate as PendingIcon
 } from '@mui/icons-material';
 import { TeamVisitReportPendingsDto } from '../../attendance/types';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface AdminPendingViewProps {
     pendings: TeamVisitReportPendingsDto[];
@@ -150,6 +151,7 @@ export const AdminPendingView: React.FC<AdminPendingViewProps> = ({ pendings, on
                                             justifyContent: 'space-between'
                                         }}
                                         onClick={() => toggleShelter(shelterName)}
+                                        data-testid={`visit-reports-shelter-${shelterName}`}
                                     >
                                         <Stack direction="row" alignItems="center" spacing={2} sx={{ overflow: 'hidden' }}>
                                             <Box sx={{
@@ -198,6 +200,7 @@ export const AdminPendingView: React.FC<AdminPendingViewProps> = ({ pendings, on
                                                         <Grid item xs={12} key={team.teamId}>
                                                             <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
                                                                 <Box
+                                                                    data-testid={`visit-reports-team-${team.teamId}`}
                                                                     onClick={(e) => toggleTeam(team.teamId, e)}
                                                                     sx={{
                                                                         p: 2,
@@ -243,7 +246,7 @@ export const AdminPendingView: React.FC<AdminPendingViewProps> = ({ pendings, on
                                                                                         <Stack direction="row" alignItems="center" spacing={1}>
                                                                                             <Chip label={`Visita #${pending.visitNumber}`} size="small" variant="outlined" color="primary" sx={{ fontWeight: 'bold' }} />
                                                                                             <Typography variant="body2" color="text.secondary" fontWeight="medium">
-                                                                                                {new Date(pending.visitDate).toLocaleDateString('pt-BR')}
+                                                                                                {formatDayBR(pending.visitDate)}
                                                                                             </Typography>
                                                                                         </Stack>
 

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AxiosError } from "axios";
 import type {
   CreatePagelaPayload,
   Pagela,
@@ -12,6 +13,25 @@ import {
 } from "./api";
 import { apiFetchShelteredSimple, apiUpdateShelteredStatus } from "../sheltered/api";
 import type { ShelteredSimpleResponseDto } from "../sheltered/types";
+import { AcceptedJesusFilter, ShelteredActiveFilter } from "../sheltered/enums";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
+
+/** Maps this page's local filter values onto the sheltered domain enums. */
+const ACCEPTED_JESUS_BY_VALUE: Readonly<
+  Record<"all" | "accepted" | "not_accepted", AcceptedJesusFilter>
+> = {
+  all: AcceptedJesusFilter.ALL,
+  accepted: AcceptedJesusFilter.ACCEPTED,
+  not_accepted: AcceptedJesusFilter.NOT_ACCEPTED,
+};
+
+const ACTIVE_BY_VALUE: Readonly<
+  Record<"all" | "active" | "inactive", ShelteredActiveFilter>
+> = {
+  all: ShelteredActiveFilter.ALL,
+  active: ShelteredActiveFilter.ACTIVE,
+  inactive: ShelteredActiveFilter.INACTIVE,
+};
 
 export type Tri = "any" | "yes" | "no";
 const triToBoolString = (t: Tri): "true" | "false" | undefined =>
@@ -58,16 +78,20 @@ export function useShelteredBrowser() {
         page: pageNum,
         limit,
         searchString: searchTerm || undefined,
-        acceptedJesus: acceptedJesusFilter,
-        active: activeFilter,
+        acceptedJesus: ACCEPTED_JESUS_BY_VALUE[acceptedJesusFilter],
+        active: ACTIVE_BY_VALUE[activeFilter],
       });
       setItems(response.data || []);
       setTotalItems(response.meta?.totalItems || 0);
       setTotalPages(response.meta?.totalPages || 0);
-    } catch (e: any) {
-      setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao listar acolhidos"
-      );
+    } catch (e: unknown) {
+      if (e instanceof AxiosError) {
+        setShelteredError(
+          getApiErrorMessage(e, "Erro ao listar acolhidos")
+        );
+      } else {
+        setShelteredError("Erro ao listar acolhidos");
+      }
     } finally {
       setLoading(false);
     }
@@ -121,9 +145,9 @@ export function useShelteredBrowser() {
     try {
       await apiUpdateShelteredStatus(id, newActive);
       await search(debouncedQ, page, acceptedJesus, active);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setShelteredError(
-        e?.response?.data?.message || e?.message || "Erro ao atualizar status do acolhido"
+        getApiErrorMessage(e, "Erro ao atualizar status do acolhido")
       );
     } finally {
       setLoading(false);
@@ -236,9 +260,13 @@ export function useShelteredPagelas(
         const data = await apiListPagelasPaginated(q, { signal: ctrl.signal });
         setRows(data.items || []);
         setTotal(data.total || 0);
-      } catch (e: any) {
-        if (e?.name !== "CanceledError" && e?.name !== "AbortError") {
-          setError(e?.response?.data?.message || e?.message || "Erro ao listar pagelas");
+      } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+          if (e.name !== "CanceledError" && e.name !== "AbortError") {
+            setError(getApiErrorMessage(e, "Erro ao listar pagelas"));
+          }
+        } else {
+          setError("Erro ao listar pagelas");
         }
       } finally {
         if (abortRef.current === ctrl) abortRef.current = null;

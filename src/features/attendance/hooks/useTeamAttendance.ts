@@ -1,380 +1,207 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-
-import { registerTeamAttendance, getAttendanceRecords } from '../api';
-import { AttendanceType } from '../types';
-import type {
-  TeamWithMembersDto,
-  TeamScheduleDto,
-  RegisterTeamAttendanceDto,
-  AttendanceFormState,
-  TeamMemberDto,
-  AttendanceResponseDto,
-} from '../types';
-
-interface MemberAttendanceRow {
-  member: TeamMemberDto;
-  type: AttendanceType;
-  comment: string;
-}
-
-import { EventCategory } from '../types';
-
-type EventTypeFilter = EventCategory;
-
-interface UseTeamAttendanceProps {
-  team: TeamWithMembersDto;
-  schedules: TeamScheduleDto[];
-  onAttendanceRegistered: () => void;
-}
+import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getOccurrenceAttendance, registerTeamAttendance } from "../api";
+import { AttendanceType, EventCategory } from "../types";
+import type { AttendanceResponseDto, AttendanceFormState } from "../types";
+import type { AttendanceRow, UseTeamAttendanceProps } from "../workspace.types";
+import {
+  attendanceSnapshot,
+  buildAttendanceRows,
+  countAttendanceRows,
+  schedulesForCategory,
+} from "../workspace.utils";
+import { attendanceErrorMessage } from "../errors";
+import { ATTENDANCE_COMMENT_LIMIT } from "../constants";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 export function useTeamAttendance({
   team,
   schedules,
   onAttendanceRegistered,
 }: UseTeamAttendanceProps) {
-  const safeSchedules = Array.isArray(schedules) ? schedules : [];
-
-  const [scheduleId, setScheduleId] = useState<string>('');
-  const [eventTypeFilter, setEventTypeFilter] = useState<EventTypeFilter>(EventCategory.VISIT);
-
-  const filteredSchedules = useMemo(() => {
-    return safeSchedules.filter(s => {
-      const type = s.category || (s.visitDate ? EventCategory.VISIT : EventCategory.MEETING);
-      return type === eventTypeFilter;
-    });
-  }, [safeSchedules, eventTypeFilter]);
-
-  const lastLoadedKey = useRef<string | null>(null);
-
-  useEffect(() => {
-    lastLoadedKey.current = null;
-
-    if (filteredSchedules.length > 0) {
-      const firstSchedule = filteredSchedules[0];
-      setScheduleId(firstSchedule.id);
-    } else {
-      setScheduleId('');
-    }
-  }, [eventTypeFilter]);
-
-  useEffect(() => {
-    if (filteredSchedules.length > 0 && !scheduleId) {
-      setScheduleId(filteredSchedules[0].id);
-    } else if (filteredSchedules.length === 0 && scheduleId) {
-      setScheduleId('');
-    }
-  }, [filteredSchedules, scheduleId]);
-
-  const membersOnly = useMemo(() => {
-    return team.members.filter(member => member.role === 'member' || !member.role);
-  }, [team.members]);
-
-  const [memberAttendances, setMemberAttendances] = useState<Record<string, MemberAttendanceRow>>(() => {
-    const initial: Record<string, MemberAttendanceRow> = {};
-    const members = team.members.filter(member => member.role === 'member' || !member.role);
-    members.forEach(member => {
-      initial[member.id] = {
-        member,
-        type: AttendanceType.PRESENT,
-        comment: '',
-      };
-    });
-    return initial;
-  });
-
-  useEffect(() => {
-    setMemberAttendances(prev => {
-      const updated = { ...prev };
-      let changed = false;
-
-      membersOnly.forEach(member => {
-        if (!updated[member.id]) {
-          updated[member.id] = {
-            member,
-            type: AttendanceType.PRESENT,
-            comment: '',
-          };
-          changed = true;
-        }
-      });
-
-      Object.keys(updated).forEach(memberId => {
-        if (!membersOnly.find(m => m.id === memberId)) {
-          delete updated[memberId];
-          changed = true;
-        }
-      });
-
-      return changed ? updated : prev;
-    });
-  }, [membersOnly]);
-
+  const [params, setParams] = useSearchParams();
+  const eventTypeFilter =
+    params.get("tipo") === EventCategory.MEETING
+      ? EventCategory.MEETING
+      : EventCategory.VISIT;
+  const selectedId = params.get("evento") ?? "";
+  const setEventTypeFilter = (category: EventCategory) =>
+    setParams({ tipo: category }, { replace: true });
+  const setSelectedId = (id: string) =>
+    setParams(
+      { tipo: eventTypeFilter, ...(id ? { evento: id } : {}) },
+      { replace: true },
+    );
+  const filteredSchedules = useMemo(
+    () => schedulesForCategory(schedules, eventTypeFilter),
+    [schedules, eventTypeFilter],
+  );
+  const selectionError = Boolean(
+    selectedId &&
+      !filteredSchedules.some((schedule) => schedule.id === selectedId),
+  );
+  const scheduleId = selectedId
+    ? selectionError
+      ? ""
+      : selectedId
+    : (filteredSchedules[0]?.id ?? "");
+  const membersOnly = useMemo(
+    () =>
+      team.members.filter((member) => !member.role || member.role === "member"),
+    [team.members],
+  );
+  const [memberAttendances, setRows] = useState<Record<string, AttendanceRow>>(
+    {},
+  );
+  const [baseline, setBaseline] = useState("");
+  const [loadedKey, setLoadedKey] = useState("");
+  const [records, setRecords] = useState<AttendanceResponseDto[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
   const [formState, setFormState] = useState<AttendanceFormState>({
     loading: false,
     error: null,
     feedback: null,
   });
-
-  const [existingRecords, setExistingRecords] = useState<AttendanceResponseDto[]>([]);
-  const [loadingExistingRecords, setLoadingExistingRecords] = useState(false);
-  const [hasExistingAttendance, setHasExistingAttendance] = useState(false);
+  const saving = useRef(false);
+  const key = `${team.teamId}:${scheduleId}:${eventTypeFilter}`;
+  const ready = Boolean(scheduleId && loadedKey === key && !loadError);
+  const isDirty = ready && attendanceSnapshot(memberAttendances) !== baseline;
+  useUnsavedChangesGuard(isDirty || formState.loading);
 
   useEffect(() => {
-    const loadExistingRecords = async () => {
-      if (!scheduleId) {
-        lastLoadedKey.current = null;
-        setExistingRecords([]);
-        setHasExistingAttendance(false);
-        const resetAttendances: Record<string, MemberAttendanceRow> = {};
-        membersOnly.forEach(member => {
-          resetAttendances[member.id] = {
-            member,
-            type: AttendanceType.PRESENT,
-            comment: '',
-          };
-        });
-        setMemberAttendances(resetAttendances);
-        return;
-      }
-
-      const category = eventTypeFilter;
-      const uniqueKey = `${scheduleId}-${category}`;
-
-      if (lastLoadedKey.current === uniqueKey) {
-        return;
-      }
-
-      try {
-        setLoadingExistingRecords(true);
-        lastLoadedKey.current = uniqueKey;
-
-        const response = await getAttendanceRecords({
-          scheduleId,
-          category: category as 'visit' | 'meeting',
-          limit: 100,
-        });
-
-        const records = response.data || [];
-        setExistingRecords(records);
-        setHasExistingAttendance(records.length > 0);
-
-        const updated: Record<string, MemberAttendanceRow> = {};
-        membersOnly.forEach(member => {
-          const existingRecord = records.find(r => r.memberId === member.id);
-          if (existingRecord) {
-            updated[member.id] = {
-              member,
-              type: existingRecord.type,
-              comment: existingRecord.comment || '',
-            };
-          } else {
-            updated[member.id] = {
-              member,
-              type: AttendanceType.PRESENT,
-              comment: '',
-            };
-          }
-        });
-        setMemberAttendances(updated);
-      } catch {
-        lastLoadedKey.current = null;
-        setExistingRecords([]);
-        setHasExistingAttendance(false);
-        const resetAttendances: Record<string, MemberAttendanceRow> = {};
-        membersOnly.forEach(member => {
-          resetAttendances[member.id] = {
-            member,
-            type: AttendanceType.PRESENT,
-            comment: '',
-          };
-        });
-        setMemberAttendances(resetAttendances);
-      } finally {
-        setLoadingExistingRecords(false);
-      }
+    let active = true;
+    setLoadedKey("");
+    setLoadError(null);
+    setRecords([]);
+    setRows({});
+    setFormState({ loading: false, error: null, feedback: null });
+    if (!scheduleId) return;
+    void getOccurrenceAttendance({
+      teamId: team.teamId,
+      scheduleId,
+      category: eventTypeFilter,
+    })
+      .then((result) => {
+        if (!active) return;
+        const rows = buildAttendanceRows(membersOnly, result);
+        setRows(rows);
+        setBaseline(attendanceSnapshot(rows));
+        setRecords(result);
+        setLoadedKey(key);
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setLoadError(
+            attendanceErrorMessage(
+              error,
+              "Não foi possível carregar a frequência. Tente novamente antes de preencher.",
+            ),
+          );
+      });
+    return () => {
+      active = false;
     };
+  }, [team.teamId, scheduleId, eventTypeFilter, membersOnly, key, retry]);
 
-    loadExistingRecords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scheduleId, eventTypeFilter]);
-
-  const handleMemberTypeChange = useCallback((memberId: string, type: AttendanceType) => {
-    setMemberAttendances(prev => ({
+  const handleMemberTypeChange = (memberId: string, type: AttendanceType) => {
+    if (!ready || saving.current) return;
+    setRows((prev) => ({ ...prev, [memberId]: { ...prev[memberId], type } }));
+    setFormState((prev) => ({ ...prev, feedback: null }));
+  };
+  const handleMemberCommentChange = (memberId: string, comment: string) => {
+    if (!ready || saving.current) return;
+    setRows((prev) => ({
       ...prev,
-      [memberId]: {
-        ...prev[memberId],
-        type,
-      },
+      [memberId]: { ...prev[memberId], comment },
     }));
-  }, []);
-
-  const handleMemberCommentChange = useCallback((memberId: string, comment: string) => {
-    setMemberAttendances(prev => ({
-      ...prev,
-      [memberId]: {
-        ...prev[memberId],
-        comment,
-      },
-    }));
-  }, []);
-
-  const bulkSetType = useCallback((type: AttendanceType) => {
-    setMemberAttendances(prev => {
-      const updated: Record<string, MemberAttendanceRow> = {};
-      Object.keys(prev).forEach(memberId => {
-        updated[memberId] = {
-          ...prev[memberId],
-          type,
-          comment: type === AttendanceType.PRESENT ? '' : prev[memberId].comment,
-        };
-      });
-      return updated;
-    });
-  }, []);
-
-  const clearAllComments = useCallback(() => {
-    setMemberAttendances(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(memberId => {
-        updated[memberId] = {
-          ...updated[memberId],
-          comment: '',
-        };
-      });
-      return updated;
-    });
-  }, []);
-
-  const clearError = useCallback(() => {
-    setFormState(prev => ({ ...prev, error: null }));
-  }, []);
-
-  const clearFeedback = useCallback(() => {
-    setFormState(prev => ({ ...prev, feedback: null }));
-  }, []);
-
-  const handleSubmit = useCallback(async () => {
-    if (!scheduleId) {
-      setFormState(prev => ({
-        ...prev,
-        error: 'Selecione um evento para registrar a presença.',
-      }));
-      return;
-    }
-
-    if (safeSchedules.length === 0) {
-      setFormState(prev => ({
-        ...prev,
-        error: 'Nenhum evento disponível para esta equipe. Tente novamente mais tarde.',
-      }));
-      return;
-    }
-
-    const selectedSchedule = safeSchedules.find(s => s.id === scheduleId);
-    if (!selectedSchedule) {
-      setFormState(prev => ({
-        ...prev,
-        error: 'Evento selecionado não encontrado. Por favor, selecione outro evento.',
-      }));
-      if (safeSchedules.length > 0) {
-        setScheduleId(safeSchedules[0].id);
+    setFormState((prev) => ({ ...prev, feedback: null }));
+  };
+  const bulkSetType = (type: AttendanceType) => {
+    if (!ready || saving.current) return;
+    setRows((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([id, row]) => [id, { ...row, type }]),
+      ),
+    );
+    setFormState((prev) => ({ ...prev, feedback: null }));
+  };
+  const counts = countAttendanceRows(memberAttendances);
+  const handleSubmit = async () => {
+    if (!ready || saving.current || !membersOnly.length || !isDirty) return;
+    const attendances = [];
+    for (const row of Object.values(memberAttendances)) {
+      if (row.type === null || row.comment.length > ATTENDANCE_COMMENT_LIMIT) {
+        setFormState((prev) => ({
+          ...prev,
+          error:
+            row.type === null
+              ? "Marque a presença ou falta de todos os membros."
+              : "A observação deve ter no máximo 500 caracteres.",
+        }));
+        return;
       }
-      return;
-    }
-
-    if (membersOnly.length === 0) {
-      setFormState(prev => ({
-        ...prev,
-        error: 'Nenhum membro na equipe para registrar presença.',
-      }));
-      return;
-    }
-
-    setFormState(prev => ({
-      ...prev,
-      loading: true,
-      error: null,
-      feedback: null,
-    }));
-
-    try {
-      const attendances = Object.values(memberAttendances).map(row => ({
+      attendances.push({
         memberId: row.member.id,
         type: row.type,
-        comment: row.comment.trim() || undefined,
-      }));
-
-      const dto: RegisterTeamAttendanceDto = {
+        comment: row.comment.trim(),
+      });
+    }
+    saving.current = true;
+    setFormState({ loading: true, error: null, feedback: null });
+    try {
+      // The mutation already returns the persisted records. A second GET must not turn a successful save into an error.
+      const saved = await registerTeamAttendance({
         teamId: team.teamId,
         scheduleId,
         category: eventTypeFilter,
         attendances,
-      };
-
-      await registerTeamAttendance(dto);
-
-      const response = await getAttendanceRecords({
-        scheduleId,
-        category: eventTypeFilter,
-        limit: 100,
       });
-      setExistingRecords(response.data || []);
-      setHasExistingAttendance(response.data && response.data.length > 0);
-
-      setFormState(prev => ({
-        ...prev,
+      const rows = buildAttendanceRows(membersOnly, saved);
+      setRows(rows);
+      setBaseline(attendanceSnapshot(rows));
+      setRecords(saved);
+      setFormState({
         loading: false,
+        error: null,
         feedback: {
-          status: 'success',
-          message: hasExistingAttendance
-            ? `Frequência atualizada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`
-            : `Frequência registrada com sucesso para ${attendances.length} membro${attendances.length > 1 ? 's' : ''}!`,
+          status: "success",
+          message: "Presenças salvas com sucesso.",
         },
-      }));
-
+      });
       onAttendanceRegistered();
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao registrar frequência. Tente novamente.';
-      setFormState(prev => ({
-        ...prev,
+    } catch (error: unknown) {
+      setFormState({
         loading: false,
-        error: message,
-      }));
+        error: attendanceErrorMessage(
+          error,
+          "Não foi possível salvar. Suas marcações foram mantidas; tente novamente.",
+        ),
+        feedback: null,
+      });
+    } finally {
+      saving.current = false;
     }
-  }, [scheduleId, safeSchedules, memberAttendances, team.teamId, membersOnly.length, hasExistingAttendance, eventTypeFilter, onAttendanceRegistered]);
-
-  const presentCount = useMemo(() => {
-    return Object.values(memberAttendances).filter(m => m.type === AttendanceType.PRESENT).length;
-  }, [memberAttendances]);
-
-  const absentCount = useMemo(() => {
-    return Object.values(memberAttendances).filter(m => m.type === AttendanceType.ABSENT).length;
-  }, [memberAttendances]);
-
-  const existingRecordsScheduleId = existingRecords.length > 0 ? existingRecords[0]?.scheduleId : undefined;
-
+  };
   return {
+    selectionError,
     scheduleId,
-    setScheduleId,
+    setScheduleId: setSelectedId,
     eventTypeFilter,
     setEventTypeFilter,
     filteredSchedules,
     membersOnly,
     memberAttendances,
     formState,
-    existingRecords,
-    existingRecordsScheduleId,
-    loadingExistingRecords,
-    hasExistingAttendance,
-    presentCount,
-    absentCount,
+    ready,
+    isDirty,
+    loadError,
+    retryLoad: () => setRetry((value) => value + 1),
+    hasExistingAttendance: records.length > 0,
+    counts,
     handleMemberTypeChange,
     handleMemberCommentChange,
     bulkSetType,
-    clearAllComments,
-    clearError,
-    clearFeedback,
     handleSubmit,
-    safeSchedules,
   };
 }

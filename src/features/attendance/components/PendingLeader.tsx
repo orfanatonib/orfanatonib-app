@@ -16,6 +16,8 @@ import {
 import { getAllPendings } from '../api';
 import { EventCategory } from '../types';
 import type { PendingForLeaderDto, TeamPendingsDto } from '../types';
+import { attendanceErrorMessage } from '../errors';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface Props {
   teamId?: string;
@@ -23,7 +25,7 @@ interface Props {
 }
 
 const formatScheduleLabel = (pending: PendingForLeaderDto) => {
-  const readableDate = pending.date ? new Date(pending.date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const readableDate = formatDayBR(pending.date);
   const kind = pending.category === EventCategory.VISIT ? 'Visita' : 'Reunião';
   return `${kind} #${pending.visitNumber} • ${readableDate}`;
 };
@@ -43,8 +45,8 @@ const PendingLeader = ({ teamId, disabled }: Props) => {
         leaderPendings = leaderPendings.filter(tp => tp.teamId === teamId);
       }
       setTeamPendings(leaderPendings);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao buscar pendências.';
+    } catch (err: unknown) {
+      const message = attendanceErrorMessage(err, 'Erro ao buscar pendências.');
       setError(message);
       setTeamPendings([]);
     } finally {

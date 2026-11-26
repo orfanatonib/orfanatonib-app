@@ -4,7 +4,7 @@
 
 This document defines the mandatory engineering standards for `orfanatonib-app`. AI coding assistants and human developers MUST read it before creating, fixing, or refactoring frontend code.
 
-Current stack: React 19, strict TypeScript, Vite, React Router, Material UI/Emotion, Redux Toolkit with persistence, Axios, React Hook Form/Yup, Vitest, and Testing Library.
+Current stack: React 19, strict TypeScript, Vite, React Router, Material UI/Emotion, Redux Toolkit with persistence, Axios, React Hook Form/Yup, Vitest/Testing Library for component unit specs, and Playwright for automated E2E/flow testing.
 
 Core principles:
 
@@ -108,10 +108,12 @@ export interface ShelterResponse {
 }
 ```
 
-- Adding `any` is prohibited. Use explicit types; use `unknown` only at untrusted boundaries and narrow it immediately.
-- Do not use a loose dictionary as a permanent substitute for a known DTO.
+- Every API interaction and operation MUST define explicit input DTOs (request payloads, query parameters) and explicit output DTOs (response types/contracts) for everything.
+- NEVER use `any` under any circumstances. Use explicit types; use `unknown` only at untrusted boundaries and narrow it immediately.
+- ALWAYS create dedicated files for `types` (`types.ts` or `types/` files) and `constants` (`constants.ts`) — inline declaration of types, interfaces, magic numbers, or hardcoded config constants inside components, hooks, or pages is strictly prohibited.
+- ALWAYS use domain enums for roles, statuses, weekdays, shelter/team options, domain values, and finite sets — magic strings are strictly prohibited in components, forms, hooks, and API integrations.
+- ALWAYS create dedicated `utils` / helper files (e.g., `src/features/<feature>/utils.ts` or `src/utils/`) for pure functions, formatters, and data transformations instead of duplicating logic inline inside components, hooks, or pages.
 - Use `interface` for object shapes and component props; use `type` for unions and utility types.
-- Roles, statuses, and domain categories MUST use shared enums or unions instead of scattered magic strings.
 - Keep API dates as ISO strings in transport DTOs and format them for `pt-BR` only in the presentation layer.
 - A component MUST consume the same domain type returned by the hook unless an explicit view model transformation is needed.
 
@@ -124,10 +126,20 @@ Material UI and the repository theme are the visual foundation. Before adding cu
 - Put reusable brand colors and recurring values in the theme.
 - Async actions MUST disable their trigger and expose a visible progress state.
 - Native buttons MUST explicitly use `type="button"` or `type="submit"`.
-- Interactive controls require an accessible name, visible focus, and keyboard operation.
+- Interactive controls require an accessible name, visible focus, keyboard operation.
 - Meaningful images require useful `alt` text; decorative images use `alt=""`.
 - Icon-only actions require an `aria-label` and a tooltip when their purpose is not obvious.
 - Reuse an existing component before creating another variant with only cosmetic differences.
+
+### 5.1 Stable Playwright Selectors (`data-testid`)
+
+Every rendered component created or modified MUST expose a stable, descriptive `data-testid` on its rendered root for Playwright testing. A component with distinct render branches (loading, empty, error, success, or permission denied) MUST keep a predictable selector in each rendered branch and SHOULD identify the state as a separate element when the E2E flow waits for it.
+
+Also add `data-testid` to critical or otherwise ambiguous interactions such as icon-only actions, repeated card actions, dialogs, menus, uploads, and controls whose accessible role and name do not identify one unique target. Names MUST be kebab-case and describe the domain, component, and element.
+
+- Prefer Playwright's user-facing locators (`getByRole`, `getByLabel`, and `getByText`) when they uniquely describe the interaction. Use `getByTestId` as the explicit contract for component roots, asynchronous states, and ambiguous/repeated targets.
+- Never derive a selector from translated visible copy, a CSS or MUI class, DOM position, array index, random value, timestamp, or React-generated ID.
+- The HTML `id` attribute MUST be unique in the document and is reserved for actual document identity, form labels, and accessibility relationships (`aria-labelledby`, `aria-describedby`).
 
 Recommended component file order:
 
@@ -174,6 +186,7 @@ Every screen MUST work on mobile first and progressively enhance through MUI bre
 - Reuse `ProtectedRoute`, `RequireAdmin`, `RequireAdminOrLeader`, and existing role guards.
 - Hiding a button is not authorization. The API remains responsible for enforcing every protected operation.
 - A feature flag must consistently protect its route, navigation entry, and related actions.
+- A new feature that sends e-mail needs a notification type with its OWN flag (`email_<type>`), created together with the notification on the API; it must appear in the admin feature-flag screen and be covered by the E2E e-mail rule in section 10.
 - Never log access tokens, refresh tokens, passwords, or personal data about sheltered children, guardians, contacts, criminal records, or ministry participants.
 
 ## 9. Errors, Observability, and Security
@@ -191,16 +204,24 @@ Every screen MUST work on mobile first and progressively enhance through MUI bre
 
 Every behavior change MUST add or update tests in the same delivery.
 
-- Components: rendering, interaction, loading, empty, success, and error states.
-- Hooks: state transitions, cleanup, and side effects.
-- API modules: method, endpoint, query parameters, payload, and response mapping.
-- Protected routes: anonymous user, allowed role, and denied role.
-- Forms: valid payload, validation failures, and API failures.
+Automated frontend testing is driven by **Playwright** (`playwright.config.ts`, `playwright.live.config.ts`, and sources in `e2e/live/`), paired with Vitest for pure unit rules:
+
+- `unit` (`e2e/unit/*.spec.ts` or `src/**/*.test.ts`): pure rules — utils, query and payload builders, validators.
+- `e2e/live/`: the only accepted Playwright e2e suite. It MUST use real login, drive the real UI, call the real NestJS API, pass through services/repositories, and verify persistence through API/database-visible state.
+- **E-mail flags:** every run of `e2e/live` starts with ALL e-mail dispatch flags (`email_*` and legacy `email-*`, none left out, including ones already off) turned off by the Playwright `setup` project (`e2e/live/support/email-flags.setup.ts`); `live-api`, `live-ui`, and `live-ui-mobile` depend on it. The setup re-reads the flags and fails if any stays on. A test that proves an e-mail turns on only that case's flag in its own `beforeAll` and restores it in `afterAll`. Flags stay off after the run.
+- E2E tests MUST NOT mock, stub, intercept, route, fulfill, or fake HTTP. Do not use `page.route`, mocked API fixtures, fake sessions, or synthetic persistence in e2e. If a test does not need the backend, write a unit/component test instead of Playwright e2e.
+
+What each kind of change needs:
+
+- Components and screens that only change presentation: use Vitest/component tests with explicit fixtures. Do not add a Playwright e2e with mocked HTTP.
+- User-facing feature flows with backend state: an `e2e/live/*.ui.spec.ts` test MUST create unique data, drive the screen, prove the result through the real API, and clean up its records. This is mandatory for create/update/delete, moderation/publication, role-scoped listings, uploads, and any workflow whose value is persistence across layers.
+- Hooks and API modules: assert request shape with non-mutating observation (`page.on('request')`, `page.waitForRequest`) when useful, but do not replace required live persistence tests with mocked request assertions.
+- Protected routes and feature flags: anonymous user, allowed role, denied role, flag on and off.
+- Forms: valid payload, validation messages, and API failures shown on screen.
+- Pure rules: a unit test.
 - Bug fixes: add a regression test that fails before the fix.
 
-Use Vitest and Testing Library. Test user-observable behavior instead of implementation details. Mock network, time, and external services; tests MUST NOT call live services. Avoid broad snapshots.
-
-New or changed code should maintain at least 90% coverage in the affected scope, including meaningful branches.
+Test data MUST be created and removed by the test itself with a unique suffix, and MUST never point at production. Live tests must fail if the API/database did not actually persist the expected state. Prefer role-based locators and the `data-testid` convention from section 5.1; avoid broad screenshots.
 
 ### 10.1 Naming, Imports, and Public Feature APIs
 
@@ -226,30 +247,54 @@ New or changed code should maintain at least 90% coverage in the affected scope,
 - Changes to the PWA manifest, update policy, or cache strategy require an offline/update-path test and explicit review of stale-content behavior.
 - Avoid adding large dependencies for behavior that can be implemented safely with the existing stack. Check bundle impact for necessary additions.
 
-### 10.3 Frontend Test Blueprint
+### 10.3 Frontend Test Blueprint (Playwright E2E & Pure Unit)
 
-```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+```ts
+import { expect, test } from '@playwright/test';
 
-describe('ShelterAction', () => {
-  it('prevents duplicate submissions while the action is pending', async () => {
-    const onSubmit = vi.fn(() => new Promise<void>(() => undefined));
+import { ApiClient, uniqueSuffix } from '../support/api';
+import { cardOf, searchListing } from '../support/ui';
 
-    render(<ShelterAction onSubmit={onSubmit} />);
-    const button = screen.getByRole('button', { name: /save/i });
+test.describe('Abrigos: edição', () => {
+  let api: ApiClient;
+  let shelter: { id: string; name: string };
+  const suffix = uniqueSuffix();
 
-    await userEvent.click(button);
-    await userEvent.click(button);
+  test.beforeAll(async () => {
+    api = await ApiClient.login();
+    shelter = await api.post('/shelters', { name: `Abrigo ${suffix}`, address: { city: 'Manaus', state: 'AM' } });
+  });
 
-    expect(onSubmit).toHaveBeenCalledTimes(1);
-    expect(button).toBeDisabled();
+  test.afterAll(async () => {
+    await api.delete(`/shelters/${shelter.id}`);
+    await api.dispose();
+  });
+
+  test('edita o nome pela tela e a API reflete', async ({ page }) => {
+    await page.goto('/adm/abrigos');
+    await searchListing(page, shelter.name);
+    await cardOf(page, 'shelters', 'shelter-card', shelter.id).getByRole('button', { name: 'Editar' }).click();
+
+    const dialog = page.getByTestId('shelters-shelter-form-dialog');
+    await dialog.getByLabel('Nome').fill(`Abrigo Atualizado ${suffix}`);
+    await dialog.getByRole('button', { name: 'Salvar' }).click();
+
+    await expect.poll(async () => (await api.get<{ name: string }>(`/shelters/${shelter.id}`)).name).toBe(`Abrigo Atualizado ${suffix}`);
   });
 });
 ```
 
-Test setup must render the same providers the production component requires. Build small provider helpers instead of copying store/router/theme setup into every test.
+Pure rules stay small and browser-free:
+
+```ts
+import { expect, test } from '@playwright/test';
+
+import { buildShelterQuery } from '@/features/shelters/utils';
+
+test('a busca vira searchString e a paginação começa em 1', () => {
+  expect(buildShelterQuery({ search: ' esperança ' })).toEqual({ page: 1, limit: 12, searchString: 'esperança' });
+});
+```
 
 ## 11. Verification Commands
 
@@ -258,7 +303,9 @@ Run from `orfanatonib-app`:
 ```bash
 NODE_OPTIONS='--max-old-space-size=2048' npm run type-check
 NODE_OPTIONS='--max-old-space-size=2048' npm run lint
-NODE_OPTIONS='--max-old-space-size=2048' npm test -- --run
+NODE_OPTIONS='--max-old-space-size=2048' npm run check:test-ids
+NODE_OPTIONS='--max-old-space-size=2048' npm run test:unit
+npm run test:e2e   # Playwright real-browser flows (needs app & API running locally)
 NODE_OPTIONS='--max-old-space-size=2048' npm run build
 ```
 
@@ -272,6 +319,7 @@ A frontend change is complete only when:
 - loading, empty, error, success, and permission states are handled;
 - mobile behavior and accessibility have been verified;
 - no new `any`, secret, sensitive log, or avoidable magic value was introduced;
-- applicable tests and documentation were updated;
+- every created or edited rendered component and critical ambiguous interaction exposes a stable Playwright selector (`data-testid`);
+- applicable Playwright tests (`e2e/`) and documentation were updated;
 - relevant type-check, lint, test, and build commands pass;
 - the final diff contains only task-related changes.

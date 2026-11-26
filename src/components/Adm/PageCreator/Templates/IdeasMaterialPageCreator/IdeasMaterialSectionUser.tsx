@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, TextField, Typography, Tabs, Tab, Grid, Snackbar, Alert } from '@mui/material';
+import { Alert, Box, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
+import {
+  DescriptionOutlined as DocumentIcon,
+  ImageOutlined as ImageIcon,
+  VideocamOutlined as VideoIcon,
+} from '@mui/icons-material';
+import { IDEA_SHARE_COPY } from '@/features/ideas-sections';
+import { MEMBER_TABS_SX } from '@/pages/MemberArea/constants/navigation';
 import { IdeasSection } from 'store/slices/ideas/ideasSlice';
 import { IdeasMaterialDocumentsUser } from './IdeasMaterialDocumentsUser';
 import { IdeasMaterialImagesUser } from './IdeasMaterialImagesUser';
@@ -115,100 +122,46 @@ export function IdeasMaterialSectionUser({ section, onUpdate }: IdeasMaterialSec
 
   return (
     <Box>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={5}>
-          <TextField
-            label="Título da sua ideia brilhante"
-            fullWidth
-            value={title}
-            onChange={handleTitleChange}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                transition: 'all 0.2s ease',
-                '&:hover:not(.Mui-error)': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                },
-                '&.Mui-focused': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderWidth: 2,
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={7}>
-          <TextField
-            label="Descreva sua ideia (brincadeira, versículo, história, etc.)"
-            fullWidth
-            multiline
-            rows={4}
-            value={description}
-            onChange={handleDescriptionChange}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                transition: 'all 0.2s ease',
-                '&:hover:not(.Mui-error)': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                },
-                '&.Mui-focused': {
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderWidth: 2,
-                  },
-                },
-              },
-            }}
-          />
-        </Grid>
-      </Grid>
+      <Stack spacing={2.5} sx={{ mb: 3 }}>
+        <TextField
+          label={IDEA_SHARE_COPY.FORM_TITLE_LABEL}
+          fullWidth
+          required
+          value={title}
+          onChange={handleTitleChange}
+          inputProps={{ 'data-testid': 'idea-title' }}
+        />
+        <TextField
+          label={IDEA_SHARE_COPY.FORM_DESCRIPTION_LABEL}
+          fullWidth
+          required
+          multiline
+          minRows={3}
+          value={description}
+          onChange={handleDescriptionChange}
+          inputProps={{ 'data-testid': 'idea-description' }}
+        />
+      </Stack>
 
-      <Typography
-        variant="h6"
-        sx={{
-          mb: 3,
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-        }}
-      >
-        📎 Itens de Mídia
-      </Typography>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography component="h3" variant="subtitle1" fontWeight={800} color="#0f2942">
+          {IDEA_SHARE_COPY.MEDIA_SECTION_TITLE}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {IDEA_SHARE_COPY.MEDIA_SECTION_HINT}
+        </Typography>
+      </Box>
 
       <Tabs
         value={tabIndex}
         onChange={handleChangeTab}
         variant="scrollable"
         scrollButtons="auto"
-        sx={{
-          mb: 3,
-          borderBottom: 1,
-          borderColor: 'divider',
-          '& .MuiTabs-indicator': {
-            height: 3,
-            borderRadius: '3px 3px 0 0',
-          },
-          '& .MuiTab-root': {
-            fontSize: { xs: '0.875rem', md: '1rem' },
-            fontWeight: 600,
-            textTransform: 'none',
-            minHeight: 56,
-            px: { xs: 2, md: 3 },
-            '&.Mui-selected': {
-              color: 'primary.main',
-            },
-          },
-        }}
+        sx={MEMBER_TABS_SX}
       >
-        <Tab label="📄 Documentos" />
-        <Tab label="🖼️ Imagens" />
-        <Tab label="🎥 Vídeos" />
+        <Tab icon={<DocumentIcon fontSize="small" />} iconPosition="start" label="Documentos" data-testid="idea-tab-documents" />
+        <Tab icon={<ImageIcon fontSize="small" />} iconPosition="start" label="Imagens" data-testid="idea-tab-images" />
+        <Tab icon={<VideoIcon fontSize="small" />} iconPosition="start" label="Vídeos" data-testid="idea-tab-videos" />
       </Tabs>
 
       {tabIndex === 0 && (

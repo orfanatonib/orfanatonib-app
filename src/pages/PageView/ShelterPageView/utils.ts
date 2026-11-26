@@ -22,3 +22,29 @@ export const makeImgErrorHandler = () => (e: React.SyntheticEvent<HTMLImageEleme
     e.currentTarget.src = '';
   }
 };
+
+type AddressParts = {
+  street: string;
+  number?: string;
+  district: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  complement?: string;
+};
+
+/** Duas linhas legíveis do endereço: "Rua, nº" e "Bairro · Cidade - UF". */
+export const buildAddressLines = (address: AddressParts) => ({
+  line1: [address.street, address.number].filter(Boolean).join(', '),
+  line2: [address.district, [address.city, address.state].filter(Boolean).join(' - ')].filter(Boolean).join(' · '),
+  postalCode: address.postalCode?.trim() || '',
+  complement: address.complement?.trim() || '',
+});
+
+/** Link de busca no Google Maps com o endereço completo. */
+export const buildMapsUrl = (address: AddressParts): string => {
+  const query = [address.street, address.number, address.district, address.city, address.state]
+    .filter(Boolean)
+    .join(', ');
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+};

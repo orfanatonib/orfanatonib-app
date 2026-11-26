@@ -12,3 +12,8 @@ export async function copyToClipboard(text: string) {
     return false;
   }
 }
+
+export const VIDEO_PAGES_LIST_PATH = '/adm/paginas-videos';
+
+export const videoPageEditPath = (id: string) =>
+  `/adm/editar-pagina-videos?id=${encodeURIComponent(id)}`;

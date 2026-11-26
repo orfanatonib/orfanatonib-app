@@ -1,11 +1,8 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import { Button, Stack } from '@mui/material';
-import { RootState } from '@/store/slices';
-import { logout, UserRole } from '@/store/slices/auth/authSlice';
-import api from '@/config/axiosConfig';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { isShellPathActive } from './shellNav';
+import { useShellNavigation } from './useShellNavigation';
 
 interface Props {
   closeMenu?: () => void;
@@ -15,29 +12,13 @@ interface Props {
 const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
 
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = isAuthenticated && user?.role === UserRole.ADMIN;
-  const isMember = isAuthenticated && user?.role === UserRole.MEMBER;
-  const isLeader = isAuthenticated && user?.role === UserRole.LEADER;
-  const isShelterManagementEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_MANAGEMENT);
+  const { publicItems } = useShellNavigation();
 
   const handleClick = () => closeMenu?.();
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-    } finally {
-      dispatch(logout());
-      navigate('/');
-      closeMenu?.();
-    }
-  };
-
   const renderLink = (to: string, label: string) => {
-    const active = location.pathname === to || location.pathname.startsWith(to + '/');
+    const active = isShellPathActive(location.pathname, to);
     return (
       <Button
         key={to}
@@ -86,11 +67,7 @@ const NavLinks: React.FC<Props> = ({ closeMenu, isMobile }) => {
       mt={isMobile ? 6 : 0}
       sx={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}
     >
-      {renderLink('/', 'Início')}
-      {renderLink('/feed-abrigos', 'Feed')}
-      {renderLink('/sobre', 'Sobre')}
-      {renderLink('/eventos', 'Eventos')}
-      {renderLink('/contato', 'Contato')}
+      {publicItems.map((item) => renderLink(item.to, item.label))}
     </Stack>
   );
 };

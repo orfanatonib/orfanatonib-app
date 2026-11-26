@@ -1,277 +1,179 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, Snackbar } from '@mui/material';
+import { RateReview } from '@mui/icons-material';
+import { useRefreshPendingCounts } from '@/features/admin-pending-counts';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
+import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+import { FeedbackData } from '@/store/slices/feedback/feedbackSlice';
+import FeedbackCard from './components/FeedbackCard';
+import FeedbackDetailsModal from './components/FeedbackDetailsModal';
+import { fetchFeedbacksPage } from './api';
 import {
-  Box,
-  Grid,
-  Snackbar,
-  Alert,
-  CircularProgress,
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import { Search, Clear, RateReview } from "@mui/icons-material";
-import { motion } from "framer-motion";
-import FeedbackCard from "./components/FeedbackCard";
-import FeedbackDetailsModal from "./components/FeedbackDetailsModal";
-import DeleteConfirmationModal from "@/components/Common/DeleteConfirmationModal";
-import { useFeedbackList, useFeedbackMutations, useFeedbackSearch } from "./hooks";
-import { FeedbackData } from "@/store/slices/feedback/feedbackSlice";
-import BackHeader from "@/components/common/header/BackHeader";
+  FEEDBACKS_DEFAULT_SORT,
+  FEEDBACKS_LABELS,
+  FEEDBACKS_TEST_ID_PREFIX,
+  FEEDBACK_CATEGORY_OPTIONS,
+  FEEDBACK_FILTER_KEYS,
+  FEEDBACK_RATING_OPTIONS,
+  FEEDBACK_SORT_OPTIONS,
+} from './constants';
+import { useFeedbackMutations } from './hooks';
+import { FeedbackReadFilter } from './types';
+import type { SnackbarKind } from './types';
+
+const P = FEEDBACKS_TEST_ID_PREFIX;
+const K = FEEDBACK_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.READ,
+    label: FEEDBACKS_LABELS.FILTER_STATUS,
+    allLabel: FEEDBACKS_LABELS.FILTER_STATUS_ALL,
+    options: [
+      { value: FeedbackReadFilter.UNREAD, label: FEEDBACKS_LABELS.UNREAD },
+      { value: FeedbackReadFilter.READ, label: FEEDBACKS_LABELS.READ },
+    ],
+  },
+  {
+    kind: 'select',
+    key: K.CATEGORY,
+    label: FEEDBACKS_LABELS.FILTER_CATEGORY,
+    allLabel: FEEDBACKS_LABELS.FILTER_CATEGORY_ALL,
+    options: FEEDBACK_CATEGORY_OPTIONS,
+  },
+  {
+    kind: 'select',
+    key: K.RATING,
+    label: FEEDBACKS_LABELS.FILTER_RATING,
+    allLabel: FEEDBACKS_LABELS.FILTER_RATING_ALL,
+    options: FEEDBACK_RATING_OPTIONS,
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: FEEDBACKS_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: FEEDBACKS_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: FEEDBACKS_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: FEEDBACK_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: FEEDBACKS_DEFAULT_SORT };
 
 const FeedbackManager: React.FC = () => {
-  const { items, loading, error, setError, refresh } = useFeedbackList();
-  const { search, setSearch, filtered } = useFeedbackSearch(items);
-  const { mLoading, mError, setMError, deleteOne, markAsRead } = useFeedbackMutations(refresh);
-  const [selected, setSelected] = React.useState<FeedbackData | null>(null);
-  const [toDelete, setToDelete] = React.useState<FeedbackData | null>(null);
-  const [snackbar, setSnackbar] = React.useState({
+  const list = useAdminList<FeedbackData>({
+    fetcher: fetchFeedbacksPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: FEEDBACKS_LABELS.LOAD_ERROR,
+  });
+  const refreshPending = useRefreshPendingCounts();
+  const { reload } = list;
+
+  useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
+
+  const refreshAll = useCallback(() => {
+    reload();
+    void refreshPending();
+  }, [reload, refreshPending]);
+  const { deleteOne, markAsRead } = useFeedbackMutations(refreshAll);
+
+  const [selected, setSelected] = useState<FeedbackData | null>(null);
+  const [toDelete, setToDelete] = useState<FeedbackData | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: SnackbarKind }>({
     open: false,
-    message: "",
-    severity: "success" as "success" | "error",
+    message: '',
+    severity: 'success',
   });
 
-  const showSnackbar = (message: string, severity: "success" | "error") =>
+  const showSnackbar = (message: string, severity: SnackbarKind) =>
     setSnackbar({ open: true, message, severity });
 
   const handleDelete = async () => {
     if (!toDelete) return;
     try {
-      await deleteOne(toDelete.id || "");
-      showSnackbar("Feedback excluído com sucesso", "success");
+      await deleteOne(toDelete.id ?? '');
+      showSnackbar(FEEDBACKS_LABELS.DELETED_OK, 'success');
     } catch {
-      showSnackbar("Erro ao excluir feedback", "error");
+      showSnackbar(FEEDBACKS_LABELS.DELETE_ERROR, 'error');
     } finally {
       setToDelete(null);
     }
   };
 
-  const handleMarkAsRead = async () => {
-    if (!selected) return;
+  const handleMarkAsRead = async (feedback: FeedbackData) => {
     try {
-      await markAsRead(selected.id || "");
-      showSnackbar("Feedback marcado como lido", "success");
+      await markAsRead(feedback.id ?? '');
+      showSnackbar(FEEDBACKS_LABELS.MARKED_OK, 'success');
     } catch {
-      showSnackbar("Erro ao marcar como lido", "error");
+      showSnackbar(FEEDBACKS_LABELS.MARK_ERROR, 'error');
     }
   };
 
-  const hasQuery = Boolean(search);
-  const isBusy = loading || mLoading;
-  const isFiltering = isBusy && items.length > 0;
-
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="💬 Feedbacks Recebidos" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: "background.paper",
+    <AdminListScreen
+      testIdPrefix={P}
+      title={FEEDBACKS_LABELS.TITLE}
+      searchLabel={FEEDBACKS_LABELS.SEARCH}
+      searchPlaceholder={FEEDBACKS_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={FEEDBACKS_LABELS.EMPTY}
+      emptyIcon={<RateReview sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      overlays={
+        <>
+          <FeedbackDetailsModal
+            feedback={selected}
+            onClose={() => setSelected(null)}
+            onMarkAsRead={() => selected && handleMarkAsRead(selected)}
+            onDelete={() => {
+              if (selected) setToDelete(selected);
+              setSelected(null);
             }}
-          >
-            <TextField
-              fullWidth
-              label="Buscar feedbacks"
-              placeholder="Buscar por nome, email, comentário ou categoria..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: "text.secondary" }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {isFiltering && (
-                      <CircularProgress size={20} sx={{ mr: hasQuery ? 1 : 0 }} />
-                    )}
-                    {hasQuery && (
-                      <Tooltip title="Limpar busca">
-                        <IconButton
-                          size="small"
-                          onClick={() => setSearch("")}
-                          sx={{
-                            "&:hover": {
-                              bgcolor: "action.hover",
-                            },
-                          }}
-                        >
-                          <Clear fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  "&:hover": {
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "primary.main",
-                    },
-                  },
-                  "&.Mui-focused": {
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderWidth: 2,
-                    },
-                  },
-                },
-              }}
-            />
-          </Paper>
-        </motion.div>
+          />
 
-        {isBusy && items.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "50vh",
-            }}
-          >
-            <CircularProgress size={60} thickness={4} />
-            <Typography variant="body2" mt={2} color="text.secondary">
-              Carregando feedbacks...
-            </Typography>
-          </Box>
-        ) : error || mError ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!toDelete}
+            title={toDelete?.name ?? 'este usuário'}
+            onClose={() => setToDelete(null)}
+            onConfirm={handleDelete}
+          />
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={5000}
+            onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           >
             <Alert
-              severity="error"
-              sx={{
-                borderRadius: 3,
-                fontSize: "1rem",
-              }}
-              onClose={() => {
-                if (error) setError("");
-                if (mError) setMError("");
-              }}
+              data-testid={`${P}-snackbar`}
+              severity={snackbar.severity}
+              variant="filled"
+              sx={{ borderRadius: 2 }}
             >
-              {error || mError}
+              {snackbar.message}
             </Alert>
-          </motion.div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: "center",
-                borderRadius: 3,
-                bgcolor: "background.paper",
-              }}
-            >
-              <RateReview sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhum feedback encontrado
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {search
-                  ? "Tente ajustar sua busca ou limpar os filtros."
-                  : "Ainda não há feedbacks recebidos."}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {isFiltering && (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} alignItems="stretch">
-              {filtered.map((feedback, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  key={feedback.id}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: "flex" }}
-                >
-                  <FeedbackCard
-                    feedback={feedback}
-                    onView={() => setSelected(feedback)}
-                    onDelete={() => setToDelete(feedback)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-
-        <FeedbackDetailsModal
-          feedback={selected}
-          onClose={() => setSelected(null)}
-          onMarkAsRead={handleMarkAsRead}
-          onDelete={() => {
-            if (selected) setToDelete(selected);
-            setSelected(null);
-          }}
-        />
-
-        <DeleteConfirmationModal
-          open={!!toDelete}
-          description={`Você está prestes a excluir o feedback de: ${toDelete?.name ?? "este usuário"}.`}
-          onClose={() => setToDelete(null)}
-          onConfirm={handleDelete}
-        />
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={5000}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity={snackbar.severity} variant="filled" sx={{ borderRadius: 2 }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
-    </Box>
+          </Snackbar>
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((feedback) => (
+          <FeedbackCard
+            key={feedback.id}
+            feedback={feedback}
+            onView={setSelected}
+            onMarkRead={handleMarkAsRead}
+            onDelete={setToDelete}
+          />
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 };
 

@@ -1,210 +1,108 @@
-import React from 'react';
-import { Box, Typography, useTheme, useMediaQuery } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
-import { memberActionMap, type MemberActionConfig, type MUIButtonColor } from './memberActions';
+import { Box, Button, Typography } from "@mui/material";
+import { ChevronRight } from "@mui/icons-material";
+import { Link } from "react-router-dom";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { useVisibleRoutes } from "@/features/feature-flags";
+import { selectAllFeatureFlags } from "@/store/selectors/featureFlagsSelectors";
+import { memberAreaColors as colors } from "@/theme/memberArea";
+import { memberActionMap } from "./memberActions";
+import { isMemberActionVisible } from "../../utils/navigation";
+import type { MemberQuickActionsProps } from "../../types";
 
-type PaletteKey = Exclude<MUIButtonColor, 'inherit'>;
-const toPaletteKey = (c: MUIButtonColor): PaletteKey => (c === 'inherit' ? 'primary' : c);
-
-interface MemberQuickActionsProps {
-  references: string[];
-}
-
-const ActionCard: React.FC<{
-  action: MemberActionConfig;
-  compact?: boolean;
-  compactFullWidth?: boolean;
-}> = ({ action, compact, compactFullWidth }) => {
-  const theme = useTheme();
-  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const paletteKey = toPaletteKey(action.color);
-  const Icon = action.icon;
-  const mainColor = theme.palette[paletteKey]?.main ?? theme.palette.primary.main;
-
-  const baseLink = {
-    display: 'flex',
-    textDecoration: 'none',
-    color: 'text.primary',
-    bgcolor: 'background.paper',
-    border: '1px solid',
-    borderColor: 'divider',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-    transition: reduceMotion
-      ? 'box-shadow .2s ease'
-      : 'transform .2s ease, box-shadow .25s ease, border-color .2s ease',
-    '&:hover': {
-      borderColor: mainColor,
-      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-      transform: reduceMotion ? 'none' : 'translateY(-2px)',
-    },
-    '&:focus-visible': {
-      outline: `2px solid ${mainColor}`,
-      outlineOffset: 2,
-    },
-  };
-
-  if (compact) {
-    return (
-      <Box
-        component={Link}
-        to={action.to}
-        aria-label={action.label}
-        sx={{
-          ...baseLink,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: 1.25,
-          px: 1.5,
-          py: 1.25,
-          borderRadius: 2,
-          ...(compactFullWidth
-            ? { width: '100%', minWidth: 0 }
-            : { minWidth: 'max-content', flexShrink: 0 }),
-        }}
-      >
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            flexShrink: 0,
-            borderRadius: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: `${mainColor}18`,
-            color: mainColor,
-          }}
-        >
-          <Icon sx={{ fontSize: 20 }} />
-        </Box>
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            lineHeight: 1.3,
-            ...(compactFullWidth ? {} : { whiteSpace: 'nowrap' }),
-          }}
-        >
-          {action.label}
-        </Typography>
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      component={Link}
-      to={action.to}
-      aria-label={action.label}
-      sx={{
-        ...baseLink,
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 1.5,
-        px: 2,
-        py: 2.5,
-        minHeight: 96,
-        borderRadius: 3,
-      }}
-    >
-      <Box
-        sx={{
-          width: 48,
-          height: 48,
-          borderRadius: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `${mainColor}18`,
-          color: mainColor,
-        }}
-      >
-        <Icon sx={{ fontSize: 28 }} />
-      </Box>
-      <Typography
-        variant="body2"
-        sx={{
-          fontWeight: 600,
-          textAlign: 'center',
-          lineHeight: 1.3,
-          fontSize: '0.875rem',
-        }}
-      >
-        {action.label}
-      </Typography>
-    </Box>
+const MemberQuickActions = ({ references }: MemberQuickActionsProps) => {
+  const featureFlags = useSelector(selectAllFeatureFlags);
+  const dynamicRoutes = useVisibleRoutes();
+  const visibleDynamicPaths = useMemo(() => dynamicRoutes.map((route) => route.path), [dynamicRoutes]);
+  const actions = references.filter(
+    (key) =>
+      memberActionMap[key] &&
+      isMemberActionVisible(memberActionMap[key], {
+        isFeatureEnabled: (flag) => featureFlags[flag] === true,
+        visibleDynamicPaths,
+      }),
   );
-};
-
-const MemberQuickActions: React.FC<MemberQuickActionsProps> = ({ references }) => {
-  const theme = useTheme();
-  const isSm = useMediaQuery(theme.breakpoints.up('sm'));
-  const isMd = useMediaQuery(theme.breakpoints.up('md'));
-
-  const isPagelasEnabled = useIsFeatureEnabled(FeatureFlagKeys.SHELTER_PAGELAS);
-
-  const actions = references
-    .map((ref) => ({ key: ref, ...memberActionMap[ref] }))
-    .filter((item): item is { key: string } & MemberActionConfig => {
-      if (!memberActionMap[item.key]) return false;
-      if (item.to === '/area-dos-acolhidos' && !isPagelasEnabled) return false;
-      return true;
-    });
-
-  if (actions.length === 0) return null;
-
-  const isMobile = !isSm;
-
+  if (!actions.length) return null;
   return (
-    <Box sx={{ px: { xs: 1, sm: 2 }, mt: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 4 } }}>
+    <Box data-testid="member-area-quick-actions" component="section">
       <Typography
+        component="h2"
         variant="overline"
         sx={{
-          display: 'block',
-          color: 'text.secondary',
-          fontWeight: 600,
-          letterSpacing: 1.2,
-          mb: { xs: 1, sm: 2 },
-          fontSize: { xs: '0.65rem', sm: '0.7rem' },
+          display: "block",
+          mb: 1.5,
+          color: colors.muted,
+          fontWeight: 800,
+          letterSpacing: 1,
         }}
       >
-        O que você precisa?
+        Acesso Rápido do Membro
       </Typography>
-
-      {isMobile ? (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-          }}
-        >
-          {actions.map(({ key, ...action }) => (
-            <ActionCard key={key} action={action} compact compactFullWidth />
-          ))}
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: isMd
-              ? 'repeat(4, 1fr)'
-              : 'repeat(3, 1fr)',
-            gap: 1.5,
-            gridAutoRows: 'minmax(96px, auto)',
-          }}
-        >
-          {actions.map(({ key, ...action }) => (
-            <ActionCard key={key} action={action} />
-          ))}
-        </Box>
-      )}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(2, minmax(0, 1fr))",
+            lg: "repeat(3, minmax(0, 1fr))",
+          },
+          gap: 1.5,
+        }}
+      >
+        {actions.map((key) => {
+          const action = memberActionMap[key];
+          const Icon = action.icon;
+          return (
+            <Button
+              key={key}
+              data-testid={`member-area-action-${key}`}
+              component={Link}
+              to={action.to}
+              sx={{
+                p: 1.75,
+                minHeight: 76,
+                borderRadius: 3,
+                bgcolor: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderLeft: `4px solid ${colors.blue}`,
+                color: colors.ink,
+                justifyContent: "space-between",
+                textAlign: "left",
+                gap: 1.5,
+                "&:hover": {
+                  bgcolor: colors.blueSoft,
+                  borderColor: colors.blue,
+                },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    placeItems: "center",
+                    width: 42,
+                    height: 42,
+                    flexShrink: 0,
+                    borderRadius: 2,
+                    bgcolor: colors.blueSoft,
+                    color: colors.blue,
+                  }}
+                >
+                  <Icon />
+                </Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 800, color: colors.ink }}
+                >
+                  {action.label}
+                </Typography>
+              </Box>
+              <ChevronRight sx={{ color: colors.muted, flexShrink: 0 }} />
+            </Button>
+          );
+        })}
+      </Box>
     </Box>
   );
 };
-
 export default MemberQuickActions;

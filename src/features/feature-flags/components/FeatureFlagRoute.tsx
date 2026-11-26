@@ -1,22 +1,52 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Box, Typography, Paper } from '@mui/material';
-import { useIsFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import { useSelector } from 'react-redux';
+import { Box, CircularProgress, Typography, Paper } from '@mui/material';
+import { useIsAnyFeatureEnabled, FeatureFlagKeys } from '@/features/feature-flags';
+import {
+    selectFeatureFlagsLastFetched,
+    selectFeatureFlagsLoading,
+} from '@/store/selectors/featureFlagsSelectors';
 
 interface FeatureFlagRouteProps {
-    featureKey: FeatureFlagKeys | string;
-    children: React.ReactElement;
+    /** Uma flag, ou uma lista em que basta UMA estar ligada (`anyOf`). */
+    featureKey: FeatureFlagKeys | string | readonly (FeatureFlagKeys | string)[];
+    children: ReactElement;
     fallbackPath?: string;
     showMessage?: boolean;
 }
 
-export const FeatureFlagRoute: React.FC<FeatureFlagRouteProps> = ({
+export const FeatureFlagRoute = ({
     featureKey,
     children,
     fallbackPath = '/',
     showMessage = false,
-}) => {
-    const isEnabled = useIsFeatureEnabled(featureKey);
+}: FeatureFlagRouteProps) => {
+    const isEnabled = useIsAnyFeatureEnabled(
+        typeof featureKey === 'string' ? [featureKey] : featureKey,
+    );
+    const loading = useSelector(selectFeatureFlagsLoading);
+    const lastFetched = useSelector(selectFeatureFlagsLastFetched);
+
+    // Until the flags have actually been fetched once, "disabled" is unknown,
+    // not false — redirecting here would bounce the user off a valid deep link
+    // just because the request had not landed yet.
+    if (loading || lastFetched === null) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '400px',
+                    p: 3,
+                }}
+                data-testid="feature-flag-route-loading"
+            >
+                <CircularProgress aria-label="Carregando funcionalidades" />
+            </Box>
+        );
+    }
 
     if (!isEnabled) {
         if (showMessage) {
@@ -29,6 +59,7 @@ export const FeatureFlagRoute: React.FC<FeatureFlagRouteProps> = ({
                         minHeight: '400px',
                         p: 3,
                     }}
+                    data-testid="feature-flag-route-disabled"
                 >
                     <Paper
                         elevation={3}
@@ -52,5 +83,9 @@ export const FeatureFlagRoute: React.FC<FeatureFlagRouteProps> = ({
         return <Navigate to={fallbackPath} replace />;
     }
 
-    return children;
+    return (
+        <Box data-testid="feature-flag-route-enabled" sx={{ display: 'contents' }}>
+            {children}
+        </Box>
+    );
 };

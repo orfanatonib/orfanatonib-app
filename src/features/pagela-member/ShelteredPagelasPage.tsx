@@ -25,6 +25,8 @@ import PagelaList from "./components/PagelaList";
 import PagelaQuickForm from "./components/PagelaQuickForm";
 import type { ShelteredSimpleResponseDto } from "../sheltered/types";
 import type { Pagela } from "./types";
+import { getApiErrorMessage } from "@/utils/apiErrorMessage";
+import { MIN_TOUCH_TARGET_PX, SHELTERED_PAGELAS_TESTID_PREFIX as TID } from "./constants";
 
 function genderPastel(seed: string, gender?: string) {
   const g = (gender || "").toUpperCase();
@@ -79,7 +81,7 @@ export default function ShelteredPagelasPage() {
             guardianPhone: data.guardianPhone || null,
             shelterId: data.shelter?.id || null,
             active: data.active,
-            acceptedChrists: data.acceptedChrists || [],
+            acceptedChrists: [],
           });
         })
         .catch((err: any) => {
@@ -111,6 +113,19 @@ export default function ShelteredPagelasPage() {
     setSnack((s) => ({ ...s, open: false }));
   };
 
+  /** Grava e avisa; falha da API (ex.: semana já lançada em outra página) vira aviso em vez de erro solto. */
+  const runSave = async (save: () => Promise<void>, okMessage: string): Promise<boolean> => {
+    try {
+      await save();
+      showSnack(okMessage);
+      return true;
+    } catch (e: unknown) {
+      showSnack(getApiErrorMessage(e, "Não foi possível salvar a pagela"), "error");
+      void list.refresh();
+      return false;
+    }
+  };
+
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [formInitial, setFormInitial] = React.useState<Pagela | null>(null);
 
@@ -137,6 +152,7 @@ export default function ShelteredPagelasPage() {
 
   return (
     <Box
+      data-testid={`${TID}-page`}
       sx={{
         px: { xs: 2, md: 4 },
         pt: { xs: 3, md: 5 },
@@ -147,6 +163,7 @@ export default function ShelteredPagelasPage() {
     >
       <Paper
         elevation={0}
+        data-testid={`${TID}-header`}
         sx={{
           p: { xs: 2, md: 2 },
           mb: 2,
@@ -171,9 +188,10 @@ export default function ShelteredPagelasPage() {
                   size="small"
                   onClick={() => nav(-1)}
                   aria-label="Voltar"
+                  data-testid={`${TID}-back`}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: MIN_TOUCH_TARGET_PX,
+                    height: MIN_TOUCH_TARGET_PX,
                     bgcolor: "background.paper",
                     boxShadow: 2,
                     border: "1px solid",
@@ -211,20 +229,21 @@ export default function ShelteredPagelasPage() {
                   overflow: "hidden",
                 }}
                 title={sheltered?.name}
+                data-testid={`${TID}-name`}
               >
                 {sheltered?.name || "Acolhido"}
               </Typography>
 
               <Stack direction="row" spacing={0.75} alignItems="center" sx={{ color: "rgba(0,0,0,.75)" }}>
                 <FamilyRestroom fontSize="small" />
-                <Typography variant="body2" noWrap title={sheltered?.guardianName || "—"}>
+                <Typography variant="body2" noWrap title={sheltered?.guardianName || "—"} data-testid={`${TID}-guardian`}>
                   {sheltered?.guardianName || "—"}
                 </Typography>
               </Stack>
 
               <Stack direction="row" spacing={0.75} alignItems="center" sx={{ color: "rgba(0,0,0,.75)" }}>
                 <Phone fontSize="small" />
-                <Typography variant="body2" noWrap title={sheltered?.guardianPhone || "—"}>
+                <Typography variant="body2" noWrap title={sheltered?.guardianPhone || "—"} data-testid={`${TID}-phone`}>
                   {sheltered?.guardianPhone || "—"}
                 </Typography>
               </Stack>
@@ -251,9 +270,10 @@ export default function ShelteredPagelasPage() {
                 size="small"
                 onClick={() => nav(-1)}
                 aria-label="Voltar"
+                data-testid={`${TID}-back`}
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: MIN_TOUCH_TARGET_PX,
+                  height: MIN_TOUCH_TARGET_PX,
                   bgcolor: "background.paper",
                   boxShadow: 2,
                   border: "1px solid",
@@ -295,7 +315,7 @@ export default function ShelteredPagelasPage() {
                     }}
                   >
                     Pagela {((sheltered as any)?.gender === "F" ? "da" : "do")}{" "}
-                    <Box component="span" sx={{ fontWeight: 900 }}>
+                    <Box component="span" sx={{ fontWeight: 900 }} data-testid={`${TID}-name`}>
                       {sheltered?.name || "Acolhido"}
                     </Box>
                   </Typography>
@@ -308,13 +328,13 @@ export default function ShelteredPagelasPage() {
                   >
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <FamilyRestroom fontSize="small" />
-                      <Typography variant="body2" noWrap>
+                      <Typography variant="body2" noWrap data-testid={`${TID}-guardian`}>
                         {sheltered?.guardianName || "—"}
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <Phone fontSize="small" />
-                      <Typography variant="body2" noWrap>
+                      <Typography variant="body2" noWrap data-testid={`${TID}-phone`}>
                         {sheltered?.guardianPhone || "—"}
                       </Typography>
                     </Stack>
@@ -339,6 +359,7 @@ export default function ShelteredPagelasPage() {
         <Alert
           severity="error"
           sx={{ mb: 2 }}
+          data-testid={`${TID}-error`}
           onClose={() => {
             list.setError("");
             setCErr("");
@@ -351,7 +372,7 @@ export default function ShelteredPagelasPage() {
       <Grid container spacing={{ xs: 1.5, md: 2.5 }}>
         <Grid item xs={12} lg={5}>
           {(list.loading && !list.rows.length) || loadingShelteredren ? (
-            <Box textAlign="center" my={4}>
+            <Box textAlign="center" my={4} data-testid={`${TID}-loading`}>
               <CircularProgress />
             </Box>
           ) : sheltered ? (
@@ -366,12 +387,10 @@ export default function ShelteredPagelasPage() {
                 memberProfileId={MEMBER_PROFILE_ID}
                 findPagela={findPagela}
                 onCreate={async (p) => {
-                  await actions.create(p);
-                  showSnack("Pagela salva!");
+                  await runSave(() => actions.create(p), "Pagela salva!");
                 }}
                 onUpdate={async (id, p) => {
-                  await actions.update(id, p);
-                  showSnack("Pagela atualizada!");
+                  await runSave(() => actions.update(id, p), "Pagela atualizada!");
                 }}
               />
             )
@@ -380,6 +399,7 @@ export default function ShelteredPagelasPage() {
 
         <Grid item xs={12} lg={7}>
           <Paper
+            data-testid={`${TID}-history`}
             sx={{
               p: { xs: 1.5, md: 2 },
               borderRadius: 3,
@@ -417,6 +437,7 @@ export default function ShelteredPagelasPage() {
         <Fab
           color="primary"
           aria-label="Criar pagela"
+          data-testid={`${TID}-create-fab`}
           onClick={openCreate}
           sx={{ position: "fixed", bottom: 88, right: 16, zIndex: 1300 }}
         >
@@ -431,6 +452,7 @@ export default function ShelteredPagelasPage() {
           onOpen={() => setSheetOpen(true)}
           onClose={closeSheet}
           disableSwipeToOpen={false}
+          data-testid={`${TID}-sheet`}
           ModalProps={{ keepMounted: true }}
           PaperProps={{
             sx: { height: "86vh", borderTopLeftRadius: 24, borderTopRightRadius: 24 },
@@ -447,14 +469,10 @@ export default function ShelteredPagelasPage() {
               memberProfileId={MEMBER_PROFILE_ID}
               findPagela={findPagela}
               onCreate={async (p) => {
-                await actions.create(p);
-                showSnack("Pagela salva!");
-                closeSheet();
+                if (await runSave(() => actions.create(p), "Pagela salva!")) closeSheet();
               }}
               onUpdate={async (id, p) => {
-                await actions.update(id, p);
-                showSnack("Pagela atualizada!");
-                closeSheet();
+                if (await runSave(() => actions.update(id, p), "Pagela atualizada!")) closeSheet();
               }}
               onClose={closeSheet}
             />
@@ -468,7 +486,7 @@ export default function ShelteredPagelasPage() {
         onClose={closeSnack}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <MuiAlert elevation={6} variant="filled" severity={snack.severity} onClose={closeSnack}>
+        <MuiAlert elevation={6} variant="filled" severity={snack.severity} onClose={closeSnack} data-testid={`${TID}-snackbar`}>
           {snack.message}
         </MuiAlert>
       </Snackbar>

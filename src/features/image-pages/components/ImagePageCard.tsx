@@ -1,19 +1,10 @@
-import React from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardActions,
-  IconButton,
-  Typography,
-  Tooltip,
-  useMediaQuery,
-} from '@mui/material';
-import { Delete, Visibility, Image as ImageIcon, Edit as EditIcon } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
-import { ImagePageData } from 'store/slices/image/imageSlice';
-import { truncate } from '../utils';
+import { CalendarMonth, Edit as EditIcon, Image as ImageIcon, Layers, PhotoLibrary, Visibility } from '@mui/icons-material';
+import { ImagePageData } from '@/features/image-pages/types';
+import AdminEntityCard from '@/components/common/admin-shell/AdminEntityCard';
+import AdminMetaChips from '@/components/common/admin-shell/AdminMetaChips';
+import { formatAdminDate } from '@/components/common/admin-shell/formatAdminDate';
+import { visibilityDescriptor } from '@/components/common/admin-shell/utils';
+import { countPhotos, truncate } from '../utils';
 
 type Props = {
   page: ImagePageData;
@@ -23,138 +14,81 @@ type Props = {
 };
 
 export default function ImagePageCard({ page, onDelete, onEdit, onViewDetails }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const preview = page.sections?.[0]?.mediaItems?.[0]?.url;
+  const isPublic = Boolean(page.public);
+  const created = formatAdminDate(page.createdAt);
+  const sections = page.sections?.length ?? 0;
+  const photos = countPhotos(page);
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        borderRadius: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        transition: 'transform .2s, box-shadow .2s',
-        '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
+    <AdminEntityCard
+      testId={`image-page-card-${page.id}`}
+      title={page.title || ''}
+      titleTestId={`image-page-title-${page.id}`}
+      description={truncate(page.description)}
+      visibility={{
+        isPublic,
+        label: visibilityDescriptor(isPublic).label,
+        testId: `image-page-visibility-${page.id}`,
       }}
-    >
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16 / 9',
-          bgcolor: 'grey.100',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
-        }}
-      >
-        {preview ? (
+      cover={
+        preview ? (
           <img
             src={preview}
             alt={page.title || 'Miniatura'}
+            loading="lazy"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
           <ImageIcon fontSize="large" color="disabled" />
-        )}
-
-        <Tooltip title="Excluir página">
-          <IconButton
-            size="small"
-            onClick={() => onDelete(page)}
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              bgcolor: 'rgba(255,255,255,0.9)',
-              '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
-              color: '#d32f2f',
-            }}
-            aria-label="Excluir página"
-          >
-            <Delete fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      <CardContent sx={{ flexGrow: 1, pb: 1.5 }}>
-        <Typography
-          variant="subtitle1"
-          fontWeight={700}
-          sx={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textAlign: 'center',
-          }}
-          title={page.title || 'Sem Título'}
-          gutterBottom
-        >
-          {page.title || 'Sem Título'}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textAlign: 'center',
-          }}
-          title={page.description}
-        >
-          {truncate(page.description)}
-        </Typography>
-
-        <Typography
-          variant="caption"
-          color={page.public ? 'success.main' : 'text.secondary'}
-          textAlign="center"
-          display="block"
-          mt={1}
-        >
-          {page.public ? 'Pública' : 'Privada'}
-        </Typography>
-      </CardContent>
-
-      <CardActions
-        sx={{
-          p: 2,
-          pt: 0,
-          gap: 1,
-          flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'stretch' : 'center',
-        }}
-      >
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Visibility />}
-          onClick={() => onViewDetails(page)}
-          sx={{ flex: 1, minWidth: 120 }}
-          fullWidth={isMobile}
-        >
-          Ver detalhes
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<EditIcon />}
-          onClick={() => onEdit(page)}
-          sx={{ flex: 1, minWidth: 120 }}
-          fullWidth={isMobile}
-        >
-          Editar
-        </Button>
-      </CardActions>
-    </Card>
+        )
+      }
+      meta={
+        <AdminMetaChips
+          chips={[
+            {
+              key: 'sections',
+              label: `${sections} ${sections === 1 ? 'seção' : 'seções'}`,
+              icon: <Layers fontSize="small" />,
+              testId: `image-page-sections-${page.id}`,
+            },
+            {
+              key: 'photos',
+              label: `${photos} ${photos === 1 ? 'foto' : 'fotos'}`,
+              icon: <PhotoLibrary fontSize="small" />,
+              testId: `image-page-photos-${page.id}`,
+            },
+            ...(created
+              ? [{
+                  key: 'created',
+                  label: created,
+                  icon: <CalendarMonth fontSize="small" />,
+                  testId: `image-page-created-${page.id}`,
+                }]
+              : []),
+          ]}
+        />
+      }
+      onDelete={() => onDelete(page)}
+      deleteTestId={`image-page-delete-${page.id}`}
+      deleteLabel="Excluir página"
+      actions={[
+        {
+          key: 'details',
+          label: 'Ver detalhes',
+          icon: <Visibility />,
+          onClick: () => onViewDetails(page),
+          testId: `image-page-details-${page.id}`,
+        },
+        {
+          key: 'edit',
+          label: 'Editar',
+          icon: <EditIcon />,
+          variant: 'outlined',
+          onClick: () => onEdit(page),
+          testId: `image-page-edit-${page.id}`,
+        },
+      ]}
+    />
   );
 }

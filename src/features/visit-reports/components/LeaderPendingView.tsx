@@ -21,6 +21,7 @@ import {
     Home as HomeIcon
 } from '@mui/icons-material';
 import { TeamVisitReportPendingsDto } from '../../attendance/types';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface LeaderPendingViewProps {
     pendings: TeamVisitReportPendingsDto[];
@@ -117,7 +118,7 @@ export const LeaderPendingView: React.FC<LeaderPendingViewProps> = ({ pendings, 
                                                     />
                                                     <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600, color: 'text.secondary' }}>
                                                         <CalendarIcon fontSize="inherit" />
-                                                        {new Date(pending.visitDate).toLocaleDateString('pt-BR')}
+                                                        {formatDayBR(pending.visitDate)}
                                                     </Typography>
                                                 </Box>
 

@@ -1,0 +1,248 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import { API_URL } from "../../../playwright.live.config";
+import { closeDb, queryAll, queryOne } from "../support/db";
+import { authHeaders, expect, loginAs, test } from "../support/live";
+import { flagEnabled } from "../support/flags";
+
+/** Versão vigente dos prompts, lida do código da API (repositório irmão). */
+const STAGE_PROMPT_VERSION = /STAGE_PROMPT_VERSION = "([^"]+)"/.exec(
+  readFileSync(resolve(process.cwd(), "../orfanatonib-api/src/content/studio/ai/generation/stage-prompts.constants.ts"), "utf8"),
+)![1];
+
+/**
+ * Geração de conteúdo do Estúdio com o PROVEDOR SIMULADO (AI_PROVIDER_MODE=fake):
+ * nenhum LLM real é chamado. Falhas e limites vêm de diretivas `[[fake:…]]`
+ * no tema do pacote (o worker usa o tipo da etapa; o tema vai no `input`).
+ * Pré-requisito: API iniciada com AI_PROVIDER_MODE=fake.
+ */
+const TAG = `e2e-llm-${Date.now()}`;
+
+type Stage = { id: string; stageType: string; status: string };
+type Pkg = { id: string; tracks: Array<{ stages: Stage[] }> };
+
+let admin: string;
+const FLAGS = ["content_studio", "content_studio_generation"];
+const flagsBefore = new Map<string, boolean>();
+
+async function setFlags(request: import("@playwright/test").APIRequestContext, enabled: boolean): Promise<void> {
+  for (const key of FLAGS) {
+    const res = await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled } });
+    expect(res.ok()).toBe(true);
+  }
+}
+
+async function newPackage(request: import("@playwright/test").APIRequestContext, directive = ""): Promise<{ packageId: string; stage: Stage }> {
+  const res = await request.post(`${API_URL}/content-studio/packages`, {
+    headers: authHeaders(admin),
+    data: { theme: `${TAG} ${directive}`.trim(), biblicalReferences: "Jo 3:16", canonicalObjective: "Objetivo" },
+  });
+  expect(res.status()).toBe(201);
+  const pkg = (await res.json()) as Pkg;
+  const stage = pkg.tracks[0].stages.find((s) => s.stageType === "LESSON") ?? pkg.tracks[0].stages[0];
+  return { packageId: pkg.id, stage };
+}
+
+/** "Visuais da lição" só gera depois das perguntas (quantidade, tipo, desenho e formato); o desenho é o padrão da categoria. */
+const VISUAL_CONFIG_BY_AUDIENCE: Record<string, object> = {
+  BABY: { quantity: 4, format: "CUTOUT_KIT", style: "CUTE_CARTOON", orientation: "LANDSCAPE" },
+  CHILD: { quantity: 4, format: "CUTOUT_KIT", style: "CUTE_CARTOON", orientation: "LANDSCAPE" },
+  TEEN: { quantity: 4, format: "STORY_SCENES", style: "MODERN_ILLUSTRATION", orientation: "LANDSCAPE" },
+  ADULT: { quantity: 4, format: "STORY_SCENES", style: "EDITORIAL_PAINTING", orientation: "PORTRAIT" },
+};
+
+const request202 = (
+  request: import("@playwright/test").APIRequestContext,
+  packageId: string,
+  stageId: string,
+  key: string,
+  visualAudience?: string,
+) =>
+  request.post(`${API_URL}/content-studio/packages/${packageId}/stages/${stageId}/generations`, {
+    headers: authHeaders(admin),
+    data: {
+      capability: "TEXT_STRUCTURED",
+      idempotencyKey: key,
+      ...(visualAudience ? { visualConfig: VISUAL_CONFIG_BY_AUDIENCE[visualAudience] } : {}),
+    },
+  });
+
+const jobRow = (id: string) =>
+  queryOne<{ status: string; attempts: number; errorCode: string | null }>("SELECT status, attempts, errorCode FROM content_generation_jobs WHERE id = ?", [id]);
+
+async function waitJob(id: string, done: (status: string) => boolean): Promise<{ status: string; attempts: number; errorCode: string | null }> {
+  for (let i = 0; i < 80; i++) {
+    const row = await jobRow(id);
+    if (row && done(row.status)) return row;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`job ${id} não chegou ao estado esperado`);
+}
+
+test.describe.serial("Geração com provedor simulado — ao vivo", () => {
+  test.beforeAll(async ({ request }) => {
+    admin = (await loginAs(request, "admin")).accessToken;
+    for (const key of FLAGS) flagsBefore.set(key, await flagEnabled(key));
+    await setFlags(request, true);
+  });
+  test.afterAll(async ({ request }) => {
+    for (const key of FLAGS) {
+      await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: flagsBefore.get(key) } });
+    }
+    await closeDb();
+  });
+
+  test("a geração conclui: job SUCCEEDED, versão gravada com snapshot do provedor FAKE e etapa em DRAFT", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request);
+    const res = await request202(request, packageId, stage.id, `${TAG}-ok`);
+    expect(res.ok()).toBe(true);
+    const { id } = (await res.json()) as { id: string };
+
+    const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+    expect(job.status).toBe("SUCCEEDED");
+    const version = await queryOne<{ generationSnapshot: string | { provider?: string } }>(
+      "SELECT generationSnapshot FROM content_versions WHERE stage_id = ?",
+      [stage.id],
+    );
+    const snap = typeof version?.generationSnapshot === "string" ? JSON.parse(version.generationSnapshot) : version?.generationSnapshot;
+    expect(snap?.provider).toBe("FAKE");
+    const row = await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]);
+    expect(row?.status).toBe("DRAFT");
+  });
+
+  test("repetir a mesma chave devolve o mesmo job e não cria outro", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request);
+    const key = `${TAG}-idem`;
+    const first = (await (await request202(request, packageId, stage.id, key)).json()) as { id: string };
+    const second = (await (await request202(request, packageId, stage.id, key)).json()) as { id: string };
+    expect(second.id).toBe(first.id);
+    await waitJob(first.id, (s) => s === "SUCCEEDED" || s === "FAILED");
+    const rows = await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_generation_jobs WHERE stage_id = ?", [stage.id]);
+    expect(rows[0].n).toBe(1);
+  });
+
+  test("anônimo 401 e membro 403, sem criar job", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request);
+    const member = (await loginAs(request, "member")).accessToken;
+    const url = `${API_URL}/content-studio/packages/${packageId}/stages/${stage.id}/generations`;
+    expect((await request.post(url, { data: { capability: "TEXT_STRUCTURED", idempotencyKey: "x" } })).status()).toBe(401);
+    expect((await request.post(url, { headers: authHeaders(member), data: { capability: "TEXT_STRUCTURED", idempotencyKey: "x" } })).status()).toBe(403);
+    const rows = await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_generation_jobs WHERE stage_id = ?", [stage.id]);
+    expect(rows[0].n).toBe(0);
+  });
+
+  test("sem geração ativa o cancelamento é 404", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request);
+    const res = await request.delete(`${API_URL}/content-studio/packages/${packageId}/stages/${stage.id}/generations`, { headers: authHeaders(admin) });
+    expect(res.status()).toBe(404);
+  });
+
+  test("limite de taxa (429): reagenda e conclui na 2ª tentativa, sem erro final", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request, "[[fake:429:1]]");
+    const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-429`)).json()) as { id: string };
+    const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+    expect(job.status).toBe("SUCCEEDED");
+    expect(job.attempts).toBe(2);
+    expect(job.errorCode).toBeNull();
+  });
+
+  test("cota esgotada (quota): falha definitiva na 1ª tentativa, etapa FAILED, nenhuma versão gravada", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request, "[[fake:quota]]");
+    const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-quota`)).json()) as { id: string };
+    const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+    expect(job).toMatchObject({ status: "FAILED", attempts: 1, errorCode: "QUOTA" });
+    expect((await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]))?.status).toBe("FAILED");
+    expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(0);
+  });
+
+  // Cada falha que um provedor real devolve, com a política de nova tentativa que lhe cabe.
+  for (const scenario of [
+    { name: "erro 500 passageiro", directive: "[[fake:500:1]]", attempts: 2 },
+    { name: "rede cai duas vezes", directive: "[[fake:network:2]]", attempts: 3 },
+    { name: "tempo esgotado uma vez", directive: "[[fake:timeout:1]]", attempts: 2 },
+    { name: "resposta cortada pelo limite de tokens uma vez", directive: "[[fake:truncated:1]]", attempts: 2 },
+  ]) {
+    test(`recupera sozinho: ${scenario.name} (conclui na tentativa ${scenario.attempts}, uma única versão)`, async ({ request }) => {
+      const { packageId, stage } = await newPackage(request, scenario.directive);
+      const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-rec-${scenario.directive}`)).json()) as { id: string };
+      const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+      expect(job).toMatchObject({ status: "SUCCEEDED", attempts: scenario.attempts, errorCode: null });
+      expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(1);
+      expect((await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]))?.status).toBe("DRAFT");
+    });
+  }
+
+  for (const scenario of [
+    { name: "erro 500 que não passa", directive: "[[fake:500]]", attempts: 3, code: "SERVER" },
+    { name: "tempo sempre esgotado", directive: "[[fake:timeout]]", attempts: 3, code: "TIMEOUT" },
+    { name: "provedor inalcançável", directive: "[[fake:network]]", attempts: 3, code: "NETWORK" },
+    { name: "resposta sempre cortada", directive: "[[fake:truncated]]", attempts: 3, code: "OUTPUT_TRUNCATED" },
+    { name: "resposta fora do formato pedido", directive: "[[fake:schema]]", attempts: 1, code: "SCHEMA" },
+  ]) {
+    test(`desiste com causa clara: ${scenario.name} (${scenario.attempts} tentativa(s), nada gravado, sem vazar o pedido)`, async ({ request }) => {
+      const { packageId, stage } = await newPackage(request, scenario.directive);
+      const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-fim-${scenario.code}`)).json()) as { id: string };
+      const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+      expect(job).toMatchObject({ status: "FAILED", attempts: scenario.attempts, errorCode: scenario.code });
+      expect((await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]))?.status).toBe("FAILED");
+      expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(0);
+
+      const latest = await request.get(`${API_URL}/content-studio/packages/${packageId}/stages/${stage.id}/generations/latest`, { headers: authHeaders(admin) });
+      expect(latest.status()).toBe(200);
+      const text = await latest.text();
+      expect(text).toContain(scenario.code);
+      // A causa exposta é um código curto: nunca o pedido enviado ao modelo.
+      expect(text).not.toContain("[[fake:");
+      expect(text).not.toContain("Objetivo");
+    });
+  }
+
+  test("bloqueio de segurança: falha definitiva sem retry", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request, "[[fake:moderation]]");
+    const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-mod`)).json()) as { id: string };
+    const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+    expect(job).toMatchObject({ status: "FAILED", attempts: 1, errorCode: "SAFETY" });
+  });
+
+  test("429 permanente: tenta 3 vezes e falha; depois a etapa aceita nova geração", async ({ request }) => {
+    const { packageId, stage } = await newPackage(request, "[[fake:429]]");
+    const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-esgota`)).json()) as { id: string };
+    const job = await waitJob(id, (s) => s === "FAILED" || s === "SUCCEEDED");
+    expect(job).toMatchObject({ status: "FAILED", attempts: 3, errorCode: "RATE_LIMIT" });
+    const again = await request202(request, packageId, stage.id, `${TAG}-esgota-2`);
+    expect(again.ok()).toBe(true);
+  });
+
+  test("todo público (bebê, criança, adolescente, adulto) gera todas as etapas do seu catálogo, e o conteúdo muda por público", async ({ request }) => {
+    const res = await request.post(`${API_URL}/content-studio/packages`, {
+      headers: authHeaders(admin),
+      data: { theme: `${TAG} públicos`, biblicalReferences: "Jo 10.1-18", canonicalObjective: "Jesus cuida" },
+    });
+    const pkg = (await res.json()) as { id: string; tracks: Array<{ audience: string; stages: Array<{ id: string; stageType: string }> }> };
+    expect(pkg.tracks.map((t) => t.audience).sort()).toEqual(["ADULT", "BABY", "CHILD", "TEEN"]);
+
+    const lessonWords: Record<string, number> = {};
+    for (const track of pkg.tracks) {
+      // respeita as dependências: gera na ordem do catálogo, esperando cada etapa concluir
+      for (const stage of track.stages) {
+        const job = (await (await request202(request, pkg.id, stage.id, `${TAG}-${track.audience}-${stage.stageType}`, stage.stageType === "LESSON_VISUALS" ? track.audience : undefined)).json()) as { id: string };
+        const done = await waitJob(job.id, (s) => s === "SUCCEEDED" || s === "FAILED");
+        expect(done.status, `${track.audience} ${stage.stageType}`).toBe("SUCCEEDED");
+        const version = await queryOne<{ structuredContent: string | { story?: Array<{ body: string }> }; generationSnapshot: string | { audience?: string; stageType?: string; promptVersion?: string } }>(
+          "SELECT structuredContent, generationSnapshot FROM content_versions WHERE stage_id = ?",
+          [stage.id],
+        );
+        const snap = typeof version?.generationSnapshot === "string" ? JSON.parse(version.generationSnapshot) : version?.generationSnapshot;
+        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: STAGE_PROMPT_VERSION });
+        if (stage.stageType === "LESSON") {
+          const content = typeof version?.structuredContent === "string" ? JSON.parse(version.structuredContent) : version?.structuredContent;
+          lessonWords[track.audience] = (content?.story ?? []).reduce((n: number, b: { body: string }) => n + b.body.split(" ").length, 0);
+        }
+      }
+    }
+    // bebê: narrativa curta; adulto: estudo longo
+    expect(lessonWords.BABY).toBeLessThan(lessonWords.CHILD);
+    expect(lessonWords.CHILD).toBeLessThan(lessonWords.ADULT);
+  });
+});

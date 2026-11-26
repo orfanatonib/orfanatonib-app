@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { TeamScheduleDto } from '../types';
+import { formatDayBR } from 'utils/dateUtils';
 
 interface Props {
   schedules: TeamScheduleDto[];
@@ -16,7 +17,7 @@ interface Props {
 
 const formatScheduleLabel = (schedule: TeamScheduleDto) => {
   const date = schedule.visitDate || schedule.meetingDate;
-  const readableDate = date ? new Date(date).toLocaleDateString('pt-BR') : 'Data a definir';
+  const readableDate = formatDayBR(date);
   const kind = schedule.visitDate ? 'Visita' : 'Reunião';
   return `${kind} #${schedule.visitNumber} • ${readableDate}`;
 };

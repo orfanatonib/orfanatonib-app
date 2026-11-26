@@ -1,296 +1,139 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Alert,
-  TextField,
-  Container,
-  InputAdornment,
-  IconButton,
-  Tooltip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Stack,
-  Paper,
-} from '@mui/material';
-import { Search, Clear, Edit, Delete, Add, Lightbulb } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { Box } from '@mui/material';
+import { Lightbulb } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { motion } from 'framer-motion';
 import IdeasSectionCard from './components/IdeasSectionCard';
 import IdeasSectionDetailsModal from './components/IdeasSectionDetailsModal';
-import { deleteIdeasSection } from './api';
-import { useIdeasSections } from './hooks';
+import { deleteIdeasSection, fetchIdeasSectionsPage } from './api';
+import { ideasSectionErrorMessage } from './errors';
+import {
+  IDEAS_SECTIONS_DEFAULT_SORT,
+  IDEAS_SECTIONS_TEST_ID_PREFIX,
+  IDEAS_SECTION_FILTER_KEYS,
+  IDEAS_SECTION_LABELS,
+  IDEAS_SECTION_MEDIA_FILTER_TYPES,
+  IDEAS_SECTION_SORT_OPTIONS,
+  IDEAS_SECTION_MESSAGES,
+  MEDIA_TYPE_LABELS,
+} from './constants';
+import { useRefreshPendingCounts } from '@/features/admin-pending-counts';
 import { IdeasSection as IdeasSectionType } from './types';
-import { setIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
-import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
-import { MediaType, MediaUploadType, MediaPlatform } from '@/store/slices/types';
-import BackHeader from '@/components/common/header/BackHeader';
+import { buildEditSectionPath } from './utils';
+import { AdminCardGrid, AdminListScreen, useAdminList } from '@/components/common/admin-shell';
+import type { AdminFilterField } from '@/components/common/admin-shell';
 import DeleteConfirmDialog from '@/components/common/modal/DeleteConfirmDialog';
+
+const P = IDEAS_SECTIONS_TEST_ID_PREFIX;
+const K = IDEAS_SECTION_FILTER_KEYS;
+
+const FIELDS: AdminFilterField[] = [
+  {
+    kind: 'select',
+    key: K.MEDIA_TYPE,
+    label: IDEAS_SECTION_LABELS.FILTER_MEDIA_TYPE,
+    allLabel: IDEAS_SECTION_LABELS.FILTER_MEDIA_TYPE_ALL,
+    options: IDEAS_SECTION_MEDIA_FILTER_TYPES.map((value) => ({ value, label: MEDIA_TYPE_LABELS[value] })),
+  },
+  { kind: 'date', key: K.CREATED_FROM, label: IDEAS_SECTION_LABELS.FILTER_CREATED_FROM },
+  { kind: 'date', key: K.CREATED_TO, label: IDEAS_SECTION_LABELS.FILTER_CREATED_TO },
+  {
+    kind: 'select',
+    key: K.SORT,
+    label: IDEAS_SECTION_LABELS.FILTER_SORT,
+    allLabel: null,
+    options: IDEAS_SECTION_SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+  },
+];
+
+const DEFAULT_FILTERS = { [K.SORT]: IDEAS_SECTIONS_DEFAULT_SORT };
 
 export default function IdeasSectionManager() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const refreshPending = useRefreshPendingCounts();
 
-  const {
-    filteredSections,
-    loading,
-    isFiltering,
-    error,
-    setError,
-    searchTerm,
-    setSearchTerm,
-    fetchSections,
-  } = useIdeasSections();
+  const list = useAdminList<IdeasSectionType>({
+    fetcher: fetchIdeasSectionsPage,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: IDEAS_SECTION_MESSAGES.LOAD_FAILED,
+  });
 
   const [sectionToDelete, setSectionToDelete] = useState<IdeasSectionType | null>(null);
   const [selectedSection, setSelectedSection] = useState<IdeasSectionType | null>(null);
+  const [actionError, setActionError] = useState('');
 
-  useEffect(() => { 
-    fetchSections();
-  }, [fetchSections]);
+  useEffect(() => {
+    void refreshPending();
+  }, [refreshPending]);
 
   const handleEdit = (section: IdeasSectionType) => {
-    const ideasSection: IdeasSection = {
-      id: section.id,
-      title: section.title,
-      description: section.description,
-      public: section.public,
-      createdAt: section.createdAt,
-      updatedAt: section.updatedAt,
-      medias: (section.medias || []).map(media => ({
-        id: media.id,
-        title: media.title,
-        description: media.description,
-        uploadType: media.uploadType as MediaUploadType,
-        mediaType: media.mediaType as MediaType,
-        isLocalFile: media.isLocalFile,
-        url: media.url,
-        platformType: media.platformType as MediaPlatform || undefined,
-        originalName: media.originalName || undefined,
-        size: media.size || undefined,
-        createdAt: media.createdAt,
-        updatedAt: media.updatedAt,
-      })),
-    };
-    
-    dispatch(setIdeasSectionData(ideasSection));
-    
-    navigate('/adm/editar-ideias-compartilhadas');
+    navigate(buildEditSectionPath(section.id));
   };
 
   const handleDelete = async () => {
     if (!sectionToDelete || !sectionToDelete.id) return;
     const id = sectionToDelete.id;
     setSectionToDelete(null);
+    setActionError('');
     try {
       await deleteIdeasSection(id);
-      await fetchSections();
-    } catch {
-      setError('Erro ao deletar seção de ideias');
+      list.reload();
+      void refreshPending();
+    } catch (error: unknown) {
+      setActionError(ideasSectionErrorMessage(error, IDEAS_SECTION_MESSAGES.DELETE_FAILED));
     }
   };
 
-  const isBusy = loading || isFiltering;
-  const hasQuery = Boolean(searchTerm);
-
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <BackHeader title="💡 Ideias Compartilhadas" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 4,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <TextField
-              fullWidth
-              placeholder="Buscar por título ou descrição..."
-              label="Buscar seções"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              inputProps={{ 'aria-label': 'Buscar Ideias compartilhadas' }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {isFiltering && <CircularProgress size={20} sx={{ mr: hasQuery ? 1 : 0 }} />}
-                    {hasQuery && (
-                      <Tooltip title="Limpar busca">
-                        <IconButton
-                          size="small"
-                          onClick={() => setSearchTerm('')}
-                          sx={{
-                            '&:hover': {
-                              bgcolor: 'action.hover',
-                            },
-                          }}
-                        >
-                          <Clear fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '&:hover': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    },
-                  },
-                  '&.Mui-focused': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderWidth: 2,
-                    },
-                  },
-                },
-              }}
-            />
-          </Paper>
-        </motion.div>
-
-        {isBusy && filteredSections.length === 0 ? (
+    <AdminListScreen
+      testIdPrefix={P}
+      title={IDEAS_SECTION_MESSAGES.MANAGER_TITLE}
+      searchLabel={IDEAS_SECTION_LABELS.SEARCH}
+      searchPlaceholder={IDEAS_SECTION_LABELS.SEARCH_PLACEHOLDER}
+      fields={FIELDS}
+      list={list}
+      emptyMessage={IDEAS_SECTION_MESSAGES.EMPTY}
+      emptyIcon={<Lightbulb sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      beforeToolbar={
+        actionError ? (
           <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '50vh',
-            }}
+            role="alert"
+            data-testid={`${P}-action-error`}
+            onClick={() => setActionError('')}
+            sx={{ mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'error.light', color: 'error.contrastText', cursor: 'pointer' }}
           >
-            <CircularProgress size={60} thickness={4} />
+            {actionError}
           </Box>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Alert
-              severity="error"
-              onClose={() => setError('')}
-              sx={{
-                borderRadius: 3,
-                fontSize: '1rem',
-              }}
-            >
-              {error}
-            </Alert>
-          </motion.div>
-        ) : filteredSections.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Lightbulb sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h5" color="text.secondary" gutterBottom>
-                📭 Nenhuma seção encontrada
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {hasQuery
-                  ? 'Tente ajustar sua busca ou limpar os filtros.'
-                  : 'Ainda não há seções de ideias compartilhadas cadastradas.'}
-              </Typography>
-            </Paper>
-          </motion.div>
-        ) : (
-          <>
-            {(loading || isFiltering) && filteredSections.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  py: 2,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
-            )}
-            <Grid container spacing={3} alignItems="stretch">
-              {filteredSections.map((section, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={4}
-                  lg={3}
-                  key={section.id}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  sx={{ display: 'flex' }}
-                >
-                  <IdeasSectionCard
-                    section={section}
-                    onDelete={(section) => setSectionToDelete(section)}
-                    onEdit={handleEdit}
-                    onViewDetails={(section) => setSelectedSection(section)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </>
-        )}
-
-        <DeleteConfirmDialog
-          open={!!sectionToDelete}
-          title={sectionToDelete?.title || 'Seção'}
-          onClose={() => setSectionToDelete(null)}
-          onConfirm={handleDelete}
-        />
-
-        <IdeasSectionDetailsModal
-          section={selectedSection}
-          open={!!selectedSection}
-          onClose={() => setSelectedSection(null)}
-        />
-
-      </Container>
-    </Box>
+        ) : null
+      }
+      overlays={
+        <>
+          <DeleteConfirmDialog
+            testId={`${P}-delete-dialog`}
+            open={!!sectionToDelete}
+            title={sectionToDelete?.title || 'Seção'}
+            onClose={() => setSectionToDelete(null)}
+            onConfirm={handleDelete}
+          />
+          <IdeasSectionDetailsModal
+            section={selectedSection}
+            open={!!selectedSection}
+            onClose={() => setSelectedSection(null)}
+          />
+        </>
+      }
+    >
+      <AdminCardGrid testId={`${P}-cards`}>
+        {list.items.map((section) => (
+          <Box key={section.id} data-testid={`${P}-card-${section.id}`} sx={{ display: 'flex', width: '100%', minWidth: 0 }}>
+            <IdeasSectionCard
+              section={section}
+              onDelete={setSectionToDelete}
+              onEdit={handleEdit}
+              onViewDetails={setSelectedSection}
+            />
+          </Box>
+        ))}
+      </AdminCardGrid>
+    </AdminListScreen>
   );
 }

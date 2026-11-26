@@ -402,7 +402,7 @@ function FormWithApiValidationExample() {
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
-              error={error?.metadata?.details?.fields?.name?.length > 0}
+              error={(error?.metadata?.details?.fields?.name?.length ?? 0) > 0}
               helperText={error?.metadata?.details?.fields?.name?.join(', ')}
             />
 
@@ -412,7 +412,7 @@ function FormWithApiValidationExample() {
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
-              error={error?.metadata?.details?.fields?.email?.length > 0}
+              error={(error?.metadata?.details?.fields?.email?.length ?? 0) > 0}
               helperText={error?.metadata?.details?.fields?.email?.join(', ')}
             />
 
@@ -421,7 +421,7 @@ function FormWithApiValidationExample() {
               value={formData.shelterId}
               onChange={(e) => setFormData(prev => ({ ...prev, shelterId: e.target.value }))}
               required
-              error={error?.metadata?.details?.fields?.shelterId?.length > 0}
+              error={(error?.metadata?.details?.fields?.shelterId?.length ?? 0) > 0}
               helperText={error?.metadata?.details?.fields?.shelterId?.join(', ')}
             />
 

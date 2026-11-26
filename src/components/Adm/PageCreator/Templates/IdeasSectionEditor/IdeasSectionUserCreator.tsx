@@ -1,375 +1,140 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  IconButton,
-} from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Button, CircularProgress, Paper, Stack } from '@mui/material';
+import { LightbulbOutlined as LightbulbIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { IdeasSection } from '@/store/slices/ideas/ideasSlice';
-import { clearIdeasSectionData } from '@/store/slices/ideas/ideasSlice';
+import type { IdeasSection } from '@/store/slices/ideas/ideasSlice';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { MEMBER_AREA_HOME_PATH, MEMBER_CARD_SX } from '@/pages/MemberArea/constants/navigation';
+import {
+  IDEA_DRAFT_ISSUE_MESSAGES,
+  IDEA_SHARE_COPY,
+  IDEA_SHARE_REDIRECT_DELAY_MS,
+  createIdeasSection,
+  getSendableMedias,
+  ideasSectionErrorMessage,
+  isDraftDirty,
+  validateIdeaDraft,
+} from '@/features/ideas-sections';
 import { IdeasMaterialSectionUser } from '../IdeasMaterialPageCreator/IdeasMaterialSectionUser';
-import api from '@/config/axiosConfig';
+import PageFeedbackSnackbar from '../shared/PageFeedbackSnackbar';
+import type { FeedbackSeverity } from '../shared/types';
+import {
+  CLOSED_FEEDBACK,
+  EMPTY_IDEA_SECTION,
+  IDEA_MEDIA_STATUS_SEVERITY,
+  IDEA_SHARE_TEST_IDS,
+  MIN_TOUCH_TARGET_PX,
+} from './constants';
+import type { IdeaFeedbackState } from './types';
+import { buildMemberIdeaFormData, getIdeaMediaStatus, getIdeaMediaStatusMessage } from './utils';
 
 export function IdeasSectionUserCreator() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [sectionData, setSectionData] = useState<IdeasSection>({
-    title: '',
-    description: '',
-    medias: [],
-    public: true,
-  });
+  const [sectionData, setSectionData] = useState<IdeasSection>(EMPTY_IDEA_SECTION);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
-  });
+  const [feedback, setFeedback] = useState<IdeaFeedbackState>(CLOSED_FEEDBACK);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const handleSectionUpdate = (updatedSection: IdeasSection) => {
-    setSectionData(updatedSection);
-  };
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
-  const handleBack = () => {
-    dispatch(clearIdeasSectionData());
-    navigate('/area-do-membro');
+  useUnsavedChangesGuard(isDraftDirty(sectionData, EMPTY_IDEA_SECTION));
+
+  const sendableMediaCount = getSendableMedias(sectionData.medias).length;
+  const mediaStatus = getIdeaMediaStatus(sendableMediaCount, sectionData.medias.length);
+
+  const showMessage = (message: string, severity: FeedbackSeverity) =>
+    setFeedback({ open: true, message, severity });
+
+  const handleCancel = () => {
+    navigate(MEMBER_AREA_HOME_PATH);
   };
 
   const handleShareIdea = async () => {
-    if (!sectionData.title.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Por favor, adicione um título para sua ideia',
-        severity: 'error',
-      });
-      return;
-    }
-
-    if (!sectionData.description.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Por favor, adicione uma descrição para sua ideia',
-        severity: 'error',
-      });
-      return;
-    }
-
-    const validMedias = sectionData.medias.filter(media => {
-      if (media.uploadType === 'upload') {
-        return media.file && media.title.trim();
-      }
-      if (media.uploadType === 'link') {
-        return media.url && media.title.trim();
-      }
-      return false;
-    });
-
-    if (validMedias.length === 0) {
-      setSnackbar({
-        open: true,
-        message: 'Por favor, adicione pelo menos uma mídia (vídeo, imagem ou documento) para sua ideia',
-        severity: 'error',
-      });
+    const issue = validateIdeaDraft(sectionData);
+    if (issue) {
+      showMessage(IDEA_DRAFT_ISSUE_MESSAGES[issue], 'error');
       return;
     }
 
     setLoading(true);
     try {
-      const formData = new FormData();
+      // A ideia enviada por um membro nasce pública e sempre com mídia nova.
+      await createIdeasSection(buildMemberIdeaFormData(sectionData));
 
-      const mediaTypeCounters = { video: 0, document: 0, image: 0 };
-
-      const mediasPayload = sectionData.medias.map((media) => {
-        const baseItem = {
-          title: media.title,
-          description: media.description,
-          mediaType: media.mediaType,
-          uploadType: media.uploadType,
-          isLocalFile: media.uploadType === 'upload',
-        };
-
-        if (media.uploadType === 'upload' && media.mediaType !== 'audio') {
-          if (!media.file) {
-            throw new Error(`Upload media "${media.title}" has no file associated`);
-          }
-
-          mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters]++;
-          const count = mediaTypeCounters[media.mediaType as keyof typeof mediaTypeCounters];
-          const fieldKey = count === 1 ? `${media.mediaType}_upload` : `${media.mediaType}${count}_upload`;
-
-          formData.append(fieldKey, media.file);
-
-          return { ...baseItem, fieldKey, originalName: media.file.name };
-        }
-
-        if (media.uploadType === 'link' && media.url) {
-          return {
-            ...baseItem,
-            url: media.url,
-            platformType: media.platformType
-          };
-        }
-
-        return baseItem;
-      });
-
-      formData.append('sectionData', JSON.stringify({
-        title: sectionData.title,
-        description: sectionData.description,
-        public: true,
-        medias: mediasPayload,
-      }));
-
-      await api.post('/ideas-sections', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      dispatch(clearIdeasSectionData());
-
-      setSectionData({
-        title: '',
-        description: '',
-        medias: [],
-        public: true,
-      });
-
-      setSnackbar({
-        open: true,
-        message: 'Sua ideia incrível foi compartilhada com sucesso! 🎉',
-        severity: 'success',
-      });
-
-      setTimeout(() => {
-        navigate('/area-do-membro');
-      }, 2000);
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Ops! Algo deu errado ao compartilhar sua ideia. Tente novamente.',
-        severity: 'error',
-      });
+      setSectionData(EMPTY_IDEA_SECTION);
+      showMessage(IDEA_SHARE_COPY.SUCCESS, 'success');
+      redirectTimer.current = setTimeout(() => navigate(MEMBER_AREA_HOME_PATH), IDEA_SHARE_REDIRECT_DELAY_MS);
+    } catch (error: unknown) {
+      showMessage(ideasSectionErrorMessage(error, IDEA_SHARE_COPY.FAILURE), 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        bgcolor: 'background.default',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      }}
-    >
-      <Box sx={{
-        py: { xs: 2, md: 3 },
-        px: 0,
-        flexShrink: 0,
-        textAlign: 'center',
-        position: 'relative',
-      }}>
-        <Box sx={{
-          position: 'absolute',
-          top: { xs: 8, md: 24 },
-          left: { xs: 8, md: 24 },
-          zIndex: 2,
-        }}>
-          <IconButton
-            onClick={handleBack}
-            sx={{
-              bgcolor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.3)',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              width: { xs: '40px', md: '48px' },
-              height: { xs: '40px', md: '48px' },
-              fontSize: { xs: '1.2rem', md: '1.5rem' },
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-        </Box>
+    <Stack data-testid={IDEA_SHARE_TEST_IDS.PAGE} spacing={{ xs: 2, md: 3 }}>
+      <Paper
+        data-testid={IDEA_SHARE_TEST_IDS.FORM_CARD}
+        elevation={0}
+        sx={MEMBER_CARD_SX}
+      >
+        <IdeasMaterialSectionUser section={sectionData} onUpdate={setSectionData} />
+      </Paper>
 
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 'bold',
-            fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.5rem' },
-            mb: { xs: 3, md: 2 },
-            color: 'white',
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            mt: { xs: 4, md: 5 },
-            px: 0,
-            maxWidth: '100%',
-            mx: 0,
-          }}
-        >
-          ✨ Criar e compartilhar ideia incrível
-        </Typography>
-
-        <Typography
-          variant="h6"
-          sx={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' },
-            mb: { xs: 4, md: 2 },
-            maxWidth: '700px',
-            mx: 'auto',
-            lineHeight: 1.5,
-            fontWeight: 400,
-            textAlign: 'center',
-          }}
-        >
-          Jesus colocou no seu coração uma ideia brilhante?<br />
-          Pode ser uma brincadeira, um versículo, uma forma especial de contar<br />
-          uma história ou qualquer outra atividade para o seu Abrigo!<br /><br />
-          Agora você também pode enviar <strong>vídeos, imagens e documentos</strong><br />
-          para mostrar como fez e ajudar outros membros a colocarem em prática. 📹📸📄
-        </Typography>
-
-      </Box>
-
-      <Box sx={{
-        flex: 1,
-        p: { xs: 2, md: 4 },
-        bgcolor: 'background.default',
-        borderRadius: '24px 24px 0 0',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-        <Box sx={{
-          maxWidth: '1200px',
-          mx: 'auto',
-          bgcolor: 'background.paper',
-          borderRadius: '20px',
-          p: { xs: 2, md: 4 },
-          boxShadow: '0 8px 40px rgba(0,0,0,0.15)',
-          border: '1px solid',
-          borderColor: 'divider',
-          position: 'relative',
-          width: { xs: '98%', md: '95%' },
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: -10,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '60px',
-            height: '6px',
-            bgcolor: 'divider',
-            borderRadius: '3px',
-          },
-        }}>
-          <IdeasMaterialSectionUser
-            section={sectionData}
-            onUpdate={handleSectionUpdate}
-          />
-
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mt: 4,
-            pt: 3,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            gap: 2,
-          }}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              p: 2,
-              borderRadius: 2,
-              bgcolor: sectionData.medias.length > 0 ? 'success.50' : 'warning.50',
-              border: `1px solid ${sectionData.medias.length > 0 ? 'success.main' : 'warning.main'}`,
-              width: '100%',
-              maxWidth: 400,
-            }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: sectionData.medias.length > 0 ? 'success.main' : 'warning.main',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  flex: 1,
-                }}
-              >
-                {sectionData.medias.length > 0
-                  ? `✅ ${sectionData.medias.length} mídia(s) adicionada(s)`
-                  : '⚠️ Adicione pelo menos uma mídia (vídeo, imagem ou documento)'
-                }
-              </Typography>
-            </Box>
-
-            <Button
-              variant="contained"
-              onClick={handleShareIdea}
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
-              sx={{
-                px: { xs: 4, md: 6 },
-                py: { xs: 1.5, md: 2 },
-                fontSize: { xs: '0.85rem', sm: '1.05rem', md: '1.2rem' },
-                fontWeight: 'bold',
-                borderRadius: '16px',
-                bgcolor: 'primary.main',
-                color: 'white',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.3)',
-                },
-                '&:disabled': {
-                  bgcolor: 'rgba(0,0,0,0.12)',
-                  color: 'rgba(0,0,0,0.26)',
-                },
-                transition: 'all 0.3s ease',
-                width: { xs: '95%', md: 'auto' },
-                maxWidth: { xs: '300px', md: 'none' },
-                opacity: sectionData.medias.length === 0 ? 0.6 : 1,
-              }}
-            >
-              {loading ? 'Compartilhando...' : '🚀 Compartilhar Ideia'}
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={5000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ zIndex: 1400 }}
+      <Paper
+        data-testid={IDEA_SHARE_TEST_IDS.ACTIONS}
+        elevation={0}
+        sx={{
+          ...MEMBER_CARD_SX,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2,
+        }}
       >
         <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          severity={snackbar.severity}
-          sx={{
-            width: '100%',
-            borderRadius: '12px',
-            fontSize: '1rem',
-          }}
+          data-testid={IDEA_SHARE_TEST_IDS.MEDIA_STATUS}
+          severity={IDEA_MEDIA_STATUS_SEVERITY[mediaStatus]}
+          variant="outlined"
+          sx={{ py: 0, flex: 1 }}
         >
-          {snackbar.message}
+          {getIdeaMediaStatusMessage(mediaStatus, sendableMediaCount)}
         </Alert>
-      </Snackbar>
-    </Box>
+
+        <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1.5}>
+          <Button
+            data-testid={IDEA_SHARE_TEST_IDS.CANCEL}
+            variant="outlined"
+            color="inherit"
+            onClick={handleCancel}
+            disabled={loading}
+            sx={{ minHeight: MIN_TOUCH_TARGET_PX, textTransform: 'none', fontWeight: 600 }}
+          >
+            {IDEA_SHARE_COPY.CANCEL}
+          </Button>
+          <Button
+            data-testid={IDEA_SHARE_TEST_IDS.SUBMIT}
+            variant="contained"
+            onClick={handleShareIdea}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <LightbulbIcon />}
+            sx={{ minHeight: MIN_TOUCH_TARGET_PX, px: 3, textTransform: 'none', fontWeight: 700 }}
+          >
+            {loading ? IDEA_SHARE_COPY.SUBMITTING : IDEA_SHARE_COPY.SUBMIT}
+          </Button>
+        </Stack>
+      </Paper>
+
+      <PageFeedbackSnackbar
+        testId={IDEA_SHARE_TEST_IDS.SNACKBAR}
+        open={feedback.open}
+        message={feedback.message}
+        severity={feedback.severity}
+        filled
+        onClose={() => setFeedback((prev) => ({ ...prev, open: false }))}
+      />
+    </Stack>
   );
 }

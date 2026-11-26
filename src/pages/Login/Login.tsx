@@ -14,10 +14,14 @@ import {
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import axios from 'axios';
 
 import api from '@/config/axiosConfig';
+import { apiGoogleLogin, apiLogin } from '@/features/auth/api';
+import { useAuthEntryOptions } from '@/features/auth/entryOptions';
+import { landingPathFor } from '@/features/auth/landing';
+import { logger } from '@/utils/logger';
 import { RootState as RootStateType, AppDispatch as AppDispatchType } from '@/store/slices';
 import { LOGIN_ERROR_MESSAGES, LOGIN_SUCCESS_MESSAGES, LOGIN_VALIDATION } from '@/constants/errors';
 import {
@@ -37,7 +41,7 @@ const isPasswordValid = (password: string): boolean => {
 const mapLoginError = (err: unknown): string => {
   if (axios.isAxiosError(err)) {
     const status = err.response?.status;
-    const raw = (err.response?.data as any)?.message;
+    const raw = (err.response?.data as { message?: unknown } | undefined)?.message;
     const serverMsg = Array.isArray(raw) ? raw.join(' ') : String(raw ?? '');
 
     if (status === 401) {
@@ -72,11 +76,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdminOrCoordinator =
-        user.role === UserRole.ADMIN || user.role === UserRole.LEADER;
-
-      const redirectPath = isAdminOrCoordinator ? '/adm' : '/area-do-membro';
-      navigate(redirectPath);
+      navigate(landingPathFor(user.role));
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -87,24 +87,16 @@ const Login: React.FC = () => {
   const bootstrapAfterLogin = async (accessToken: string): Promise<void> => {
     try {
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-    } catch (error) {
+    } catch (error: unknown) {
+      logger.warn('Não foi possível aplicar o cabeçalho de autorização', { feature: 'login' }, error);
     }
 
     try {
       await dispatch(fetchCurrentUser()).unwrap();
-    } catch (error) {
+    } catch (error: unknown) {
+      // O login já deu certo; a sessão completa é recarregada na próxima navegação.
+      logger.warn('Não foi possível carregar o usuário logo após o login', { feature: 'login' }, error);
     }
-  };
-
-  const getRedirectPath = (role: UserRole): string => {
-    return role === UserRole.ADMIN ? '/adm' : '/area-do-membro';
-  };
-
-  const mapUserRole = (responseUser: any): any => {
-    return {
-      ...responseUser,
-      role: responseUser.role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MEMBER,
-    };
   };
 
   const handleUserInactive = (): void => {
@@ -124,13 +116,13 @@ const Login: React.FC = () => {
     setEmailVerification(null);
 
     try {
-      const response = await api.post<LoginResponse>('/auth/login', { email, password });
+      const loginData = await apiLogin(email, password);
 
-      if (response.data.user.active === false) {
+      if (loginData.user.active === false) {
         handleUserInactive();
 
-        if (response.data.emailVerification?.verificationEmailSent) {
-          setEmailVerification(response.data.emailVerification);
+        if (loginData.emailVerification?.verificationEmailSent) {
+          setEmailVerification(loginData.emailVerification);
         } else {
           setEmailVerification(null);
         }
@@ -139,21 +131,19 @@ const Login: React.FC = () => {
         return;
       }
 
-      if (response.data.emailVerification?.verificationEmailSent) {
-        setEmailVerification(response.data.emailVerification);
-        dispatch(setEmailVerificationAlert(response.data.emailVerification));
+      if (loginData.emailVerification?.verificationEmailSent) {
+        setEmailVerification(loginData.emailVerification);
+        dispatch(setEmailVerificationAlert(loginData.emailVerification));
       } else {
         setEmailVerification(null);
         dispatch(setEmailVerificationAlert(null));
       }
 
-      const { accessToken, refreshToken, user: responseUser } = response.data;
-      const mappedUser = mapUserRole(responseUser);
-      dispatch(login({ accessToken, refreshToken, user: mappedUser, emailVerificationAlert: response.data.emailVerification }));
+      const { accessToken, refreshToken, user: responseUser } = loginData;
+      dispatch(login({ accessToken, refreshToken, user: responseUser, emailVerificationAlert: loginData.emailVerification }));
       await bootstrapAfterLogin(accessToken);
 
-      const redirectPath = getRedirectPath(mappedUser.role);
-      navigate(redirectPath);
+      navigate(landingPathFor(responseUser.role));
     } catch (error) {
       const msg = mapLoginError(error);
       setErrorMessage(msg);
@@ -163,13 +153,14 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any): Promise<void> => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse): Promise<void> => {
     setLoading(true);
     setErrorMessage(null);
 
     try {
       const { credential } = credentialResponse;
-      const res = await api.post('/auth/google', { token: credential });
+      if (!credential) throw new Error('Credencial do Google ausente');
+      const res = { data: await apiGoogleLogin(credential) };
 
       if (res.data.active === false) {
         handleUserInactive();
@@ -178,21 +169,26 @@ const Login: React.FC = () => {
 
       if (res.data.newUser) {
         if (res.data.name && res.data.email) {
-          dispatch(setGoogleUser({ name: res.data.name, email: res.data.email }));
+          dispatch(
+            setGoogleUser({
+              name: res.data.name,
+              email: res.data.email,
+              completionToken: res.data.completionToken,
+            }),
+          );
         }
         navigate('/cadastrar-google');
         return;
       }
 
       const { accessToken, refreshToken, user: responseUser } = res.data;
-      const mappedUser = mapUserRole(responseUser);
+      if (!accessToken || !refreshToken || !responseUser) throw new Error('Resposta de login do Google incompleta');
 
-      dispatch(login({ accessToken, refreshToken, user: mappedUser }));
+      dispatch(login({ accessToken, refreshToken, user: responseUser }));
 
       await bootstrapAfterLogin(accessToken);
 
-      const redirectPath = getRedirectPath(mappedUser.role);
-      navigate(redirectPath);
+      navigate(landingPathFor(responseUser.role));
     } catch (error) {
       const msg = mapLoginError(error);
       setErrorMessage(msg);
@@ -204,6 +200,8 @@ const Login: React.FC = () => {
   const handleGoogleError = (): void => {
     setErrorMessage(LOGIN_ERROR_MESSAGES.GOOGLE_LOGIN_ERROR);
   };
+
+  const { canRegister, canRecoverPassword, canUseGoogle } = useAuthEntryOptions();
 
   const handleNavigateToRegister = (): void => {
     navigate('/cadastrar');
@@ -224,6 +222,7 @@ const Login: React.FC = () => {
       >
         <Container maxWidth="sm" disableGutters sx={{ width: '100%', maxWidth: 560 }}>
           <Paper
+            data-testid="login-page"
             elevation={3}
             sx={{
               p: { xs: 3, md: 4 },
@@ -237,7 +236,7 @@ const Login: React.FC = () => {
             </Typography>
 
             {errorMessage && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 2 }} data-testid="login-error">
                 {errorMessage}
               </Alert>
             )}
@@ -248,6 +247,7 @@ const Login: React.FC = () => {
 
             <Box
               component="form"
+              data-testid="login-form"
               onSubmit={handleSubmit}
               noValidate
               sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
@@ -261,6 +261,7 @@ const Login: React.FC = () => {
                 required
                 disabled={loading}
                 aria-label="Digite seu email"
+                inputProps={{ 'data-testid': 'login-email' }}
                 variant="outlined"
                 error={!!errorMessage && !email}
                 helperText={!!errorMessage && !email ? LOGIN_ERROR_MESSAGES.EMAIL_REQUIRED : ''}
@@ -275,23 +276,28 @@ const Login: React.FC = () => {
                 required
                 disabled={loading}
                 aria-label="Digite sua senha"
+                inputProps={{ 'data-testid': 'login-password' }}
                 variant="outlined"
                 error={!!errorMessage && !password}
                 helperText={!!errorMessage && !password ? LOGIN_ERROR_MESSAGES.PASSWORD_REQUIRED : ''}
               />
 
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => navigate('/esqueci-minha-senha')}
-                  sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
-                >
-                  Esqueci minha senha
-                </Button>
-              </Box>
+              {canRecoverPassword && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    data-testid="login-forgot-password"
+                    variant="text"
+                    size="small"
+                    onClick={() => navigate('/esqueci-minha-senha')}
+                    sx={{ textTransform: 'none', minWidth: 'auto', p: 0 }}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </Box>
+              )}
 
               <Button
+                data-testid="login-submit"
                 type="submit"
                 variant="contained"
                 fullWidth
@@ -303,18 +309,23 @@ const Login: React.FC = () => {
               </Button>
             </Box>
 
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-            </Box>
+            {canUseGoogle && (
+              <Box data-testid="login-google" sx={{ mt: 2, textAlign: 'center' }}>
+                <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+              </Box>
+            )}
 
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={handleNavigateToRegister}
-              sx={{ mt: 3, fontWeight: 'bold' }}
-            >
-              Cadastre-se
-            </Button>
+            {canRegister && (
+              <Button
+                data-testid="login-register"
+                variant="outlined"
+                fullWidth
+                onClick={handleNavigateToRegister}
+                sx={{ mt: 3, fontWeight: 'bold' }}
+              >
+                Cadastre-se
+              </Button>
+            )}
           </Paper>
         </Container>
       </Box>

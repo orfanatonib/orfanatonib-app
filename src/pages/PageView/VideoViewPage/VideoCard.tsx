@@ -40,6 +40,7 @@ const VideoCard = ({ video }: Props) => {
         whileHover={{ y: -2 }}
       >
         <Paper
+          data-testid="video-card"
           elevation={3}
           onClick={() => setOpen(true)}
           sx={{

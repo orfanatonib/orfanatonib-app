@@ -33,10 +33,11 @@ import {
   GroupOutlined,
   WhatsApp,
 } from "@mui/icons-material";
-import ImagePreviewDialog from "@/components/Common/ImagePreviewDialog";
+import ImagePreviewDialog from "@/components/common/ImagePreviewDialog";
 import { ShelterResponseDto } from "./types";
-import { fmtDate } from "@/utils/dates";
-import { CopyButton, initials } from "@/utils/components";
+import { fmtDate } from "@/utils/dateUtils";
+import { CopyButton } from "@/components/common/CopyButton";
+import { initials } from "@/utils/textUtils";
 import { useIsFeatureEnabled, FeatureFlagKeys } from "@/features/feature-flags";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -98,13 +99,14 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
         fullWidth
         maxWidth="lg"
         PaperProps={{
+          "data-testid": "shelter-view-dialog",
           sx: {
             width: isXs ? "98%" : "44rem",
             m: 0,
             borderRadius: { xs: 2, sm: 3 },
             overflow: "hidden",
           },
-        }}
+        } as React.HTMLAttributes<HTMLDivElement>}
       >
         <Box
           sx={{
@@ -546,7 +548,7 @@ export default function ShelterViewDialog({ open, loading, shelter, onClose }: P
             justifyContent: "space-between",
           }}
         >
-          <Button fullWidth={isXs} onClick={onClose} variant="outlined">
+          <Button data-testid="close-shelter-view-dialog-button" fullWidth={isXs} onClick={onClose} variant="outlined">
             Fechar
           </Button>
         </DialogActions>

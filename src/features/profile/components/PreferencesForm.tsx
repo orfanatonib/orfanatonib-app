@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import SaveIcon from '@mui/icons-material/Save';
 import { UserPreferences, UpdateUserPreferencesDto } from '../types';
 import { apiUpdateCompleteProfile } from '../api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface PreferencesFormProps {
   preferences: UserPreferences | undefined;
@@ -138,8 +139,8 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
       setSuccess(true);
       onUpdate();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 'Erro ao atualizar preferências';
+    } catch (err: unknown) {
+      const errorMessage = getApiErrorMessage(err, 'Erro ao atualizar preferências');
       onError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -152,7 +153,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ width: '100%' }}>
+      <Box data-testid="preferences-form" sx={{ width: '100%' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>

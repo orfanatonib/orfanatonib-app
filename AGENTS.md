@@ -9,49 +9,59 @@ These instructions apply to the entire `orfanatonib-app` repository.
 Before modifying any source, test, configuration, or documentation file, read and comply with:
 
 - [`docs/ORFANATO_FRONTEND_BEST_PRACTICES.md`](docs/ORFANATO_FRONTEND_BEST_PRACTICES.md)
+- the applicable domain document under `docs/`.
 
-That document is the canonical detailed guide for architecture, API access, state ownership, Material UI, responsive design, accessibility, authentication, privacy, tests, and verification. This file is the always-loaded entrypoint and does not replace the detailed guide.
+The frontend best-practices document is the canonical detailed guide. This file is the always-loaded entrypoint and does not replace it.
 
 ## Repository Context
 
 - Application: Orfanato NIB frontend.
-- Stack: React 19, strict TypeScript, Vite, React Router, Material UI/Emotion, Redux Toolkit, Axios, React Hook Form/Yup, Vitest, and Testing Library.
+- Stack: React 19, strict TypeScript, Vite, React Router, Material UI/Emotion, Redux Toolkit, Axios, React Hook Form/Yup, Vitest/Testing Library (unit specs), and Playwright (unit rules in Node plus real-browser flows).
 - Backend contract: sibling repository `../orfanatonib-api`.
 - User-facing language: Portuguese. Engineering documentation and code identifiers: English.
 
 ## Non-Negotiable Rules
 
-1. Use `src/config/axiosConfig.ts` for every HTTP operation. Do not duplicate Axios instances, authentication headers, token refresh, retry, or global error handling.
-2. Keep domain code under `src/features/<feature>/`; keep shared UI under `src/components/common/`; keep routed composition under `src/pages/`.
-3. Components must not call Axios directly or own backend business rules.
-4. Do not add `any`. Model request DTOs, response DTOs, props, state, errors, roles, and status values explicitly.
-5. Reuse Material UI, the project theme, shared components, route guards, and existing error utilities before creating alternatives.
-6. Every screen and interaction must be mobile-first, keyboard-accessible, and usable with 44 × 44 px touch targets.
-7. The API is the authorization authority. UI guards and hidden buttons do not replace backend permission checks.
-8. Never log or persist secrets or unnecessary personal data about sheltered people, guardians, contacts, or ministry participants.
-9. Every behavior change requires tests. Bug fixes require a regression test.
-10. Do not modify environment, deployment, or infrastructure files unless the task explicitly requires it.
-11. Preserve unrelated user changes and keep the final diff limited to the requested outcome.
+1. Use `src/config/axiosConfig.ts` for every HTTP operation. Do not duplicate Axios instances, authentication headers, token refresh, or global error handling.
+2. Keep domain code under `src/features/<feature>/`; shared UI under `src/components/common/`; routed composition under `src/pages/`.
+3. Choose one owner per state value: local React state, Redux, or cache. Do not mirror the same server response across them.
+4. Cache keys must include every result-changing filter; mutations must invalidate or update only related queries; cache instances must be stable.
+5. Components must not call Axios directly or own backend business rules.
+6. NEVER use `any` under any circumstances. Always define explicit input DTOs (request payloads/params) and output DTOs (response contracts) for every API integration and operation. ALWAYS use enums for roles, statuses, weekdays, domain options, and finite sets (never magic strings).
+7. ALWAYS create dedicated files for `types` (`types.ts` or `types/` files) and `constants` (`constants.ts`) — never declare types, interfaces, magic numbers, or hardcoded config constants inline inside components, hooks, or pages.
+8. ALWAYS create dedicated `utils` / helper files (e.g., `src/features/<feature>/utils.ts` or `src/utils/`) for reusable pure functions, formatters, and data transformations instead of duplicating logic inline inside components, hooks, or pages.
+9. Reuse Material UI, shared components, route guards, and the global error pipeline before creating alternatives.
+10. Every screen and interaction must be mobile-first, keyboard-accessible, and usable with 44 × 44 px touch targets.
+11. The API is the authorization authority. UI guards do not replace backend checks for admin, leader, staff, shelter, or child access.
+12. Never log or persist tokens or unnecessary personal data about sheltered people, guardians, contacts, or ministry participants.
+13. Every behavior change requires tests. Bug fixes require a regression test.
+14. Update the applicable domain documentation when a flow or contract changes.
+15. Do not modify environment, deployment, or infrastructure files unless explicitly requested.
+16. Preserve unrelated user changes and keep the final diff limited to the requested outcome.
+17. Every rendered component created or edited must expose a stable, descriptive `data-testid` for Playwright. Also tag critical or ambiguous controls, overlays, and loading/empty/error states. Use kebab-case domain/component/element names; never derive selectors from translated copy, CSS classes, array indexes, random values, or React-generated IDs. Use the HTML `id` attribute only for unique document identity and accessibility relationships (`label`, `aria-labelledby`, `aria-describedby`).
 
 ## Required Implementation Workflow
 
-1. Inspect the current code and the complete affected flow.
+1. Inspect the current code, the relevant domain documentation, and the complete affected flow.
 2. Verify the endpoint and DTO contract in the NestJS API.
 3. Search for reusable components, hooks, types, and utilities.
 4. Implement the smallest cohesive change with loading, empty, success, error, and permission states.
-5. Add or update tests and relevant documentation.
+5. Add or update Playwright tests (`e2e/`) and documentation.
 6. Run checks proportional to the change and inspect the final diff.
+7. E-mail notifications and E2E: **every E2E run starts with ALL e-mail dispatch flags turned off** (`email_*` and legacy `email-*`, none left out, even the ones already off) — this is done once by the Playwright `setup` project (`e2e/live/support/email-flags.setup.ts`), which `live-api`, `live-ui`, and `live-ui-mobile` depend on; never remove it or add a project that skips it. A test that proves an e-mail turns on ONLY that case's flag in its own `beforeAll` and restores it in `afterAll`. When a frontend feature triggers an e-mail (new notification type), the flag must already exist in the API (one flag per notification type, created with the notification) and be listed in the admin feature-flag screen; do not hardcode e-mail behavior in the UI.
 
-When existing code conflicts with the canonical guide, do not spread the inconsistency into new code and do not perform an unrelated mass refactor. Apply the standard within the task scope and report any remaining debt.
+8. E2E data ("massa"): every scenario does the full CRUD of its feature and proves there is **no orphan media in S3** (no object without a row, no row without an object); and **every run leaves 5 to 10 new records per feature** (`massCount()` in `e2e/live/support/keep-data.ts`, created through the UI when the screen exists), which accumulate run after run. Scenario data is not cleaned up by default (`E2E_CLEANUP=1` enables cleanup); never assume an empty database or fixed global totals. All E2E hit the real API; only LLM-based ones are mocked. See `e2e/live/README.md` ("Regra de massa do E2E").
+
+When existing code conflicts with the canonical guide, do not spread the inconsistency and do not perform an unrelated mass refactor. Apply the standard within scope and report remaining debt.
 
 ## Verification
-
-Run from the repository root as applicable:
 
 ```bash
 NODE_OPTIONS='--max-old-space-size=2048' npm run type-check
 NODE_OPTIONS='--max-old-space-size=2048' npm run lint
-NODE_OPTIONS='--max-old-space-size=2048' npm test -- --run
+NODE_OPTIONS='--max-old-space-size=2048' npm run check:test-ids
+NODE_OPTIONS='--max-old-space-size=2048' npm run test:unit
+npm run test:e2e   # Playwright real-browser flows (needs app & API running locally)
 NODE_OPTIONS='--max-old-space-size=2048' npm run build
 ```
 

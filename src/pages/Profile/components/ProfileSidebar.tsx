@@ -1,3 +1,4 @@
+import type { RootState } from '@/store/slices';
 import React from 'react';
 import {
   Box,
@@ -45,11 +46,14 @@ interface Profile {
 
 interface ProfileSidebarProps {
   profile: Profile | null;
-  user: any;
+  user: AuthUser;
   selectedMenu: number;
   onMenuClick: (index: number) => void;
   onImageClick: (url: string) => void;
 }
+
+type AuthUser = RootState['auth']['user'];
+type LeaderTeam = NonNullable<NonNullable<NonNullable<AuthUser>['leaderProfile']>['teams']>[number];
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   profile,
@@ -62,10 +66,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const renderTooltipContent = (shelter: any) => {
+  const renderTooltipContent = (shelter: LeaderTeam['shelter'] | null | undefined) => {
     if (!shelter?.address) return shelter?.name || '';
     return (
-      <Box>
+      <Box data-testid="profile-sidebar">
         <Typography variant="caption" fontWeight={600} sx={{ display: 'block' }}>
           {shelter.name}
         </Typography>
@@ -209,7 +213,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
               Minhas Equipes ({user.leaderProfile.teams.length})
             </Typography>
             <Stack spacing={1}>
-              {user.leaderProfile.teams.map((team: any) => (
+              {user.leaderProfile.teams.map((team) => (
                 <Tooltip key={team.id} title={renderTooltipContent(team.shelter)} {...tooltipProps}>
                   <Box
                     sx={{

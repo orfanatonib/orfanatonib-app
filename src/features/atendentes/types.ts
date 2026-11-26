@@ -1,5 +1,14 @@
 export type AttendableType = "integration" | "user";
 
+/** Situação dos PDFs, na forma que a API recebe em `documents`. */
+export enum AtendenteDocumentsFilter {
+  COMPLETE = "complete",
+  ONLY_ESTADUAL = "only_estadual",
+  ONLY_FEDERAL = "only_federal",
+}
+
+export type PdfScope = "estadual" | "federal";
+
 export type AtendentePdf = {
   id?: string;
   title: string;
@@ -31,14 +40,6 @@ export type PaginatedAtendenteResponseDto = {
   page: number;
   limit: number;
   totalPages: number;
-};
-
-export type QueryAtendenteDto = {
-  page?: number;
-  limit?: number;
-  search?: string;
-  attendableType?: AttendableType;
-  attendableId?: string;
 };
 
 export type CreateAtendenteDto = {
@@ -89,11 +90,6 @@ export type UpdateAtendenteDto = {
   };
   removePdfEstadual?: boolean;
   removePdfFederal?: boolean;
-};
-
-export type AtendenteFilters = {
-  search?: string;
-  attendableType?: AttendableType;
 };
 
 export type AtendenteFiles = {

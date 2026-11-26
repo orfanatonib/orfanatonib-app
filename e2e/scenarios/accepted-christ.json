@@ -1,0 +1,15 @@
+{
+ "unit": "accepted-christ",
+ "scenarios": [
+  "accepted-christ.post.accepted-christs#conflito-ou-duplicidade",
+  "accepted-christ.post.accepted-christs#escopo-proprio-x-outro",
+  "accepted-christ.post.accepted-christs#falha-do-colaborador-sem-efeito-parcial",
+  "accepted-christ.post.accepted-christs#feliz",
+  "accepted-christ.post.accepted-christs#flag-desligada",
+  "accepted-christ.post.accepted-christs#perfil-admin",
+  "accepted-christ.post.accepted-christs#perfil-anonimo",
+  "accepted-christ.post.accepted-christs#perfil-lider",
+  "accepted-christ.post.accepted-christs#perfil-membro",
+  "accepted-christ.post.accepted-christs#validacao"
+ ]
+}

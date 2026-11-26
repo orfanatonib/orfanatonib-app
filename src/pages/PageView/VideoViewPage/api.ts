@@ -1,13 +1,12 @@
-import api from "@/config/axiosConfig";
-import { MediaItem } from "@/store/slices/types";
-import type { VideoPageData } from "@/store/slices/video/videoSlice";
+import { apiDeleteVideoPage, apiGetVideoPage } from "@/features/video-pages/api";
+import type { VideoMediaResponse, VideoPageData } from "@/features/video-pages/types";
 
 export interface GetVideoPageResponse {
   id: string;
   title: string;
   description?: string;
   public?: boolean;
-  videos: Array<MediaItem>;
+  videos: VideoMediaResponse[];
 }
 
 export const toVideoPageData = (dto: GetVideoPageResponse): VideoPageData => ({
@@ -19,12 +18,11 @@ export const toVideoPageData = (dto: GetVideoPageResponse): VideoPageData => ({
 });
 
 export const videoPageApi = {
-  async getById(id: string) {
-    const { data } = await api.get<GetVideoPageResponse>(`/video-pages/${id}`);
-    return data;
+  async getById(id: string): Promise<GetVideoPageResponse> {
+    return (await apiGetVideoPage(id)) as GetVideoPageResponse;
   },
 
   async deleteById(id: string) {
-    await api.delete(`/video-pages/${id}`);
+    await apiDeleteVideoPage(id);
   },
 };

@@ -1,11 +1,9 @@
-import { Fragment, useState, useRef, useEffect } from 'react';
+import { Fragment } from 'react';
 import {
   Box,
   Button,
   Grid,
   Typography,
-  IconButton,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -16,9 +14,9 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Delete, Edit } from '@mui/icons-material';
-import { MediaItem, MediaType, MediaUploadType, MediaPlatform } from 'store/slices/types';
-import { validateMediaURL } from 'utils/validateMediaURL';
+import { MediaItem, MediaUploadType, MediaPlatform } from 'store/slices/types';
+import { IdeasVideoCard } from './IdeasVideoCard';
+import { useIdeasVideosDraft } from './useIdeasVideosDraft';
 
 interface VideosUserProps {
   videos: MediaItem[];
@@ -28,103 +26,23 @@ interface VideosUserProps {
   shakeButton?: boolean;
 }
 
-export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendingChange, shakeButton }: VideosUserProps) {
-  const addButtonRef = useRef<HTMLButtonElement>(null);
-  const [tempVideo, setTempVideo] = useState<MediaItem>({
-    title: '',
-    description: '',
-    mediaType: MediaType.VIDEO,
-    uploadType: MediaUploadType.UPLOAD,
-    url: '',
-  });
-  const [fileName, setFileName] = useState('');
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [errors, setErrors] = useState({ url: false });
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (shakeButton && addButtonRef.current) {
-      addButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [shakeButton]);
-
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    const objectURL = URL.createObjectURL(file);
-    setTempVideo((prev) => ({ ...prev, url: objectURL, file }));
-    onPendingChange(true);
-  };
-
-  const resetForm = () => {
-    setTempVideo({
-      title: '',
-      description: '',
-      mediaType: MediaType.VIDEO,
-      uploadType: MediaUploadType.UPLOAD,
-      url: '',
-    });
-    setFileName('');
-    setEditingIndex(null);
-    setErrors({ url: false });
-  };
-
-  const handleAddOrUpdate = () => {
-    const isValid =
-      tempVideo.uploadType === MediaUploadType.UPLOAD ||
-      (tempVideo.uploadType === MediaUploadType.LINK && validateMediaURL(tempVideo.url, tempVideo.platformType));
-
-    const hasError = !tempVideo.url || (tempVideo.uploadType === MediaUploadType.LINK && !isValid);
-
-    setErrors({
-      url: hasError,
-    });
-
-    if (hasError) return;
-
-    const videoNumber = editingIndex !== null ? editingIndex + 1 : videos.length + 1;
-    const generatedTitle = ideaTitle.trim()
-      ? `Vídeo ${videoNumber} da ideia "${ideaTitle}"`
-      : `Vídeo ${videoNumber}`;
-    const generatedDescription = ideaTitle.trim()
-      ? `Vídeo ${videoNumber} para auxiliar na Ideia "${ideaTitle}"`
-      : `Vídeo ${videoNumber}`;
-
-    const videoWithGeneratedInfo = {
-      ...tempVideo,
-      title: generatedTitle,
-      description: generatedDescription,
-    };
-
-    const updated =
-      editingIndex !== null
-        ? videos.map((vid, i) => (i === editingIndex ? videoWithGeneratedInfo : vid))
-        : [...videos, videoWithGeneratedInfo];
-
-    setVideos(updated);
-    resetForm();
-  };
-
-  const handleEdit = (index: number) => {
-    setTempVideo(videos[index]);
-    setFileName(videos[index].file?.name || '');
-    setEditingIndex(index);
-  };
-
-  const handleRemoveClick = (index: number) => {
-    setItemToDelete(index);
-    setOpenDeleteDialog(true);
-  };
-
-  const confirmRemove = () => {
-    if (itemToDelete !== null) {
-      setVideos(videos.filter((_, i) => i !== itemToDelete));
-      setItemToDelete(null);
-    }
-    setOpenDeleteDialog(false);
-  };
+export function IdeasMaterialVideosUser(props: VideosUserProps) {
+  const { videos, shakeButton, onPendingChange } = props;
+  const {
+    addButtonRef,
+    tempVideo,
+    setTempVideo,
+    fileName,
+    editingIndex,
+    errors,
+    openDeleteDialog,
+    setOpenDeleteDialog,
+    handleUpload,
+    handleAddOrUpdate,
+    handleEdit,
+    handleRemoveClick,
+    confirmRemove,
+  } = useIdeasVideosDraft(props);
 
   return (
     <Box>
@@ -141,7 +59,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
           🎥 Adicionar Vídeo
         </Typography>
 
-        <FormControl fullWidth sx={{ mb: 3 }}>
+        <FormControl fullWidth sx={{ mb: 3 }} data-testid="idea-video-upload-type">
           <InputLabel>Tipo de Upload</InputLabel>
           <Select
             value={tempVideo.uploadType}
@@ -189,6 +107,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
                   </InputLabel>
                   <input
                     type="text"
+                    data-testid="idea-video-url"
                     placeholder="https://www.youtube.com/watch?v=..."
                     value={tempVideo.url}
                     onChange={(e) => {
@@ -253,7 +172,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
                   }}
                 >
                   Escolher Arquivo de Vídeo (MP4, AVI, MOV, etc.)
-                  <input type="file" hidden accept="video/*" onChange={handleUpload} />
+                  <input type="file" hidden accept="video/*" onChange={handleUpload} data-testid="idea-video-file" />
                 </Button>
               </Grid>
 
@@ -321,6 +240,7 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
 
         <Button
           ref={addButtonRef}
+          data-testid="idea-video-add"
           variant="contained"
           fullWidth
           onClick={handleAddOrUpdate}
@@ -366,47 +286,13 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
         </Button>
       </Box>
 
-      <Grid container spacing={2} sx={{ mt: 3 }}>
+      <Grid container spacing={2} sx={{ mt: 3 }} data-testid="idea-video-list">
         {videos.map((video, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-            <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-              <Typography fontWeight="bold">{video.title}</Typography>
-              <Typography variant="body2">{video.description}</Typography>
-              {video.uploadType === MediaUploadType.LINK && video.platformType === MediaPlatform.YOUTUBE ? (
-                <Box sx={{ aspectRatio: '16/9', mt: 1 }}>
-                  <iframe
-                    src={video.url.includes('embed') ?
-                      `${video.url}?autoplay=0&mute=0` :
-                      video.url.replace(/watch\?v=/, 'embed/') + '?autoplay=0&mute=0'
-                    }
-                    title={video.title}
-                    allowFullScreen
-                    style={{ width: '100%', height: '100%', border: 0 }}
-                  />
-                </Box>
-              ) : (
-                <video controls style={{ width: '100%', marginTop: 8 }}>
-                  <source src={video.url} />
-                </video>
-              )}
-              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                <Tooltip title="Editar">
-                  <IconButton onClick={() => handleEdit(index)}>
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Remover">
-                  <IconButton color="error" onClick={() => handleRemoveClick(index)}>
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Grid>
+          <IdeasVideoCard key={index} video={video} index={index} onEdit={handleEdit} onRemove={handleRemoveClick} />
         ))}
       </Grid>
 
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <Dialog data-testid="idea-video-delete-dialog" open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -414,8 +300,8 @@ export function IdeasMaterialVideosUser({ videos, setVideos, ideaTitle, onPendin
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-          <Button onClick={confirmRemove} color="error">
+          <Button data-testid="idea-video-delete-cancel" onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
+          <Button data-testid="idea-video-delete-confirm" onClick={confirmRemove} color="error">
             Excluir
           </Button>
         </DialogActions>

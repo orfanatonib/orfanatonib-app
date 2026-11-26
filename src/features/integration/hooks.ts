@@ -15,6 +15,7 @@ import type {
   UpdateIntegrationDto,
 } from "./types";
 import type { SortingState } from "@tanstack/react-table";
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 function mapSortingToServer(sorting: SortingState) {
   const first = sorting?.[0];
@@ -55,9 +56,9 @@ export function useIntegrations(
       });
       setRows(data.data || []);
       setTotal(data.total || 0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.response?.data?.message || err.message || "Erro ao listar integrações"
+        getApiErrorMessage(err, "Erro ao listar integrações")
       );
     } finally {
       setLoading(false);
@@ -95,9 +96,9 @@ export function useIntegrationsSimple() {
     try {
       const data = await apiListIntegrationsSimple();
       setRows(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.response?.data?.message || err.message || "Erro ao listar integrações"
+        getApiErrorMessage(err, "Erro ao listar integrações")
       );
     } finally {
       setLoading(false);
@@ -127,9 +128,9 @@ export function useIntegrationMutations(
       await apiCreateIntegration(data, files);
       await refreshPage();
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDialogError(
-        err?.response?.data?.message || err.message || "Erro ao criar integração"
+        getApiErrorMessage(err, "Erro ao criar integração")
       );
       throw err; // Re-throw to allow parent component to handle
     } finally {
@@ -149,9 +150,9 @@ export function useIntegrationMutations(
       await apiUpdateIntegration(id, data, files);
       await refreshOne(id);
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDialogError(
-        err?.response?.data?.message || err.message || "Erro ao atualizar integração"
+        getApiErrorMessage(err, "Erro ao atualizar integração")
       );
       throw err; // Re-throw to allow parent component to handle
     } finally {
@@ -169,9 +170,9 @@ export function useIntegrationMutations(
       await apiDeleteIntegration(id);
       await refreshPage();
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDialogError(
-        err?.response?.data?.message || err.message || "Erro ao deletar integração"
+        getApiErrorMessage(err, "Erro ao deletar integração")
       );
       throw err; // Re-throw to allow parent component to handle
     } finally {

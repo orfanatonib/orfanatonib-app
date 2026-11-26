@@ -1,0 +1,27 @@
+{
+ "unit": "dynamic-routes",
+ "scenarios": [
+  "dynamic-routes.get.routes#feliz",
+  "dynamic-routes.get.routes#perfil-admin",
+  "dynamic-routes.get.routes#perfil-anonimo",
+  "dynamic-routes.get.routes#perfil-lider",
+  "dynamic-routes.get.routes#perfil-membro",
+  "dynamic-routes.get.routes#visitante-rota-privada",
+  "dynamic-routes.get.routes-id#feliz",
+  "dynamic-routes.get.routes-id#nao-encontrado",
+  "dynamic-routes.get.routes-id#perfil-admin",
+  "dynamic-routes.get.routes-id#perfil-anonimo",
+  "dynamic-routes.get.routes-id#perfil-lider",
+  "dynamic-routes.get.routes-id#perfil-membro",
+  "dynamic-routes.get.routes-orphans-check#feliz",
+  "dynamic-routes.get.routes-orphans-check#perfil-admin",
+  "dynamic-routes.get.routes-orphans-check#perfil-anonimo",
+  "dynamic-routes.get.routes-orphans-check#perfil-lider",
+  "dynamic-routes.get.routes-orphans-check#perfil-membro",
+  "dynamic-routes.post.routes-orphans-cleanup#feliz",
+  "dynamic-routes.post.routes-orphans-cleanup#perfil-admin",
+  "dynamic-routes.post.routes-orphans-cleanup#perfil-anonimo",
+  "dynamic-routes.post.routes-orphans-cleanup#perfil-lider",
+  "dynamic-routes.post.routes-orphans-cleanup#perfil-membro"
+ ]
+}

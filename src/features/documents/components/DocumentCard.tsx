@@ -1,9 +1,13 @@
-import React from 'react';
-import { Paper, Box, Typography, IconButton, Stack, Tooltip, Card, CardContent, CardActions } from '@mui/material';
-import { Visibility, Edit, Delete, Info } from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { useTheme, useMediaQuery } from '@mui/material';
-import { DocumentItem } from '../types';
+import { Edit, InsertLink, CloudUpload, Info, Visibility } from '@mui/icons-material';
+import { AdminEntityCard } from '@/components/common/admin-shell';
+import type { AdminCardAction } from '@/components/common/admin-shell';
+import AdminChipRow from '@/components/common/admin-shell/AdminChipRow';
+import type { AdminChipRowItem } from '@/components/common/admin-shell/chipRow.types';
+import { formatCreatedDate } from '@/components/common/admin-shell/dates';
+import { MediaUploadType } from '../types';
+import type { DocumentItem } from '../types';
+import { DOCUMENTS_LABELS, DOCUMENTS_TEST_ID_PREFIX } from '../constants';
+import { platformLabel } from '../utils';
 
 export interface DocumentCardProps {
   document: DocumentItem;
@@ -13,160 +17,74 @@ export interface DocumentCardProps {
   onDelete: (doc: DocumentItem) => void;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({
-  document,
-  onPreviewFile,
-  onViewDetails,
-  onEdit,
-  onDelete,
-}) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+const P = DOCUMENTS_TEST_ID_PREFIX;
+
+/** Cartão do documento: tipo (upload/link), data de criação e as ações de ver, detalhar e editar. */
+export default function DocumentCard({ document, onPreviewFile, onViewDetails, onEdit, onDelete }: DocumentCardProps) {
+  const id = document.id;
+  const isLink = document.media?.uploadType === MediaUploadType.LINK;
+
+  const actions: AdminCardAction[] = [
+    {
+      key: 'view',
+      label: DOCUMENTS_LABELS.VIEW,
+      ariaLabel: 'Visualizar documento',
+      testId: `${P}-card-view-${id}`,
+      icon: <Visibility />,
+      variant: 'outlined',
+      onClick: () => onPreviewFile(document),
+    },
+    {
+      key: 'details',
+      label: DOCUMENTS_LABELS.DETAILS,
+      ariaLabel: 'Ver detalhes do documento',
+      testId: `${P}-card-details-${id}`,
+      icon: <Info />,
+      variant: 'outlined',
+      onClick: () => onViewDetails(document),
+    },
+    {
+      key: 'edit',
+      label: DOCUMENTS_LABELS.EDIT,
+      testId: `${P}-card-edit-${id}`,
+      icon: <Edit />,
+      onClick: () => onEdit(document),
+    },
+  ];
+
+  const chips: AdminChipRowItem[] = [
+    {
+      key: 'type',
+      label: isLink ? DOCUMENTS_LABELS.LINK_CHIP : DOCUMENTS_LABELS.UPLOAD_CHIP,
+      testId: `${P}-card-type-${id}`,
+      color: isLink ? 'info' : 'primary',
+      icon: isLink ? <InsertLink /> : <CloudUpload />,
+    },
+  ];
+  if (isLink && document.media?.platformType) {
+    chips.push({
+      key: 'platform',
+      label: platformLabel(document.media.platformType),
+      testId: `${P}-card-platform-${id}`,
+    });
+  }
+  chips.push({
+    key: 'created',
+    label: `${DOCUMENTS_LABELS.CREATED_AT} ${formatCreatedDate(document.createdAt)}`,
+    testId: `${P}-card-created-${id}`,
+  });
 
   return (
-    <Card
-      component={motion.div}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      sx={{
-        width: '100%',
-        minHeight: { xs: 200, sm: 220 },
-        maxHeight: { xs: 230, sm: 230 },
-        borderRadius: 4,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
-          borderColor: 'primary.main',
-        },
-      }}
-    >
-      <CardContent
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: { xs: 1.5, sm: 2 },
-        }}
-      >
-        <Typography
-          variant="h6"
-          fontWeight="bold"
-          gutterBottom
-          sx={{
-            fontSize: { xs: '0.95rem', sm: '1.1rem' },
-            lineHeight: 1.3,
-            mb: 1,
-            display: '-webkit-box',
-            WebkitLineClamp: 1,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {document.name}
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            flex: 1,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            lineHeight: 1.5,
-            fontSize: { xs: '0.75rem', sm: '0.8rem' },
-          }}
-          title={document.description}
-        >
-          {document.description || 'Sem descrição'}
-        </Typography>
-      </CardContent>
-
-      <CardActions
-        sx={{
-          p: { xs: 1, sm: 1.5 },
-          pt: 0,
-          gap: { xs: 0.25, sm: 0.5 },
-          flexWrap: 'wrap',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Tooltip title="Visualizar">
-          <IconButton
-            color="primary"
-            onClick={() => onPreviewFile(document)}
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              '&:hover': {
-                bgcolor: 'primary.lighter',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Visibility fontSize={isMobile ? 'small' : 'medium'} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Detalhes">
-          <IconButton
-            color="info"
-            onClick={() => onViewDetails(document)}
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              '&:hover': {
-                bgcolor: 'info.lighter',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Info fontSize={isMobile ? 'small' : 'medium'} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Editar">
-          <IconButton
-            color="warning"
-            onClick={() => onEdit(document)}
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              '&:hover': {
-                bgcolor: 'warning.lighter',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Edit fontSize={isMobile ? 'small' : 'medium'} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Excluir">
-          <IconButton
-            color="error"
-            onClick={() => onDelete(document)}
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              '&:hover': {
-                bgcolor: 'error.lighter',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Delete fontSize={isMobile ? 'small' : 'medium'} />
-          </IconButton>
-        </Tooltip>
-      </CardActions>
-    </Card>
+    <AdminEntityCard
+      testId={`${P}-card-${id}`}
+      title={document.name}
+      titleTestId={`${P}-card-title-${id}`}
+      description={document.description || DOCUMENTS_LABELS.NO_DESCRIPTION}
+      onDelete={() => onDelete(document)}
+      deleteTestId={`${P}-card-delete-${id}`}
+      deleteLabel={DOCUMENTS_LABELS.DELETE}
+      meta={<AdminChipRow testId={`${P}-card-chips-${id}`} chips={chips} />}
+      actions={actions}
+    />
   );
-};
-
-export default DocumentCard;
+}

@@ -42,16 +42,17 @@ export default function UserEditDialog({
   const isMember = value.role === UserRole.MEMBER;
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+    <Dialog data-testid="user-edit-dialog" open={open} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>Editar Usuário</DialogTitle>
       <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2 }} data-testid="user-edit-error">{error}</Alert>}
 
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Nome"
+              inputProps={{ "data-testid": "user-edit-name" }}
               value={value.name}
               onChange={(e) => onChange({ ...value, name: e.target.value })}
               onBlur={() => onChange({ ...value, name: normalizeName(value.name || "") })}
@@ -63,11 +64,12 @@ export default function UserEditDialog({
               <InputLabel>Papel</InputLabel>
               <Select
                 label="Papel"
+                SelectDisplayProps={{ "data-testid": "user-edit-role" } as React.HTMLAttributes<HTMLDivElement>}
                 value={value.role}
                 onChange={(e) => onChange({ ...value, role: e.target.value as UserRole })}
               >
                 {roleOptions.map((role) => (
-                  <MenuItem key={role} value={role}>
+                  <MenuItem key={role} value={role} data-testid={`user-edit-role-option-${role}`}>
                     {roleLabels[role]}
                   </MenuItem>
                 ))}
@@ -79,6 +81,7 @@ export default function UserEditDialog({
             <TextField
               fullWidth
               label="Telefone"
+              inputProps={{ "data-testid": "user-edit-phone" }}
               inputMode="numeric"
               value={maskPhoneBR(value.phone || "")}
               onChange={(e) => onChange({ ...value, phone: maskPhoneBR(e.target.value) })}
@@ -91,6 +94,7 @@ export default function UserEditDialog({
               control={
                 <Switch
                   checked={value.active}
+                  inputProps={{ "data-testid": "user-edit-active" } as React.InputHTMLAttributes<HTMLInputElement>}
                   onChange={(e) => onChange({ ...value, active: e.target.checked })}
                 />
               }
@@ -103,6 +107,7 @@ export default function UserEditDialog({
               control={
                 <Switch
                   checked={value.completed}
+                  inputProps={{ "data-testid": "user-edit-completed" } as React.InputHTMLAttributes<HTMLInputElement>}
                   onChange={(e) => onChange({ ...value, completed: e.target.checked })}
                 />
               }
@@ -115,6 +120,7 @@ export default function UserEditDialog({
               control={
                 <Switch
                   checked={editingPassword}
+                  inputProps={{ "data-testid": "user-edit-toggle-password" } as React.InputHTMLAttributes<HTMLInputElement>}
                   onChange={(e) => {
                     const checked = e.target.checked;
                     onChange({
@@ -161,6 +167,7 @@ export default function UserEditDialog({
                 <TextField
                   fullWidth
                   label="Nova Senha"
+                  inputProps={{ "data-testid": "user-edit-password" }}
                   type="password"
                   value={value.password}
                   onChange={(e) => onChange({ ...value, password: e.target.value })}
@@ -170,6 +177,7 @@ export default function UserEditDialog({
                 <TextField
                   fullWidth
                   label="Confirmar Senha"
+                  inputProps={{ "data-testid": "user-edit-confirm-password" }}
                   type="password"
                   value={value.confirmPassword ?? ""}
                   onChange={(e) => onChange({ ...value, confirmPassword: e.target.value })}
@@ -192,8 +200,8 @@ export default function UserEditDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onCancel} sx={{ color: "text.secondary" }}>Cancelar</Button>
-        <Button variant="contained" onClick={onConfirm} disabled={loading || senhaInvalida}>
+        <Button onClick={onCancel} sx={{ color: "text.secondary" }} data-testid="user-edit-cancel">Cancelar</Button>
+        <Button variant="contained" onClick={onConfirm} disabled={loading || senhaInvalida} data-testid="user-edit-submit">
           Salvar
         </Button>
       </DialogActions>

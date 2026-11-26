@@ -16,6 +16,7 @@ import type { AppDispatch } from 'store/slices';
 import { fetchRoutes } from 'store/slices/route/routeSlice';
 import type { InformativeBannerData } from 'store/slices/informative/informativeBannerSlice';
 import { createBannerApi, updateBannerApi } from '../api';
+import { getApiErrorMessage } from '@/utils/apiErrorMessage';
 
 interface InformativeBannerModalProps {
   open: boolean;
@@ -74,11 +75,9 @@ export default function InformativeBannerModal({
       await onSave();
 
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Erro ao salvar banner. Tente novamente.';
+        getApiErrorMessage(err, 'Erro ao salvar banner. Tente novamente.');
       setErrMsg(String(msg));
     } finally {
       setLoading(false);
@@ -86,12 +85,12 @@ export default function InformativeBannerModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog data-testid="informatives-form-dialog" open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{isEditing ? 'Editar Banner Informativo' : 'Criar Banner Informativo'}</DialogTitle>
       <DialogContent>
         <Box mt={1}>
           {errMsg && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert data-testid="informatives-form-error" severity="error" sx={{ mb: 2 }}>
               {errMsg}
             </Alert>
           )}
@@ -99,6 +98,7 @@ export default function InformativeBannerModal({
           <TextField
             fullWidth
             label="Título"
+            inputProps={{ 'data-testid': 'informatives-form-title' }}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             sx={{ mb: 2 }}
@@ -108,6 +108,7 @@ export default function InformativeBannerModal({
           <TextField
             fullWidth
             label="Descrição"
+            inputProps={{ 'data-testid': 'informatives-form-description' }}
             multiline
             rows={3}
             value={description}
@@ -122,6 +123,7 @@ export default function InformativeBannerModal({
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
                 color="primary"
+                inputProps={{ 'data-testid': 'informatives-form-public' } as React.InputHTMLAttributes<HTMLInputElement>}
                 disabled={loading}
               />
             }
@@ -130,10 +132,10 @@ export default function InformativeBannerModal({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button data-testid="informatives-form-cancel" onClick={onClose} disabled={loading}>
           Cancelar
         </Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+        <Button data-testid="informatives-form-submit" variant="contained" onClick={handleSubmit} disabled={loading}>
           {isEditing ? 'Atualizar' : 'Criar'}
         </Button>
       </DialogActions>

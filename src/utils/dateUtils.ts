@@ -1,8 +1,24 @@
+/** Só a parte da data: "2026-09-01" (dia puro do banco) ou "2026-09-01T12:00:00Z". */
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Lê uma data. O dia puro ("2026-09-01") é montado a partir das próprias
+ * partes, no fuso local: `new Date("2026-09-01")` o lê como meia-noite UTC e,
+ * em Manaus (UTC-4), mostrava o dia anterior. Um instante completo continua
+ * sendo convertido pelo fuso, que é o correto para um instante.
+ */
+export const parseDate = (value: string): Date => {
+  const parts = DATE_ONLY.exec(value);
+  if (parts) return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+  return new Date(value);
+};
+
 export const formatDate = (date?: string | null, includeTime: boolean = false) => {
   if (!date) return "—";
-  return includeTime 
-    ? new Date(date).toLocaleString("pt-BR")
-    : new Date(date).toLocaleDateString("pt-BR");
+  const parsed = parseDate(date);
+  return includeTime
+    ? parsed.toLocaleString("pt-BR")
+    : parsed.toLocaleDateString("pt-BR");
 };
 
 export const fmtDateOnly = (d?: string | null) => formatDate(d, false);
@@ -24,8 +40,8 @@ export function summaryLabel(from?: string, to?: string) {
   if (f && t && f === t) return fmtBR(f);
   if (f && t) return `${fmtBR(f)} — ${fmtBR(t)}`;
   if (f && !t) return `${fmtBR(f)} — `;
-  if (!f && t) return `— ${fmtBR(t)}`;
-  return "";
+  // Sobrou só `to` (os casos sem nenhum, iguais, ambos e só `from` já retornaram).
+  return `— ${fmtBR(t)}`;
 }
 
 const WEEKDAY_PT: Record<string, string> = {
@@ -45,7 +61,7 @@ export const weekdayLabel = (weekday?: string | null): string => {
 
 export const ageFrom = (birth?: string | null) => {
   if (!birth) return null;
-  const b = new Date(birth);
+  const b = parseDate(birth);
   if (isNaN(+b)) return null;
   const now = new Date();
   let y = now.getFullYear() - b.getFullYear();
@@ -57,7 +73,7 @@ export const ageFrom = (birth?: string | null) => {
 
 function calculateTimeDifference(date?: string | null) {
   if (!date) return null;
-  const d = new Date(date);
+  const d = parseDate(date);
   if (isNaN(+d)) return null;
   
   const now = new Date();
@@ -90,12 +106,7 @@ export const timeDifference = (date?: string | null) => {
 export const ageDetailed = timeDifference;
 export const tenureFrom = timeDifference;
 
-export const maskDateBR = (value: string): string => {
-  const digits = value.replace(/\D/g, '');
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
-};
+export { maskDateBR } from "./masks";
 
 export const isValidBRDate = (brDate: string): boolean => {
   
@@ -106,9 +117,8 @@ export const isValidBRDate = (brDate: string): boolean => {
   const parts = brDate.split('/');
   if (parts.length !== 3) return false;
 
+  // Com `/` nas posições 2 e 5 e 10 caracteres, dia e mês têm 2 dígitos e o ano 4.
   const [dayStr, monthStr, yearStr] = parts;
-
-  if (dayStr.length !== 2 || monthStr.length !== 2 || yearStr.length !== 4) return false;
 
   const day = Number(dayStr);
   const month = Number(monthStr);
@@ -142,4 +152,44 @@ export const brToISO = (brDate: string): string => {
   const dayPadded = day.padStart(2, '0');
   const monthPadded = month.padStart(2, '0');
   return `${year}-${monthPadded}-${dayPadded}`;
+};
+
+export const fmtDate = (date?: string | Date, tz = "America/Manaus") => {
+  if (!date) return "—";
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleString("pt-BR", { timeZone: tz });
+};
+
+/** Só a parte da data: "2026-09-01" ou "2026-09-01T12:00:00Z". */
+const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})/;
+
+/**
+ * Dia puro do banco no formato brasileiro.
+ *
+ * A data chega como "2026-09-01". `new Date` a lê como meia-noite **UTC** e
+ * `toLocaleDateString` a exibe no fuso local — em Manaus (UTC-4) isso mostrava
+ * o dia anterior: toda visita aparecia um dia antes. Aqui a data é montada a
+ * partir das próprias partes, sem passar pelo UTC.
+ *
+ * Um horário completo continua sendo convertido pelo fuso, que é o correto
+ * para um instante.
+ */
+export const formatDayBR = (
+  iso?: string | null,
+  fallback = 'Data a definir',
+): string => {
+  if (!iso) return fallback;
+
+  const parts = DATE_PREFIX.exec(iso);
+  if (parts) {
+    const [, year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+
+  const parsed = new Date(iso);
+  // `toLocaleDateString` de uma data inválida devolve "Invalid Date" em vez de
+  // lançar: sem esta checagem, o usuário vê isso na tela.
+  return Number.isNaN(parsed.getTime())
+    ? 'Data inválida'
+    : parsed.toLocaleDateString('pt-BR');
 };

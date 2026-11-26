@@ -1,0 +1,20 @@
+{
+ "unit": "app-shell",
+ "scenarios": [
+  "app-shell.get.rota-inexistente#nao-encontrado",
+  "app-shell.get.menu-publico#visitante",
+  "app-shell.get.menu-publico#flag-desligada",
+  "app-shell.get.menu-publico#so-lider",
+  "app-shell.get.menu-publico#mobile",
+  "app-shell.get.menu-usuario#membro",
+  "app-shell.get.menu-usuario#lider",
+  "app-shell.get.menu-usuario#admin",
+  "app-shell.get.menu-usuario#flag-desligada",
+  "app-shell.get.menu-usuario#mobile",
+  "app-shell.get.menu-admin#perfil-indevido",
+  "app-shell.get.menu-admin#flag-desligada",
+  "app-shell.get.menu-admin#selo-pendencias",
+  "app-shell.get.menu-admin#mobile",
+  "app-shell.get.flags#estado-restaurado"
+ ]
+}

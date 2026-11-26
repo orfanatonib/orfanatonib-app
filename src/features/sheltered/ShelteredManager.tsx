@@ -1,73 +1,131 @@
 import React, { useCallback, useState } from "react";
+import { Button } from "@mui/material";
+import { Add, ChildCare } from "@mui/icons-material";
 import {
-  Alert,
-  Box,
-  CircularProgress,
-  useTheme,
-  useMediaQuery,
-  Container,
-  Paper,
-  Typography,
-} from "@mui/material";
-import { motion } from "framer-motion";
-import SearchIcon from "@mui/icons-material/Search";
-import ShelteredToolbar from "./components/ShelteredToolbar";
-import ShelteredTable from "./components/ShelteredTable";
+  AdminTableListScreen,
+  splitSort,
+  useAdminList,
+  type AdminFilterField,
+  type AdminListFetcher,
+} from "@/components/common/admin-shell";
+import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
+import ShelteredCard from "./components/ShelteredCard";
+import { buildShelteredColumns } from "./components/shelteredColumns";
 import ShelteredViewDialog from "./components/ShelteredViewDialog";
 import ShelteredFormDialog from "./components/ShelteredFormDialog";
-import DeleteConfirmDialog from "@/components/common/modal/DeleteConfirmDialog";
-import { useShelteredDetails, useShelteredMutations, useSheltered } from "./hooks";
+import { apiFetchShelteredList } from "./api";
+import { useShelteredDetails, useShelteredMutations } from "./hooks";
 import {
-  ShelteredFilters,
-  ShelteredResponseDto,
-  ShelteredSort,
+  GENDER_LABELS,
+  MIN_TOUCH_TARGET_PX,
+  SHELTERED_MESSAGES,
+  SHELTERED_PAGE_SIZE_DEFAULT,
+  SHELTERED_SORT_DEFAULT_VALUE,
+  SHELTERED_SORT_FIELD_OPTIONS,
+  SHELTERED_TESTID,
+  SHELTERED_TESTID_PREFIX,
+} from "./constants";
+import { ShelteredFormMode, ShelteredGender, ShelteredOrderBy } from "./enums";
+import type {
   CreateShelteredForm,
   EditShelteredForm,
+  ShelteredResponseDto,
 } from "./types";
-import BackHeader from "@/components/common/header/BackHeader";
+
+const emptyCreateForm = (): CreateShelteredForm => ({
+  name: "",
+  gender: ShelteredGender.MALE,
+  guardianName: "",
+  guardianPhone: "",
+  birthDate: "",
+  joinedAt: null,
+  shelterId: null,
+  address: { street: "", district: "", city: "", state: "", postalCode: "" },
+});
+
+const toEditForm = (sheltered: ShelteredResponseDto): EditShelteredForm => ({
+  id: sheltered.id,
+  name: sheltered.name,
+  gender: sheltered.gender,
+  guardianName: sheltered.guardianName ?? "",
+  guardianPhone: sheltered.guardianPhone ?? "",
+  // Mantém ISO: `isoToDayjs` só interpreta esse formato sem ambiguidade.
+  // Uma data em DD/MM/AAAA seria lida como MM/DD/AAAA e trocaria dia por mês.
+  birthDate: sheltered.birthDate,
+  joinedAt: sheltered.joinedAt,
+  shelterId: sheltered.shelter?.id ?? null,
+  address: sheltered.address
+    ? {
+        street: sheltered.address.street,
+        number: sheltered.address.number,
+        district: sheltered.address.district,
+        city: sheltered.address.city,
+        state: sheltered.address.state,
+        postalCode: sheltered.address.postalCode,
+        complement: sheltered.address.complement,
+      }
+    : null,
+});
+
+
+/** Campos da toolbar padrão: um por filtro que a API de `/sheltered` aceita (a busca geral é o campo de busca). */
+const FILTER_FIELDS: AdminFilterField[] = [
+  { kind: "select", key: "sort", label: "Ordenar por", allLabel: null, options: [...SHELTERED_SORT_FIELD_OPTIONS] },
+  {
+    kind: "select",
+    key: "gender",
+    label: "Gênero",
+    allLabel: "Todos",
+    options: [
+      { value: ShelteredGender.MALE, label: GENDER_LABELS[ShelteredGender.MALE] },
+      { value: ShelteredGender.FEMALE, label: GENDER_LABELS[ShelteredGender.FEMALE] },
+    ],
+  },
+  { kind: "text", key: "shelterSearchingString", label: "Abrigo", placeholder: "Nome, cidade ou estado" },
+  { kind: "text", key: "addressFilter", label: "Endereço", placeholder: "Rua, bairro, cidade" },
+  { kind: "date", key: "birthDateFrom", label: "Nascimento a partir de" },
+  { kind: "date", key: "birthDateTo", label: "Nascimento até" },
+  { kind: "date", key: "joinedFrom", label: "No abrigo desde" },
+  { kind: "date", key: "joinedTo", label: "No abrigo até" },
+];
+
+const DEFAULT_FILTERS = { sort: SHELTERED_SORT_DEFAULT_VALUE };
+
+/** Traduz o estado da lista (busca, filtros, página 1-indexada) para `GET /sheltered`. */
+const fetchSheltered: AdminListFetcher<ShelteredResponseDto> = async (params, signal) => {
+  const { filters } = params;
+  const { sortBy, order } = splitSort(filters.sort);
+  const { data, meta } = await apiFetchShelteredList({
+    page: params.page,
+    limit: params.limit,
+    sort: sortBy ? { id: sortBy as ShelteredOrderBy, desc: order === "DESC" } : null,
+    filters: {
+      searchString: params.search,
+      shelterSearchingString: filters.shelterSearchingString,
+      addressFilter: filters.addressFilter,
+      gender: (filters.gender || undefined) as ShelteredGender | undefined,
+      birthDateFrom: filters.birthDateFrom,
+      birthDateTo: filters.birthDateTo,
+      joinedFrom: filters.joinedFrom,
+      joinedTo: filters.joinedTo,
+    },
+    signal,
+  });
+  return { items: data, total: meta.totalItems, totalPages: meta.totalPages };
+};
 
 export default function ShelteredManager() {
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const [filters, setFilters] = useState<ShelteredFilters>({
-    shelteredSearchingString: "",
-    shelterSearchingString: "",
-    addressFilter: "",
-    gender: undefined,
-    birthDateFrom: "",
-    birthDateTo: "",
-    joinedFrom: "",
-    joinedTo: "",
+  const list = useAdminList<ShelteredResponseDto>({
+    fetcher: fetchSheltered,
+    pageSize: SHELTERED_PAGE_SIZE_DEFAULT,
+    defaultFilters: DEFAULT_FILTERS,
+    errorMessage: SHELTERED_MESSAGES.LIST_ERROR,
   });
 
-  const [pageSize, setPageSize] = useState<number>(12);
-  const [pageIndex, setPageIndex] = useState<number>(0);
-  const [sorting, setSorting] = useState<ShelteredSort>({
-    id: "updatedAt",
-    desc: true,
-  });
+  const refetch = useCallback(async () => list.reload(), [list.reload]);
 
-  const { rows, total, loading, error, setError, fetchPage } = useSheltered(
-    pageIndex,
-    pageSize,
-    sorting,
-    filters
-  );
-  const doRefresh = useCallback(() => {
-    fetchPage();
-  }, [fetchPage]);
-
-  const {
-    viewing,
-    setViewing,
-    loading: viewingLoading,
-    fetchSheltered,
-  } = useShelteredDetails();
-  const handleOpenView = (row: ShelteredResponseDto) => {
-    setViewing(row);
-    fetchSheltered(row.id);
-  };
+  const { viewing, setViewing, loading: viewingLoading, fetchSheltered: loadSheltered } =
+    useShelteredDetails();
 
   const {
     dialogLoading,
@@ -76,232 +134,125 @@ export default function ShelteredManager() {
     createSheltered,
     updateSheltered,
     deleteSheltered,
-  } = useShelteredMutations(async () => {
-    await fetchPage();
-  });
+  } = useShelteredMutations(refetch);
 
   const [creating, setCreating] = useState<CreateShelteredForm | null>(null);
-  const openCreate = () =>
-    setCreating({
-      name: "",
-      gender: "M",
-      guardianName: "",
-      guardianPhone: "",
-      birthDate: "",
-      joinedAt: null,
-      shelterId: null,
-      address: {
-        street: "",
-        district: "",
-        city: "",
-        state: "",
-        postalCode: "",
-      } as any,
-    });
+  const [editing, setEditing] = useState<EditShelteredForm | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(null);
+
+  const handleOpenView = (row: ShelteredResponseDto) => {
+    setViewing(row);
+    void loadSheltered(row.id);
+  };
+
+  const handleStartEdit = (row: ShelteredResponseDto) => {
+    setViewing(null);
+    setDialogError("");
+    setEditing(toEditForm(row));
+  };
+
   const submitCreate = async () => {
     if (!creating) return;
-    const payload = { ...creating };
-    if (!payload.joinedAt) payload.joinedAt = null;
-    if (!payload.shelterId) payload.shelterId = null as any;
-    const success = await createSheltered(payload, pageIndex + 1, pageSize, filters, sorting);
-    
-    if (success) {
-      setCreating(null);
-    }
+    if (await createSheltered(creating)) setCreating(null);
   };
 
-  const [editing, setEditing] = useState<EditShelteredForm | null>(null);
-  const startEdit = (c: ShelteredResponseDto) => {
-    const isoToBr = (raw?: string | null) => {
-      if (!raw) return raw ?? "";
-      const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      return m ? `${m[3]}/${m[2]}/${m[1]}` : String(raw);
-    };
-    setEditing({
-      id: c.id,
-      name: c.name,
-      gender: c.gender,
-      guardianName: c.guardianName,
-      guardianPhone: c.guardianPhone,
-      birthDate: isoToBr(c.birthDate),
-      joinedAt: (isoToBr(c.joinedAt) as any) || null,
-      shelterId: c.shelter?.id ?? null,
-      address: c.address ? ({ ...c.address } as any) : undefined,
-    });
-  };
   const submitEdit = async () => {
     if (!editing) return;
-    const { id, ...rest } = editing;
-    const success = await updateSheltered(id, rest, pageIndex + 1, pageSize, filters, sorting);
-    
-    if (success) {
-      setEditing(null);
-    }
+    const { id, ...payload } = editing;
+    if (await updateSheltered(id, payload)) setEditing(null);
   };
 
-  const [confirmDelete, setConfirmDelete] = useState<ShelteredResponseDto | null>(
-    null
-  );
-  const askDelete = (row: ShelteredResponseDto) => setConfirmDelete(row);
   const submitDelete = async () => {
     if (!confirmDelete) return;
-    await deleteSheltered(
-      confirmDelete.id,
-      pageIndex + 1,
-      pageSize,
-      filters,
-      sorting
-    );
-    setConfirmDelete(null);
+    if (await deleteSheltered(confirmDelete.id)) setConfirmDelete(null);
+  };
+
+  const rowActions = {
+    onOpenView: handleOpenView,
+    onStartEdit: handleStartEdit,
+    onAskDelete: setConfirmDelete,
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        pb: 4,
-      }}
-    >
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+    <AdminTableListScreen
+      testIdPrefix={SHELTERED_TESTID_PREFIX}
+      title="Gerenciar Acolhidos"
+      searchLabel="Buscar acolhido"
+      searchPlaceholder="Nome do acolhido, responsável ou telefone"
+      fields={FILTER_FIELDS}
+      list={list}
+      emptyMessage={SHELTERED_MESSAGES.EMPTY_HINT}
+      emptyIcon={<ChildCare aria-hidden sx={{ fontSize: 56, color: "text.secondary" }} />}
+      columns={buildShelteredColumns(rowActions)}
+      rowKey={(row) => row.id}
+      renderCard={(row) => <ShelteredCard sheltered={row} {...rowActions} />}
+      cardsBelow="sm"
+      primaryAction={
+        <Button
+          variant="contained"
+          fullWidth
+          startIcon={<Add />}
+          onClick={() => {
+            setDialogError("");
+            setCreating(emptyCreateForm());
+          }}
+          data-testid="sheltered-create"
+          sx={{ minHeight: MIN_TOUCH_TARGET_PX, textTransform: "none", fontWeight: 600, whiteSpace: "nowrap" }}
         >
-          <BackHeader title="Gerenciar Acolhidos" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <ShelteredToolbar
-            filters={filters}
-            onChange={(updater) => {
-              setFilters(updater);
-              setPageIndex(0);
-            }}
-            onCreateClick={openCreate}
-            onRefreshClick={doRefresh}
-            isXs={isXs}
+          Criar acolhido
+        </Button>
+      }
+      overlays={
+        <>
+          <ShelteredViewDialog
+            open={Boolean(viewing)}
+            loading={viewingLoading}
+            sheltered={viewing}
+            onClose={() => setViewing(null)}
+            onEdit={handleStartEdit}
           />
-        </motion.div>
 
-        {loading && !rows.length && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              py: 8,
+          <ShelteredFormDialog
+            mode={ShelteredFormMode.CREATE}
+            open={Boolean(creating)}
+            value={creating}
+            onChange={(next) => setCreating(next as CreateShelteredForm)}
+            onCancel={() => {
+              setCreating(null);
+              setDialogError("");
             }}
-          >
-            <CircularProgress size={48} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Carregando acolhidos...
-            </Typography>
-          </Box>
-        )}
+            onSubmit={() => void submitCreate()}
+            error={dialogError}
+            loading={dialogLoading}
+          />
 
-        {error && !loading && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2, borderRadius: 2 }}
-            onClose={() => setError("")}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {!loading && !error && rows.length === 0 && (
-          <Paper
-            sx={{
-              p: 6,
-              textAlign: "center",
-              borderRadius: 2,
-              bgcolor: "background.paper",
+          <ShelteredFormDialog
+            mode={ShelteredFormMode.EDIT}
+            open={Boolean(editing)}
+            value={editing}
+            onChange={(next) => setEditing(next as EditShelteredForm)}
+            onCancel={() => {
+              setEditing(null);
+              setDialogError("");
             }}
-          >
-            <SearchIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhum acolhido encontrado
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tente ajustar os filtros de busca ou criar um novo acolhido.
-            </Typography>
-          </Paper>
-        )}
+            onSubmit={() => void submitEdit()}
+            error={dialogError}
+            loading={dialogLoading}
+          />
 
-        {!loading && rows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <ShelteredTable
-        rows={rows}
-        total={total}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-        sorting={sorting ? ([sorting] as any) : []}
-        setSorting={(s) => setSorting(Array.isArray(s) ? s[0] ?? null : (s as any))}
-        onOpenView={handleOpenView}
-        onStartEdit={startEdit}
-        onAskDelete={askDelete}
-            />
-          </motion.div>
-        )}
-
-      <ShelteredViewDialog
-        open={!!viewing}
-        loading={viewingLoading}
-        sheltered={viewing}
-        onClose={() => setViewing(null)}
-      />
-
-      <ShelteredFormDialog
-        mode="create"
-        open={!!creating}
-        value={creating}
-        onChange={(v) => setCreating(v as CreateShelteredForm)}
-        onCancel={() => {
-          setCreating(null);
-          setDialogError("");
-        }}
-        onSubmit={submitCreate}
-        error={dialogError}
-        loading={dialogLoading}
-      />
-
-      <ShelteredFormDialog
-        mode="edit"
-        open={!!editing}
-        value={editing}
-        onChange={(v) => setEditing(v as EditShelteredForm)}
-        onCancel={() => {
-          setEditing(null);
-          setDialogError("");
-        }}
-        onSubmit={submitEdit}
-        error={dialogError}
-        loading={dialogLoading}
-      />
-
-      <DeleteConfirmDialog
-        open={!!confirmDelete}
-        title={confirmDelete?.name || ""}
-        onClose={() => {
-          setConfirmDelete(null);
-          setDialogError("");
-        }}
-        onConfirm={submitDelete}
-      />
-      </Container>
-    </Box>
+          <DeleteConfirmDialog
+            open={Boolean(confirmDelete)}
+            title={confirmDelete?.name ?? ""}
+            loading={dialogLoading}
+            testId={SHELTERED_TESTID.DELETE_DIALOG}
+            onClose={() => {
+              setConfirmDelete(null);
+              setDialogError("");
+            }}
+            onConfirm={submitDelete}
+          />
+        </>
+      }
+    />
   );
 }

@@ -97,7 +97,7 @@ export default function VisitAudios({ audios, setAudios }: Props) {
   };
 
   return (
-    <Box sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
+    <Box data-testid="visit-material-audio-editor" sx={{ width: { xs: '95%', md: '100%' }, mx: 'auto' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -194,7 +194,7 @@ export default function VisitAudios({ audios, setAudios }: Props) {
         )}
 
         <Grid item xs={12}>
-          <Button variant="contained" fullWidth onClick={handleAddOrEdit}>
+          <Button data-testid="visit-material-audio-add" variant="contained" fullWidth onClick={handleAddOrEdit}>
             {editIndex !== null ? 'Atualizar Áudio' : 'Adicionar Áudio'}
           </Button>
         </Grid>
@@ -203,7 +203,7 @@ export default function VisitAudios({ audios, setAudios }: Props) {
       <Grid container spacing={3} mt={4}>
         {audios.map((audio, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box border={1} borderRadius={2} p={2} position="relative">
+            <Box data-testid="visit-material-audio-item" border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{audio.title}</Typography>
               <Typography variant="body2" mb={1}>
                 {audio.description}
@@ -214,12 +214,12 @@ export default function VisitAudios({ audios, setAudios }: Props) {
               </audio>
               <Box position="absolute" top={8} right={8} display="flex" gap={1}>
                 <Tooltip title="Editar">
-                  <IconButton size="small" onClick={() => handleEdit(index)}>
+                  <IconButton data-testid="visit-material-audio-edit" aria-label="Editar áudio" size="small" onClick={() => handleEdit(index)}>
                     <Edit fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Remover">
-                  <IconButton size="small" color="error" onClick={() => handleDelete(index)}>
+                  <IconButton data-testid="visit-material-audio-remove" aria-label="Remover áudio" size="small" color="error" onClick={() => handleDelete(index)}>
                     <Delete fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -229,7 +229,7 @@ export default function VisitAudios({ audios, setAudios }: Props) {
         ))}
       </Grid>
 
-      <Dialog open={confirmDeleteIndex !== null} onClose={() => setConfirmDeleteIndex(null)}>
+      <Dialog data-testid="visit-material-audio-remove-dialog" open={confirmDeleteIndex !== null} onClose={() => setConfirmDeleteIndex(null)}>
         <DialogTitle>Confirmar remoção do áudio?</DialogTitle>
         <DialogActions>
           <Button onClick={() => setConfirmDeleteIndex(null)}>Cancelar</Button>

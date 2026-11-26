@@ -72,7 +72,7 @@ export interface ShelterDto {
       commonUser: boolean;
     };
   }>;
-  mediaItem?: any | null;
+  mediaItem?: { id: string; url: string; title: string } | null;
   createdAt: string;
   updatedAt: string;
 }

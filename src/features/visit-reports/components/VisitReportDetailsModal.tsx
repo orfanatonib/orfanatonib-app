@@ -21,6 +21,7 @@ import {
     Description as DescriptionIcon,
     Assessment as AssessmentIcon,
 } from "@mui/icons-material";
+import { formatDayBR } from 'utils/dateUtils';
 
 interface VisitReportDetailsModalProps {
     open: boolean;
@@ -39,7 +40,7 @@ export default function VisitReportDetailsModal({
     if (!report) return null;
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
+        <Dialog data-testid="visit-reports-details-dialog" open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">Detalhes do Relatório</Typography>
                 <Chip
@@ -77,7 +78,7 @@ export default function VisitReportDetailsModal({
                         </Box>
                         <Typography variant="body1">
                             {report.schedule?.visitDate
-                                ? new Date(report.schedule.visitDate).toLocaleDateString('pt-BR')
+                                ? formatDayBR(report.schedule.visitDate)
                                 : "Data não informada"}
                         </Typography>
                     </Grid>
@@ -91,7 +92,7 @@ export default function VisitReportDetailsModal({
                             {report.team?.description && ` - ${report.team.description}`}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Líderes: {report.team?.leaders?.map((l: any) => l.name).join(", ") || "N/A"}
+                            Líderes: {report.team?.leaders?.map((l) => l.name).join(", ") || "N/A"}
                         </Typography>
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -159,7 +160,7 @@ export default function VisitReportDetailsModal({
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} variant="contained" color="primary">
+                <Button data-testid="visit-reports-details-close" onClick={onClose} variant="contained" color="primary">
                     Fechar
                 </Button>
             </DialogActions>

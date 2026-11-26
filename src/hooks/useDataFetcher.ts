@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useErrorHandler } from './useErrorHandler';
-import type { ErrorHandlingOptions } from '@/utils/errorHandler';
+import type { AppError, ErrorHandlingOptions } from '@/utils/errorHandler';
 
 export interface UseDataFetcherResult<T> {
   data: T | null;
   isLoading: boolean;
   isRefreshing: boolean;
-  error: any;
+  error: AppError | null;
   refetch: (options?: ErrorHandlingOptions) => Promise<T | undefined>;
   refresh: (options?: ErrorHandlingOptions) => Promise<T | undefined>;
   clearData: () => void;
