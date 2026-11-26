@@ -75,12 +75,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
     {
-      // Fluxos marcados com @mobile no título, em 375×812 (mobile-first).
+      // Fluxos em 375×812 (mobile-first): `@mobile` roda só aqui; `@responsive` roda aqui e no desktop.
       name: "live-ui-mobile",
       dependencies: ["setup"],
       testMatch: "**/*.ui.spec.ts",
       testIgnore: SEED_SPECS,
-      grep: /@mobile/,
+      grep: /@mobile|@responsive/,
       use: { ...devices["Pixel 5"], viewport: { width: 375, height: 812 } },
     },
     ...seedProjects,

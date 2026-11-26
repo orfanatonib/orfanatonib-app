@@ -1,15 +1,8 @@
 {
   "uncovered": [
-    "/adm/abrigos/novo",
     "/adm/editar-imagens-shelter",
     "/adm/editar-meditacao",
     "/adm/editar-pagina-ideias",
-    "/adm/pagelas",
-    "/adm/presenca/consultar",
-    "/adm/presenca/equipes/:teamId",
-    "/adm/presenca/lancar",
-    "/area-dos-acolhidos",
-    "/area-dos-acolhidos/:shelteredId",
     "/presenca"
   ]
 }

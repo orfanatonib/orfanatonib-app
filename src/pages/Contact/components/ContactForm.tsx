@@ -43,14 +43,14 @@ const ContactForm: React.FC<ContactFormProps> = ({
   });
 
   const handleFormSubmit = async (data: ContactFormData) => {
-    await onSubmit(data);
-    reset();
+    // Falhou: o que a pessoa digitou fica na tela para tentar de novo.
+    if (await onSubmit(data)) reset();
   };
 
   return (
     <Box>
       {globalError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert data-testid="contact-error" severity="error" sx={{ mb: 2 }}>
           {globalError}
         </Alert>
       )}

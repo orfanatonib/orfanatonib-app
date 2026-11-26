@@ -103,6 +103,9 @@ npx playwright test --config=playwright.live.config.ts --ui
 npx playwright test --config=playwright.live.config.ts --project=live-ui --debug
 ```
 
+**Desktop e mobile.** `live-ui` (1440×900) roda tudo menos `@mobile`; `live-ui-mobile` (375×812) roda `@mobile` e
+`@responsive`. Fluxo que precisa valer nos dois leva `@responsive` no título.
+
 A suíte roda com `workers: 1` e `describe.serial`: os cenários escrevem no mesmo
 banco e dependem uns dos outros na ordem declarada.
 

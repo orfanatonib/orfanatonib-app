@@ -8,7 +8,8 @@ export interface ContactFormData {
 }
 
 export interface ContactFormProps {
-  onSubmit: (data: ContactFormData) => Promise<void>;
+  /** Resolve `true` só quando a mensagem foi aceita pela API. */
+  onSubmit: (data: ContactFormData) => Promise<boolean>;
   loading: boolean;
   submitted: boolean;
   globalError: string | null;
