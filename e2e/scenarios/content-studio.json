@@ -32,6 +32,7 @@
   "content-studio.get.content-studio-packages-id#perfil-anonimo",
   "content-studio.get.content-studio-packages-id#perfil-lider",
   "content-studio.get.content-studio-packages-id#perfil-membro",
+  "content-studio.get.content-studio-packages-packageid-publication#feliz",
   "content-studio.patch.content-studio-packages-packageid-stages-stageid-content#conflito-ou-duplicidade",
   "content-studio.patch.content-studio-packages-packageid-stages-stageid-content#falha-do-colaborador-sem-efeito-parcial",
   "content-studio.patch.content-studio-packages-packageid-stages-stageid-content#feliz",
@@ -64,6 +65,14 @@
   "content-studio.post.content-studio-packages-packageid-archive#perfil-membro",
   "content-studio.post.content-studio-packages-packageid-archive#rollback-de-transacao",
   "content-studio.post.content-studio-packages-packageid-archive#validacao",
+  "content-studio.post.content-studio-packages-packageid-publish#conflito-ou-duplicidade",
+  "content-studio.post.content-studio-packages-packageid-publish#estado-invalido",
+  "content-studio.post.content-studio-packages-packageid-publish#feliz",
+  "content-studio.post.content-studio-packages-packageid-publish#flag-desligada",
+  "content-studio.post.content-studio-packages-packageid-publish#idempotencia",
+  "content-studio.post.content-studio-packages-packageid-publish#nao-encontrado",
+  "content-studio.post.content-studio-packages-packageid-publish#sem-token",
+  "content-studio.post.content-studio-packages-packageid-publish#validacao",
   "content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#conflito-ou-duplicidade",
   "content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#falha-do-colaborador-sem-efeito-parcial",
   "content-studio.post.content-studio-packages-packageid-review-comments-commentid-resolve#feliz",
@@ -124,11 +133,14 @@
   "content-studio.post.content-studio-packages-packageid-submit-review#feliz",
   "content-studio.post.content-studio-packages-packageid-submit-review#flag-desligada",
   "content-studio.post.content-studio-packages-packageid-submit-review#nao-encontrado",
+  "content-studio.post.content-studio-packages-packageid-submit-review#parcial",
   "content-studio.post.content-studio-packages-packageid-submit-review#perfil-admin",
   "content-studio.post.content-studio-packages-packageid-submit-review#perfil-anonimo",
   "content-studio.post.content-studio-packages-packageid-submit-review#perfil-lider",
   "content-studio.post.content-studio-packages-packageid-submit-review#perfil-membro",
   "content-studio.post.content-studio-packages-packageid-submit-review#rollback-de-transacao",
-  "content-studio.post.content-studio-packages-packageid-submit-review#validacao"
+  "content-studio.post.content-studio-packages-packageid-submit-review#todas",
+  "content-studio.post.content-studio-packages-packageid-submit-review#validacao",
+  "content-studio.post.content-studio-packages-packageid-submit-review#validacao-publico"
  ]
 }

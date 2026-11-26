@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Cleaner, RUN_TAG, tagged } from "./factory";
+
+/** A limpeza é opt-in (`E2E_CLEANUP=1`); o teste liga e desliga a chave. */
+const cleanup = vi.hoisted(() => ({ enabled: true }));
+vi.mock("./keep-data", () => ({
+  get CLEANUP_ENABLED() {
+    return cleanup.enabled;
+  },
+}));
 
 describe("Cleaner", () => {
   it("desfaz em ordem inversa à da criação", async () => {
@@ -32,6 +40,22 @@ describe("Cleaner", () => {
     await cleaner.run();
     await cleaner.run();
     expect(runs).toBe(1);
+  });
+});
+
+describe("Cleaner sem E2E_CLEANUP (padrão: a massa fica)", () => {
+  it("não apaga nada e descarta o que foi registrado", async () => {
+    let runs = 0;
+    const cleaner = new Cleaner();
+    cleaner.track("x", async () => void (runs += 1));
+    cleanup.enabled = false;
+    try {
+      await cleaner.run();
+    } finally {
+      cleanup.enabled = true;
+    }
+    await cleaner.run();
+    expect(runs).toBe(0);
   });
 });
 

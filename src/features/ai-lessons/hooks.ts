@@ -8,7 +8,7 @@ import {
 import { ACTIVE_GENERATIONS_POLL_MS } from './generation.constants';
 import { nextReconnectDelay } from './stream';
 import { aiLessonsKeys } from './queryKeys';
-import { setCurrentWeek } from '@/features/week-materials/api';
+import { setCurrentMaterial } from '@/features/visit-materials/api';
 import { computeLessonSnapshotSignature, isLessonSnapshotNewerOrEqual } from './utils';
 import {
   LessonArchiveAction,
@@ -267,7 +267,7 @@ export function useLessonPublicationPreview(
 export function useSetLessonMaterialCurrentWeek(lessonId: string, onRoutesChanged: () => unknown) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (weekMaterialId: string) => setCurrentWeek(weekMaterialId),
+    mutationFn: (weekMaterialId: string) => setCurrentMaterial({ id: weekMaterialId }),
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey: aiLessonsKeys.publicationPreviews(lessonId) }),

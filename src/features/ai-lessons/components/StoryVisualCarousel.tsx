@@ -170,7 +170,7 @@ export const StoryVisualCarousel = ({
           {assets.map((item, index) => (
             <IconButton
               key={item.id ?? index}
-              data-testid={`${testIdPrefix}-carousel-dot-${item.id ?? index}`}
+              data-testid={item.id ? `${testIdPrefix}-carousel-dot-${item.id}` : undefined}
               aria-label={`Mostrar visual ${index + 1}`}
               aria-current={index === activeIndex ? 'true' : undefined}
               onClick={() => setActiveIndex(index)}

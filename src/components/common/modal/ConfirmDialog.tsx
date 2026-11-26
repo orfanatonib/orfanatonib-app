@@ -11,7 +11,7 @@ export type ConfirmDialogProps = {
   open: boolean;
   title?: React.ReactNode;
   content?: React.ReactNode;
-  shelteredren?: React.ReactNode;
+  children?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   confirmColor?: "primary" | "secondary" | "success" | "error" | "warning" | "info" | "inherit";
@@ -43,7 +43,7 @@ export default function ConfirmDialog({
   open,
   title,
   content,
-  shelteredren,
+  children,
   confirmText = "Confirmar",
   cancelText = "Cancelar",
   confirmColor = "primary",
@@ -129,7 +129,7 @@ export default function ConfirmDialog({
         </DialogTitle>
       )}
 
-      {(content || shelteredren) && (
+      {(content || children) && (
         <DialogContent
           sx={{
             pt: title ? 1 : 2,
@@ -142,7 +142,7 @@ export default function ConfirmDialog({
             typeof content === "string"
               ? <Typography>{content}</Typography>
               : content
-          ) : shelteredren}
+          ) : children}
         </DialogContent>
       )}
 

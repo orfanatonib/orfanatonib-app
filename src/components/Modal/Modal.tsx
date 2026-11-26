@@ -3,17 +3,17 @@ import styles from './Modal.module.css';
 
 interface ModalProps {
   onClose: () => void;
-  shelteredren: React.ReactNode;
+  children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose, shelteredren }) => {
+const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose}>
           ✖
         </button>
-        {shelteredren}
+        {children}
       </div>
     </div>
   );
