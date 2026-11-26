@@ -11,6 +11,7 @@ import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs, seedBrowserSession, test, type LoginResult } from "../support/live";
 import { setFlag } from "./feed-fixtures";
 import { makePng } from "./png";
+import { outboxRows } from "../support/outbox";
 
 /**
  * JORNADA COMPLETA do feed v2, só pela tela e com arquivos reais: envio (2 fotos + vídeo) → pendente →
@@ -111,7 +112,7 @@ test.describe.serial("Jornada completa do feed v2 (tela, arquivos reais)", () =>
     await expect(sectionBox(page).getByTestId("shelter-feed-comments-panel")).toBeVisible();
   };
   const outboxFor = (templateKey: string, recipient: string, text: string) =>
-    queryAll<{ status: string; text: string }>("SELECT status, text FROM email_outbox WHERE templateKey = ? AND recipient = ? AND text LIKE ?", [
+    outboxRows<{ status: string; text: string }>("status, text", "templateKey = ? AND recipient = ? AND text LIKE ?", [
       templateKey,
       recipient,
       `%${text}%`,

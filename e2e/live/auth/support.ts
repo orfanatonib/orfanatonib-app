@@ -8,6 +8,7 @@ import { promoteToAdminInDb } from "../support/db-admin";
 import { apiJwtSecret } from "../support/env";
 import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs, type LoginResult } from "../support/live";
+import { directOutboxCount, outboxRows } from "../support/outbox";
 
 /** Suporte dos E2E de autenticação: contas descartáveis criadas pela API e provas por SELECT. */
 
@@ -112,7 +113,7 @@ export async function authSnapshot(): Promise<{ users: number; verification: num
     users: await countRows("users"),
     verification: await countRows("email_verification_tokens"),
     reset: await countRows("password_reset_tokens"),
-    outbox: await countRows("email_outbox"),
+    outbox: await directOutboxCount(),
   };
 }
 
@@ -127,8 +128,8 @@ export async function resetTokens(userId: string): Promise<Array<{ token: string
 /** Linhas do outbox para um destinatário (o SMTP não faz parte do E2E). */
 export async function outboxFor(recipient: string, templateKey?: string): Promise<Array<{ templateKey: string; status: string }>> {
   return templateKey
-    ? queryAll("SELECT templateKey, status FROM email_outbox WHERE recipient = ? AND templateKey = ?", [recipient, templateKey])
-    : queryAll("SELECT templateKey, status FROM email_outbox WHERE recipient = ?", [recipient]);
+    ? outboxRows("templateKey, status", "recipient = ? AND templateKey = ?", [recipient, templateKey])
+    : outboxRows("templateKey, status", "recipient = ?", [recipient]);
 }
 
 /** Com as flags `email_*` desligadas nada fica pendente: o aviso vira `skipped`. */

@@ -5,7 +5,7 @@ import { closeDb, countRows, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { expectFeatureDisabled, withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
 
 /**
@@ -105,7 +105,8 @@ test.describe.serial("Frequência — cenários por handler", () => {
     for (const id of schedules) await request.delete(`${API_URL}/shelter-schedules/${id}`, { headers: authHeaders(admin) });
     await request.put(`${API_URL}/leader-profiles/${leaderProfileId}`, { headers: authHeaders(admin), data: [] });
     for (const id of shelters) await deleteShelterApi(request, admin, id);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     expect(await countRows("shelter_schedules", {}), "agendas do E2E").toBeGreaterThanOrEqual(0);
     await closeDb();
   });

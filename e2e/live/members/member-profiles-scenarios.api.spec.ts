@@ -5,8 +5,9 @@ import { closeDb, countRows, queryAll, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { expectFeatureDisabled, withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
+import { outboxRows } from "../support/outbox";
 
 /**
  * Cenários de `/member-profiles` por handler (plano 16 §7.3). Dois membros criados pela API ficam em
@@ -64,7 +65,7 @@ test.describe.serial("Perfis de membro — cenários por handler", () => {
 
   const outbox = async (recipient: string): Promise<string[]> =>
     (
-      await queryAll<{ status: string }>("SELECT status FROM email_outbox WHERE templateKey = ? AND recipient = ?", [
+      await outboxRows<{ status: string }>("status", "templateKey = ? AND recipient = ?", [
         TEAM_EMAIL_TEMPLATE,
         recipient,
       ])
@@ -96,7 +97,8 @@ test.describe.serial("Perfis de membro — cenários por handler", () => {
     await leadShelter(request, "");
     for (const id of shelters) await deleteShelterApi(request, admin, id);
     await removeActors(request, admin, [first.id, second.id, loose.id]);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     expect(await countRows("leader_teams", { leader_id: seededLeaderProfileId }), "o líder semeado ficou preso a equipes").toBe(0);
     await closeDb();
   });

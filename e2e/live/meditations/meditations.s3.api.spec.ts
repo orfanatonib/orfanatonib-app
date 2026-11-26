@@ -18,6 +18,7 @@ import {
   removeApi,
 } from "./support";
 import { get as getRaw } from "./support-read";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `meditation.s3.01-12` (plano 29 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o bucket
@@ -55,7 +56,7 @@ test.describe.serial("Meditações — S3 sem órfão nem referência quebrada",
   });
 
   test.afterAll(async () => {
-    expect(await meditationsWithTag(RUN_TAG), "a limpeza deixou meditações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await meditationsWithTag(RUN_TAG), "a limpeza deixou meditações do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

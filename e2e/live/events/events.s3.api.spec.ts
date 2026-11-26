@@ -6,6 +6,7 @@ import { expect, loginAs, test } from "../support/live";
 import { addedKeys } from "../support/s3-invariants";
 import { expectBucketUnchanged, expectNoBrokenRefs, expectNoOrphans, listObjects, snapshotBucket } from "../support/s3";
 import { OVERSIZED_FILE_NAME, create, createRaw, eventsWithTag, label, mediaCount, patchRaw, png, removeApi } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `event.s3.01-12` (plano 20 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o bucket
@@ -39,7 +40,7 @@ test.describe.serial("Eventos — S3 sem órfão nem referência quebrada", () =
   });
 
   test.afterAll(async () => {
-    expect(await eventsWithTag(RUN_TAG), "a limpeza deixou eventos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await eventsWithTag(RUN_TAG), "a limpeza deixou eventos do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

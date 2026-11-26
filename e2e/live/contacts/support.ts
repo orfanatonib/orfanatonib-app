@@ -1,9 +1,10 @@
 import type { APIRequestContext, APIResponse } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
-import { queryAll, queryOne } from "../support/db";
+import { queryOne } from "../support/db";
 import { tagged } from "../support/factory";
 import { authHeaders, expect } from "../support/live";
+import { outboxStates } from "../support/outbox";
 
 export const BAD_ID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
 export const TEMPLATE_KEY = "contact-received";
@@ -66,12 +67,6 @@ export const unreadInDb = (): Promise<number> => count("SELECT COUNT(*) AS n FRO
 export const allContacts = (): Promise<number> => count("SELECT COUNT(*) AS n FROM contacts");
 
 /** Avisos de "contato recebido" por status no outbox (com a flag de e-mail desligada no E2E, só `skipped`). */
-export async function outboxByStatus(): Promise<Record<string, number>> {
-  const rows = await queryAll<{ status: string; n: number }>(
-    "SELECT status, COUNT(*) AS n FROM email_outbox WHERE templateKey = ? GROUP BY status",
-    [TEMPLATE_KEY],
-  );
-  return Object.fromEntries(rows.map((row) => [row.status, Number(row.n)]));
-}
+export const outboxByStatus = (): Promise<Record<string, number>> => outboxStates(TEMPLATE_KEY);
 
 export const label = (name: string): string => tagged(name);

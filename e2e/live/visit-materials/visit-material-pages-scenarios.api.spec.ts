@@ -26,6 +26,7 @@ import {
   updatePageRaw,
   type PageBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários de `/visit-material-pages` por handler (plano 35 §7.3): feliz, validação, conflito, não encontrado,
@@ -71,7 +72,7 @@ test.describe.serial("Materiais de visita — cenários por handler", () => {
     if (currentBefore.length === 1 && (await currentPageIds()).join() !== currentBefore.join()) {
       await promote(request, admin, currentBefore[0]);
     }
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

@@ -6,6 +6,7 @@ import { expect, loginAs, test } from "../support/live";
 import { addedKeys } from "../support/s3-invariants";
 import { expectBucketUnchanged, expectNoBrokenRefs, expectNoOrphans, listObjects, snapshotBucket } from "../support/s3";
 import { OVERSIZED_TITLE, create, createRaw, exe, label, mediaCount, pdf, putRaw, recordsWithTag, removeApi } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `background-checks.s3.NN` (plano 26 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o
@@ -42,7 +43,7 @@ test.describe.serial("Antecedentes criminais — S3 sem órfão nem referência 
   });
 
   test.afterAll(async () => {
-    expect(await recordsWithTag(RUN_TAG), "a limpeza deixou antecedentes do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await recordsWithTag(RUN_TAG), "a limpeza deixou antecedentes do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

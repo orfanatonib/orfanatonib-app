@@ -28,6 +28,7 @@ import {
   snapshotDb,
   type RecordBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários do plano 26 (`background-checks`): dado de maior sensibilidade (antecedente criminal). Cada cenário cria os
@@ -70,7 +71,7 @@ test.describe.serial("Antecedentes criminais — cenários de contrato, atomicid
 
   test.afterAll(async ({ request }) => {
     await removeActors(request, seeded, people.map((p) => p.id));
-    expect(await recordsWithTag(RUN_TAG), "a limpeza deixou antecedentes do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await recordsWithTag(RUN_TAG), "a limpeza deixou antecedentes do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

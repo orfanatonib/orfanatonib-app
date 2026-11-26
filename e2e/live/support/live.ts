@@ -1,6 +1,7 @@
 import { test as base, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { API_URL } from "../../../playwright.live.config";
 import { LIVE_ACCOUNTS, type LiveRole } from "./credentials";
+import { markOutboxWindow } from "./outbox";
 
 export type LoginResult = { accessToken: string; refreshToken: string; userId: string };
 
@@ -57,7 +58,15 @@ type LiveFixtures = {
   authenticatedPage: Page;
 };
 
-export const test = base.extend<LiveFixtures>({
+export const test = base.extend<LiveFixtures & { outboxWindow: void }>({
+  outboxWindow: [
+    async ({}, use, testInfo) => {
+      markOutboxWindow(testInfo.testId);
+      await use();
+    },
+    { auto: true },
+  ],
+
   adminToken: async ({ request }, use) => {
     const { accessToken } = await loginAs(request, "admin");
     await use(accessToken);

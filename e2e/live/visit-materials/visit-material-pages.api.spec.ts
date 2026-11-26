@@ -1,4 +1,5 @@
 import { authHeaders, expect, loginAs, test } from "../support/live";
+import { queryOne } from "../support/db";
 
 /**
  * Percorre os cenários de `/visit-material-pages` contra a API real, o MySQL
@@ -91,14 +92,16 @@ test.describe.serial("Materiais de visita — API ao vivo", () => {
     expect(response.status()).toBe(403);
   });
 
-  test("sem material atual, current-material responde vazio", async ({ request }) => {
+  test("current-material espelha o banco: o marcado como atual, ou vazio quando não há", async ({ request }) => {
+    const current = await queryOne<{ id: string }>("SELECT id FROM visit_material_pages WHERE currentWeek = 1");
     const response = await request.get("/visit-material-pages/current-material", {
       headers: authHeaders(token),
     });
 
     expect(response.status()).toBe(200);
     const body = await response.text();
-    expect(body === "" || body === "null").toBe(true);
+    if (current) expect((JSON.parse(body) as { id: string }).id).toBe(current.id);
+    else expect(body === "" || body === "null").toBe(true);
   });
 
   test("cria a página com mídias em link", async ({ request }) => {

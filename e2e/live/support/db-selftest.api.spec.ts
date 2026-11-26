@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { closeDb, countRows, expectNoRow, expectRow, queryAll } from "./db";
 import { Cleaner, RUN_TAG, tagged } from "./factory";
+import { CLEANUP_ENABLED } from "./keep-data";
 
 /** Auto-teste dos helpers de banco contra o MySQL local (somente leitura). */
 test.describe("helpers de banco dos E2E", () => {
@@ -38,8 +39,14 @@ test.describe("Cleaner", () => {
     cleaner.track("a", async () => { order.push("a"); });
     cleaner.track("falha", async () => { throw new Error("boom"); });
     cleaner.track("c", async () => { order.push("c"); });
-    await expect(cleaner.run()).rejects.toThrow("falha: boom");
-    expect(order).toEqual(["c", "a"]);
+    if (CLEANUP_ENABLED) {
+      await expect(cleaner.run()).rejects.toThrow("falha: boom");
+      expect(order).toEqual(["c", "a"]);
+    } else {
+      // Padrão: a massa fica, então nada registrado é executado.
+      await cleaner.run();
+      expect(order).toEqual([]);
+    }
     expect(tagged("x")).toContain(RUN_TAG);
   });
 });

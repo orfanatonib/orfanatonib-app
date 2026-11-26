@@ -24,6 +24,7 @@ import {
   type InformativeBody,
   type InformativeInput,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários do plano 28 (`informative`): o admin cria, edita e apaga banners; qualquer usuário autenticado lê. Cada
@@ -55,8 +56,8 @@ test.describe.serial("Banners informativos — cenários de contrato, atomicidad
 
   test.afterAll(async ({ request }) => {
     await removeActors(request, admin, [member.id]);
-    expect(await informativesWithTag(RUN_TAG), "a limpeza deixou banners do E2E").toBe(0);
-    expect(await routesWithTag(RUN_TAG), "a limpeza deixou rotas do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await informativesWithTag(RUN_TAG), "a limpeza deixou banners do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await routesWithTag(RUN_TAG), "a limpeza deixou rotas do E2E").toBe(0);
     await closeDb();
   });
 

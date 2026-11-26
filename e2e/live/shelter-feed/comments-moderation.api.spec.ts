@@ -17,6 +17,10 @@ import {
   postComment,
   rejectComment,
 } from "./comments-moderation-helpers";
+import { outboxCountFor } from "../support/outbox";
+
+/** Marca só desta spec: o RUN_TAG é do processo e outras specs do feed também o usam. */
+const TAG = `${RUN_TAG}-moderacao`;
 
 /**
  * Moderação de comentários do feed (plano 36): todo comentário nasce PENDENTE, o admin aprova ou
@@ -40,7 +44,7 @@ test.describe.serial("Comentários do feed — moderação", () => {
   const flagBefore: Record<string, boolean> = {};
 
   const outboxCount = (templateKey: string, recipient?: string) =>
-    countRows("email_outbox", recipient ? { templateKey, recipient } : { templateKey });
+    outboxCountFor(templateKey, recipient);
   const row = (id: string) =>
     queryOne<{ status: string; moderationReason: string | null; moderatedById: string | null; reviewedAt: string | null; requestId: string | null }>(
       "SELECT status, moderationReason, moderatedById, reviewedAt, requestId FROM image_section_comments WHERE id = ?",
@@ -50,8 +54,8 @@ test.describe.serial("Comentários do feed — moderação", () => {
   let approvedId: string;
   let rejectedId: string;
   const requestId = randomUUID();
-  const approvedText = `${RUN_TAG} aprovado: que alegria!`;
-  const rejectedText = `${RUN_TAG} reprovado: bênção!`;
+  const approvedText = `${TAG} aprovado: que alegria!`;
+  const rejectedText = `${TAG} reprovado: bênção!`;
 
   test.beforeAll(async ({ request }) => {
     const a = await loginAs(request, "admin");
@@ -67,9 +71,9 @@ test.describe.serial("Comentários do feed — moderação", () => {
         ((await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 1) === 1;
       await setFlag(request, admin, key, true);
     }
-    const gallery = await createGallery(request, admin, `${RUN_TAG} galeria moderação`, `${RUN_TAG} legada`);
+    const gallery = await createGallery(request, admin, `${TAG} galeria moderação`, `${TAG} legada`);
     pageId = gallery.pageId;
-    sectionId = await createFeedSection(request, member, admin, pageId, `${RUN_TAG} publicação`, true);
+    sectionId = await createFeedSection(request, member, admin, pageId, `${TAG} publicação`, true);
   });
 
   test.afterAll(async ({ request }) => {
@@ -122,7 +126,7 @@ test.describe.serial("Comentários do feed — moderação", () => {
     expect(await countRows("image_section_comments", { sectionId, authorId: memberId })).toBe(1);
 
     // UNIQUE(authorId, requestId): o mesmo requestId de OUTRO usuário é um comentário diferente.
-    const other = await request.post(commentsUrl(sectionId), { headers: authHeaders(leader), data: commentBody(`${RUN_TAG} do líder`, requestId) });
+    const other = await request.post(commentsUrl(sectionId), { headers: authHeaders(leader), data: commentBody(`${TAG} do líder`, requestId) });
     expect(other.status()).toBe(201);
     expect((await other.json()).id).not.toBe(approvedId);
     expect((await request.post(commentsUrl(sectionId), { headers: authHeaders(member), data: { content: "sem requestId" } })).status()).toBe(400);
@@ -152,20 +156,20 @@ test.describe.serial("Comentários do feed — moderação", () => {
         limit: number;
       };
     };
-    const found = await get(`status=pending&search=${encodeURIComponent(RUN_TAG)}&limit=50`);
+    const found = await get(`status=pending&search=${encodeURIComponent(TAG)}&limit=50`);
     expect(found.items.map((i) => i.id)).toContain(approvedId);
     expect(found.items.every((i) => i.status === "pending")).toBe(true);
     const mineItem = found.items.find((i) => i.id === approvedId)!;
     expect(mineItem.authorId).toBe(memberId);
-    expect(mineItem.post?.caption).toBe(`${RUN_TAG} publicação`);
+    expect(mineItem.post?.caption).toBe(`${TAG} publicação`);
 
-    const paged = await get(`status=pending&search=${encodeURIComponent(RUN_TAG)}&limit=1&page=2`);
+    const paged = await get(`status=pending&search=${encodeURIComponent(TAG)}&limit=1&page=2`);
     expect(paged).toMatchObject({ page: 2, limit: 1, total: found.total });
     expect(paged.items).toHaveLength(1);
 
-    expect((await get(`status=approved&search=${encodeURIComponent(RUN_TAG)}`)).total).toBe(0);
-    expect((await get(`search=${encodeURIComponent(`${RUN_TAG} do líder`)}`)).total).toBe(1);
-    expect((await get(`search=${encodeURIComponent(`${RUN_TAG} publicação`)}`)).total).toBe(2); // busca pela legenda da publicação
+    expect((await get(`status=approved&search=${encodeURIComponent(TAG)}`)).total).toBe(0);
+    expect((await get(`search=${encodeURIComponent(`${TAG} do líder`)}`)).total).toBe(1);
+    expect((await get(`search=${encodeURIComponent(`${TAG} publicação`)}`)).total).toBe(2); // busca pela legenda da publicação
 
     for (const status of ["pending", "approved", "rejected"]) {
       expect(found.counts[status], status).toBe(await countRows("image_section_comments", { status }));
@@ -214,7 +218,7 @@ test.describe.serial("Comentários do feed — moderação", () => {
     }
     expect((await row(rejectedId))?.status).toBe("pending");
 
-    const reason = `${RUN_TAG} fora do tema da visita`;
+    const reason = `${TAG} fora do tema da visita`;
     const res = await rejectComment(request, admin, rejectedId, reason);
     expect(res.status()).toBe(200);
     expect(await res.json()).toMatchObject({ status: COMMENT_STATUS.rejected, moderationReason: reason });
@@ -240,20 +244,20 @@ test.describe.serial("Comentários do feed — moderação", () => {
     const admins = await countRows("users", { role: "admin", active: 1 });
     expect(admins).toBeGreaterThan(0);
     const before = await outboxCount(PENDING_TEMPLATE);
-    const id = await postComment(request, member, sectionId, `${RUN_TAG} para o aviso`);
+    const id = await postComment(request, member, sectionId, `${TAG} para o aviso`);
     await expect.poll(() => outboxCount(PENDING_TEMPLATE)).toBeGreaterThan(before);
     // O aviso ao admin não carrega o texto do comentário.
     const leaked = await queryOne<{ total: number }>("SELECT COUNT(*) AS total FROM email_outbox WHERE templateKey = ? AND (html LIKE ? OR text LIKE ?)", [
       PENDING_TEMPLATE,
-      `%${RUN_TAG} para o aviso%`,
-      `%${RUN_TAG} para o aviso%`,
+      `%${TAG} para o aviso%`,
+      `%${TAG} para o aviso%`,
     ]);
     expect(Number(leaked?.total ?? 0)).toBe(0);
     await request.delete(commentItemUrl(id), { headers: authHeaders(admin) });
   });
 
   test("[comments-moderation#excluir] autor remove o seu (pendente ou reprovado); admin remove qualquer um; outro usuário: 403", async ({ request }) => {
-    const mine = await postComment(request, admin, sectionId, `${RUN_TAG} do admin`);
+    const mine = await postComment(request, admin, sectionId, `${TAG} do admin`);
     expect((await request.delete(commentItemUrl(mine), { headers: authHeaders(member) })).status()).toBe(403);
     expect(await countRows("image_section_comments", { id: mine })).toBe(1);
     expect((await request.delete(commentItemUrl(mine), { headers: authHeaders(admin) })).status()).toBe(204);
@@ -266,7 +270,7 @@ test.describe.serial("Comentários do feed — moderação", () => {
   });
 
   test("[comments-moderation#flag] flag do recurso desligada: fila e decisões respondem 403 FEATURE_DISABLED", async ({ request }) => {
-    const id = await postComment(request, member, sectionId, `${RUN_TAG} com flag`);
+    const id = await postComment(request, member, sectionId, `${TAG} com flag`);
     await setFlag(request, admin, "shelter_feed_comments", false);
     try {
       for (const res of [

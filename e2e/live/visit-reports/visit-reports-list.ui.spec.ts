@@ -1,7 +1,7 @@
 import type { APIRequestContext } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
-import { closeDb, queryAll, queryOne } from "../support/db";
+import { countRows, closeDb, queryAll, queryOne } from "../support/db";
 import {
   cardIds,
   clearAllFilters,
@@ -21,7 +21,7 @@ import { RUN_TAG } from "../support/factory";
 import { localShift } from "../support/local-day";
 import { registerShellSuite, setDateFilter } from "../support/shell-suite";
 import { authHeaders, expect, loginAs, seedBrowserSession, test } from "../support/live";
-import { createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createRaw, deleteRaw, payload, reportRow, type ReportBody } from "./support";
 import { cleanupData } from "../support/keep-data";
 
@@ -98,7 +98,8 @@ test.describe.serial("Relatórios de visita: casca única, filtros no servidor e
       for (const id of reports) await deleteRaw(request, admin, id);
       for (const id of schedules) await request.delete(`${API_URL}/shelter-schedules/${id}`, { headers: authHeaders(admin) });
       for (const id of shelters) await deleteShelterApi(request, admin, id);
-      expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+      // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+      for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
       expect(Number((await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM shelter_schedules WHERE lessonContent LIKE ?", [`%${RUN_TAG}%`]))?.n)).toBe(0);
     });
     await closeDb();

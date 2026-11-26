@@ -24,6 +24,7 @@ import {
   type Audience,
   type EventBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários de `/events` por handler (plano 20 §7.3): feliz, validação, conflito, não encontrado, escopo (a audiência
@@ -66,7 +67,7 @@ test.describe.serial("Eventos — cenários por handler", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await removeApi(request, admin, id);
-    expect(await eventsWithTag(RUN_TAG), "a limpeza deixou eventos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await eventsWithTag(RUN_TAG), "a limpeza deixou eventos do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

@@ -276,9 +276,16 @@ test.describe.serial("Estúdio — matriz de cenários", () => {
   test("[content-studio.post.content-studio-packages-packageid-submit-review#validacao] id que não é UUID ⇒ 400", async ({ request }) => {
     expect((await call(request, "post", submitPath("x"))).status()).toBe(400);
   });
-  test("[content-studio.post.content-studio-packages-packageid-submit-review#conflito-ou-duplicidade] pacote sem produção ⇒ 409; categoria já enviada ⇒ 400", async ({ request }) => {
+  test("[content-studio.post.content-studio-packages-packageid-submit-review#conflito-ou-duplicidade] pacote arquivado ⇒ 409; sem produção ⇒ 400 dizendo qual etapa falta; categoria já enviada ⇒ 400", async ({ request }) => {
+    const archived = await newPackage(request);
+    await completeAll(request, archived); // só pacote com conteúdo pode ser arquivado
+    expect((await call(request, "post", `${CS}/packages/${archived.id}/archive`, {})).ok()).toBe(true);
+    expect((await call(request, "post", submitPath(archived.id), {})).status()).toBe(409);
     const fresh = await newPackage(request);
-    expect((await call(request, "post", submitPath(fresh.id), {})).status()).toBe(409);
+    const pending = await call(request, "post", submitPath(fresh.id), {});
+    expect(pending.status()).toBe(400);
+    expect(await pending.text()).toContain("Conclua a etapa");
+    expect(await queryOne("SELECT status FROM content_packages WHERE id = ?", [fresh.id])).toEqual({ status: "DRAFT" });
     const reviewing = await inReview(request);
     expect((await call(request, "post", submitPath(reviewing.id), { audiences: [reviewing.tracks[0].audience] })).status()).toBe(400);
   });

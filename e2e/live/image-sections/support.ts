@@ -4,6 +4,7 @@ import { API_URL } from "../../../playwright.live.config";
 import { queryAll, queryOne } from "../support/db";
 import { authHeaders, expect } from "../support/live";
 import { PNG_1X1, type TestFile } from "../support/media-scenarios";
+import { outboxRows } from "../support/outbox";
 
 export const TARGET_TYPE = "ImagesPage";
 export const BAD_ID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
@@ -225,7 +226,8 @@ export async function snapshotDb(): Promise<{ sections: number; media: number; p
 
 /** Linhas do outbox de um modelo de e-mail cujo texto cita a legenda do cenário. */
 export const outboxFor = (templateKey: string, caption: string) =>
-  queryAll<{ status: string; recipient: string; subject: string }>(
-    "SELECT status, recipient, subject FROM email_outbox WHERE templateKey = ? AND text LIKE ?",
+  outboxRows<{ status: string; recipient: string; subject: string }>(
+    "status, recipient, subject",
+    "templateKey = ? AND text LIKE ?",
     [templateKey, `%${caption}%`],
   );

@@ -1,6 +1,10 @@
+import { writeFileSync } from "node:fs";
+
 import { test as setup } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
+import { closeDb } from "./db";
+import { FLAG_SNAPSHOT_FILE, readFlags } from "./flags-snapshot";
 import { authHeaders, loginAs } from "./live";
 
 /**
@@ -34,6 +38,10 @@ setup("desliga TODAS as flags de e-mail antes da rodada", async ({ request }) =>
   if (!isLocal && process.env.E2E_ALLOW_REMOTE_FLAGS !== "1") {
     throw new Error(`Recusado: ${API_URL} não é uma API local. Use E2E_ALLOW_REMOTE_FLAGS=1 se for de propósito.`);
   }
+
+  // Estado das demais flags antes de qualquer spec: o teardown confere e restaura.
+  writeFileSync(FLAG_SNAPSHOT_FILE, JSON.stringify(await readFlags()));
+  await closeDb();
 
   const { accessToken } = await loginAs(request, "admin");
   const headers = authHeaders(accessToken);

@@ -22,6 +22,7 @@ import {
   type ContactBody,
   type ContactInput,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários do plano 38 (`contact`): o formulário de contato é PÚBLICO (sem sessão) e devolve só um recibo; a caixa,
@@ -60,7 +61,7 @@ test.describe.serial("Contato — cenários de contrato e caixa do admin", () =>
 
   test.afterAll(async ({ request }) => {
     await removeActors(request, admin, [member.id, leader.id]);
-    expect(await contactsWithTag(RUN_TAG), "a limpeza deixou contatos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await contactsWithTag(RUN_TAG), "a limpeza deixou contatos do E2E").toBe(0);
     await closeDb();
   });
 

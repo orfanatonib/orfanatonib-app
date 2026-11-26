@@ -6,6 +6,7 @@ import { expect, loginAs, test } from "../support/live";
 import { mediaScenarios, type MediaFeatureAdapter, type TestFile } from "../support/media-scenarios";
 import { expectNoBrokenRefs, expectNoOrphans } from "../support/s3";
 import { OVERSIZED_TITLE, create, createRaw, fetchOne, integrationsWithTag, label, mediaCount, png, putRaw, removeApi } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `integration.s3.01-12` (plano 25 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o bucket
@@ -95,7 +96,7 @@ test.describe.serial("Integração — S3 sem órfão nem referência quebrada",
   test.afterAll(async ({ request: api }) => {
     request = api;
     await adapter.cleanup();
-    expect(await integrationsWithTag(RUN_TAG), "a limpeza deixou integrações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await integrationsWithTag(RUN_TAG), "a limpeza deixou integrações do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

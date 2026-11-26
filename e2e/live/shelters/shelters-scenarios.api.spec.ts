@@ -23,6 +23,7 @@ import {
   teamsCount,
   type ShelterBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários de `/shelters` por handler (plano 13 §7.3): feliz, escopo, não encontrado,
@@ -84,7 +85,7 @@ test.describe.serial("Abrigos — cenários por handler", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await deleteShelterApi(request, admin, id);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
     await closeDb();
   });
 

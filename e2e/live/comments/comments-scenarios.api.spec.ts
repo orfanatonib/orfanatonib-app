@@ -22,6 +22,7 @@ import {
   type CommentBody,
   type CommentInput,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários do plano 37 (`comment`): qualquer usuário autenticado ENVIA um comentário (nasce NÃO publicado); só o admin
@@ -67,7 +68,7 @@ test.describe.serial("Comentários — cenários de contrato e moderação", () 
 
   test.afterAll(async ({ request }) => {
     await removeActors(request, admin, [member.id, leader.id]);
-    expect(await commentsWithTag(RUN_TAG), "a limpeza deixou comentários do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await commentsWithTag(RUN_TAG), "a limpeza deixou comentários do E2E").toBe(0);
     await closeDb();
   });
 

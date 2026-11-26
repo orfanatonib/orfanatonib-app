@@ -1,3 +1,4 @@
+import { tagged } from "../support/factory";
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, queryAll, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
@@ -18,7 +19,19 @@ test.beforeAll(async ({ request }) => {
     before[key] = (await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 0;
     await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: true } });
   }
+  // Pré-condição montada pelo próprio spec (a paginação precisa de mais de uma página de 3).
+  for (let index = await activePackages(); index < MINIMUM_PACKAGES; index += 1) {
+    const created = await request.post(`${API_URL}/content-studio/packages`, {
+      headers: authHeaders(admin),
+      data: { theme: tagged(`listagem-${index}`), biblicalReferences: "Salmos 23", canonicalObjective: "Provar a paginação da lista" },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+  }
 });
+
+const MINIMUM_PACKAGES = 4;
+const activePackages = async (): Promise<number> =>
+  Number((await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status <> 'ARCHIVED'"))?.n ?? 0);
 
 test.afterAll(async ({ request }) => {
   for (const key of FLAGS) {
@@ -34,8 +47,8 @@ const list = async (request: import("@playwright/test").APIRequestContext, query
 };
 
 test("percorrendo as páginas de 3 em 3 vem todo pacote uma única vez, e cada página está cheia", async ({ request }) => {
-  const total = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status <> 'ARCHIVED'"))?.n ?? 0;
-  test.skip(total < 4, "precisa de pelo menos 4 pacotes no banco do E2E");
+  const total = await activePackages();
+  expect(total).toBeGreaterThanOrEqual(MINIMUM_PACKAGES);
 
   const seen: string[] = [];
   for (let page = 1; page <= Math.ceil(total / 3); page++) {
@@ -53,7 +66,8 @@ test("filtro por faixa etária e por situação respondem 200 e só devolvem o q
   for (const audience of ["BABY", "CHILD", "TEEN", "ADULT"]) {
     const filtered = await list(request, `page=1&limit=50&audience=${audience}`);
     expect(filtered.total).toBeLessThanOrEqual(all.total);
-    expect(filtered.data.length).toBe(filtered.total);
+    // A página devolve o que cabe nela, nunca menos (o defeito antigo cortava pela contagem do join).
+    expect(filtered.data.length).toBe(Math.min(50, filtered.total));
   }
   const archived = await list(request, "page=1&limit=50&status=ARCHIVED");
   const rows = (await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM content_packages WHERE status = 'ARCHIVED'"))?.n ?? 0;

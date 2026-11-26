@@ -20,6 +20,7 @@ import {
   type Profile,
   type ProfileAccounts,
 } from "./support";
+import { directOutboxCount } from "../support/outbox";
 
 /**
  * Sessão (plano 06): login, refresh, logout, me e google, por perfil
@@ -346,8 +347,8 @@ test.describe.serial("Auth — sessão por perfil", () => {
   });
 
   test("[auth.post.auth-google#email-enviado-ou-bloqueado-por-flag] credencial inválida não dispara e-mail", async ({ request }) => {
-    const before = await countRows("email_outbox");
+    const before = await directOutboxCount();
     await request.post(`${BASE}/auth/google`, { data: { token: "x" } });
-    expect(await countRows("email_outbox")).toBe(before);
+    expect(await directOutboxCount()).toBe(before);
   });
 });

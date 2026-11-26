@@ -5,8 +5,9 @@ import { closeDb, countRows, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { expectFeatureDisabled, withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários de `/sheltered` (acolhidos) por handler (plano 17 §7.3). Admin, líder semeado (lidera o abrigo A)
@@ -115,8 +116,9 @@ test.describe.serial("Acolhidos — cenários por handler", () => {
     await request.put(`${API_URL}/leader-profiles/${leaderProfileId}`, { headers: authHeaders(admin), data: [] });
     for (const id of shelters) await deleteShelterApi(request, admin, id);
     await removeActors(request, admin, [member.id]);
-    expect(await withTag(RUN_TAG), "a limpeza deixou acolhidos do E2E").toBe(0);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await withTag(RUN_TAG), "a limpeza deixou acolhidos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     await closeDb();
   });
 

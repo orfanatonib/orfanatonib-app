@@ -33,13 +33,20 @@ test.describe.serial("Rotas dinâmicas — API", () => {
   test("[dynamic-routes.get.routes#perfil-membro] GET /routes como membro: 200 e inclui rotas não públicas", async ({
     request,
   }) => {
-    const total = await countRows("routes");
-    const publicOnly = await countRows("routes", { public: 1 });
+    const publicBefore = await countRows("routes", { public: 1 });
     const res = await request.get(`${API_URL}/routes`, { headers: authHeaders(member) });
     expect(res.status()).toBe(200);
     const rows = (await res.json()) as RouteBody[];
-    expect(rows.length).toBeGreaterThanOrEqual(publicOnly);
-    expect(rows.length).toBeLessThanOrEqual(total);
+    // Referência de cima contada depois: publicações em segundo plano criam rotas a qualquer momento.
+    const totalAfter = await countRows("routes");
+    // Com sessão a API acrescenta os dias da meditação da semana como rotas virtuais (não existem em `routes`).
+    const virtualRoutes = rows.filter((row) => row.entityType === "MeditationDay");
+    const stored = rows.length - virtualRoutes.length;
+    expect(virtualRoutes.length).toBeLessThanOrEqual(5);
+    expect(stored).toBeGreaterThanOrEqual(publicBefore);
+    expect(stored).toBeLessThanOrEqual(totalAfter);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    expect(rows.some((row) => row.public === false)).toBe(true);
   });
 
   test("[dynamic-routes.get.routes#perfil-lider] GET /routes como líder: 200", async ({ request }) => {

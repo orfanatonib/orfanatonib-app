@@ -25,6 +25,7 @@ import {
   sheltersWithTag,
   teamsCount,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `shelter.s3.01-12` (plano 13 §7.4): toda operação vai pela API real, o banco é lido por
@@ -57,7 +58,7 @@ test.describe.serial("Abrigos — S3 sem órfão nem referência quebrada", () =
   });
 
   test.afterAll(async () => {
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

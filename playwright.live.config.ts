@@ -15,7 +15,7 @@ export const APP_URL = process.env.E2E_APP_URL ?? "http://localhost:5173";
  * Massa de dados (`*.seed.ui.spec.ts`, tag `@seed`): cria dados pela UI e DEIXA no banco. Fora da suíte
  * normal: o projeto `live-seed` só existe com `E2E_SEED=1` (scripts `seed:*` do package.json).
  */
-const SEED_SPECS = "**/*.seed.ui.spec.ts";
+const SEED_SPECS = ["**/*.seed.ui.spec.ts", "**/*.seed.api.spec.ts"];
 const seedProjects =
   process.env.E2E_SEED === "1"
     ? [
@@ -58,12 +58,21 @@ export default defineConfig({
       name: "setup",
       testDir: "./e2e/live/support",
       testMatch: "**/email-flags.setup.ts",
+      teardown: "flags-teardown",
+      use: { baseURL: API_URL },
+    },
+    {
+      // Confere (e restaura) as flags que alguma spec tenha deixado diferentes.
+      name: "flags-teardown",
+      testDir: "./e2e/live/support",
+      testMatch: "**/flags-restore.teardown.ts",
       use: { baseURL: API_URL },
     },
     {
       name: "live-api",
       dependencies: ["setup"],
       testMatch: "**/*.api.spec.ts",
+      testIgnore: SEED_SPECS,
       use: { baseURL: API_URL },
     },
     {

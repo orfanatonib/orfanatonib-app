@@ -1,6 +1,15 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, queryAll, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
+import { flagEnabled } from "../support/flags";
+
+/** Versão vigente dos prompts, lida do código da API (repositório irmão). */
+const STAGE_PROMPT_VERSION = /STAGE_PROMPT_VERSION = "([^"]+)"/.exec(
+  readFileSync(resolve(process.cwd(), "../orfanatonib-api/src/content/studio/ai/generation/stage-prompts.constants.ts"), "utf8"),
+)![1];
 
 /**
  * Geração de conteúdo do Estúdio com o PROVEDOR SIMULADO (AI_PROVIDER_MODE=fake):
@@ -15,6 +24,7 @@ type Pkg = { id: string; tracks: Array<{ stages: Stage[] }> };
 
 let admin: string;
 const FLAGS = ["content_studio", "content_studio_generation"];
+const flagsBefore = new Map<string, boolean>();
 
 async function setFlags(request: import("@playwright/test").APIRequestContext, enabled: boolean): Promise<void> {
   for (const key of FLAGS) {
@@ -73,10 +83,13 @@ async function waitJob(id: string, done: (status: string) => boolean): Promise<{
 test.describe.serial("Geração com provedor simulado — ao vivo", () => {
   test.beforeAll(async ({ request }) => {
     admin = (await loginAs(request, "admin")).accessToken;
+    for (const key of FLAGS) flagsBefore.set(key, await flagEnabled(key));
     await setFlags(request, true);
   });
   test.afterAll(async ({ request }) => {
-    await setFlags(request, false);
+    for (const key of FLAGS) {
+      await request.patch(`${API_URL}/feature-flags/${key}`, { headers: authHeaders(admin), data: { enabled: flagsBefore.get(key) } });
+    }
     await closeDb();
   });
 
@@ -143,6 +156,48 @@ test.describe.serial("Geração com provedor simulado — ao vivo", () => {
     expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(0);
   });
 
+  // Cada falha que um provedor real devolve, com a política de nova tentativa que lhe cabe.
+  for (const scenario of [
+    { name: "erro 500 passageiro", directive: "[[fake:500:1]]", attempts: 2 },
+    { name: "rede cai duas vezes", directive: "[[fake:network:2]]", attempts: 3 },
+    { name: "tempo esgotado uma vez", directive: "[[fake:timeout:1]]", attempts: 2 },
+    { name: "resposta cortada pelo limite de tokens uma vez", directive: "[[fake:truncated:1]]", attempts: 2 },
+  ]) {
+    test(`recupera sozinho: ${scenario.name} (conclui na tentativa ${scenario.attempts}, uma única versão)`, async ({ request }) => {
+      const { packageId, stage } = await newPackage(request, scenario.directive);
+      const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-rec-${scenario.directive}`)).json()) as { id: string };
+      const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+      expect(job).toMatchObject({ status: "SUCCEEDED", attempts: scenario.attempts, errorCode: null });
+      expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(1);
+      expect((await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]))?.status).toBe("DRAFT");
+    });
+  }
+
+  for (const scenario of [
+    { name: "erro 500 que não passa", directive: "[[fake:500]]", attempts: 3, code: "SERVER" },
+    { name: "tempo sempre esgotado", directive: "[[fake:timeout]]", attempts: 3, code: "TIMEOUT" },
+    { name: "provedor inalcançável", directive: "[[fake:network]]", attempts: 3, code: "NETWORK" },
+    { name: "resposta sempre cortada", directive: "[[fake:truncated]]", attempts: 3, code: "OUTPUT_TRUNCATED" },
+    { name: "resposta fora do formato pedido", directive: "[[fake:schema]]", attempts: 1, code: "SCHEMA" },
+  ]) {
+    test(`desiste com causa clara: ${scenario.name} (${scenario.attempts} tentativa(s), nada gravado, sem vazar o pedido)`, async ({ request }) => {
+      const { packageId, stage } = await newPackage(request, scenario.directive);
+      const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-fim-${scenario.code}`)).json()) as { id: string };
+      const job = await waitJob(id, (s) => s === "SUCCEEDED" || s === "FAILED");
+      expect(job).toMatchObject({ status: "FAILED", attempts: scenario.attempts, errorCode: scenario.code });
+      expect((await queryOne<{ status: string }>("SELECT status FROM content_stages WHERE id = ?", [stage.id]))?.status).toBe("FAILED");
+      expect((await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM content_versions WHERE stage_id = ?", [stage.id]))[0].n).toBe(0);
+
+      const latest = await request.get(`${API_URL}/content-studio/packages/${packageId}/stages/${stage.id}/generations/latest`, { headers: authHeaders(admin) });
+      expect(latest.status()).toBe(200);
+      const text = await latest.text();
+      expect(text).toContain(scenario.code);
+      // A causa exposta é um código curto: nunca o pedido enviado ao modelo.
+      expect(text).not.toContain("[[fake:");
+      expect(text).not.toContain("Objetivo");
+    });
+  }
+
   test("bloqueio de segurança: falha definitiva sem retry", async ({ request }) => {
     const { packageId, stage } = await newPackage(request, "[[fake:moderation]]");
     const { id } = (await (await request202(request, packageId, stage.id, `${TAG}-mod`)).json()) as { id: string };
@@ -179,7 +234,7 @@ test.describe.serial("Geração com provedor simulado — ao vivo", () => {
           [stage.id],
         );
         const snap = typeof version?.generationSnapshot === "string" ? JSON.parse(version.generationSnapshot) : version?.generationSnapshot;
-        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: "orfanato.studio.prompts/2.2.0" });
+        expect(snap).toMatchObject({ audience: track.audience, stageType: stage.stageType, promptVersion: STAGE_PROMPT_VERSION });
         if (stage.stageType === "LESSON") {
           const content = typeof version?.structuredContent === "string" ? JSON.parse(version.structuredContent) : version?.structuredContent;
           lessonWords[track.audience] = (content?.story ?? []).reduce((n: number, b: { body: string }) => n + b.body.split(" ").length, 0);

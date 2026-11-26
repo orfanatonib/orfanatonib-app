@@ -22,6 +22,7 @@ import {
   unreadInDb,
   type FeedbackBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários do plano 39 (`site-feedback`): qualquer usuário autenticado ENVIA a avaliação; caixa, detalhe, edição,
@@ -60,7 +61,7 @@ test.describe.serial("Avaliações do site — cenários de contrato", () => {
 
   test.afterAll(async ({ request }) => {
     await removeActors(request, admin, [member.id, leader.id]);
-    expect(await feedbacksWithTag(RUN_TAG), "a limpeza deixou avaliações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await feedbacksWithTag(RUN_TAG), "a limpeza deixou avaliações do E2E").toBe(0);
     await closeDb();
   });
 

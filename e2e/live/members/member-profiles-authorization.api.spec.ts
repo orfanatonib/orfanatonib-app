@@ -1,6 +1,7 @@
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, countRows, queryOne } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
+import { ensureSeededLeaderLeadsShelter } from "../support/seeded-leader";
 
 /**
  * Autorização de `/member-profiles` (plano 16): membro nunca; líder lê só os membros
@@ -26,6 +27,7 @@ test.describe.serial("Perfis de membro — autorização", () => {
     admin = (await loginAs(request, "admin")).accessToken;
     leader = (await loginAs(request, "leader")).accessToken;
     member = (await loginAs(request, "member")).accessToken;
+    await ensureSeededLeaderLeadsShelter(request, admin);
     flagBefore =
       (await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = 'member_management'"))?.enabled ?? 1;
   });

@@ -1,7 +1,7 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
-import { closeDb, queryAll, queryOne } from "../support/db";
+import { countRows, closeDb, queryAll, queryOne } from "../support/db";
 import {
   DESKTOP_VIEWPORT,
   PAGE_SIZE,
@@ -26,7 +26,7 @@ import { setDateFilter } from "../support/shell-suite";
 import { RUN_TAG } from "../support/factory";
 import { withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, seedBrowserSession, test } from "../support/live";
-import { createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
 import { cleanupData } from "../support/keep-data";
 
@@ -128,7 +128,8 @@ test.describe.serial("Pagelas: fluxo em três níveis na casca única (UI real)"
       for (const id of acolhidos) await send(request, "DELETE", `/sheltered/${id}`);
       for (const id of shelters) await deleteShelterApi(request, admin, id);
       await removeActors(request, admin, [author.id]);
-      expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+      // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+      for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
       expect((await queryAll("SELECT id FROM sheltered WHERE name LIKE ?", [`%${RUN_TAG}%`])).length, "acolhidos do E2E").toBe(0);
     });
     await closeDb();

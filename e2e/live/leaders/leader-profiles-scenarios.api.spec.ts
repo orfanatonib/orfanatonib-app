@@ -5,7 +5,7 @@ import { closeDb, countRows, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { expectFeatureDisabled, withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
 
 /**
@@ -69,7 +69,8 @@ test.describe.serial("Perfis de líder — cenários por handler", () => {
   test.afterAll(async ({ request }) => {
     for (const id of shelters) await deleteShelterApi(request, admin, id);
     await removeActors(request, admin, [other.id]);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     expect(await linkedTeams(seededProfileId), "o líder semeado ficou preso a equipes").toBe(0);
     await closeDb();
   });
@@ -161,8 +162,17 @@ test.describe.serial("Perfis de líder — cenários por handler", () => {
     expect(res.status()).toBe(200);
     const body = (await res.json()) as { items: LeaderBody[]; total: number; page: number };
     expect(body.page).toBe(1);
-    expect(idsOf(body.items)).toEqual(expect.arrayContaining([seededProfileId, otherProfileId]));
-    expect(body.total).toBe(await countRows("leader_profiles"));
+    // A listagem só traz líderes com usuário ativo.
+    const active = await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM leader_profiles lp JOIN users u ON u.id = lp.user_id WHERE u.active = 1");
+    expect(body.total).toBe(Number(active?.n));
+    // A massa acumulada passa de uma página: os dois líderes têm de aparecer ao percorrer a lista inteira.
+    const seen = idsOf(body.items);
+    for (let next = 2; (next - 1) * 100 < body.total; next += 1) {
+      const more = (await (await get(request, admin, `/leader-profiles?page=${next}&limit=100`)).json()) as { items: LeaderBody[] };
+      seen.push(...idsOf(more.items));
+    }
+    expect(seen).toEqual(expect.arrayContaining([seededProfileId, otherProfileId]));
+    expect(new Set(seen).size).toBe(seen.length);
   });
 
   test("[leader-profile.get.leader-profiles-id#feliz] detalhe do líder bate com o banco (usuário e equipes)", async ({ request }) => {

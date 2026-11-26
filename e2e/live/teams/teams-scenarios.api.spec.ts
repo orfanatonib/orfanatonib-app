@@ -4,7 +4,8 @@ import { API_URL } from "../../../playwright.live.config";
 import { closeDb, countRows, queryAll, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, DIRECTORY_FLAGS, createShelter, deleteShelterApi, label } from "../shelters/support";
+import { outboxCountFor } from "../support/outbox";
 
 /**
  * Cenários de `/teams` por handler (plano 14 §7.3): feliz, escopo, não encontrado, validação,
@@ -108,7 +109,7 @@ test.describe.serial("Equipes — cenários por handler", () => {
     expect(JSON.stringify(await response.json())).toContain("FEATURE_DISABLED");
   };
 
-  const teamEmails = (): Promise<number> => countRows("email_outbox", { templateKey: TEAM_EMAIL_TEMPLATE });
+  const teamEmails = (): Promise<number> => outboxCountFor(TEAM_EMAIL_TEMPLATE);
 
   test.beforeAll(async ({ request }) => {
     admin = (await loginAs(request, "admin")).accessToken;
@@ -127,7 +128,8 @@ test.describe.serial("Equipes — cenários por handler", () => {
   test.afterAll(async ({ request }) => {
     for (const id of teams) await deleteTeam(request, admin, id);
     for (const id of shelters) await deleteShelterApi(request, admin, id);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     await closeDb();
   });
 

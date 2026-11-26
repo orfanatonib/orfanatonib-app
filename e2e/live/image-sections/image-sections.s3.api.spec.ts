@@ -22,6 +22,7 @@ import {
   submit,
   submitRaw,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `image-section.s3.01-12` (plano 32 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o
@@ -150,8 +151,8 @@ test.describe.serial("Seções de imagem — S3 sem órfão nem referência queb
     await adapter.cleanup();
     await removeGallery(api, admin, galleryId);
     for (const key of SECTION_FLAGS) await setFlag(key, flagsBefore[key]);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
-    expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
     expect(await countRows("image_sections", { caption: OVERSIZED_CAPTION })).toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();

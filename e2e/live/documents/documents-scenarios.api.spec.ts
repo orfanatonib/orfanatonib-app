@@ -52,7 +52,8 @@ test.describe.serial("Documentos — cenários por handler", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await removeApi(request, admin, id);
-    expect(await documentsWithTag(RUN_TAG), "a limpeza deixou documentos do E2E").toBe(0);
+    // Só o que este cenário criou: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of created) expect(await documentRow(id), "a limpeza deixou documentos do cenário").toBeNull();
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

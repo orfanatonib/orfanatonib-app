@@ -11,6 +11,7 @@ import { LIVE_ACCOUNTS } from "../support/credentials";
 import { authHeaders, expect, loginAs, test, type LoginResult } from "../support/live";
 import { setFlag } from "./feed-fixtures";
 import { makePng } from "./png";
+import { outboxRows } from "../support/outbox";
 
 /**
  * Notificações e reprovação de publicações (API, arquivos reais):
@@ -33,9 +34,7 @@ const created: string[] = [];
 
 const flagEnabled = async (key: string) => ((await queryOne<{ enabled: number }>("SELECT enabled FROM feature_flags WHERE `key` = ?", [key]))?.enabled ?? 0) === 1;
 const outboxFor = (templateKey: string, recipient: string, caption: string) =>
-  queryAll<{ status: string; html: string; text: string; subject: string }>(
-    "SELECT status, html, text, subject FROM email_outbox WHERE templateKey = ? AND recipient = ? AND text LIKE ?",
-    [templateKey, recipient, `%${caption}%`],
+  outboxRows<{ status: string; html: string; text: string; subject: string }>("status, html, text, subject", "templateKey = ? AND recipient = ? AND text LIKE ?", [templateKey, recipient, `%${caption}%`],
   );
 
 async function submit(request: APIRequestContext, token: string, caption: string): Promise<string> {

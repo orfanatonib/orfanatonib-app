@@ -18,6 +18,7 @@ import {
   updatePageRaw,
   type ImagePageBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `image-page.s3.01-12` (plano 33 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o bucket
@@ -165,8 +166,8 @@ test.describe.serial("Image Pages — S3 sem órfão nem referência quebrada", 
   test.afterAll(async ({ request: api }) => {
     request = api;
     await adapter.cleanup();
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

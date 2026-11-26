@@ -2,6 +2,7 @@ import { type APIRequestContext, type APIResponse, expect } from "@playwright/te
 
 import { countRows, queryAll, type Where } from "./db";
 import { expectBucketUnchanged, snapshotBucket } from "./s3";
+import { outboxRows } from "./outbox";
 
 /** Estados da fila de saída de e-mail (`email_outbox.status`). */
 export type OutboxStatus = "pending" | "sent" | "failed" | "skipped";
@@ -15,10 +16,10 @@ export async function expectOutbox(filter: {
   recipient: string;
   status?: OutboxStatus;
 }): Promise<void> {
-  const rows = await queryAll<{ status: OutboxStatus }>(
-    "SELECT status FROM `email_outbox` WHERE `templateKey` = ? AND `recipient` = ?",
-    [filter.templateKey, filter.recipient],
-  );
+  const rows = await outboxRows<{ status: OutboxStatus }>("status", "templateKey = ? AND recipient = ?", [
+    filter.templateKey,
+    filter.recipient,
+  ]);
   expect(rows.length, `e-mail ${filter.templateKey} → ${filter.recipient} no outbox`).toBeGreaterThan(0);
   if (filter.status) expect(rows.map((r) => r.status)).toContain(filter.status);
 }

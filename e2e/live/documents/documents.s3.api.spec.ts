@@ -1,11 +1,10 @@
 import type { APIRequestContext } from "@playwright/test";
 
 import { closeDb, countRows } from "../support/db";
-import { RUN_TAG } from "../support/factory";
 import { expect, loginAs, test } from "../support/live";
 import { addedKeys } from "../support/s3-invariants";
 import { expectBucketUnchanged, expectNoBrokenRefs, expectNoOrphans, listObjects, snapshotBucket } from "../support/s3";
-import { OVERSIZED_MEDIA_TITLE, create, createRaw, documentsWithTag, label, mediaCount, mediaPayload, patchRaw, pdf, removeApi, routesCount } from "./support";
+import { OVERSIZED_MEDIA_TITLE, create, createRaw, documentRow, documentsWithTag, label, mediaCount, mediaPayload, patchRaw, pdf, removeApi, routesCount } from "./support";
 
 /**
  * Cenários `document.s3.01-12` (plano 27 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o bucket
@@ -34,11 +33,13 @@ test.describe.serial("Documentos — S3 sem órfão nem referência quebrada", (
   });
 
   test.afterEach(async ({ request }) => {
-    for (const id of owners.splice(0)) await removeApi(request, admin, id);
+    for (const id of owners.splice(0)) {
+      await removeApi(request, admin, id);
+      expect(await documentRow(id), "a limpeza deixou o documento do cenário").toBeNull();
+    }
   });
 
   test.afterAll(async () => {
-    expect(await documentsWithTag(RUN_TAG), "a limpeza deixou documentos do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

@@ -19,6 +19,7 @@ import {
   updatePageRaw,
   type PageBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `visit-material.s3.01-12` (plano 35 §7.4): toda operação vai pela API real, o banco é lido por SELECT e o
@@ -116,7 +117,7 @@ test.describe.serial("Materiais de visita — S3 sem órfão nem referência que
   test.afterAll(async ({ request: api }) => {
     request = api;
     await adapter.cleanup();
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

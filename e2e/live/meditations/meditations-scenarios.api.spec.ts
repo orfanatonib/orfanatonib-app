@@ -25,6 +25,7 @@ import {
   snapshotDb,
   type MeditationBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários de `/meditations` por handler (plano 29 §7.3): feliz, validação, conflito (semana ocupada), não encontrado,
@@ -75,7 +76,7 @@ test.describe.serial("Meditações — cenários por handler", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await removeApi(request, admin, id);
-    expect(await meditationsWithTag(RUN_TAG), "a limpeza deixou meditações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await meditationsWithTag(RUN_TAG), "a limpeza deixou meditações do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

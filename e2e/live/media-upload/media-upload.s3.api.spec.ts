@@ -18,6 +18,7 @@ import {
   updatePageRaw,
   type ImagePageBody,
 } from "../image-pages/support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Cenários `media-upload.s3.01-12` (plano 05 §7.4), exercidos no CAMINHO LEGADO de upload (galeria de imagens: `AwsS3Service` +
@@ -167,8 +168,8 @@ test.describe.serial("Mídia e upload (caminho legado) — S3 sem órfão nem re
   test.afterAll(async ({ request: api }) => {
     request = api;
     await adapter.cleanup();
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

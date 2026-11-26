@@ -5,8 +5,9 @@ import { closeDb, countRows, queryAll, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { expectFeatureDisabled, withFlagsOff } from "../support/flags";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { BAD_ID, createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { BAD_ID, createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
+import { directOutboxCount } from "../support/outbox";
 
 /**
  * Cenários de `/pagelas` por handler (plano 19 §7.3). Dois abrigos criados pelo cenário (o líder semeado lidera o A) com
@@ -82,7 +83,7 @@ test.describe.serial("Pagelas — cenários por handler", () => {
     );
 
   const total = (): Promise<number> => countRows("pagelas", {});
-  const outbox = async (): Promise<number> => Number((await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM email_outbox"))?.n ?? 0);
+  const outbox = (): Promise<number> => directOutboxCount();
   const idsOf = <T extends { id: string }>(items: T[]): string[] => items.map((item) => item.id);
 
   test.beforeAll(async ({ request }) => {
@@ -106,7 +107,8 @@ test.describe.serial("Pagelas — cenários por handler", () => {
     await request.put(`${API_URL}/leader-profiles/${leaderProfileId}`, { headers: authHeaders(admin), data: [] });
     for (const id of shelters) await deleteShelterApi(request, admin, id);
     await removeActors(request, admin, [author.id]);
-    expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+    // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+    for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     expect((await queryAll("SELECT id FROM pagelas WHERE sheltered_id IN (?, ?)", [shelteredA, shelteredB])).length, "pagelas do E2E").toBe(0);
     await closeDb();
   });

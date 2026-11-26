@@ -1,7 +1,7 @@
 import { API_URL } from "../../../playwright.live.config";
 import { closeDb, queryAll } from "../support/db";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { listObjects, objectExists, plantObject, removeObject, uploadsPrefix } from "../support/s3";
+import { listObjects, objectExists, plantObject, referencedKeys, removeObject, snapshotBucket, uploadsPrefix } from "../support/s3";
 
 /**
  * Reconciliação bucket × banco (`POST /media-storage/reconcile`):
@@ -49,10 +49,17 @@ test.describe.serial("Reconciliação de mídia — ao vivo", () => {
     expect(await objectExists(orphanKey)).toBe(true);
   });
 
-  test("[media-upload.reconcile.e2e#orfao-removido] dryRun=false com janela 0 remove o órfão", async ({ request }) => {
+  test("[media-upload.reconcile.e2e#orfao-removido] dryRun=false com janela 0 remove o órfão e SÓ órfão", async ({ request }) => {
+    // Arquivo em uso = referenciado por QUALQUER coluna de mídia (capas e arquivos do Estúdio, imagem de rota…).
+    const inBucket = new Set(await snapshotBucket());
+    const inUse = (await referencedKeys()).filter((key) => inBucket.has(key));
+
     const res = await request.post(`${API_URL}/media-storage/reconcile?dryRun=false&minAgeHours=0`, { headers: authHeaders(admin) });
     const report = (await res.json()) as Report;
     expect(report.removedKeys).toContain(orphanKey);
+    expect(report.removedKeys.filter((key) => inUse.includes(key))).toEqual([]);
+    const after = new Set(await snapshotBucket());
+    expect(inUse.filter((key) => !after.has(key))).toEqual([]);
     expect(await objectExists(orphanKey)).toBe(false);
     expect(await listObjects(`${uploadsPrefix()}Recon/${TAG}/`)).toEqual([]);
   });

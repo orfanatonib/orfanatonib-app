@@ -20,7 +20,8 @@ export const pdf = (name: string): TestFile => ({
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 const DAY_MS = 86_400_000;
 /** Segunda-feira aleatória num futuro distante: a API recusa duas meditações na mesma semana, então cada cenário usa a sua. */
-const BASE_MONDAY = Date.UTC(2070, 0, 6) + Math.floor(Math.random() * 3000) * 7 * DAY_MS;
+/** Faixa larga (até o ano ~7800): a massa acumula centenas de meditações e uma faixa curta passa a colidir. */
+const BASE_MONDAY = Date.UTC(2070, 0, 6) + Math.floor(Math.random() * 300_000) * 7 * DAY_MS;
 let weekCounter = 0;
 
 export interface Week {

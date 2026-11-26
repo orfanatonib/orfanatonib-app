@@ -106,7 +106,7 @@ test.describe.serial("Mídia por entidade × S3 — ao vivo", () => {
       const rows = await mediaOf(id);
       expect(rows).toHaveLength(1);
       expect(rows[0].storageKey).not.toBe(before.storageKey);
-      expect(await listObjects(`${uploadsPrefix()}AtendenteEstadual/${id}/`)).toEqual([rows[0].storageKey]);
+      expect(await listObjects(`${uploadsPrefix()}private/AtendenteEstadual/${id}/`)).toEqual([rows[0].storageKey]);
       await expectNoOrphans();
       await expectNoBrokenRefs();
     });
@@ -115,7 +115,7 @@ test.describe.serial("Mídia por entidade × S3 — ao vivo", () => {
       const res = await request.delete(`${API_URL}/antecedentes-criminais/${id}`, { headers: authHeaders(admin) });
       expect(res.ok()).toBe(true);
       expect(await mediaOf(id)).toEqual([]);
-      expect(await listObjects(`${uploadsPrefix()}AtendenteEstadual/${id}/`)).toEqual([]);
+      expect(await listObjects(`${uploadsPrefix()}private/AtendenteEstadual/${id}/`)).toEqual([]);
       await expectNoOrphans();
       await expectNoBrokenRefs();
     });

@@ -21,6 +21,7 @@ import {
   updatePageRaw,
   type ImagePageBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Contrato ao vivo de `/image-pages` (plano 33): sempre contra API, MySQL e bucket reais.
@@ -79,8 +80,8 @@ test.describe.serial("Image Pages — API ao vivo", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await deletePageApi(request, admin, id);
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou galerias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou seções do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();
@@ -225,7 +226,8 @@ test.describe.serial("Image Pages — API ao vivo", () => {
     });
     expect(missingFile.status()).toBe(400);
     expect(await snapshotDb()).toEqual(before);
-    expect(await pagesWithTag(RUN_TAG)).toBe(created.length);
+    // Nenhum dos pedidos recusados deixou registro (conferido pelo título exato de cada um).
+    for (const title of [tagged("sem-arquivo"), tagged("x")]) expect(await pagesWithTag(title), title).toBe(0);
   });
 
   test("[image-page.post.image-pages#conflito-ou-duplicidade] mesmo título duas vezes: duas galerias com rotas distintas", async ({

@@ -13,9 +13,9 @@ import { approveComment, commentBody } from "./comments-moderation-helpers";
 
 /**
  * MASSA DE DADOS do feed, criada só pela API (fotos de verdade, vários autores, celebrações e comentários).
- * Não roda na execução normal: é opt-in.
+ * Não é teste da suíte: vive no projeto `live-seed` (só existe com `E2E_SEED=1`) e é opt-in.
  *
- *   FEED_SEED=1 npx playwright test -c playwright.live.config.ts --project=live-api e2e/live/shelter-feed/feed-seed.api.spec.ts --workers=1
+ *   E2E_SEED=1 FEED_SEED=1 npx playwright test --project=live-seed e2e/live/shelter-feed/feed-seed --workers=1
  *   FEED_SEED_CLEAN=1 ...mesmo comando...   # apaga só o que a massa criou (marca na descrição)
  *
  * Vai para a galeria do feed local ("Feed dos Abrigos", ou `E2E_FEED_PAGE_ID`).
@@ -99,75 +99,77 @@ async function createPost(request: APIRequestContext, authorToken: string, admin
 }
 
 test.describe.serial("Massa do feed", () => {
-  test.skip(!SEED && !CLEAN, "opt-in: FEED_SEED=1 cria a massa; FEED_SEED_CLEAN=1 apaga");
   test.afterAll(async () => {
     await closeDb();
   });
 
-  test("cria a massa: posts com fotos reais, vários autores, celebrações e comentários", async ({ request }) => {
-    test.skip(!SEED, "só com FEED_SEED=1");
-    test.setTimeout(240_000);
-    const admin = (await loginAs(request, "admin")).accessToken;
-    const leader = (await loginAs(request, "leader")).accessToken;
-    const member = (await loginAs(request, "member")).accessToken;
-    for (const key of FLAGS) await setFlag(request, admin, key, true);
-    const pageId = await galleryId();
-    const authors = [admin, leader, member];
+  // Declarados só quando pedidos: nada aparece como "pulado".
+  if (SEED) {
+    test("cria a massa: posts com fotos reais, vários autores, celebrações e comentários", async ({ request }) => {
+      test.setTimeout(240_000);
+      const admin = (await loginAs(request, "admin")).accessToken;
+      const leader = (await loginAs(request, "leader")).accessToken;
+      const member = (await loginAs(request, "member")).accessToken;
+      for (const key of FLAGS) await setFlag(request, admin, key, true);
+      const pageId = await galleryId();
+      const authors = [admin, leader, member];
 
-    const ids: string[] = [];
-    for (let index = 0; index < POSTS; index += 1) {
-      // Um em cada oito fica pendente (o admin ainda não publicou).
-      ids.push(await createPost(request, authors[index % 3], admin, pageId, index, index % 8 !== 7));
-    }
-
-    // Celebrações: cada perfil celebra uma parte diferente das publicações.
-    let celebrations = 0;
-    for (const [who, token] of [
-      ["admin", admin],
-      ["leader", leader],
-      ["member", member],
-    ] as const) {
-      for (const [index, id] of ids.entries()) {
-        if ((index + who.length) % 5 === 0) continue;
-        const res = await request.post(`${API_URL}/feed-sections/${id}/celebration/toggle`, { headers: authHeaders(token) });
-        if (res.ok()) celebrations += 1;
+      const ids: string[] = [];
+      for (let index = 0; index < POSTS; index += 1) {
+        // Um em cada oito fica pendente (o admin ainda não publicou).
+        ids.push(await createPost(request, authors[index % 3], admin, pageId, index, index % 8 !== 7));
       }
-    }
 
-    // Comentários: alguns posts ficam com conversa.
-    let comments = 0;
-    for (const [index, id] of ids.entries()) {
-      if (index % 3 !== 0) continue;
-      for (let n = 0; n < 1 + (index % 3); n += 1) {
-        const res = await request.post(`${API_URL}/feed-sections/${id}/comments`, {
-          headers: authHeaders(authors[(index + n) % 3]),
-          data: commentBody(COMMENTS[(index + n) % COMMENTS.length]),
-        });
-        if (res.ok()) {
-          comments += 1;
-          // A massa de demonstração aparece publicada: o admin aprova cada comentário novo.
-          await approveComment(request, admin, ((await res.json()) as { id: string }).id);
+      // Celebrações: cada perfil celebra uma parte diferente das publicações.
+      let celebrations = 0;
+      for (const [who, token] of [
+        ["admin", admin],
+        ["leader", leader],
+        ["member", member],
+      ] as const) {
+        for (const [index, id] of ids.entries()) {
+          if ((index + who.length) % 5 === 0) continue;
+          const res = await request.post(`${API_URL}/feed-sections/${id}/celebration/toggle`, { headers: authHeaders(token) });
+          if (res.ok()) celebrations += 1;
         }
       }
-    }
 
-    // Conferência no banco.
-    const rows = await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
-    expect(Number(rows[0].n)).toBeGreaterThanOrEqual(POSTS);
-    expect(celebrations).toBeGreaterThan(POSTS);
-    expect(comments).toBeGreaterThan(5);
-    console.log(`MASSA: ${POSTS} posts, ${celebrations} celebrações, ${comments} comentários na galeria ${pageId}`);
-  });
+      // Comentários: alguns posts ficam com conversa.
+      let comments = 0;
+      for (const [index, id] of ids.entries()) {
+        if (index % 3 !== 0) continue;
+        for (let n = 0; n < 1 + (index % 3); n += 1) {
+          const res = await request.post(`${API_URL}/feed-sections/${id}/comments`, {
+            headers: authHeaders(authors[(index + n) % 3]),
+            data: commentBody(COMMENTS[(index + n) % COMMENTS.length]),
+          });
+          if (res.ok()) {
+            comments += 1;
+            // A massa de demonstração aparece publicada: o admin aprova cada comentário novo.
+            await approveComment(request, admin, ((await res.json()) as { id: string }).id);
+          }
+        }
+      }
 
-  test("apaga a massa (só o que tem a marca)", async ({ request }) => {
-    test.skip(!CLEAN, "só com FEED_SEED_CLEAN=1");
-    const admin = (await loginAs(request, "admin")).accessToken;
-    const rows = await queryAll<{ id: string }>("SELECT id FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
-    for (const row of rows) {
-      const res = await request.delete(`${API_URL}/image-sections/${row.id}`, { headers: authHeaders(admin) });
-      expect([200, 204]).toContain(res.status());
-    }
-    const left = await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
-    expect(Number(left?.n)).toBe(0);
-  });
+      // Conferência no banco.
+      const rows = await queryAll<{ n: number }>("SELECT COUNT(*) AS n FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
+      expect(Number(rows[0].n)).toBeGreaterThanOrEqual(POSTS);
+      expect(celebrations).toBeGreaterThan(POSTS);
+      expect(comments).toBeGreaterThan(5);
+      console.log(`MASSA: ${POSTS} posts, ${celebrations} celebrações, ${comments} comentários na galeria ${pageId}`);
+    });
+  }
+
+  if (CLEAN) {
+    test("apaga a massa (só o que tem a marca)", async ({ request }) => {
+      const admin = (await loginAs(request, "admin")).accessToken;
+      const rows = await queryAll<{ id: string }>("SELECT id FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
+      for (const row of rows) {
+        const res = await request.delete(`${API_URL}/image-sections/${row.id}`, { headers: authHeaders(admin) });
+        expect([200, 204]).toContain(res.status());
+      }
+      const left = await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM image_sections WHERE description LIKE ?", [`%${MARK}%`]);
+      expect(Number(left?.n)).toBe(0);
+    });
+  }
 });

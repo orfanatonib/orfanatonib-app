@@ -7,6 +7,7 @@ import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs } from "../support/live";
 import { PNG_1X1 } from "../support/media-scenarios";
 import { expectBucketUnchanged, expectNoBrokenRefs, expectNoOrphans, snapshotBucket, uploadsPrefix } from "../support/s3";
+import { outboxRows } from "../support/outbox";
 
 /** Suporte dos E2E de usuários e perfis (plano 07): contas descartáveis criadas pela API, provas por SELECT. */
 
@@ -153,7 +154,7 @@ export async function expectFeatureDisabled(res: APIResponse): Promise<void> {
 
 /** O e-mail do usuário não tem nenhum envio real pendente: só `skipped` (flags `email_*` desligadas no E2E). */
 export async function expectNoDeliverableEmail(recipient: string): Promise<void> {
-  const rows = await queryAll<{ status: string }>("SELECT status FROM `email_outbox` WHERE `recipient` = ?", [recipient]);
+  const rows = await outboxRows<{ status: string }>("status", "recipient = ?", [recipient]);
   expect(rows.filter((r) => r.status !== "skipped"), `nada além de skipped no outbox de ${recipient}`).toEqual([]);
 }
 

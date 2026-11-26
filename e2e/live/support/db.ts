@@ -25,7 +25,7 @@ function getPool(): Pool {
 
 export async function queryAll<T extends Record<string, unknown> = Record<string, unknown>>(
   sql: string,
-  params: ReadonlyArray<string | number | boolean | null> = [],
+  params: ReadonlyArray<string | number | boolean | Date | null> = [],
 ): Promise<T[]> {
   assertSelectOnly(sql);
   const [rows] = await getPool().query<RowDataPacket[]>(sql, [...params]);

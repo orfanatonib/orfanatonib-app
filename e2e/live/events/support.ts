@@ -5,6 +5,7 @@ import { queryAll, queryOne } from "../support/db";
 import { tagged } from "../support/factory";
 import { authHeaders, expect } from "../support/live";
 import { PNG_1X1, type TestFile } from "../support/media-scenarios";
+import { BROADCAST_TEMPLATE, outboxStates } from "../support/outbox";
 
 export const BAD_ID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
 export const MEDIA_TARGET = "Event";
@@ -95,11 +96,6 @@ export async function snapshotDb(): Promise<{ events: number; media: number }> {
 }
 
 /** Avisos de evento no outbox por estado (o envio é assíncrono; o que importa é o estado final). */
-export const eventNoticeStates = async (): Promise<Record<string, number>> => {
-  const rows = await queryAll<{ status: string; n: number }>(
-    "SELECT status, COUNT(*) AS n FROM email_outbox WHERE templateKey = 'event-notice' GROUP BY status",
-  );
-  return Object.fromEntries(rows.map((row) => [row.status, Number(row.n)]));
-};
+export const eventNoticeStates = (): Promise<Record<string, number>> => outboxStates(BROADCAST_TEMPLATE);
 
 export const label = (name: string): string => tagged(name);

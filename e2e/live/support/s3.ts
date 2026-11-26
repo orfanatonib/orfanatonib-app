@@ -104,20 +104,47 @@ export async function removeObject(key: string): Promise<void> {
   await getClient().send(new DeleteObjectCommand({ Bucket: s3Config().bucket, Key: key }));
 }
 
+/**
+ * A API grava no S3 ANTES de gravar a linha, e trabalhos em segundo plano (pré-geração de PDF, capas) gravam
+ * enquanto o teste confere. Por isso a ordem das duas leituras importa, e um candidato a órfão só vale se continuar
+ * sem linha depois de um tempo de assentamento.
+ */
+const SETTLE_ATTEMPTS = 6;
+const SETTLE_DELAY_MS = 1_000;
+
+async function stillUnreferenced(candidates: string[], prefix: string): Promise<string[]> {
+  let pending = candidates;
+  for (let attempt = 0; attempt < SETTLE_ATTEMPTS && pending.length > 0; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, SETTLE_DELAY_MS));
+    // Bucket antes do banco: quem já saiu do bucket ou já ganhou linha deixa de ser candidato.
+    const present = new Set(await listObjects(prefix));
+    const referenced = new Set(await referencedKeys());
+    pending = pending.filter((key) => present.has(key) && !referenced.has(key));
+  }
+  return pending;
+}
+
 /** Invariante: nenhum objeto do bucket sem referência no banco. */
 export async function expectNoOrphans(prefix: string = uploadsPrefix()): Promise<void> {
-  const { orphans } = diffBucketAndRefs(await listObjects(prefix), (await referencedKeys()).filter((k) => k.startsWith(prefix)));
+  const objects = await listObjects(prefix);
+  const { orphans: candidates } = diffBucketAndRefs(objects, (await referencedKeys()).filter((k) => k.startsWith(prefix)));
+  const orphans = await stillUnreferenced(candidates, prefix);
   if (orphans.length > 0) throw new Error(`Objetos órfãos no S3 (${orphans.length}): ${orphans.slice(0, 10).join(", ")}`);
 }
 
 /** Invariante: nenhuma referência do banco aponta para objeto inexistente. */
 export async function expectNoBrokenRefs(prefix: string = uploadsPrefix()): Promise<void> {
-  const { broken } = diffBucketAndRefs(await listObjects(prefix), (await referencedKeys()).filter((k) => k.startsWith(prefix)));
+  // Banco antes do bucket: toda linha lida aqui já teve o objeto gravado.
+  const references = (await referencedKeys()).filter((k) => k.startsWith(prefix));
+  const { broken } = diffBucketAndRefs(await listObjects(prefix), references);
   if (broken.length > 0) throw new Error(`Referências quebradas (${broken.length}): ${broken.slice(0, 10).join(", ")}`);
 }
 
-/** Cenário que falha: o bucket não pode ter ganhado nenhum objeto. */
+/**
+ * Cenário que falha: o bucket não pode ter ganhado nenhum objeto SEM linha. (Objeto novo com linha é de um trabalho
+ * em segundo plano; uma linha criada pelo próprio cenário que falhou é pega pelo retrato do banco.)
+ */
 export async function expectBucketUnchanged(before: string[]): Promise<void> {
-  const added = addedKeys(before, await snapshotBucket());
+  const added = await stillUnreferenced(addedKeys(before, await snapshotBucket()), uploadsPrefix());
   if (added.length > 0) throw new Error(`O cenário deixou objetos novos no bucket: ${added.join(", ")}`);
 }

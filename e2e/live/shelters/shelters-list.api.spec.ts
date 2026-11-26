@@ -42,7 +42,8 @@ test.describe.serial("GET /shelters — filtros, ordenação e paginação no se
   };
 
   const ids = (body: Page): string[] => body.items.map((item) => item.id);
-  const scoped = `searchString=${encodeURIComponent(RUN_TAG)}`;
+  // Só os desta lista: o RUN_TAG é do processo e também marca abrigos de outros arquivos.
+  const scoped = `searchString=${encodeURIComponent(`${RUN_TAG}-lista-`)}`;
 
   const dbIds = async (where: string, params: Array<string | number> = [], order = "s.name ASC, s.id ASC"): Promise<string[]> =>
     (

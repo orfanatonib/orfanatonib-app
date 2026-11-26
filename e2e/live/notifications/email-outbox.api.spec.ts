@@ -5,6 +5,8 @@ import { LIVE_ACCOUNTS } from "../support/credentials";
 import { closeDb, countRows, queryAll, queryOne } from "../support/db";
 import { Cleaner, tagged } from "../support/factory";
 import { authHeaders, expect, loginAs, test } from "../support/live";
+import { directOutboxCount } from "../support/outbox";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Plano 10 — comportamento principal do e-mail, provado por `SELECT` em `email_outbox`
@@ -194,20 +196,21 @@ test.describe.serial("E-mail — fila de saída (email_outbox)", () => {
     request,
   }) => {
     await arm(request, { master: true, contact: true, feedback: true });
-    const before = await countRows("email_outbox");
+    const before = await directOutboxCount();
     const res = await request.post(`${API_URL}/contact`, { data: { name: "", email: "nao-e-email", phone: "", message: "" } });
     expect(res.status()).toBe(400);
     await new Promise((resolve) => setTimeout(resolve, 1_500));
-    expect(await countRows("email_outbox")).toBe(before);
+    expect(await directOutboxCount()).toBe(before);
   });
 
-  test("[email-notification.outbox#limpeza] os contatos e feedbacks criados foram apagados (0 linhas com o RUN_TAG)", async ({ request }) => {
+  test("[email-notification.outbox#limpeza] os contatos e feedbacks do cenário são apagados com E2E_CLEANUP=1 e mantidos como massa sem ele", async ({ request }) => {
     await cleaner.run();
     const tag = tagged("").replace(/-$/, "");
     const contacts = await queryOne<{ total: number }>("SELECT COUNT(*) AS total FROM contacts WHERE message LIKE ?", [`%${tag}%`]);
     const feedbacks = await queryOne<{ total: number }>("SELECT COUNT(*) AS total FROM site_feedbacks WHERE comment LIKE ?", [`%${tag}%`]);
-    expect(Number(contacts?.total)).toBe(0);
-    expect(Number(feedbacks?.total)).toBe(0);
+    // Regra de massa: sem E2E_CLEANUP=1 o que o cenário criou fica no banco.
+    if (CLEANUP_ENABLED) expect([Number(contacts?.total), Number(feedbacks?.total)]).toEqual([0, 0]);
+    else expect(Number(contacts?.total) + Number(feedbacks?.total)).toBeGreaterThan(0);
     // O restante do outbox é trilha de auditoria da fila: não há (nem deve haver) rota para apagá-lo.
     expect(request).toBeTruthy();
   });

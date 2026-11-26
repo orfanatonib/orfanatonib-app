@@ -17,6 +17,7 @@ import {
   updatePageRaw,
   type VideoPageBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Contrato ao vivo de `/video-pages` (plano 34): front-less, mas sempre contra API e MySQL reais.
@@ -49,7 +50,7 @@ test.describe.serial("Video Pages — API ao vivo", () => {
 
   test.afterAll(async ({ request }) => {
     for (const id of created) await deletePageApi(request, admin, id);
-    expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await pagesWithTag(RUN_TAG), "a limpeza deixou páginas do E2E").toBe(0);
     await closeDb();
   });
 
@@ -160,7 +161,8 @@ test.describe.serial("Video Pages — API ao vivo", () => {
     });
     expect(unknownField.status()).toBe(400);
     expect(await snapshotDb()).toEqual(before);
-    expect(await pagesWithTag(RUN_TAG)).toBe(created.length);
+    // Nenhum dos pedidos recusados deixou registro (conferido pelo título exato de cada um).
+    for (const title of [tagged("x")]) expect(await pagesWithTag(title), title).toBe(0);
   });
 
   test("[video-page.post.video-pages#conflito-ou-duplicidade] mesmo título duas vezes: duas páginas com rotas distintas", async ({

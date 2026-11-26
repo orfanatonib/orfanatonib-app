@@ -3,6 +3,7 @@ import type { APIRequestContext, APIResponse } from "@playwright/test";
 import { API_URL } from "../../../playwright.live.config";
 import { queryOne } from "../support/db";
 import { authHeaders } from "../support/live";
+import { directOutboxCount } from "../support/outbox";
 
 export interface ReportInput {
   scheduleId: string;
@@ -69,4 +70,4 @@ export const reportsOfSchedule = (scheduleId: string): Promise<number> =>
   count("SELECT COUNT(*) AS n FROM visit_reports WHERE schedule_id = ?", [scheduleId]);
 
 export const allReports = (): Promise<number> => count("SELECT COUNT(*) AS n FROM visit_reports");
-export const outboxTotal = (): Promise<number> => count("SELECT COUNT(*) AS n FROM email_outbox");
+export const outboxTotal = (): Promise<number> => directOutboxCount();

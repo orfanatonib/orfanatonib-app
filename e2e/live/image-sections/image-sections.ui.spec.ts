@@ -22,6 +22,7 @@ import {
   submit,
   type SectionBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Plano 32 — as TELAS de fotos dos abrigos contra a pilha real (nenhum `page.route`): o membro envia em
@@ -91,8 +92,8 @@ test.describe.serial("Fotos dos abrigos — telas (front → API → banco)", ()
   test.afterAll(async ({ request }) => {
     for (const id of created) await deleteRaw(request, admin.accessToken, id);
     for (const key of SECTION_FLAGS) await setFlag(request, key, flagsBefore[key]);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
-    expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
     await expectNoOrphans();
     await expectNoBrokenRefs();
     await closeDb();

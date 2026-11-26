@@ -32,6 +32,7 @@ import {
   submitRaw,
   type SectionBody,
 } from "./support";
+import { CLEANUP_ENABLED } from "../support/keep-data";
 
 /**
  * Plano 32 — `/image-sections` pela API REAL (MySQL e LocalStack): cada cenário prova o efeito por SELECT, os negativos
@@ -114,8 +115,8 @@ test.describe.serial("Seções de imagem — API (banco e bucket reais)", () => 
     for (const id of created) await deleteRaw(api, admin.accessToken, id);
     await removeGallery(api, admin.accessToken, galleryId);
     for (const key of FLAGS) await setFlag(key, flagsBefore[key]);
-    expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
-    expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await sectionsWithTag(RUN_TAG), "a limpeza deixou publicações do E2E").toBe(0);
+    if (CLEANUP_ENABLED) expect(await mediaWithTag(RUN_TAG), "a limpeza deixou mídias do E2E").toBe(0);
     await invariants();
     await closeDb();
   });

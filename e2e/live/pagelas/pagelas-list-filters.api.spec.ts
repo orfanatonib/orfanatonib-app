@@ -1,10 +1,10 @@
 import type { APIRequestContext, APIResponse } from "@playwright/test";
 
 import { API_URL } from "../../../playwright.live.config";
-import { closeDb, queryOne } from "../support/db";
+import { countRows, closeDb, queryOne } from "../support/db";
 import { RUN_TAG } from "../support/factory";
 import { authHeaders, expect, loginAs, test } from "../support/live";
-import { createShelter, deleteShelterApi, label, sheltersWithTag } from "../shelters/support";
+import { createShelter, deleteShelterApi, label } from "../shelters/support";
 import { createActor, removeActors, type Actor } from "../users/support";
 import { cleanupData } from "../support/keep-data";
 
@@ -80,7 +80,8 @@ test.describe.serial("Pagelas — filtros e ordenação da listagem paginada", (
       for (const id of shelteredIds) await request.delete(`${API_URL}/sheltered/${id}`, { headers: authHeaders(admin) });
       for (const id of shelters) await deleteShelterApi(request, admin, id);
       await removeActors(request, admin, [author.id]);
-      expect(await sheltersWithTag(RUN_TAG), "a limpeza deixou abrigos do E2E").toBe(0);
+      // Só os do cenário: o RUN_TAG é do processo e cobre a massa que outros arquivos mantêm.
+      for (const id of shelters) expect(await countRows("shelters", { id }), "a limpeza deixou um abrigo do cenário").toBe(0);
     });
     await closeDb();
   });
